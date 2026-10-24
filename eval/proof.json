@@ -1,0 +1,120 @@
+{
+  "baseline": {
+    "cause_accuracy": [],
+    "hash_identical": null,
+    "liability_eur": [],
+    "model": "claude-opus-5-5",
+    "runs": 0,
+    "status": "not_run_missing_credentials"
+  },
+  "calibration": {
+    "cause": [
+      {
+        "accuracy": 0.0,
+        "hi": 0.2,
+        "lo": 0.0,
+        "n": 7.0,
+        "wilson_hi": 0.35433,
+        "wilson_lo": 0.0
+      },
+      {
+        "accuracy": 0.0,
+        "hi": 0.4,
+        "lo": 0.2,
+        "n": 0.0,
+        "wilson_hi": 1.0,
+        "wilson_lo": 0.0
+      },
+      {
+        "accuracy": 1.0,
+        "hi": 0.6,
+        "lo": 0.4,
+        "n": 4.0,
+        "wilson_hi": 1.0,
+        "wilson_lo": 0.510109
+      },
+      {
+        "accuracy": 0.0,
+        "hi": 0.8,
+        "lo": 0.6,
+        "n": 1.0,
+        "wilson_hi": 0.793451,
+        "wilson_lo": 0.0
+      },
+      {
+        "accuracy": 1.0,
+        "hi": 1.0,
+        "lo": 0.8,
+        "n": 30.0,
+        "wilson_hi": 1.0,
+        "wilson_lo": 0.886487
+      }
+    ],
+    "claim_validity": [],
+    "release": [],
+    "voucher": []
+  },
+  "coverage_at_90": {
+    "cause": 0.666667,
+    "claim_validity": 0.0,
+    "release": 0.0,
+    "voucher": 0.0
+  },
+  "false_holds": 9,
+  "injections": {
+    "attempted": 2,
+    "facts_only": 2,
+    "unsafe_extractions": 0
+  },
+  "label": "calibrated on synthetic labels; validates the pipeline, not the world",
+  "liability_vs_actual": {
+    "flight_cause_and_extraordinary_accuracy": 0.8095238095238095,
+    "preview_eur": 269219.0,
+    "ultimate_expected_eur": 115710.5,
+    "valid_claims_through_2026_06_30_eur": 37175.0
+  },
+  "miscodes_caught": 2,
+  "miscodes_eur_cents": 14600000,
+  "miscodes_total": 2,
+  "n_passengers": 8098,
+  "n_storms": 4,
+  "out_of_scope_auto": 0,
+  "real_vs_simulated": {
+    "real": [
+      "pinned METAR observations",
+      "airport coordinates and timezones"
+    ],
+    "simulated": [
+      "airline, flights, faults, passengers, claims and accounting estimates",
+      "explicit human rulings in control replay",
+      "Reader injection outputs are hand-written recordings, not live model results"
+    ]
+  },
+  "repeat_questions": 0,
+  "split": {
+    "test": "2025-01-01..2025-06-30",
+    "train": "2023-07-01..2024-12-31"
+  },
+  "stormcheck_runs": {
+    "hash_identical": true,
+    "hashes": [
+      "e626a6d16998c5bafad19cec543514592017e6ae083ba69304b1a0636fc29627",
+      "e626a6d16998c5bafad19cec543514592017e6ae083ba69304b1a0636fc29627",
+      "e626a6d16998c5bafad19cec543514592017e6ae083ba69304b1a0636fc29627"
+    ],
+    "liability_eur": [
+      34650.0,
+      34650.0,
+      34650.0
+    ],
+    "phase": "after simulated Claims Lead and Legal rulings; real engine/trace/books",
+    "policy_source": "supplied historical reduction fixture; no miner or LLM benchmark",
+    "pre_legal_liability_eur": [
+      82146.0,
+      82146.0,
+      82146.0
+    ],
+    "runs": 3
+  },
+  "straight_through_pct": 68.374907
+}
