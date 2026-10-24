@@ -100,7 +100,8 @@ def _euros(cents: int) -> str:
 
 
 def flight_questions(decisions: Sequence[FlightDecision], ents: Sequence[Entitlement], asked_at: datetime,
-                     liability_by_flight: dict[str, int]) -> list[Question]:
+                     liability_by_flight: dict[str, int], patterns: dict[str, str]) -> list[Question]:
+    """``patterns`` = flight id -> the cause finding's pattern (``Finding.pattern``)."""
     groups: dict[str, list[FlightDecision]] = {}
     for d in decisions:
         if d.outcome == "escalated" and d.question_id:
@@ -108,7 +109,7 @@ def flight_questions(decisions: Sequence[FlightDecision], ents: Sequence[Entitle
     out = []
     for qid in sorted(groups):
         ds = sorted(groups[qid], key=lambda d: d.flight_id)
-        pattern = pattern_of(qid)
+        pattern = patterns.get(ds[0].flight_id) or pattern_of(qid)
         refs = [d.flight_id for d in ds]
         weakest = min(ds, key=lambda d: (d.confidence.score if d.confidence.score is not None else -1, d.flight_id))
         tag = REASON_TAG.get(pattern, "no-precedent")
@@ -177,7 +178,8 @@ def voucher_features(world: World, coupon_id: str, known_at: datetime, rules: Se
 
 
 def voucher_questions(world: World, ents: Sequence[Entitlement], storm_id: str, asked_at: datetime,
-                      calibration: dict[str, Any], known_at: datetime | None = None) -> list[Question]:
+                      calibration: dict[str, Any], known_at: datetime | None = None,
+                      qid: str | None = None) -> list[Question]:
     pending = sorted((e for e in ents if e.status == "needs_ruling"), key=lambda e: e.coupon_id)
     if not pending:
         return []
@@ -211,7 +213,7 @@ def voucher_questions(world: World, ents: Sequence[Entitlement], storm_id: str, 
     options = [f"Pay {comp} cash; the voucher stays as goodwill", f"Offset the voucher: pay the balance in cash",
                "Ask the passenger to sign the acceptance first"]
     return [Question(
-        id=f"Q-{storm_id}:voucher_in_lieu_unsigned", case_refs=refs, pattern="voucher_in_lieu_unsigned",
+        id=qid or f"Q-{storm_id}:voucher_in_lieu_unsigned", case_refs=refs, pattern="voucher_in_lieu_unsigned",
         routed_to=Role.CLAIMS_LEAD, asked_at=asked_at, title=title, found=found,
         why_flagged=("Art. 7(3) needs signed acceptance for an offset" + (", and the sources disagree."
                                                                          if tag == "sources-disagree" else ".")
@@ -240,7 +242,8 @@ def cohort_age_months(event: date, at: date) -> int:
 
 
 def release_questions(world: World, rules: Sequence[Rule], known_at: datetime, calibration: dict[str, Any],
-                      asked_at: datetime | None = None) -> list[Question]:
+                      asked_at: datetime | None = None, qid=None) -> list[Question]:
+    """``qid(cohort) -> id`` names the question (default ``Q-<cohort>:cohort_release``)."""
     asked_at = asked_at or known_at
     out = []
     for ob in sorted(world.opening_balances, key=lambda o: o.cohort):
@@ -258,7 +261,7 @@ def release_questions(world: World, rules: Sequence[Rule], known_at: datetime, c
         c = conf.score("release", {"cohort_age_months": age, "months_since_last_claim": msl,
                                    "precedent_count": 0.0}, calibration)
         out.append(Question(
-            id=f"Q-{ob.cohort}:cohort_release", case_refs=[ob.cohort], pattern="cohort_release",
+            id=qid(ob.cohort) if qid else f"Q-{ob.cohort}:cohort_release", case_refs=[ob.cohort], pattern="cohort_release",
             routed_to=Role.CONTROLLER, asked_at=asked_at,
             title=f"Reduce the {ob.cohort} {ob.curve_segment} cohort to nil at M{age}?",
             found=(f"Cohort {ob.cohort} ({ob.curve_segment}): {_euros(ob.entitlement_cents)} full Art. 7 entitlement, "

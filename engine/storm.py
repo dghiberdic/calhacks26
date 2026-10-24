@@ -23,7 +23,7 @@ from contracts.models import (
 )
 from engine import questions as qs
 from engine.case import station_obs, stations_for
-from engine.engine import expected_liability, local_day_span, station_airport
+from engine.engine import cohort_question_id, expected_liability, local_day_span, question_id, station_airport
 from engine.geo import UnknownAirport, airport
 from engine.timeline import storm_windows
 
@@ -74,11 +74,14 @@ def run_storm(engine: Engine, world: World, station: str, local_day: date, rules
     ents_all: list[Entitlement] = []
     liability: dict[str, int] = {}
     feed: list[TraceEvent] = []
+    patterns: dict[str, str] = {}
     for f in flights:
         if f.status != "cancelled":
             rows.append(FlightRow(flight=f, decision=None))
             continue
-        d = engine.decide_in(world, f.id, rules, known_at, stations=stations, storm_id=storm_id)
+        ev = engine.evaluate(world, f.id, rules, known_at, stations)
+        d = engine.to_decision(world, ev, rules, known_at, storm_id)
+        patterns[f.id] = ev.finding.pattern
         ents = engine.entitlements(d, world, list(rules))
         decisions.append(d)
         ents_all += ents
@@ -88,9 +91,12 @@ def run_storm(engine: Engine, world: World, station: str, local_day: date, rules
         feed.append(TraceEvent(seq=len(feed) + 1, at=known_at, kind="decision", actor="agent.engine",
                                summary=summary, ref=f.id, chip=chip, amount_cents=liability[f.id] or None))
 
-    questions: list[Question] = qs.flight_questions(decisions, ents_all, known_at, liability)
-    questions += qs.voucher_questions(world, ents_all, storm_id, known_at, engine.calibration, known_at)
-    questions += qs.release_questions(world, rules, known_at, engine.calibration)
+    questions: list[Question] = qs.flight_questions(decisions, ents_all, known_at, liability, patterns)
+    questions += qs.voucher_questions(world, ents_all, storm_id, known_at, engine.calibration, known_at,
+                                      qid=question_id(world, storm_id, "voucher_in_lieu_unsigned"))
+    questions += qs.release_questions(world, rules, known_at, engine.calibration,
+                                      qid=lambda cohort: cohort_question_id(world, cohort))
+    questions.sort(key=lambda q: q.id)
     for q in questions:
         feed.append(TraceEvent(
             seq=len(feed) + 1, at=known_at, kind="question", actor="agent.engine",

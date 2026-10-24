@@ -132,7 +132,7 @@ def test_ns117_knock_on_to_legal(engine, world):
     assert sig(d) == (Cause.KNOCK_ON, Extraordinary.NEEDS_LEGAL, False, "escalated", Role.LEGAL)
     assert d.in_window_dep == "out" and d.in_window_arr == "out"
     assert d.confidence.score < 0.60 and "capped:no-precedent" in d.confidence.caps
-    assert d.question_id == "Q-EIDW@2025-01-24:knock_on_return"
+    assert d.question_id == "Q-2"
     assert "CJEU C-74/19" in d.legal_basis
     spare = [e for e in d.evidence if e.field == "spare.available_within_h"]
     assert spare and spare[0].value == pytest.approx(4.33)
@@ -178,7 +178,7 @@ def test_aog_inside_window_is_concurrent(engine, world):
     w = edit(world, lambda w: _tl(w, logged_at=mw.z("08:00")))
     d = decide(engine, w, "NS31")
     assert sig(d) == (Cause.CONCURRENT, Extraordinary.NEEDS_LEGAL, False, "escalated", Role.LEGAL)
-    assert d.question_id.endswith(":concurrent_causes")
+    assert d.question_id == "Q-4"
 
 
 def test_aog_before_window_but_flight_in_window_is_concurrent(engine, world):
@@ -193,7 +193,7 @@ def test_aog_before_window_but_flight_in_window_is_concurrent(engine, world):
 def test_mel_relief_means_no_recode(engine, world):
     d = decide(engine, edit(world, lambda w: _tl(w, mel_relief=True)), "NS31")
     assert sig(d) == (Cause.UNKNOWN, Extraordinary.NEEDS_LEGAL, False, "escalated", Role.OPS)
-    assert d.question_id.endswith(":weather_code_contradicted")
+    assert d.question_id == "Q-6"
 
 
 def test_weather_code_contradicted_by_metar_goes_to_ops(engine, world):

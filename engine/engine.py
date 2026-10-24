@@ -200,7 +200,7 @@ class Engine:
                           role=f.route, settled_by_rule=ev.settled_by is not None)
         qid = None
         if r.outcome == "escalated":
-            qid = question_id(storm_id or default_storm_id(world, case), f.pattern)
+            qid = question_id(world, storm_id or default_storm_id(world, case), f.pattern)
         return dec.model_copy(update={"outcome": r.outcome, "routed_to": r.routed_to, "question_id": qid})
 
 
@@ -244,8 +244,40 @@ def flight_features(world: World, case: FlightCase, finding: Finding, prev: Find
 
 # ---------- ids ----------
 
-def question_id(storm_id: str, pattern: str) -> str:
+# Short ids for the world's primary storm match the stub and the demo script (Q-1 voucher, Q-2 knock-on, Q-3 the
+# cohort release); every other storm gets ids qualified by storm, so runs never collide in a store.
+PATTERN_NO = {
+    "voucher_in_lieu_unsigned": 1, "knock_on_return": 2, "cohort_release": 3, "concurrent_causes": 4,
+    "external_event": 5, "weather_code_contradicted": 6, "window_unknown": 7, "cause_unknown": 8,
+    "technical_unverified": 9, "crew": 10, "atc": 11, "new_legal_pattern": 12,
+}
+
+
+def primary_storm(world: World) -> str | None:
+    """``meta.primary_storm``, else the earliest of ``meta.storms``; ``None`` if the world lists no storms."""
+    storms = world.meta.get("storms") if isinstance(world.meta, dict) else None
+    if not isinstance(storms, dict) or not storms:
+        return None
+    if world.meta.get("primary_storm") in storms:
+        return str(world.meta["primary_storm"])
+
+    def key(k: str) -> tuple[str, str]:
+        v = storms[k]
+        d = v.get("local_date") if isinstance(v, dict) else None
+        return (str(d or k.split("@")[-1]), k)
+    return min(storms, key=key)
+
+
+def question_id(world: World, storm_id: str, pattern: str) -> str:
+    if pattern in PATTERN_NO and storm_id == primary_storm(world):
+        return f"Q-{PATTERN_NO[pattern]}"
     return f"Q-{storm_id}:{pattern}"
+
+
+def cohort_question_id(world: World, cohort: str) -> str:
+    if primary_storm(world) is not None and len({o.cohort for o in world.opening_balances}) == 1:
+        return f"Q-{PATTERN_NO['cohort_release']}"
+    return f"Q-{cohort}:cohort_release"
 
 
 def default_storm_id(world: World, case: FlightCase) -> str:

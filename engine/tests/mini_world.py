@@ -92,7 +92,9 @@ class Builder:
         self.metar: dict[str, list[MetarObs]] = {}
         self.airports: dict[str, Airport] = {}
         self.history = []
-        self.meta = {"carrier": "Northstar Air", "distances_km": dict(DISTANCES)}
+        self.meta = {"carrier": "Northstar Air", "distances_km": dict(DISTANCES),
+                     "storms": {"EIDW@2025-01-24": {"station": "EIDW", "local_date": "2025-01-24",
+                                                    "known_at": "2025-01-25T06:00:00Z"}}}
 
     def add_flight(self, f: Flight) -> Flight:
         self.flights.append(f)

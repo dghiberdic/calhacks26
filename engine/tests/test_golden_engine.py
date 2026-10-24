@@ -131,3 +131,13 @@ def test_herminia_before_and_after_r_cl_1(engine, world):
     assert all(e.status == "owed" and e.voucher_offset_cents == 0 for e in settled)
     q2 = next(x for x in after.questions if x.pattern == "voucher_in_lieu_unsigned")
     assert q2.case_refs == world.meta["herminia"]["in_lieu_unsigned_non_eu"]        # BOS→DUB asks again
+
+
+def test_question_ids_short_for_primary_storm_only(engine, world, eowyn):
+    assert {q.pattern: q.id for q in eowyn.questions} == {
+        "voucher_in_lieu_unsigned": "Q-1", "knock_on_return": "Q-2", "cohort_release": "Q-3"}
+    assert all(decisions(eowyn)[f].question_id == "Q-2" for f in KNOCK_ONS)
+    herm = run(engine, world, HERMINIA, [REDUCE])
+    ids = {q.pattern: q.id for q in herm.questions}
+    assert ids["voucher_in_lieu_unsigned"] == "Q-EIDW@2025-01-26:voucher_in_lieu_unsigned"
+    assert ids["cohort_release"] == "Q-3"                      # the same cohort question, whichever run shows it

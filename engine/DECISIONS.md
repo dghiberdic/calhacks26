@@ -113,7 +113,10 @@ A no-go line (`mel_relief` False or None) beats one with relief; ties go to the 
 
 **`window_margin_min`** is non-negative, matching the stub: the |margin| at the end that sits in a window, else the smaller known out-margin. `in_window_*` says which side.
 
-**Question ids** are `Q-<storm>:<pattern>`, with storm = the window's `<ICAO>@<start date>`. That gives one question per (pattern, storm).
+**Question ids.** There is one question per (pattern, storm). Here storm = the run's id, or for a lone `decide`, the window's `<ICAO>@<start date>`.
+- For the world's *primary* storm (`meta.primary_storm`, else the earliest of `meta.storms`), ids are short and match the stub, the demo script and `server/tests`: `Q-1` voucher in lieu, `Q-2` knock-on returns, `Q-3` cohort release, `Q-4…Q-12` the other patterns (`engine.engine.PATTERN_NO`).
+- Every other storm gets `Q-<storm>:<pattern>`, so a later run or a desk world never overwrites the hero's questions in a store. A world with no `meta.storms` (e.g. a desk world) always gets qualified ids.
+- The cohort question is `Q-3` whenever the world lists storms and has exactly one opening-balance cohort; otherwise it is `Q-<cohort>:cohort_release`. The mini world declares `meta.storms` so it behaves like golden.
 
 **`run_storm`.**
 - Flights are those with STD at the station, or STA at the station, inside the station's *local* day (overnight inbounds included).
@@ -127,4 +130,4 @@ A no-go line (`mel_relief` False or None) beats one with relief; ties go to the 
   - Questions are knock-on (Legal), 14C (Claims Lead, 0.39 sources-disagree) and the Isha release (Controller, 0.72), so "3 questions · 3 people".
   - Money: entitlement 9,900,000 and drafted 8,214,600, with R-MINED-REDUCE active.
   - Herminia: NS106 recoded 71 → 41, NS110 and NS30@01-25 technical. R-CL-1 settles exactly the 31 EU-departure vouchers; the BOS→DUB one asks again.
-- **The Isha release question is in every run** whose `known_at` month-close puts the cohort at ≥ M12 with ≥3 quiet months and no keep-tail/deny-release rule. It has one id (`Q-EIDW@2024-01-21:cohort_release`), so the server can de-duplicate it across runs. It disappears once R-CTL-1 is in force.
+- **The Isha release question is in every run** whose `known_at` month-close puts the cohort at ≥ M12 with ≥3 quiet months and no keep-tail/deny-release rule. It has one id (`Q-3` on golden), so the server can de-duplicate it across runs. It disappears once R-CTL-1 is in force.
