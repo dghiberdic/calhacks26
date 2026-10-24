@@ -225,6 +225,8 @@ export type Question = {
   holds_cents?: Cents;
   status?: "open" | "answered" | "reminded";
   remind_at?: ISODateTime | null;
+  /** Additive (contracts/requests/justin.md #4): cases the same pattern settled since it was asked. */
+  others_settled?: number;
 };
 
 export type Ruling = {
