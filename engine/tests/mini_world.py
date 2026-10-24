@@ -187,6 +187,8 @@ def build(*, with_muc_metar: bool = True, ns31_extra: dict | None = None) -> Wor
                                  text=SPARES_NS31, author="OCC"))
     b.ops_log.append(OpsLogEntry(id="SPARES-NS117", at=z("06:30"), kind="spares", flight_ids=[ns117.id],
                                  text=SPARES_NS117, author="OCC"))
+    b.ops_log.append(OpsLogEntry(id="REACC-NS117", at=z("07:10"), kind="occ", flight_ids=[ns117.id],
+                                 text="NS117 pax offered the earliest reroute (LH via FRA).", author="IROPS desk"))
     b.ops_log.append(OpsLogEntry(id="OCC-0512", at=z("05:12"), kind="occ", code="71",
                                  flight_ids=[f.id for f in (ns31, ns108, ns101, ns116, ns117)], text=OCC_TEXT,
                                  author="OCC DM"))
