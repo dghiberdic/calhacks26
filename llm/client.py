@@ -164,7 +164,7 @@ def schema_json(schema: type[BaseModel] | None) -> dict[str, Any] | None:
     try:
         from anthropic.lib._parse._transform import to_json_output_format
         return dict(to_json_output_format(schema))
-    except Exception:  # pragma: no cover - SDK internals moved; keep a stable key anyway
+    except Exception:  # noqa: BLE001  # pragma: no cover - SDK internals moved; keep a stable key anyway
         return {"type": "json_schema", "schema": schema.model_json_schema()}
 
 

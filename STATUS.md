@@ -5,6 +5,6 @@
 | david-a | | | D1 | |
 | david-b | | | D0a | |
 | filip-a | | | F1 | |
-| filip-b (llm) | Sat 10:25 | F5 Reader (span-verified facts, regex fallback, 29 recordings) | F6 Drafter | no (books F8b/F8c moved to another agent) |
+| filip-b (llm) | Sat 11:05 | F5 Reader on contracts fields/parse/normalize (29 recordings) | F7 personas | no (F6, F8b, F8c moved to other agents) |
 | justin-a | | | J0 | |
 | justin-b | | | J10 | |

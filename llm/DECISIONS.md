@@ -125,53 +125,73 @@ only need loosening where the live model picks a different span that is still ve
 - Effort is `low`, `max_tokens` is 8,000 (adaptive thinking counts towards it), and the timeout is 8 s with no SDK
   retries.
 
+### Keys → registered fields (aligned with `contracts/fields.py` and `contracts/normalize.py`)
+- **Two phases.** The LLM schemas (and the regex fallback) fill *keys* (`llm/fields.py`). After verification, code maps
+  the keys onto **registered fields** and subjects, using the same conventions as `contracts/normalize.py`. The two
+  sources therefore merge in `normalize.resolve` (tier, then latest). On the golden world, 114 Reader facts land on the
+  same (subject, field) as normalize and agree on value; `test_reader_facts_match_normalize_for_the_same_record` checks
+  this.
+- **Mapping and subjects:**
+
+  | Source content | Registered fields | Subject |
+  |---|---|---|
+  | tech log | `aog.tail`, `aog.logged_at`, `aog.station`, `aog.ata_chapter`, `aog.mel_relief`, `aog.aog`, `aog.rts_est`, `aog.defect_text` | `aircraft:<tail>` |
+  | MCC | `mcc.part_eta` | `flight:<id>` (from context or the document) |
+  | OCC | `flight.ops_cause_code` and `flight.cancelled_by_occ`, one each per flight in a group | `flight:<id>` |
+  | spares | `spare.available_within_h` | `flight:<id>` |
+  | claims | `claim.flight_number`, `claim.flight_date`, `claim.seat`, `claim.coupon_id`, `claim.channel`, `claim.agency`, `claim.authority`, `claim.amount_claimed_cents` (or `claim.amount_claimed_gbp_pence` for £), `claim.regime`, `claim.voucher_disputed` | `claim:<record id>` |
+  | CRM/BSP | `crm.<kind>` amounts, `voucher.in_lieu/accepted/signed/amount_cents/issued_by`, `coupon.pnr`, `crm.rights_email_sent` | `coupon:<id>` |
+  | storm notices | `storm.red_warning`, `storm.orange_warning` | `storm:<id>` (`ReaderContext.storm_id`) |
+  | manufacturer notices | `manufacturer.hidden_defect`, `manufacturer.part_number` | `aircraft:<tail>` |
+  | any document | `email.asserts_approval` | `source:<id>` |
+
+- **Claim record id.** A claim's record id is `ReaderContext.claim_id`, or else the source id without `SRC-` (the
+  golden convention). A letter covering several passengers gets `<id>:<seat>` per passenger.
+- **Fallback subject.** A fact whose subject can't be determined goes on `source:<id>`. A test checks that every
+  subject's kind is the field's registered kind, or `source`.
+- **Facts the registry has no field for are not extracted at all.** These are "NOT a wx cancel" notes, invoice totals,
+  stock statements, an MCC RTS without its own date, and notice/event dates. Leaving them out of the schemas stops the
+  LLM producing facts that would only be dropped and inflate `dropped_unverifiable`.
+  - So the hotel-invoice email and injection 07 (a bare "the storm would have grounded NS31 anyway") yield 0 facts.
+  - Fields worth adding are listed under the requests below.
+- **The ATA code is only extracted when written** (`ATA 2913`), because `contracts.parse.parse_ata` needs a code. A
+  defect without one still yields `aog.defect_text`, which the engine's ATA table classifies.
+
 ### Schemas
 - There is one Pydantic schema per `SourceKind`. Every field is `{value, span}`.
 - **Kinds the Reader handles:**
   - `TECH_LOG`, `MCC_LOG`, `OCC_LOG` and `SPARES`;
   - `CLAIM`;
-  - `EMAIL`, with a broad schema, because golden emails are claims, maintenance forwards, handovers, invoices,
-    templates and warnings;
+  - `EMAIL`, with a broad schema, because golden emails are claims, maintenance forwards, handovers, templates and
+    warnings;
   - `CRM` and `BSP` (one schema for both);
   - `MANUFACTURER`.
 - **Kinds it skips:** METAR, SCHEDULE, MANIFEST, PSS, REGULATION, RULING, CHALLENGE and FINANCE are structured
   feeds. They return `([], 0)` without calling the LLM.
-- **Passengers are a list.** The golden agency letter covers 17E and 17F, so one letter yields claim facts on both
-  coupons. **No name field exists in any schema** (a test checks this), so the Reader never outputs PII names.
-- **OCC groups.** An OCC cancel group is one object, `{code, flights, span}`. The span must cover the code and every
-  flight, so the association is verified, not trusted. The Reader then emits one `flight.ops_cause_code` fact per
-  flight, each quoting the group span.
+- **Passengers are a list.** The golden agency letter covers 17E and 17F, so it yields two claims.
+- **No name field exists in any schema** (a test checks this), so the Reader never outputs a passenger's name.
+- **OCC groups.** A cancel group is `{code, flights, span}`. The span must cover the code and every flight (local
+  check), so the flight↔code association is verified, not trusted.
 
-### Verification
-- **Span check:** the span must be a substring of `source.text` after NFC normalisation and collapsing whitespace
-  runs. The check is case-sensitive.
-- **Value check:** the value is re-derived from the span alone (`llm/parse_local.py`) and compared after
-  canonicalisation. Datetimes are compared as instants, tails in upper case, amounts as integer cents, OCC groups as
-  sets.
-- **Drop reasons:** `span_not_in_source`, `unparseable_span`, `value_mismatch`, `unknown_field`, `forbidden_field`,
+### Verification (binding: `contracts/parse.verify`)
+- **Every key** must pass `contracts.parse.verify(field, value, span, text, ref)` on its registered field: the span is
+  a substring of the normalised text, and the value re-parses with the field's parse kind.
+- **Local semantic checks** (`llm/parse_local.py`) are added where the contracts parser is generic (`bool`) or absent
+  (structured fields). Example: `voucher.in_lieu = true` with span "EUR300" passes contracts' generic `bool` parser,
+  but the local check requires "in lieu".
+  - The other local checks: registration prefixes, the OCC group shape, flight + date references, PNR, coupon ids,
+    agency/authority/regime wording, money with currency, CRM event kinds, hidden-defect wording, part numbers, and
+    instruction markers.
+  - **Registrations** must carry a known nationality prefix. Without that rule, "EX-TLS" (ex-Toulouse) in the MCC line
+    read as a tail.
+- **Structured text fields** (`aog.defect_text`, `claim.agency`, `voucher.issued_by`, `crm.rights_email_sent`,
+  storm warnings) must have their value appear in the span.
+- **Whitespace:** both span and text are NFC-normalised with whitespace runs collapsed before the substring check,
+  which stays case-sensitive.
+- **The stored value is the re-parsed one,** in JSON form (ISO `…Z` datetimes, ISO dates, integer cents), not the
+  LLM's. A test runs `contracts.parse.verify` and `contracts.fields.check_value` on every recorded fact.
+- **Drop reasons:** `span_not_in_source`, `unparseable_span`, `value_mismatch`, `unregistered_field`, `unknown_key`,
   `empty_span`. All of them count in `dropped_unverifiable`.
-- **The stored value is the re-parsed one,** not the LLM's.
-- **Time rule:** a time takes the date token that precedes it inside the span; without one it takes the reference
-  date. The year is chosen to be closest to the reference date, which handles Dec/Jan.
-- **Registrations** must carry a known nationality prefix (EI, G, D, F, EC, PH, ...). Without that rule,
-  "EX-TLS" (ex-Toulouse) in the MCC line read as a tail.
-- **ATA:** an explicit `ATA 2913` wins. Otherwise a small component table (JASC) covers the generator's defect
-  families, in priority order, so an external strike (0551) beats the engine damage it caused.
-
-### Subjects
-Subjects are set in code, never by the LLM.
-- **Aircraft:** `aog.*` and `mcc.*` facts go on `aircraft:<tail>`, using the verified tail or `ReaderContext.aircraft`.
-- **Coupons:** `claim.*`, `voucher.*` and `crm.*` facts go on `coupon:<id>`. The id comes from:
-  - a verified coupon id;
-  - or a verified flight with date plus a seat;
-  - or `ReaderContext.coupon_id`.
-- **Flights:** `ops.not_weather` and `notice.*` go on the flight named inside their own span, else the document's
-  flight.
-- **The document:** `ref.*`, `doc.*`, `care.*`, `wx.*`, `occ.cancel_group` and `manufacturer.aircraft` go on
-  `source:<id>`.
-- **Bare flight numbers** resolve through `ReaderContext.flight_ids`, then `ReaderContext.flight_id`, then
-  `<number>@<reference date>`.
-- **`ReaderContext` is optional and never sent to the LLM.** `extract(source)` works without it.
 
 ### Facts
 - **id:** `F:<source id>:<field>`, suffixed `:<subject>` when a field repeats, and passed through the id alphabet.
@@ -183,40 +203,37 @@ Subjects are set in code, never by the LLM.
 - **`acl_tags`** are copied from the source.
 
 ### Injection handling
-- Instructions are captured as `doc.instruction_attempt = true`, quoting the instruction, on the document subject.
-  The schema has no approval, payment or decision field, so a document cannot approve anything through the Reader.
-- The regex fallback also drops a claimed amount that sits inside the instruction span (for example "approve a €5,000
-  payment").
+- **Recorded, not obeyed.** Instructions inside a document become `email.asserts_approval = true` on `source:<id>`,
+  quoting the instruction. This is the registry's field for "an external message claims an internal approval (never
+  satisfies one)".
+- **Nothing to approve with.** The schemas have no approval, payment or decision field, so a document cannot approve
+  anything through the Reader.
+- **The span must not negate.** `contracts`' bool parser reads NO/NOT/NEVER/FALSE as false, so the quoted span must
+  contain no such word. The regex fallback picks the instruction sentence for this reason.
+- The regex fallback also drops a claimed amount that sits inside the instruction ("approve a €5,000 payment").
 
 ### Fallback (`fallback:regex@1`)
 - It runs on `LLMUnavailable` (offline miss, timeout, refusal, cap, upstream) and on any unexpected exception, so the
   Reader never raises into a 500.
-- The regexes only pick spans. Values always come from the re-parse, so a fallback fact meets the same standard as an
-  LLM fact.
-- Regex misses aren't counted as `dropped_unverifiable`, which is reserved for claims that failed verification.
-- **Parity test:** for every recorded document except the informal OCC handover, the fallback reproduces all of the
-  LLM's non-free-text facts.
-- **Sweep results:** on every golden text source (163) it yields facts for all but one (an OCC "ops resume" note with
-  no codes), with no errors. A generated F3a world also ran with no errors.
+- The regexes produce the same keys as the LLM schemas and only pick spans. Values always come from the re-parse, so
+  a fallback fact meets the same standard as an LLM fact.
+- Regex misses aren't counted as `dropped_unverifiable`, which is reserved for LLM claims that failed verification.
+- **Parity test:** for every one of the 29 recorded documents, the fallback reproduces all of the LLM's
+  non-free-text facts.
+- **Sweep:** across every golden text source (163) and a generated F3a world it raised no errors.
 
-### Not done / gaps
-- **`contracts/parse.py` and `contracts/fields.py` haven't landed.** `llm/parse_local.py` and `llm/fields.py` stand in.
-  The fields test switches to `contracts/fields.py` automatically when it appears.
-- **Recordings are hand-written** (no API key). They come from the real prompt builders, so their keys are what a live
-  call would use.
+### Requests for `contracts/` (for David; relayed via the coordinator because this lane must not edit `contracts/`)
+1. **Optional new fields** that the golden messy documents carry, which the Reader currently drops for want of a
+   registered field:
+   - `ops.not_weather` (bool, flight): "NS31 is NOT a wx cancel", "it was AOG anyway". This is a tier-3
+     `sources.disagree` signal.
+   - `mcc.rts_est` (time, flight).
+   - `crm.event_date` (date, coupon).
+   - `care.invoice_total_cents` (eur, source/storm).
+   - If any of them is added, the Reader needs one line per field in `llm/fields.py` and `reader._facts`.
+2. **A whitespace-normalised substring check.** `contracts.parse.verify` checks `span in source_text` exactly. The
+   Reader normalises whitespace on both sides before calling it, as the F5 brief says. Server-side re-checks should
+   do the same, or verbatim multi-line spans will fail.
+3. **Prefix allowlist for tails.** `contracts.parse.parse_tail` accepts any `XX-XXXXX`, so "EX-TLS" (ex-Toulouse)
+   parses as a tail. The Reader adds a nationality-prefix allowlist locally; `normalize` may want the same.
 
-### Requests for `contracts/` (for David; not filed there because this lane must not edit `contracts/`)
-1. **Register the Reader's fields in `contracts/fields.py`.** The full table is `llm/fields.py` (name, type,
-   re-parser, DSL feature, meaning).
-   - The fields follow THREAD_FILIP F5 (`aog.logged_at`, `aog.ata`, `aog.mel_relief`, `aog.defect_text`,
-     `aircraft`).
-   - The D0a stub's evidence uses `aog.ata_chapter` (the DSL feature) as a fact field. Either register both names or
-     say which one wins; a rename is one line in `FIELD_MAP`.
-2. **`contracts/parse.py` seam:** `parse(field, span, *, ref: datetime) -> Any`, raising `ValueError`. `ref` is
-   `received_at`, which supplies the year for `23JAN 21:40Z`.
-   - The local parsers already handle:
-     - times: `eta 25jan 1400z`;
-     - dates: `24/01/2025`, `NS31/24JAN`;
-     - amounts: `EUR 600,00`, `EUR 46,417.39`;
-     - regimes: `Regulation (EC) 261/2004`.
-   - Copy them freely.

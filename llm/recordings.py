@@ -90,11 +90,9 @@ def record(dest: Path = DEMO_CACHE_DIR, *, live: bool = False, only: str | None 
         client = LlmClient(mode="live", cache_dir=dest, read_dirs=[], backend=backend,
                            clock=(lambda: datetime.now(UTC)) if live else (lambda: AUTHORED_AT),
                            spend_dir=DEFAULT_CACHE_DIR)          # the spend ledger never lands in the demo dir
-        orig_call = client.call
-
-        def spy(*a: Any, **k: Any) -> Any:
-            parsed, record_ = orig_call(*a, **k)
-            keys.append(record_.prompt_hash)
+        def spy(*a: Any, _call: Any = client.call, _keys: list[str] = keys, **k: Any) -> Any:
+            parsed, record_ = _call(*a, **k)
+            _keys.append(record_.prompt_hash)
             return parsed, record_
 
         client.call = spy  # type: ignore[method-assign]
