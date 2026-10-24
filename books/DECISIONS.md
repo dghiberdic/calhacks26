@@ -110,6 +110,7 @@ Judgment calls made while building the books core. Golden numbers (CONTRACTS §5
   `post_recode`.
 
 ## Rollforward
+- **Row order:** newest cohort first (by event date), `unassigned` last, as in `expected/rollforward_2025-02.json`.
 - **Sign convention:** `claims_approved_cents`, `settled_in_kind_cents` and `derecognised_cents` are positive
   magnitudes; `change_in_estimate_cents`, `recode_cents` and `out_of_period_cents` are signed. So:
   `closing = opening + new − claims − settled − derecognised + change_in_estimate + recode + out_of_period`.
@@ -123,8 +124,104 @@ Judgment calls made while building the books core. Golden numbers (CONTRACTS §5
 `locked_periods`, `journal_entry` and `close`. Errors are in `books.errors`: `BooksError(code="validation")`,
 `NotFound`, `Forbidden`, `SoDViolation(code="sod_violation")` and `PeriodLocked`.
 
-`invariants`, `cfo_metrics` and `audit` are minimal in F8a: INV-1, 1b, 2, 6, 9a, 9b and 11; refunds, care and
-vouchers read 0. F8b and F8c complete them.
+`invariants`, `cfo_metrics` and `audit` were minimal in F8a. F8b and F8c complete them (see below).
+
+# F8b: the remaining postings (`books/ops.py`)
+
+All numbers are plan §1.3, asserted to the cent in `books/tests/test_postings.py`. Every entry is per flight (lines
+carry `storm`, `cohort` and `flight` dims; `built_from` = coupons) and dated at its economic event.
+
+## ATL side
+- **Sale.** `post_storm` brings the ATL of every coupon on the run's flights forward: Dr 1110 / Cr 2100 fare (carrier
+  surcharges YQ/YR are part of the fare) / Cr 2110 taxes. NS31: 8,772,000 / 7,740,000 / 1,032,000. The PSS extract
+  has no sale dates, so the sale is dated at departure (cut-off stays inside the event's period). All channels debit
+  1110: the CoA has no BSP receivable.
+- **Relief once per coupon.** A coupon leaves ATL exactly once, through the first of: a refund event (CRM bot, BSP,
+  chargeback), then its election (refund queued, refund voucher, partner FIM). Reaccommodated-own and `none` coupons
+  stay in 2100 (revenue is recognised when they fly, in the revenue-accounting system, outside StormCheck's drafts;
+  the CoA has no uplift JE kind). The ATL subledger is `books_coupon_events` (append-only): `sale`, `relief` and the
+  flags below. Elections have no timestamp, so the last election per coupon wins, as in the engine.
+- **CRM-bot refunds through 2125.** Each `refund_initiated` CRM event is the bot's own posting, recorded as a JE
+  prepared by `agent.crm_bot`: Dr 2125 / Cr 1110 (NS31: 1,632,000). Books then posts Dr 2100 / Dr 2110 / Cr 2125
+  (1,440,000 / 192,000 / 1,632,000), so 2125 nets to 0. CRM refund events are processed before elections, so the
+  NS31 refunds are one clearing entry, not a queued refund plus a payment.
+- **Other refund channels.** A BSP refund relieves to 2120 refunds payable (settled in the BSP remittance); a
+  chargeback relieves to 1110. A refund elected with no payment event yet is *queued*: Dr 2100 / Dr 2110 / Cr 2120,
+  the "refund draft queued" of INV-10.
+- **Duplicates (detect, never repeat).** A second refund event on a relieved coupon never relieves ATL again:
+  - the bot pays a refund still payable in 2120 (queued, or BSP not yet remitted): Dr 2120 / Cr 2125, and 2125 still
+    nets to 0; if the 2120 came from a BSP refund, the BSP refund is flagged `duplicate` ("recall it, ADM");
+  - BSP after a queued refund: `executed` (BSP pays it); BSP or chargeback after any cash refund: `duplicate`, no JE;
+  - the bot refunds a coupon already relieved by cash, a voucher or FIM: its Dr 2125 / Cr 1110 stands (the cash went
+    out), Books has nothing to clear it against, so 2125 stays open and the coupon is flagged `double_refund`. That
+    is exactly what INV-4b reports: 2125 = 0 proves no double refund.
+- **Refund voucher.** Ticket value incl. taxes: Dr 2100 / Dr 2110 / Cr 2131 (NS31: 714,000).
+- **Partner reroute (FIM, net).** Dr 2100 / Dr 2110 / Cr 2160 at ticket value (NS31: 714,000). An optional
+  `fim_values={coupon: cents}` keyword on `post_storm` / `post_operations` sets a FIM value: excess → Dr 6110,
+  shortfall → Cr 4000 (retained). `post_interline_bill(flight, billed, known_at, bill_ref=)` books the partner's
+  IATA SIS bill: Dr 2160 (open FIM) / Cr 2000, the difference to 6110 or 4000. Idempotent per `bill_ref`.
+
+## Vouchers in lieu of compensation
+- **Unsigned** (14C): goodwill on issue, Dr 4090 / Cr 2132 €300, whatever the case status. The compensation stays
+  claimable in cash at face value (after R-CL-1, Dr 2140 / Cr 2141 €600 via `post_claim`).
+- **Signed** (`signed_acceptance_sha256`) on an accruing coupon: settles in kind, Dr 2140 / Cr 2132, up to the
+  compensation not yet settled; any excess over it is goodwill (Dr 4090). The settlement counts as an actual for BF
+  (`books_claim_events` kind `in_kind`) and shows in the rollforward's `settled_in_kind_cents`. If 2140 can't cover
+  it, a top-up change in estimate is drafted first (as for claims). On a non-accruing coupon a signed voucher is
+  goodwill. The residual (Art. 15(2)) is approved by `post_claim` at face value net of the engine's offset.
+- **Void.** `void_voucher(coupon, known_at, reason)` reverses the outstanding goodwill: Dr 2132 / Cr 4090,
+  `reverses` = the issuing JE. A voucher that settled a claim in kind can't be voided to revenue (BooksError).
+  Redemption is not modelled.
+- **Hard control in `post_claim`: no offset without a signed hash.** The engine's `voucher_offset_cents` is applied
+  only when the register holds a signed acceptance for the coupon; otherwise the claim is approved at face value and
+  the memo says "voucher offset denied". INV-8 still flags the entitlement.
+
+## Care
+- **Accrual.** Care rows in the world (`invoiced=False`) for the run's flights, one JE per run and period: Dr 6100 /
+  Cr 2150 (22,700,000). They are accrued whatever their `at` (the service time can be after `known_at`; they are the
+  care issued). Care is owed even when the circumstances are extraordinary (McDonagh).
+- **Invoices.** `invoiced=True` rows are vendor invoices: posted by `post_storm` / `post_operations` once
+  `at ≤ known_at`, or passed to `post_care_invoices(run_id, invoices, known_at)`. One JE per run and period: Dr 2150
+  (the open accrual of every flight the batch invoices) / Cr 2000 invoiced / ± 6100 for the difference
+  (22,700,000 / 22,130,000 / Cr 570,000). An invoice batch closes the accrual of each flight it covers.
+  Idempotent per care / invoice id.
+
+## External postings (`status = "posted"`)
+- The **sale** (preparer `system.pss`) and the **CRM bot's own refund posting** (preparer `agent.crm_bot`) are
+  postings other systems already made; Books records them so the ledger is whole (2125 can net to 0, ATL exists to
+  relieve), with status `posted` (a `posted` JE event). They count in the GL and can't be approved or rejected
+  (BooksError). Every entry StormCheck itself drafts still stops at `approved`. This matches
+  `expected/journal_NS31.json`: `external` = the bot's posting; `day1` = StormCheck's drafts, in this order:
+  estimate, 2125 clearing, refund vouchers, FIM, 14C in-lieu voucher.
+- `post_storm` drafts every flight's EU261 estimate before the PSS side, so a flight's estimate is its first
+  journal entry (the server's Flight File shows `journal_preview[0]`).
+- Views are dropped and recreated at start-up (they hold no data), so a newer view definition always wins.
+
+## Re-runs and later events
+- `post_storm` returns every JE of the run's flights (existing and new), sorted by id. The compensation estimate
+  stays idempotent per flight; the PSS side is idempotent per coupon and per source event, so a re-run with a newer
+  world posts only what is new. `post_operations(run_id, world, known_at)` does the same without the estimate and
+  returns only new entries. Bitemporal: CRM events and invoices count only once `at ≤ known_at`.
+
+## Recodes
+- `post_recode(before, after, known_at, *, decisions=None, evidence_received_at=None)` covers weather ↔ technical
+  (no_compensation → owed accrues at the BF remaining rate) and technical → extraordinary (release, bounded to the
+  segment balance). `decisions` records the engine's new decisions and updates the register's cause / recoded /
+  decision commit, also for coupons whose € did not move. Refunds, vouchers and care are untouched by a recode.
+- IAS 8.5 (unchanged from F8a): if the decisive evidence was received before the lock of the cohort's period, the
+  entry is `out_of_period_adjustment` / `prior_period_error` in the current open period. Weather → technical with
+  the tech log logged before the Jan lock: +690,857 in Feb for NS100 (186 × €250 × (20% − M1 rate)).
+
+## Claims (F8b additions)
+- Claim metadata (channel, authority, assignment notice time) is stored once per claim (`books_claims`).
+- An agency claim without `poa` or `assignment` authority is rejected (`agency_without_authority`): never pay a
+  third party without authority. A direct claim after an assignment notice is rejected (`assigned_to_agency`).
+  An assignment claim on a coupon already paid directly *after* its notice is rejected
+  (`assignment_notified_direct_payment_not_discharged`): the direct payment does not discharge, and INV-5 flags it.
+- **Derecognition.** At or after limitation (6 years), `month_end` derecognises a cohort's remaining balance
+  (Dr 2140 / Cr 4090, kind `derecognition`) instead of running BF; unclaimed entitlement of a time-barred cohort is 0.
+  `derecognise(cohort, known_at, session, rule_ref)` does it on demand; before limitation it needs a Controller
+  session citing a Controller rule (recorded as a `derecognise` policy event).
 
 ## Contract gaps (not changed; `contracts/` is David's)
 1. `SoDViolation` / `PeriodLocked` aren't in `contracts/`. The server must import them from `books.errors`, or

@@ -33,7 +33,7 @@ package = false
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-testpaths = ["contracts", "engine", "server", "world", "llm", "books", "eval"]
+testpaths = ["contracts", "engine", "server", "scripts", "world", "llm", "books", "eval"]
 addopts = "-q"
 
 [tool.ruff]

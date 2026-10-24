@@ -10,7 +10,7 @@ from books import Books
 from books.periods import next_period, period_end
 from contracts.models import Entitlement
 
-from .helpers import CONTROLLER, EOWYN, FixedClock, make_claim, make_world, ts
+from .helpers import CONTROLLER, EOWYN, FixedClock, make_claim, make_decision, make_world, ts
 
 KINDS = [(600, 60_000, "none"), (600, 30_000, "art7_2_50pct"), (400, 40_000, "none"), (250, 25_000, "none")]
 KM = {600: 4804.0, 400: 1643.0, 250: 1381.0}
@@ -54,7 +54,9 @@ def test_random_claim_sequences_keep_invariants(spec, claims, lock):
     ents = _ents(spec)
     flights = sorted({e.flight_id for e in ents})
     world = make_world([])
-    books.post_storm(EOWYN, world, [], ents, clock.now())
+    decisions = [make_decision("NS31", clock.now()).model_copy(update={"flight_id": f, "commit": f"commit-{f}"})
+                 for f in flights]                         # every non-zero entitlement traces to a decision (INV-7b)
+    books.post_storm(EOWYN, world, decisions, ents, clock.now())
     _check(books, "2025-01")
 
     by_month: dict[int, list[int]] = {}
