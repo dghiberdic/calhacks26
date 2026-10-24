@@ -6,6 +6,8 @@
 - Materiality: auto-draft only if per-flight liability < €50k AND confidence >= 0.90.
 - A rule's author must hold the authority the rule automates (``engine.rules.authority_problems``).
 - External parties (emails, claims, agencies, passengers) never satisfy an internal approval.
+- Simulated personas (``persona:<role>``, llm/personas.py) are external parties too: whatever session they carry,
+  they never approve, pay or lock a period, and they answer only as the role their id names.
 - No ``now()`` inside a decision (``engine/tests/test_purity.py``).
 
 Pure: no wall clock, no randomness. Callers pass the time and write the resulting ``AccessDecision``.
@@ -16,6 +18,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 from contracts.models import AccessDecision, Role, Rule, RuleAction, TraceEvent
 
@@ -25,6 +28,25 @@ AGENT_ROLES = frozenset({Role.READER, Role.DRAFTER, Role.ENGINE, Role.CRM_BOT})
 APPROVER_ROLES = frozenset({Role.CLAIMS_LEAD, Role.CONTROLLER})
 PAYOUT_KINDS = frozenset({"claim_approved", "claim_paid", "payout"})
 EXTERNAL_PREFIXES = ("external:", "email:", "claim:", "agency:", "passenger:", "pax:", "bsp:", "partner:")
+PERSONA_PREFIX = "persona:"          # = llm.personas.PERSONA_PREFIX; engine/ never imports llm/
+PERSONA_DENIAL = ("{p} is a simulated persona; personas never approve, pay, lock a period or satisfy an internal "
+                  "approval")
+
+
+def is_persona(principal: Any) -> bool:
+    """A simulated person's principal id (``persona:<role>``), case-insensitive. Never trust its session's role."""
+    return isinstance(principal, str) and principal.strip().lower().startswith(PERSONA_PREFIX)
+
+
+def persona_role(principal: Any) -> Role | None:
+    """The role a persona simulates, read from its id (``persona:legal`` → legal); None if not a human role."""
+    if not is_persona(principal):
+        return None
+    try:
+        role = Role(principal.strip()[len(PERSONA_PREFIX):].split(":", 1)[0])
+    except ValueError:
+        return None
+    return role if role in (Role.CLAIMS_LEAD, Role.LEGAL, Role.CONTROLLER) else None
 
 
 @dataclass(frozen=True)
@@ -108,6 +130,8 @@ def role_of(principal: str, role: Role | str | None) -> Role | None:
 
 def check_approval(*, principal: str, role: Role | str | None, preparer: str, kind: str) -> ControlResult:
     """May ``principal`` (acting as ``role``) approve a journal of ``kind`` prepared by ``preparer``?"""
+    if is_persona(principal):
+        return ControlResult(False, "R-HC-EXTERNAL", PERSONA_DENIAL.format(p=principal))
     r = role_of(principal, role)
     if is_external(principal) or r is None:
         return ControlResult(False, "R-HC-EXTERNAL", "an external party never satisfies an internal approval")
@@ -135,8 +159,9 @@ def materiality_ok(liability_cents: int, score: float | None) -> bool:
 
 
 def check_answer(*, principal: str, role: Role | str | None, routed_to: Role) -> ControlResult:
-    """Only the person a question was routed to may answer it; never an agent or an external party."""
-    r = role_of(principal, role)
+    """Only the person a question was routed to may answer it; never an agent or an external party. A persona answers
+    (as simulated) only as the role its id names, never as the role its session claims."""
+    r = persona_role(principal) if is_persona(principal) else role_of(principal, role)
     if is_external(principal) or r is None:
         return ControlResult(False, "R-HC-EXTERNAL", "an external party never answers an internal question")
     if r in AGENT_ROLES:

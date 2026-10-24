@@ -231,6 +231,7 @@ def _tech_log(b: _Builder, tails: set[str] | None) -> None:
 
 
 _ETA = re.compile(r"(?:\d{2}[A-Z]{3} )?ETA \d{2}:\d{2}Z")
+_RTS = re.compile(r"RTS EST (?:\d{2}[A-Z]{3} )?\d{2}:\d{2}Z")
 _STD_PLUS = re.compile(r"STD\+\d+h\d*")
 
 
@@ -247,12 +248,21 @@ def _ops_log(b: _Builder, flight_ids: set[str] | None) -> None:
             if e.kind == "mcc":
                 b.add(rec, subj, "mcc.text", e.text, s, span=e.text, valid_at=e.at)
                 m = _ETA.search(e.text)
+                eta = None
                 if m:
                     try:
                         eta = parse_time(m.group(0), e.at, not_before=e.at)
                     except ParseError:
                         eta = None
                     b.add(rec, subj, "mcc.part_eta", eta, s, span=m.group(0), valid_at=e.at)
+                r = _RTS.search(e.text)
+                if r:
+                    day = eta or e.at              # "ETA 14:00Z, RTS EST 20:00Z": the RTS is on the ETA's day
+                    try:
+                        rts = parse_time(r.group(0), day, not_before=day)
+                    except ParseError:
+                        rts = None
+                    b.add(rec, subj, "mcc.rts_est", rts, s, span=r.group(0), valid_at=day)
             else:
                 b.add(rec, subj, "spare.text", e.text, s, span=e.text, valid_at=e.at)
                 m = _STD_PLUS.search(e.text)

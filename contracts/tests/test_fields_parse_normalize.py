@@ -176,7 +176,8 @@ def test_normalize_sources_and_spans_are_real(world: World, facts: list[Fact]):
 
 
 ATOMIC = {"aog.logged_at", "aog.ata_chapter", "aog.mel_relief", "aog.aog", "aog.rts_est", "aog.tail",
-          "flight.ops_cause_code", "flight.pax", "flight.notified_at", "mcc.part_eta", "spare.available_within_h",
+          "flight.ops_cause_code", "flight.pax", "flight.notified_at", "mcc.part_eta", "mcc.rts_est",
+          "spare.available_within_h",
           "crm.refund_initiated", "crm.bsp_refund", "crm.chargeback", "crm.voucher_issued", "voucher.amount_cents",
           "voucher.signed", "voucher.in_lieu", "voucher.accepted", "claim.amount_claimed_cents",
           "claim.voucher_disputed", "pax.reroute_earliest_offered", "cohort.last_claim_at"}
@@ -202,6 +203,7 @@ def test_golden_hero_facts(facts: list[Fact]):
     ns31 = "flight:NS31@2025-01-24"
     assert idx[(ns31, "flight.ops_cause_code")].value == "71" and idx[(ns31, "flight.ops_cause_code")].span == "RSN 71"
     assert idx[(ns31, "mcc.part_eta")].value == "2025-01-25T14:00:00Z"
+    assert idx[(ns31, "mcc.rts_est")].value == "2025-01-25T20:00:00Z" and idx[(ns31, "mcc.rts_est")].span == "RTS EST 20:00Z"
     assert idx[("flight:NS117@2025-01-24", "spare.available_within_h")].value == 4.33
     assert idx[("flight:NS117@2025-01-24", "pax.reroute_earliest_offered")].value is True
     assert idx[("flight:NS20@2025-01-23", "flight.ops_cause_code")].span == "RSN 72"
