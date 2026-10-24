@@ -175,15 +175,7 @@ def _end_ev(case: FlightCase, end: EndPosition, role_in: str, role_out: str) -> 
 
 def main_window(case: FlightCase) -> StormWindow | None:
     """The window the flight relates to: one it sits in, else the nearest at either end."""
-    best: tuple[float, StormWindow] | None = None
-    for end, st in ((case.dep, case.dep_station), (case.arr, case.arr_station)):
-        for w in st.windows:
-            if w.start <= end.at <= w.end:
-                return w
-            d = min(abs((w.start - end.at).total_seconds()), abs((end.at - w.end).total_seconds()))
-            if best is None or d < best[0]:
-                best = (d, w)
-    return best[1] if best else None
+    return case.window
 
 
 def deciding_margin(case: FlightCase) -> int | None:

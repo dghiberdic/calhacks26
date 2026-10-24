@@ -121,3 +121,10 @@ A no-go line (`mel_relief` False or None) beats one with relief; ties go to the 
 - Counters: `drafted` = owed coupons; `held` = held + needs_ruling coupons; `rules_cited` = decision rules + coupon-level rules not already on the decision.
 - `entitlement_cents` = owed + needs_ruling compensation. `liability_drafted_cents` is the engine's preview of Books' day-1 number (same rates, rounded per flight × segment, half away from zero).
 - A day with no window gets `message = "max gust N kt · no storm window"`.
+- **`aog.before_window`** is relative to *the flight's* storm window, i.e. the window it sits in at either end, else the nearest window to either end (`FlightCase.window`). Comparing against any window at the AOG station was wrong on Herminia: Éowyn's window had ended 32 h before EI-NSF's AOG, which made a pre-Herminia AOG read as "after a window". An AOG logged inside the flight's window, or inside any window at its own station, is `inside_window`.
+- **Golden world check (`test_golden_engine.py`, before `expected/` lands):**
+  - Éowyn: 23 weather auto, NS31 technical 71 → 41 auto at 0.909, 3 knock-ons to Legal (0.37–0.50, one question).
+  - Questions are knock-on (Legal), 14C (Claims Lead, 0.39 sources-disagree) and the Isha release (Controller, 0.72), so "3 questions · 3 people".
+  - Money: entitlement 9,900,000 and drafted 8,214,600, with R-MINED-REDUCE active.
+  - Herminia: NS106 recoded 71 → 41, NS110 and NS30@01-25 technical. R-CL-1 settles exactly the 31 EU-departure vouchers; the BOS→DUB one asks again.
+- **The Isha release question is in every run** whose `known_at` month-close puts the cohort at ≥ M12 with ≥3 quiet months and no keep-tail/deny-release rule. It has one id (`Q-EIDW@2024-01-21:cohort_release`), so the server can de-duplicate it across runs. It disappears once R-CTL-1 is in force.

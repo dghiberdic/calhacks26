@@ -37,7 +37,7 @@ class Aog:
     entry: TechLogEntry
     cls: AtaClass
     inside_window: bool               # logged while a storm window was open at its station
-    before_window: bool               # logged before any storm window that reaches the flight (or no storm at all)
+    before_window: bool               # logged before the flight's storm window starts (or no storm at all)
     window: StormWindow | None        # the station window it relates to (inside, or the next one after it)
 
     @property
@@ -71,6 +71,7 @@ class FlightCase:
     prev: Flight | None                # previous rotation of the tail (outbound pair first)
     known_at: datetime
     sources: dict[str, Source] = field(default_factory=dict)
+    window: StormWindow | None = None   # the storm window the flight relates to (in it, or nearest)
 
     @property
     def ops_code(self) -> str | None:
@@ -110,7 +111,9 @@ class _StationCache:
 
 # ---------- logs ----------
 
-def _aog_for(world: World, flight: Flight, known_at: datetime, stations: _StationCache) -> Aog | None:
+def _aog_for(world: World, flight: Flight, known_at: datetime, stations: _StationCache,
+             relevant: StormWindow | None) -> Aog | None:
+    """The tech-log AOG that grounds this flight, if any. ``relevant`` = the storm window the flight relates to."""
     cands = [t for t in world.tech_log
              if t.aircraft == flight.aircraft and t.aog and t.logged_at <= known_at
              and flight.sched_dep - AOG_LOOKBACK <= t.logged_at <= flight.sched_dep
@@ -123,13 +126,26 @@ def _aog_for(world: World, flight: Flight, known_at: datetime, stations: _Statio
         icao = airport(world, t.station).icao
     except UnknownAirport:
         icao = t.station
-    wins = stations.get(icao).windows
-    inside = window_at(t.logged_at, wins)
-    reach = [w for w in wins if w.end >= t.logged_at and w.start <= flight.sched_arr]
-    after_one = any(w.end < t.logged_at and w.end >= t.logged_at - AOG_LOOKBACK for w in wins)
-    nxt = min(reach, key=lambda w: w.start) if reach else None
-    return Aog(entry=t, cls=classify(t.ata, t.text), inside_window=inside is not None,
-               before_window=inside is None and not after_one, window=inside or nxt)
+    inside = window_at(t.logged_at, stations.get(icao).windows)
+    if inside is None and relevant is not None and relevant.start <= t.logged_at <= relevant.end:
+        inside = relevant
+    before = inside is None and (relevant is None or t.logged_at < relevant.start)
+    return Aog(entry=t, cls=classify(t.ata, t.text), inside_window=inside is not None, before_window=before,
+               window=inside or relevant)
+
+
+def relevant_window(dep: EndPosition, arr: EndPosition, dep_st: StationView,
+                    arr_st: StationView) -> StormWindow | None:
+    """The window a flight relates to: one it sits in at either end, else the nearest to either end."""
+    best: tuple[float, StormWindow] | None = None
+    for end, st in ((dep, dep_st), (arr, arr_st)):
+        for w in st.windows:
+            if w.start <= end.at <= w.end:
+                return w
+            d = min(abs((w.start - end.at).total_seconds()), abs((end.at - w.end).total_seconds()))
+            if best is None or d < best[0]:
+                best = (d, w)
+    return best[1] if best else None
 
 
 _STD_PLUS = re.compile(r"STD\s*\+\s*(\d+)\s*h\s*(\d{1,2})?", re.I)
@@ -274,17 +290,19 @@ def build_case(world: World, flight_id: str, known_at: datetime, stations: _Stat
             spare_h = h
     occ = _flight_log(world, flight, "occ", known_at)
     occ_coded = [e for e in occ if e.code] or occ
+    dep = departure_position(flight, dep_st.obs, dep_st.windows)
+    arr = arrival_position(flight, arr_st.obs, arr_st.windows)
+    relevant = relevant_window(dep, arr, dep_st, arr_st)
     return FlightCase(
-        flight=flight, origin=origin, dest=dest, dep_station=dep_st, arr_station=arr_st,
-        dep=departure_position(flight, dep_st.obs, dep_st.windows),
-        arr=arrival_position(flight, arr_st.obs, arr_st.windows),
-        aog=_aog_for(world, flight, known_at, stations),
+        flight=flight, origin=origin, dest=dest, dep_station=dep_st, arr_station=arr_st, dep=dep, arr=arr,
+        aog=_aog_for(world, flight, known_at, stations, relevant),
         occ=occ_coded[0] if occ_coded else None,
         mcc=_flight_log(world, flight, "mcc", known_at),
         spares=spares, spare_within_h=spare_h,
         reroute_earliest_offered=_reroute_offered(world, flight, known_at),
         prev=_prev(world, flight), known_at=known_at,
         sources={s.id: s for s in world.sources},
+        window=relevant,
     )
 
 
