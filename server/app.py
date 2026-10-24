@@ -21,6 +21,7 @@ from contracts import stub_app as stub
 from contracts.models import FlightFile, Health, OkResponse, StormRun, StormSummary
 from contracts.stub_app import ERRORS, ApiError, envelope
 
+from . import routes
 from .config import Settings
 from .runtime import Runtime
 
@@ -127,6 +128,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         stub.reset()   # the stub fallbacks keep in-memory state too
         return OkResponse(ok=True)
 
+    routes.install(app, rt)                       # D10b: the rest of the API on the real pipeline
     app.state.stub_routes = add_stub_fallbacks(app)
     app.state.web = install_web(app, settings.web_dist)
     _fix_openapi(app)

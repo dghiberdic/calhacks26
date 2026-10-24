@@ -40,3 +40,43 @@ Judgment calls made while building the real server. Newest at the bottom of each
 - `timeline` = tech log for the tail (STD −48 h … STA +24 h), ops log entries naming the flight or tail, the main window's edges, the METAR obs nearest STD and STA (±60 min), and CRM events **as counts per kind** (no PII in the timeline).
 - `handoff` appears when any coupon had a refund already initiated; `rights_notices_drafted` counts only on owed flights.
 - `explanation`: `Drafter.explain` with an 8 s timeout when a drafter exists and the mode isn't offline; otherwise a template draft of the engine's reason (`template_fallback: true`).
+
+## D10b · full API on the real pipeline
+
+**Sessions** (`server/auth.py`)
+- `POST /api/session` returns `<urlsafe-b64 Session>.<hex hmac-sha256>` signed with `STORMCHECK_SECRET` (a dev default that is not a secret). It uses `engine.acl.sign_session` / `verify_session` instead once those exist. Missing, malformed, forged or unknown-role tokens are the `judge` (fail closed). Principals follow the stub: `<role>:<name-slug>` for people, the bare role for agents and the judge. Issuing a token writes an allowed row to the access log.
+
+**Questions**
+- Role-scoped like the stub (claims_lead / legal / controller / ops see only theirs; judge and cfo see all). `?status=open` includes reminded.
+- **Redaction per recipient:** only the Claims Lead sees passenger PII. For everyone else, an evidence quote from a source tagged `pii` (or a claim/CRM/call-note/email/PNR/manifest source) becomes `[redacted · PII]`.
+- Status is a view: `answered` once a ruling doc exists, `reminded` once the clock passes `remind_at`.
+
+**Rulings → rules → replay** (`server/lifecycle.py`; `engine.lifecycle` replaces it when it lands)
+- **Answer:** the session role must equal `routed_to`, else 403 plus an `access_denied` commit, trace event and access-log row. A second answer to the same question returns the first ruling (idempotent). Rulings are append-only docs plus a `ruling` commit.
+- **Proposal source:** the Drafter's `propose_rule` for unknown patterns (when a drafter exists), else the scripted R-CL-1 / R-LEG-1 / R-CTL-1 rule bodies (the stub's, with the case refs from the question), else none. With no proposal, the ruling is applied directly to its own cases as a human override (decision text "extraordinary/weather" vs "not extraordinary/technical/owed").
+- **`would_flip` is a real replay, never canned:**
+  - flight-level rules (`set_extraordinary` / `set_not_extraordinary`) flip a `needs_legal` decision on the rule's own cases, or wherever `engine.dsl.applies` matches the flight features the server can derive (windows, return sector, previous rotation, spares "STD+4h20" → 4.33 h, "earliest reroute" in the logs);
+  - coupon-level rules (R-CL-1 `deny_offset`, reductions) go through `engine.eu261.entitlements` with the candidate rule set (the engine's own DSL decides);
+  - Books prices the change (`Books.preview`).
+  On golden: R-LEG-1 gives −4,749,600 across NS113/115/117; R-CL-1 flips 14C `needs_ruling → owed`, Δ 0.
+- **Checks** (until `engine.rules` lands): compiles = `engine.dsl.validate` on condition and scope; reproduces_case = a case ref changes; no_hard_control; grounded = has grounding or only `case:` scope; author_has_authority = the THREAD D4 table plus `authority_required == author`; no_conflict = no active rule of the same kind and tier with the opposite action over the same scope keys.
+- **Confirm** needs the rule's `authority_required` role (403 otherwise). It writes the rule as active, re-decides, writes decisions and entitlements (commits), calls `Books.post_recode` (recode JEs → `adjustment_je_ids`), and refreshes flight files and storm runs (liability = `Books.gl_balance("2140", cohort=run)`). `keep_tail` / `deny_release` rules call `Books.keep_tail` (no cohort scope = all storm cohorts). The scripted rules confirm even before their question is answered, so screens can be built in any order (stub behaviour).
+- **Revert** (authority role or Controller) retires the rule, replays without it and posts the reverse recode. **Reject** records a rejection ruling. It retires an active rule (with replay) or marks a proposal rejected. A release-kind rule, or R-CTL-1, yields the R-CTL-1 proposal (the Q3 path). **Hard controls, regulation versions and static cards can't be rejected or reverted (403).**
+- **Widen** drops exactly one `case:` scope key (and its condition clause) into a new `proposed` version that `supersedes` the old, with its own replay. 422 when nothing case-scoped is left.
+- **`times_cited` is a view:** flight-level rules count once per decision and coupon-level rules once per coupon (D3 note). The origin case counts, so R-CL-1 reads 32 after Herminia (14C + 31). The run event says "31 cases settled under R-CL-1@1, ruling cited · 1 asks again".
+- **Herminia (EIDW@2025-01-26)** runs when the clock passes its `meta.storms[].known_at` (27 Jan 06:00Z). Its decisions come from `expected/decisions.json` (FakeEngine-equivalent) until the engine's cause logic lands. With R-CL-1 active, 31 EU-departure vouchers settle and NS30@2025-01-25:23F (BOS→DUB) asks again, matching `expected/questions.json`.
+
+**Books routes**
+- Reads go straight to `books.Books`. Errors map to the envelope: NotFound → 404, SoD → 403 `sod_violation`, PeriodLocked/Forbidden → 403 `forbidden`, other BooksError/ValueError → 422.
+- **Approve:** judge → 403 `forbidden`, agents → 403 `sod_violation` (before Books), then Books' own SoD (preparer ≠ approver; JEs need the Controller, payouts the Claims Lead). Every denial is logged, committed and streamed. Approval adds a `journal_event` commit and an APPLIED event ("parked, not posted").
+- **Month end moves the clock forward to the period's last second** if it is behind (forward-only), which processes the claims received by then, then runs `Books.month_end`. On golden after R-LEG-1 + R-CL-1: Jan close 3,105,000 (6 claims at face value); Feb 3,105,000 − 930,000 + 399,000 = 2,574,000, A/E 1.448, rollforward ties to GL.
+- **Lock** needs the Controller (Books enforces; denial logged).
+- **Claims are assessed when the clock moves**, not at boot ("6 claims arrived overnight and still unassessed" on day 1). Claims on held / needs-ruling coupons wait and are retried on the next clock move.
+- **Stub pipeline:** with no world, the books routes fall back to the stub's fixture handlers.
+- **Boot seeds one real denial:** the Drafter tries to approve NS31's journal and Books refuses (`agent.drafter approve_payout → DENIED · SoD`, plan §3 Access tab).
+
+**Trace / blame / audit**
+- `/trace?since=` and `/commits?limit=` (newest first) read the event store. `/invariants` appends `INV-T1` (the commit chain verifies).
+- **Blame** walks: JE line → entitlement → rules@v (→ ruling quote) → decision → evidence (tier order, struck sources, METAR last). It also accepts coupon, flight, rule and question targets. An unknown target returns an empty chain, never an error. It uses `engine.trace.blame` once that lands.
+- **Audit** = `Books.audit` (JE, events, register rows, claims) with decision commits resolved to `Commit`s, the evidence source ids and the JE's own commits.
+- `/access/matrix` comes from `engine.acl.matrix()` when present, else the stub's matrix. `/controls` and `/injections` are the static fixture lists. `/eval` reads `eval/proof.json` when it validates, else the stub's placeholder.

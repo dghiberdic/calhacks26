@@ -23,8 +23,8 @@ from typing import Any
 from pydantic import TypeAdapter
 
 from contracts.models import (
-    Draft, Entitlement, FlightDecision, FlightFile, JournalEntry, LearnedItem, Question, Role, Rule, Source,
-    StormRun, StormSummary, TraceEvent, World,
+    AccessDecision, Draft, Entitlement, FlightDecision, FlightFile, JournalEntry, LearnedItem, Question, Role, Rule,
+    Session, Source, StormRun, StormSummary, TraceEvent, World,
 )
 
 from . import compose
@@ -98,6 +98,12 @@ class Runtime:
         self.engine_sha = _git_sha()
         self.pipeline = "golden" if self.world is not None else "stub"
         self.boot_error: str | None = None
+        from .auth import Signer
+        from .blame import Blamer
+        from .lifecycle import Lifecycle
+        self.signer = Signer(settings.secret)
+        self.lifecycle = Lifecycle(self)
+        self.blamer = Blamer(self)
 
     # ------------------------------------------------------------------ setup
     def _fresh_db(self) -> None:
@@ -154,6 +160,47 @@ class Runtime:
         return self.store.emit(at=at or self.now, kind=kind, actor=actor, summary=summary, chip=chip, ref=ref,
                                amount_cents=amount)
 
+    def deny(self, principal: str, action: str, resource: str, reason: str) -> None:
+        """A denial is an access-log row, an `access_denied` commit and a DENIED trace event."""
+        d = AccessDecision(at=self.now, principal=principal, action=action, resource=resource, allowed=False,
+                           reason=reason)
+        self.store.access(d)
+        self.store.commit(kind="access_denied", actor=principal, at=self.now, payload=d, payload_ref=resource,
+                          inputs=self.inputs(), message=f"{principal} {action} → DENIED · {reason}")
+        self.emit("access_denied", principal, f"{principal} {action} → DENIED · {reason}", "DENIED", resource)
+
+    def allow(self, principal: str, action: str, resource: str, reason: str) -> None:
+        self.store.access(AccessDecision(at=self.now, principal=principal, action=action, resource=resource,
+                                         allowed=True, reason=reason))
+
+    def commit_rules(self, rules: list[Rule]) -> None:
+        for r in rules:
+            self.store.put("rule", r.id, r, self.now)
+            self.store.commit(kind="rule_event", actor="agent.engine", at=self.now, payload=r,
+                              payload_ref=f"{r.id}@{r.version}", inputs=self.inputs(),
+                              message=f"{r.id}@{r.version} {r.status} · {r.tier.replace('_', ' ')}"
+                                      + (f" · {r.support}" if r.support else ""))
+
+    def seed_denial(self) -> None:
+        """Plan §3 Access tab: the Drafter tries to approve NS31's journal → DENIED · SoD (the real Books check)."""
+        if self.books is None:
+            return
+        try:
+            jes = list(self.books.journal())
+        except Exception:
+            return
+        recoded = {k for k in self.store.keys("decision") if (self.store.get("decision", k) or {}).get("recoded")}
+        je = next((j for j in jes if any(line.dims.get("flight") in recoded for line in j.lines)),
+                  jes[0] if jes else None)
+        if je is None:
+            return
+        drafter = Session(principal=Role.DRAFTER.value, role=Role.DRAFTER, name="Drafter", issued_at=self.now)
+        try:
+            self.books.approve(je.id, drafter)
+        except Exception as exc:
+            self.deny(drafter.principal, "approve_payout", je.id, "SoD")
+            log.debug("seeded denial: %s", exc)
+
     # ------------------------------------------------------------------ boot
     def boot(self) -> None:
         with self.lock:
@@ -177,11 +224,89 @@ class Runtime:
             self.store.restore(self.settings.baseline)
             self.clock.invalidate()
 
+    # ------------------------------------------------------------------ time
+    def advance(self, t: datetime, actor: str) -> datetime:
+        """Move the forward-only clock and process what became due (storms, claims, reminders)."""
+        with self.lock:
+            if t.tzinfo is None:
+                t = t.replace(tzinfo=UTC)
+            t = t.astimezone(UTC)
+            prev = self.now
+            self.clock.set(t, actor)
+            if t > prev:
+                self.store.commit(kind="clock", actor=actor, at=t, payload={"from": iso(prev), "to": iso(t)},
+                                  payload_ref="clock", inputs=self.inputs(), message=f"clock {iso(prev)} → {iso(t)}")
+                self.process_due()
+            return t
+
+    def process_due(self) -> None:
+        with self.lock:
+            self._run_pending_storms()
+            self._process_claims()
+            self._remind()
+
+    def _run_pending_storms(self) -> None:
+        if self.world is None:
+            return
+        for key in self.store.keys("pending_storm"):
+            info = self.store.get("pending_storm", key)
+            if info.get("done") or datetime.fromisoformat(info["run_at"].replace("Z", "+00:00")) > self.now:
+                continue
+            self.run_and_store(self.world, info["station"], date.fromisoformat(info["date"]), self.now,
+                               source="clock")
+            self.store.put("pending_storm", key, {**info, "done": True}, self.now)
+
+    def _process_claims(self) -> None:
+        """Claims received by now are assessed at face value (Books drafts; the Claims Lead approves)."""
+        if self.world is None or self.books is None:
+            return
+        for claim in sorted(self.world.claims, key=lambda c: (c.received_at, c.id)):
+            if claim.received_at > self.now:
+                continue
+            state = self.store.get("claim_state", claim.id)
+            if state is not None and state.get("state") != "held":
+                continue
+            fid = claim.coupon_id.rsplit(":", 1)[0]
+            ent = next((Entitlement.model_validate(e) for e in (self.store.get("entitlements", fid) or [])
+                        if e["coupon_id"] == claim.coupon_id), None)
+            if ent is None:
+                continue
+            if ent.status in ("held", "needs_ruling"):
+                if state is None:
+                    self.store.put("claim_state", claim.id, {"state": "held", "status": ent.status}, self.now)
+                continue
+            try:
+                jes = list(self.books.post_claim(claim, ent, claim.received_at))
+            except Exception as exc:
+                log.warning("post_claim %s failed: %s", claim.id, exc)
+                continue
+            self.store.put("claim_state", claim.id, {"state": "approved" if jes else "rejected",
+                                                     "je_ids": [j.id for j in jes]}, self.now)
+            for je in jes:
+                self.store.commit(kind="journal_event", actor="agent.books", at=self.now, payload=je,
+                                  payload_ref=je.id, inputs=self.inputs(claim.id),
+                                  message=f"{je.id} drafted · {je.kind} · claim {claim.id}")
+            if jes:
+                amt = sum(line.dr_cents for je in jes if je.kind == "claim_approved" for line in je.lines
+                          if line.account == "2140")
+                self.emit("journal", "agent.books", f"Claim {claim.id} on {fid.split('@')[0]} assessed at face value "
+                          f"{compose.eur(amt)} · drafted, pending Claims Lead approval", "DRAFTED", claim.id, amt)
+
+    def _remind(self) -> None:
+        for q in self.questions():
+            if q.status != "reminded" or self.store.get("reminded", q.id) is not None:
+                continue
+            hours = int((self.now - q.asked_at).total_seconds() // 3600)
+            others = sum(1 for k in self.store.keys("decision")
+                         if (self.store.get("decision", k) or {}).get("outcome") == "auto")
+            self.store.put("reminded", q.id, {"at": iso(self.now)}, self.now)
+            self.emit("reminder", "agent.engine", f"Waiting on {compose.label(q.routed_to)} {hours}h · reminder sent · "
+                      f"{others} others settled", "INFO", q.id)
+
     def _boot_stub(self) -> None:
         from contracts import stub_app as stub
         now = self.now
-        for r in stub.RULES:
-            self.store.put("rule", r.id, r, now)
+        self.commit_rules(list(stub.RULES))
         for run in stub.STORM_RUNS.values():
             self.store.put("storm_run", run.id, run.model_copy(update={"feed": []}), now)
         for fid, ff in stub.FLIGHT_FILES.items():
@@ -225,17 +350,28 @@ class Runtime:
             hub = a.icao if a else "EIDW"
         return compose.storm_days(world, hub)
 
+    @staticmethod
+    def storm_run_at(world: World, station: str, day: date) -> datetime:
+        """When a storm day is run: `meta.storms[id].known_at`, else the morning after (day + 1 d 06:00Z)."""
+        info = compose.storm_meta(world, f"{station}@{day.isoformat()}")
+        k = info.get("known_at")
+        if isinstance(k, str):
+            try:
+                return datetime.fromisoformat(k.replace("Z", "+00:00")).astimezone(UTC)
+            except ValueError:
+                pass
+        return datetime(day.year, day.month, day.day, tzinfo=UTC) + MORNING_AFTER
+
     def _boot_world(self, world: World) -> None:
         now = self.now
-        for r in self.boot_rules(world):
-            self.store.put("rule", r.id, r, now)
+        self.commit_rules(self.boot_rules(world))
         for s in world.sources:
             self.store.commit(kind="fact", actor="agent.reader", at=now, payload=s, payload_ref=s.id,
                               message=f"source · {s.kind.value} · {s.title} (tier {s.trust_tier})",
                               inputs=self.inputs(s.sha256))
         ran = 0
         for station, day in self.storm_days(world):
-            run_at = datetime(day.year, day.month, day.day, tzinfo=UTC) + MORNING_AFTER
+            run_at = self.storm_run_at(world, station, day)
             if run_at > now:
                 self.store.put("pending_storm", f"{station}@{day.isoformat()}",
                                {"station": station, "date": day.isoformat(), "run_at": iso(run_at)}, now)
@@ -249,6 +385,7 @@ class Runtime:
                 log.warning("opening balances not posted: %s", exc)
         if not ran:
             log.warning("golden world has no storm day before %s", iso(now))
+        self.seed_denial()
 
     def engine_run(self, world: World, station: str, day: date, rules: list[Rule], known_at: datetime) -> StormRun | None:
         eng = self.impls.engine
@@ -267,8 +404,11 @@ class Runtime:
             if f.status != "cancelled":
                 continue
             ff = stub.FLIGHT_FILES.get(f.id) if curated else None
+            entry = compose.expected_entries().get(f.id) if curated else None
             if ff is not None:
                 out.append(compose.rebase_decision(ff.decision, known_at))
+            elif entry is not None:
+                out.append(compose.expected_decision(f, world, entry, known_at))
             else:
                 out.append(compose.provisional_decision(f, world, known_at))
         return out
@@ -302,7 +442,7 @@ class Runtime:
             windows = engine_run.windows or windows
             obs = engine_run.metar or obs
         else:
-            flights = compose.run_flights(world, iata, day)
+            flights = compose.run_flights(world, iata, day, station)
             decisions = self.decide_all(world, flights, known_at, curated)
         ents: dict[str, list[Entitlement]] = {}
         for d in decisions:
@@ -430,6 +570,21 @@ class Runtime:
             if refunds and owed:
                 self.emit("info", "agent.engine", f"CRM bot already initiated {refunds} {num} refunds · not repeated",
                           "INFO", d.flight_id, at=known_at)
+        ruled = {}
+        for r in self.rules():
+            if r.tier in ("legal_ruling", "controller_ruling", "claims_lead_ruling") and r.status == "active":
+                ruled[f"{r.id}@{r.version}"] = r
+        for rref in ruled:
+            n_flights = sum(1 for d in decisions if rref in d.rules_applied)
+            n_coupons = sum(1 for d in decisions for e in ents.get(d.flight_id, [])
+                            if rref in e.rules_applied and rref not in d.rules_applied)
+            if n_flights or n_coupons:
+                asks = sum(1 for q in questions for c in q.case_refs if q.pattern in ("voucher_in_lieu_unsigned",)
+                           and ruled[rref].kind == "voucher")
+                what = f"{n_coupons} cases" if n_coupons else f"{n_flights} flights"
+                self.emit("rule", "agent.engine", f"↻ {what} settled under {rref}, ruling cited"
+                          + (f" · {asks} asks again (outside the rule's scope)" if asks else ""), "CITED", rref,
+                          at=known_at)
         held_ids = {d.flight_id for d in decisions if d.outcome == "escalated"}
         held_total = 0
         for je in journal:
