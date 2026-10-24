@@ -135,10 +135,15 @@ export class SatelliteLayer {
   private cache = new Map<string, THREE.Texture>();
   private loading = new Set<string>();
 
-  /** Lazily upload a frame; returns it once ready (null until then). */
+  /** Lazily upload a frame; returns it once ready (null until then). Keeps a small LRU on the GPU. */
   frame(url: string): THREE.Texture | null {
     const hit = this.cache.get(url);
-    if (hit) return hit;
+    if (hit) {
+      // refresh recency
+      this.cache.delete(url);
+      this.cache.set(url, hit);
+      return hit;
+    }
     if (!this.loading.has(url)) {
       this.loading.add(url);
       new THREE.TextureLoader().load(url, (tex) => {
@@ -147,6 +152,14 @@ export class SatelliteLayer {
         tex.generateMipmaps = false;
         this.cache.set(url, tex);
         this.loading.delete(url);
+        // ~8 frames at 2200×1200 is ~85 MB of GPU memory; evict the least recently used beyond that
+        const inUse = new Set([this.material.uniforms.uSat.value, this.material.uniforms.uSatB.value]);
+        for (const [key, t] of this.cache) {
+          if (this.cache.size <= 8) break;
+          if (inUse.has(t)) continue;
+          t.dispose();
+          this.cache.delete(key);
+        }
       });
     }
     return null;
