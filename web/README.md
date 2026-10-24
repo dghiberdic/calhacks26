@@ -31,5 +31,22 @@ Refetch: `node scripts/fetch-storm.mjs --date 2025-12-09 …`, `node scripts/fet
 
 ## Design rules
 Colour only means a verdict (weather grey, owed vermilion, review amber, settled green, interactive blue).
-B612 Mono only for machine text (METAR, tech log, codes, amounts). Evidence inks the drawing: pencil until the
-sources agree. Art direction lives on the Claude Design canvas "StormCheck — Design".
+B612 Mono only for machine text at reading size (METAR, tech log, codes, table amounts). Clocks and money at
+display size use `.figure` (Archivo, tabular figures): B612 sets `:` and `,` at the left of a full cell, so
+large mono reads "13: 50Z". Evidence inks the drawing: pencil until the sources agree. Art direction lives on
+the Claude Design canvas "StormCheck — Design".
+
+- Line art plots with `PLOTTED` on the paths and `UNPLOTTED` in a `.from()` (`components/motion/gsap.ts`);
+  DrawSVG measures every path and costs ~250 ms across the landing's ~650.
+- A pinned section has to fit one screen on a 375×667 phone; on phones the chart pans instead of shrinking.
+- No page-wide `<ViewTransition>`: Suspense reveals would freeze the landing mid-scroll. App pages have one.
+
+## Visual QA
+`npm run shoot` takes headless screenshots with the Chrome you already have (Node 22+) and lists every console
+error; it exits 1 if the page threw. With `npm run dev` running:
+
+```
+npm run shoot                                              # landing, 1440×900 + 390×844, 8 scroll depths
+npm run shoot -- --url http://localhost:3000/app/payouts --at 0
+npm run shoot -- --sizes 375x667 --at 0,0.4,0.6 --out shots
+```
