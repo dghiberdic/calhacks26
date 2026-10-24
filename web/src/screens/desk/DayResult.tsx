@@ -23,13 +23,24 @@ const COUNTERS: [string, string][] = [
   ["passengers", "passengers"],
   ["cancelled", "cancelled"],
   ["operated", "operated"],
+  ["recoded", "recoded"],
   ["drafted", "payouts drafted"],
+  ["settled", "settled"],
   ["held", "held"],
+  ["needs_ruling", "need a ruling"],
   ["questions", "questions"],
+  ["open_questions", "still open"],
   ["people", "people asked"],
   ["rules_cited", "rulings cited"],
   ["repeat_questions", "repeat questions"],
 ];
+
+/** Known counters in reading order, then any the server adds, in its words. */
+function counterRows(c: Record<string, number>, skip: string[]) {
+  const known = new Map(COUNTERS);
+  const order = [...COUNTERS.map(([k]) => k), ...Object.keys(c).filter((k) => !known.has(k)).sort()];
+  return order.filter((k) => c[k] !== undefined && !skip.includes(k)).map((k) => [k, known.get(k) ?? k.replace(/_/g, " ")] as const);
+}
 
 /** Cool blue on the navy readout; wraps on a phone instead of running off the panel. */
 const WINDOW_CHIP = "h-auto min-h-6 whitespace-normal bg-metar/15 py-1 text-[#9ccbf2]";
@@ -64,7 +75,8 @@ export function DayResult({ run }: { run: StormRun }) {
 
   const c = run.counters ?? {};
   const place = airportByIcao(run.station);
-  const name = stormName(runKey(run));
+  const rc = (run.real_context ?? {}) as Record<string, unknown>;
+  const name = typeof rc.name === "string" && rc.name ? rc.name : stormName(runKey(run));
   const recoded = run.flights.filter((r) => r.decision?.recoded);
   const hub = place?.iata ?? iataOf(run.station);
   const routes = new Set(run.flights.map((r) => (r.flight.origin === hub ? r.flight.dest : r.flight.origin)));
@@ -86,47 +98,48 @@ export function DayResult({ run }: { run: StormRun }) {
         <div aria-hidden="true" className="pointer-events-none absolute -right-32 -top-44 size-[480px] rounded-full bg-[radial-gradient(closest-side,rgba(79,159,224,0.14),transparent)]" />
         <div className="relative px-4 pb-4 pt-5 md:px-7 md:pt-6">
           <div className="min-w-0">
-          <p className="micro text-cloud-500">
-            {name ? `${name} · ` : ""}
-            {place ? `${place.name} · ` : ""}
-            {run.station} · {dayLabel(run.date)} · local
-          </p>
-          {run.message ? (
-            <>
+            <p className="micro text-cloud-500">
+              {name ? `${name} · ` : ""}
+              {place ? `${place.name} · ` : ""}
+              {run.station} · {dayLabel(run.date)} · local
+            </p>
+            {run.message ? (
+              <>
+                <h2 className="display mt-2.5 text-[28px] text-cloud-50 md:text-[36px]" data-testid="desk-headline">
+                  <span data-testid="desk-message">{run.message}</span>
+                </h2>
+                <p className="mt-2 font-mono text-[12.5px] text-cloud-400">
+                  {[c.operated !== undefined ? `${count(c.operated)} operated` : null, `${count(cancelled)} cancelled`, c.questions !== undefined ? `${count(c.questions)} ${c.questions === 1 ? "question" : "questions"}` : null].filter(Boolean).join(" · ")}
+                </p>
+              </>
+            ) : (
               <h2 className="display mt-2.5 text-[28px] text-cloud-50 md:text-[36px]" data-testid="desk-headline">
-                <span data-testid="desk-message">{run.message}</span>
+                {c.passengers !== undefined ? (
+                  <>
+                    {count(c.passengers)} passengers <span className="text-cloud-500">·</span>{" "}
+                  </>
+                ) : null}
+                {count(cancelled)} cancelled
+                {c.questions !== undefined ? (
+                  <>
+                    {" "}
+                    <span className="text-cloud-500">·</span> {count(c.questions)} {c.questions === 1 ? "question" : "questions"}
+                  </>
+                ) : null}
               </h2>
-              <p className="mt-2 font-mono text-[12.5px] text-cloud-400">
-                {[c.operated !== undefined ? `${count(c.operated)} operated` : null, `${count(cancelled)} cancelled`, c.questions !== undefined ? `${count(c.questions)} ${c.questions === 1 ? "question" : "questions"}` : null].filter(Boolean).join(" · ")}
-              </p>
-            </>
-          ) : (
-            <h2 className="display mt-2.5 text-[28px] text-cloud-50 md:text-[36px]" data-testid="desk-headline">
-              {c.passengers !== undefined ? (
-                <>
-                  {count(c.passengers)} passengers <span className="text-cloud-500">·</span>{" "}
-                </>
-              ) : null}
-              {count(cancelled)} cancelled
-              {c.questions !== undefined ? (
-                <>
-                  {" "}
-                  <span className="text-cloud-500">·</span> {count(c.questions)} {c.questions === 1 ? "question" : "questions"}
-                </>
-              ) : null}
-            </h2>
-          )}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <StatusChip tone="metar" className={WINDOW_CHIP}>
-              real METAR · {count(run.metar.length)} obs
-            </StatusChip>
-            {run.windows.map((w, i) => (
-              <StatusChip key={i} tone="metar" dot={false} className={WINDOW_CHIP} title={w.definition}>
-                storm window {windowSpan(w, run.date)} · peak gust {w.peak_gust_kt} kt{w.obs_count ? ` · ${w.obs_count} obs` : ""}
+            )}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <StatusChip tone="metar" className={WINDOW_CHIP}>
+                real METAR · {count(run.metar.length)} obs
               </StatusChip>
-            ))}
-          </div>
-          {run.windows[0]?.definition ? <p className="mt-2 font-mono text-[11px] leading-relaxed text-cloud-500">window = {run.windows[0].definition}</p> : null}
+              {run.windows.map((w, i) => (
+                <StatusChip key={i} tone="metar" dot={false} className={WINDOW_CHIP} title={w.definition}>
+                  storm window {windowSpan(w, run.date)} · peak gust {w.peak_gust_kt} kt{w.obs_count ? ` · ${w.obs_count} obs` : ""}
+                </StatusChip>
+              ))}
+            </div>
+            {run.windows[0]?.definition ? <p className="mt-2 font-mono text-[11px] leading-relaxed text-cloud-500">window = {run.windows[0].definition}</p> : null}
+            <RealContext rc={rc} />
           </div>
 
           {recoded.length ? <NotWeather rows={recoded} onOpen={select} /> : null}
@@ -184,6 +197,21 @@ export function DayResult({ run }: { run: StormRun }) {
         <RunFeed events={run.feed} />
       </div>
     </div>
+  );
+}
+
+/** What really happened at the airport that day, when the API has it (Eurocontrol, Met Éireann). */
+function RealContext({ rc }: { rc: Record<string, unknown> }) {
+  const parts: string[] = [];
+  if (rc.eurocontrol_departures !== undefined) parts.push(`${count(Number(rc.eurocontrol_departures))} departures (Eurocontrol)${rc.normal_departures ? ` vs ${String(rc.normal_departures)} normal` : ""}`);
+  if (rc.reported_cancellations_dep !== undefined) parts.push(`~${count(Number(rc.reported_cancellations_dep))} cancelled (reported)`);
+  if (rc.red_warning) parts.push(`red warning ${String(rc.red_warning).replace("-", "–")}`);
+  if (rc.orange_warning) parts.push(`orange ${String(rc.orange_warning).replace("-", "–")}`);
+  if (!parts.length) return null;
+  return (
+    <p className="mt-1 font-mono text-[11px] leading-relaxed text-cloud-500">
+      <span className="text-cloud-300">real context</span> · {parts.join(" · ")}
+    </p>
   );
 }
 
@@ -264,7 +292,7 @@ function MoneyRow({ run }: { run: StormRun }) {
       <Panel>
         <MicroLabel>Counters</MicroLabel>
         <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[12.5px]">
-          {COUNTERS.filter(([k]) => c[k] !== undefined && !["passengers", "drafted"].includes(k)).map(([k, label]) => (
+          {counterRows(c, ["passengers", "drafted"]).map(([k, label]) => (
             <div key={k} className="flex items-baseline justify-between gap-2 border-b border-cloud-100 py-0.5">
               <dt className="text-slate-500">{label}</dt>
               <dd className="figure font-semibold text-navy-900">{count(c[k])}</dd>
@@ -380,7 +408,12 @@ function FlightItem({ row, open, onToggle, linkable }: { row: FlightRow; open: b
         {open ? (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }} className="overflow-hidden">
             <div className="px-3 pb-3">
-              {d ? (
+              {f.status === "operated" ? (
+                <>
+                  <p className="text-[12.5px] text-slate-500">{d?.reason ?? "Operated as scheduled. Nothing to decide."}</p>
+                  {d?.evidence.length ? <EvidenceList evidence={d.evidence.slice(0, 3)} compact className="mt-2" /> : null}
+                </>
+              ) : d ? (
                 <>
                   <ConfidenceLine confidence={d.confidence} className="text-[11.5px]" />
                   <div className="mt-2 flex flex-wrap gap-1.5">
@@ -410,7 +443,7 @@ function FlightItem({ row, open, onToggle, linkable }: { row: FlightRow; open: b
                   {d.routed_to ? <RoutedTo role={d.routed_to} className="mt-2" /> : null}
                 </>
               ) : (
-                <p className="text-[12.5px] text-slate-500">{f.status === "operated" ? "Operated as scheduled. Nothing to decide." : "No decision yet."}</p>
+                <p className="text-[12.5px] text-slate-500">No decision yet.</p>
               )}
               {linkable ? (
                 <Link to={`/flights/${encodeURIComponent(f.id)}`} className="mt-2 inline-flex items-center gap-1 text-[12.5px] font-medium text-metar-ink hover:underline">
