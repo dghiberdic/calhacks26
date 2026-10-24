@@ -26,7 +26,10 @@ export default function TraceScreen() {
         const next = new URLSearchParams(prev);
         next.set("tab", value);
         if (value !== "blame") next.delete("target");
-        if (value !== "commits") next.delete("commit");
+        if (value !== "commits") {
+          next.delete("commit");
+          next.delete("q");
+        }
         return next;
       },
       { replace: true },

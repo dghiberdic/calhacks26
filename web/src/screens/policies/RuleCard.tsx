@@ -12,7 +12,7 @@ import { ROLE_LABEL, shortId } from "@/lib/format";
 import { stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
 import { PRECEDENCE, RULER, caseClause, caseKeys, flightOf, isId, originOf, splitSource, stamp, validFromText, withoutCaseScope, type Origin, type RuleFamily } from "./model";
-import { Marked, RuleStatusChip, SupportTicks, VersionTrail } from "./parts";
+import { Marked, RuleStatusChip, SupportTicks, TickingCount, VersionTrail } from "./parts";
 
 export type CardActions = { onWiden?: (rule: Rule) => void; onRevert?: (rule: Rule) => void };
 
@@ -248,7 +248,17 @@ function Record({ family }: { family: RuleFamily }) {
         </span>
       </Item>
       <Item label="Cited">
-        <span className="figure text-[15px] font-semibold text-navy-900">{rule.times_cited ?? 0}×</span>
+        {rule.times_cited ? (
+          <Link
+            to={`/trace?tab=commits&q=${encodeURIComponent(rule.id)}`}
+            title={`Commits that mention ${rule.id}`}
+            className="figure text-[15px] font-semibold text-navy-900 underline decoration-cloud-300 underline-offset-[3px] hover:decoration-navy-900"
+          >
+            <TickingCount value={rule.times_cited} />×
+          </Link>
+        ) : (
+          <span className="figure text-[15px] font-semibold text-slate-400">0×</span>
+        )}
       </Item>
       <Item label="Applies">
         <span className="text-navy-900" title={applies.long}>

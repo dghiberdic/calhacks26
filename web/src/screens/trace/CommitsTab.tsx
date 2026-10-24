@@ -27,7 +27,17 @@ export function CommitsTab() {
   const [limit, setLimit] = useState(PAGE);
   const commits = useQuery({ queryKey: qk.commits(limit), queryFn: () => api.commits(limit), placeholderData: keepPreviousData });
   const [kind, setKind] = useState<CommitKind | "all">("all");
-  const [grep, setGrep] = useState("");
+  const grep = params.get("q") ?? "";
+  const setGrep = (q: string) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (q) next.set("q", q);
+        else next.delete("q");
+        return next;
+      },
+      { replace: true },
+    );
   const open = params.get("commit");
   const [flash, setFlash] = useState<string | null>(null);
   const listRef = useRef<HTMLOListElement>(null);

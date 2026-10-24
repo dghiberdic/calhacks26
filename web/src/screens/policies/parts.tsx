@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { animate, motion, useReducedMotion } from "motion/react";
 import type { Rule, RuleStatus } from "@/api/types";
 import { StatusChip, type Tone } from "@/components/chips";
 import { RuleSentence, ruleRef } from "@/components/rule-sentence";
@@ -45,20 +45,47 @@ const STATUS: Record<RuleStatus, { tone: Tone; hint: string }> = {
   retired: { tone: "outline", hint: "Superseded or reverted; kept for replay" },
 };
 
-/** `shadow` → `active` → `suspect` / `retired`, mono kebab-case. */
+/** `shadow` → `active` → `suspect` / `retired`, mono kebab-case. A change (shadow → active) settles in visibly. */
 export function RuleStatusChip({ status, className }: { status: RuleStatus; className?: string }) {
   const s = STATUS[status] ?? STATUS.proposed;
+  const reduce = useReducedMotion();
+  const [initial] = useState(status);
+  const changed = initial !== status;
   return (
-    <StatusChip
-      tone={s.tone}
-      dot={status === "suspect"}
-      title={s.hint}
-      className={cn(status === "shadow" && "shadow-none outline-1 -outline-offset-1 outline-dashed outline-cloud-400", status === "retired" && "text-slate-400 line-through", className)}
+    <motion.span
+      key={status}
+      initial={changed && !reduce ? { opacity: 0, scale: 0.85 } : false}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ type: "spring", stiffness: 420, damping: 26 }}
+      className={cn("inline-flex", className)}
     >
-      {status === "active" ? <span className="size-1.5 shrink-0 rounded-full bg-navy-900" aria-hidden="true" /> : null}
-      {status}
-    </StatusChip>
+      <StatusChip
+        tone={s.tone}
+        dot={status === "suspect"}
+        title={s.hint}
+        className={cn(status === "shadow" && "shadow-none outline-1 -outline-offset-1 outline-dashed outline-cloud-400", status === "retired" && "text-slate-400 line-through")}
+      >
+        {status === "active" ? <span className="size-1.5 shrink-0 rounded-full bg-navy-900" aria-hidden="true" /> : null}
+        {status}
+      </StatusChip>
+    </motion.span>
   );
+}
+
+/** A count that ticks up when the API reports more (a ruling cited 31 more times), never on first render. */
+export function TickingCount({ value }: { value: number }) {
+  const reduce = useReducedMotion();
+  const [shown, setShown] = useState(value);
+  const last = useRef(value);
+  useEffect(() => {
+    const from = last.current;
+    last.current = value;
+    if (from === value || reduce) return;
+    const controls = animate(from, value, { duration: 0.9, ease: [0.16, 1, 0.3, 1], onUpdate: (v) => setShown(Math.round(v)) });
+    return () => controls.stop();
+  }, [value, reduce]);
+  // Reduced motion (or a value the animation hasn't reached yet on a re-render) shows the API's number as is.
+  return <>{reduce ? value : shown}</>;
 }
 
 export function StatusLifecycle({ className }: { className?: string }) {
