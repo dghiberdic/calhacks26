@@ -161,6 +161,9 @@ export type Confidence = {
   features: Record<string, number>;
   caps?: string[];
   calibration_version: string;
+  /** Additive (#12): coefficient × input per feature, in log-odds; score = logistic(intercept + Σ contributions). */
+  contributions?: Record<string, number>;
+  intercept?: number | null;
 };
 
 export type FlightDecision = {
@@ -229,6 +232,8 @@ export type Question = {
   remind_at?: ISODateTime | null;
   /** Additive (contracts/requests/justin.md #4): cases the same pattern settled since it was asked. */
   others_settled?: number;
+  /** Additive (#11): the pending proposal a release question is about, when there is one. */
+  proposal_rule_id?: string | null;
 };
 
 export type Ruling = {
@@ -281,6 +286,10 @@ export type Rule = {
   static_card?: boolean;
   /** Additive (D0a): plain-language card title (the ruling sentence, a regulation's name, a hard control). */
   title?: string | null;
+  /** Additive (#13): the ruler's own words; the static 2026/2202 card carries its text here. */
+  origin_quote?: string | null;
+  /** Additive (#6): cases each storm settled by citing this rule, e.g. {"EIDW@2025-01-24": 23}. */
+  cases_settled_by_storm?: Record<string, number>;
 };
 
 export type ReplayFlip = { entity_id: string; field: string; before: unknown; after: unknown; delta_cents?: Cents };
@@ -335,6 +344,8 @@ export type Commit = {
   payload_ref: string;
   inputs?: string[];
   message: string;
+  /** Additive (#15): when the commit was written, beside the event time. */
+  recorded_at?: ISODateTime | null;
 };
 
 export type BlameStep = { commit: Commit; label: string; quote?: string | null };
@@ -399,6 +410,8 @@ export type Rollforward = {
   closing_total_cents: Cents;
   gl_balance_cents: Cents;
   ties_to_gl: boolean;
+  /** Additive (#16): the period is locked. */
+  locked?: boolean;
 };
 
 export type CurveSegment = "long_haul_gt3500" | "medium_1500_3500" | "short_le1500";
@@ -453,6 +466,8 @@ export type CfoMetrics = {
   vouchers_outstanding_cents: Cents;
   care_accrued_cents: Cents;
   care_invoiced_cents: Cents;
+  /** Additive (#19): the cohort these figures describe, e.g. "EIDW@2025-01-24". */
+  cohort?: string | null;
 };
 
 // ---------- API views ----------
@@ -505,12 +520,27 @@ export type StormRun = {
   message?: string | null;
   /** Additive (D0a): every airport the flights reference (map coordinates, tz, eu). */
   airports?: Airport[];
+  /** Additive (#3): "Storm Éowyn", from real_context.storm_name. */
+  name?: string | null;
 };
 
 export type StormSummary = { id: string; station: string; date: ISODate; cancelled: number; questions: number; liability_drafted_cents: Cents };
 
 /** One timeline mark on the Flight File strip (tech log → MCC → OCC → METAR marks → CRM). Loosely typed by the contract. */
-export type TimelineMark = { at?: ISODateTime; kind?: string; label?: string; text?: string; source_id?: string; [key: string]: unknown };
+/** Kinds of Flight File timeline mark (CONTRACTS TimelineKind; Justin request #9). */
+export type TimelineKind =
+  | "tech_log" | "mcc" | "occ" | "spares" | "metar" | "window_start" | "window_end" | "metar_window_start" | "metar_window_end"
+  | "crm" | "operated" | "schedule" | "pss" | "claim" | "care" | "warning" | "email" | "injection" | "challenge" | "ruling" | "info";
+/** One mark on the Flight File timeline (TimelineItem; extra keys allowed). */
+export type TimelineMark = {
+  at?: ISODateTime;
+  kind?: TimelineKind | (string & {});
+  label?: string | null;
+  text?: string | null;
+  source_id?: string | null;
+  trust_tier?: number | null;
+  [key: string]: unknown;
+};
 
 export type FlightFile = {
   flight: Flight;

@@ -741,6 +741,8 @@ export interface components {
             care_accrued_cents: number;
             /** Care Invoiced Cents */
             care_invoiced_cents: number;
+            /** Cohort */
+            cohort?: string | null;
         };
         /** ChallengeRequest */
         ChallengeRequest: {
@@ -840,6 +842,8 @@ export interface components {
             inputs: string[];
             /** Message */
             message: string;
+            /** Recorded At */
+            recorded_at?: string | null;
         };
         /** Confidence */
         Confidence: {
@@ -863,6 +867,15 @@ export interface components {
             caps: string[];
             /** Calibration Version */
             calibration_version: string;
+            /**
+             * Contributions
+             * @default {}
+             */
+            contributions: {
+                [key: string]: number;
+            };
+            /** Intercept */
+            intercept?: number | null;
         };
         /** ConfirmResponse */
         ConfirmResponse: {
@@ -1255,8 +1268,89 @@ export interface components {
         FlightFile: {
             flight: components["schemas"]["Flight"];
             decision: components["schemas"]["FlightDecision"];
-            /** Entitlements Summary */
+            /** EntitlementsSummary */
             entitlements_summary: {
+                /** Coupons */
+                coupons?: number | null;
+                /** Distance Km */
+                distance_km?: number | null;
+                /** Band Eur */
+                band_eur?: number | null;
+                /** Band Margin Km */
+                band_margin_km?: number | null;
+                /** Band Label */
+                band_label?: string | null;
+                /** Band Note */
+                band_note?: string | null;
+                /** Compensation Cents */
+                compensation_cents?: number | null;
+                /** Owed */
+                owed?: number | null;
+                /** Needs Ruling */
+                needs_ruling?: number | null;
+                /** Held */
+                held?: number | null;
+                /** Full Entitlement Cents */
+                full_entitlement_cents?: number | null;
+                /** Full Entitlement Label */
+                full_entitlement_label?: string | null;
+                /** Drafted Liability Cents */
+                drafted_liability_cents?: number | null;
+                /** Liability Drafted Cents */
+                liability_drafted_cents?: number | null;
+                /** Claim Rate */
+                claim_rate?: number | null;
+                /** Expected Ultimate Claim Rate */
+                expected_ultimate_claim_rate?: number | null;
+                /** Claim Rate Label */
+                claim_rate_label?: string | null;
+                /** Status Counts */
+                status_counts?: {
+                    [key: string]: number;
+                } | null;
+                /** Statuses */
+                statuses?: {
+                    [key: string]: unknown;
+                }[] | null;
+                /** Status Line */
+                status_line?: string | null;
+                /** Elections */
+                elections?: {
+                    [key: string]: number;
+                } | null;
+                /** Compensation Breakdown */
+                compensation_breakdown?: {
+                    [key: string]: unknown;
+                }[] | null;
+                /** Formula */
+                formula?: string | null;
+                /** Reduction 7 2 */
+                reduction_7_2?: {
+                    [key: string]: unknown;
+                } | null;
+                /** Reduced */
+                reduced?: number | null;
+                /** Refunds Already Initiated */
+                refunds_already_initiated?: number | null;
+                /** Refund Due Cents */
+                refund_due_cents?: number | null;
+                /** Voucher Offset Cents */
+                voucher_offset_cents?: number | null;
+                /** Claims Received */
+                claims_received?: number | null;
+                /** Care Due */
+                care_due?: boolean | null;
+                /** Accrued Cents */
+                accrued_cents?: number | null;
+                /** Accrual Basis */
+                accrual_basis?: string | null;
+                /** Compensation If Owed Cents */
+                compensation_if_owed_cents?: number | null;
+                /** Question Id */
+                question_id?: string | null;
+                /** Headline */
+                headline?: string | null;
+            } & {
                 [key: string]: unknown;
             };
             /** Sample Entitlements */
@@ -1264,9 +1358,28 @@ export interface components {
             /** Journal Preview */
             journal_preview: components["schemas"]["JournalEntry"][];
             /** Timeline */
-            timeline: {
+            timeline: ({
+                /**
+                 * At
+                 * Format: date-time
+                 */
+                at: string;
+                /**
+                 * Kind
+                 * @enum {string}
+                 */
+                kind: "tech_log" | "mcc" | "occ" | "spares" | "metar" | "window_start" | "window_end" | "metar_window_start" | "metar_window_end" | "crm" | "operated" | "schedule" | "pss" | "claim" | "care" | "warning" | "email" | "injection" | "challenge" | "ruling" | "info";
+                /** Label */
+                label?: string | null;
+                /** Text */
+                text?: string | null;
+                /** Source Id */
+                source_id?: string | null;
+                /** Trust Tier */
+                trust_tier?: number | null;
+            } & {
                 [key: string]: unknown;
-            }[];
+            })[];
             /** Handoff */
             handoff?: {
                 [key: string]: unknown;
@@ -1533,6 +1646,13 @@ export interface components {
             status: "open" | "answered" | "reminded";
             /** Remind At */
             remind_at?: string | null;
+            /**
+             * Others Settled
+             * @default 0
+             */
+            others_settled: number;
+            /** Proposal Rule Id */
+            proposal_rule_id?: string | null;
         };
         /** RejectRequest */
         RejectRequest: {
@@ -1602,6 +1722,11 @@ export interface components {
             gl_balance_cents: number;
             /** Ties To Gl */
             ties_to_gl: boolean;
+            /**
+             * Locked
+             * @default false
+             */
+            locked: boolean;
         };
         /** RollforwardRow */
         RollforwardRow: {
@@ -1639,6 +1764,11 @@ export interface components {
             closing_cents: number;
             /** Unclaimed Entitlement Cents */
             unclaimed_entitlement_cents: number;
+            /**
+             * Je Ids
+             * @default []
+             */
+            je_ids: string[];
         };
         /** Rule */
         Rule: {
@@ -1707,6 +1837,15 @@ export interface components {
             static_card: boolean;
             /** Title */
             title?: string | null;
+            /** Origin Quote */
+            origin_quote?: string | null;
+            /**
+             * Cases Settled By Storm
+             * @default {}
+             */
+            cases_settled_by_storm: {
+                [key: string]: number;
+            };
         };
         /**
          * RuleAction
@@ -1851,6 +1990,8 @@ export interface components {
              * @default []
              */
             airports: components["schemas"]["Airport"][];
+            /** Name */
+            name?: string | null;
         };
         /** StormSummary */
         StormSummary: {
