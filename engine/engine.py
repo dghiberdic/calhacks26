@@ -45,6 +45,25 @@ CAUSE_ACTIONS = (RuleAction.SET_EXTRAORDINARY, RuleAction.SET_NOT_EXTRAORDINARY)
 CAUSE_RULE_TIERS = frozenset({"hard_control", "regulation", "legal_ruling"})   # who may settle extraordinary
 RULING_TIERS = frozenset({"hard_control", "regulation", "legal_ruling", "controller_ruling", "claims_lead_ruling"})
 RULE_PRECEDENT_WEIGHT = 10        # a binding ruling counts as a full set of precedents (capped at 10)
+# patterns with a grounded aircraft in play: a ruling that says nothing about the AOG cannot settle them
+AOG_PATTERNS = frozenset({"concurrent_causes", "external_event", "technical_internal"})
+
+
+def may_settle(rule: Rule, pattern: str) -> bool:
+    """A cause ruling settles only the pattern it was ruled on (``scope.pattern``, checked by the DSL) and never an
+    AOG pattern unless its condition is about the AOG (``aog.*``)."""
+    if pattern in AOG_PATTERNS:
+        return any(str(c.get("f", "")).startswith("aog.") for c in dsl.clauses(rule.condition))
+    return True
+
+
+def notice_exemption(flight: Any) -> str | None:
+    """Art. 5(1)(c)(i) when the passengers were told ≥ 14 days before STD (``eu261.flight_notice_exemption``)."""
+    helper = getattr(eu261, "flight_notice_exemption", None)
+    if helper is not None:
+        return helper(flight)
+    got = eu261.notice_exemption(flight, None)          # with no election only sub-paragraph (i) can apply
+    return got if got == "Art.5(1)(c)(i)" else None
 
 # Expected ultimate claim rate by band (Books' curves: LH .35, MH .27, SH .20); the engine uses it only for the
 # materiality gate and the run's "drafted" preview. Books owns the booked number.
@@ -144,7 +163,8 @@ class Engine:
         def want(r: Rule) -> Extraordinary:
             return Extraordinary.YES if r.action == RuleAction.SET_EXTRAORDINARY else Extraordinary.NO
 
-        legal = rulebook.resolve(rules, ev.features, actions=CAUSE_ACTIONS, tiers={"legal_ruling"}, **when)
+        settling = [r for r in rules if r.action not in CAUSE_ACTIONS or may_settle(r, f.pattern)]
+        legal = rulebook.resolve(settling, ev.features, actions=CAUSE_ACTIONS, tiers={"legal_ruling"}, **when)
         if legal.conflicted:
             f.extraordinary, f.route, f.pattern = Extraordinary.NEEDS_LEGAL, Role.LEGAL, "rule_conflict"
             f.reason_tag = "new-legal-pattern"
@@ -159,7 +179,7 @@ class Engine:
             f.route = None
             f.reason = f"{f.reason.rstrip('.')}. Settled by {dsl.ref(r)}" + (f" ({r.title})." if r.title else ".")
         else:
-            cited = rulebook.resolve(rules, ev.features, actions=CAUSE_ACTIONS, tiers=CAUSE_RULE_TIERS, **when)
+            cited = rulebook.resolve(settling, ev.features, actions=CAUSE_ACTIONS, tiers=CAUSE_RULE_TIERS, **when)
             agree = next((r for r in cited.hits if want(r) == f.extraordinary), None)
             if agree is not None:
                 ev.rules_applied.append(dsl.ref(agree))
@@ -168,10 +188,13 @@ class Engine:
                                       tiers=RULING_TIERS - {"hard_control", "regulation"}, **when)
             if routes.rule is not None and routes.rule.action_arg:
                 try:
-                    f.route = Role(routes.rule.action_arg)
-                    ev.rules_applied.append(dsl.ref(routes.rule))
+                    target = Role(routes.rule.action_arg)
                 except ValueError:
-                    pass
+                    target = None
+                # a Legal pattern stays with Legal whatever a routing rule says (only Legal settles law)
+                if target is not None and not (routing.role_for(f.pattern) == Role.LEGAL and target != Role.LEGAL):
+                    f.route = target
+                    ev.rules_applied.append(dsl.ref(routes.rule))
 
     def cause_confidence(self, world: World, ev: Evaluated) -> Confidence:
         f, case = ev.finding, ev.case
@@ -189,6 +212,7 @@ class Engine:
             "sources_disagree": 1.0 if f.sources_disagree else 0.0,
             "precedent_count": precedent,
             "knock_on": 1.0 if f.cause == Cause.KNOCK_ON else 0.0,
+            "concurrent_causes": 1.0 if f.cause == Cause.CONCURRENT else 0.0,
         }
         caps = list(f.caps)
         if precedent == 0 and f.extraordinary == Extraordinary.NEEDS_LEGAL and f.reason_tag == "no-precedent":
@@ -212,6 +236,17 @@ class Engine:
             window_margin_min=deciding_margin(case), confidence=c, reason=f.reason, evidence=f.evidence,
             rules_applied=list(dict.fromkeys(ev.rules_applied)), legal_basis=f.legal_basis, outcome="auto",
             routed_to=None, question_id=None, known_at=known_at)
+        exempt = notice_exemption(case.flight)
+        if exempt is not None:
+            # Art. 5(1)(c)(i): no compensation whatever the cause, so the cause question is moot; refunds and care
+            # still apply (eu261 returns exempt_notice per coupon). The cause found is kept as recorded.
+            days = (case.flight.sched_dep - case.flight.notified_at).days if case.flight.notified_at else None
+            return dec.model_copy(update={
+                "extraordinary": Extraordinary.NO if f.extraordinary == Extraordinary.NEEDS_LEGAL else f.extraordinary,
+                "reason": f"{f.reason.rstrip('.')}. Notice ≥14 days ({days} days), Art. 5(1)(c)(i): no compensation "
+                          "whatever the cause; refunds and care still due.",
+                "legal_basis": list(dict.fromkeys([f"EU261 {exempt}", *f.legal_basis])),
+                "outcome": "auto", "routed_to": None, "question_id": None})
         liability = 0
         if f.extraordinary == Extraordinary.NO:
             liability = expected_liability(eu261.entitlements(dec, world, list(rules), known_at), self.claim_rates)
@@ -226,12 +261,13 @@ class Engine:
 # ---------- features ----------
 
 def flight_features(world: World, case: FlightCase, finding: Finding, prev: Finding | None) -> dict[str, Any]:
-    """DSL features (CONTRACTS §4) for flight-level rules. Spares are blanked for a technical cause."""
+    """DSL features (CONTRACTS §4) for flight-level rules, plus the ``pattern`` context key (the question a cause
+    ruling answers). Spares are blanked whenever an AOG grounds the tail (technical or concurrent causes)."""
     fl = case.flight
     dist = distance_km(world, fl.origin, fl.dest)
     band = eu261.band_for(dist, case.origin.eu and case.dest.eu)
     aog = case.aog
-    technical = finding.cause == Cause.TECHNICAL
+    technical = finding.cause in (Cause.TECHNICAL, Cause.CONCURRENT)
     return {
         "flight.in_window_dep": case.dep.position,
         "flight.in_window_arr": case.arr.position,
@@ -258,6 +294,7 @@ def flight_features(world: World, case: FlightCase, finding: Finding, prev: Find
         "precedent.count": sum(1 for h in world.history_cases if h.kind == finding.pattern),
         "flight": fl.id,
         "station": case.origin.icao,
+        "pattern": finding.pattern,
     }
 
 
@@ -269,6 +306,7 @@ PATTERN_NO = {
     "voucher_in_lieu_unsigned": 1, "knock_on_return": 2, "cohort_release": 3, "concurrent_causes": 4,
     "external_event": 5, "weather_code_contradicted": 6, "window_unknown": 7, "cause_unknown": 8,
     "technical_unverified": 9, "crew": 10, "atc": 11, "new_legal_pattern": 12, "rule_conflict": 13,
+    "occ_code_in_window": 14, "airport_restriction": 15, "aog_unverified": 16,
 }
 
 

@@ -1,0 +1,38 @@
+{
+  "segment": "long_haul_gt3500",
+  "basis": "eur",
+  "points": [
+    [
+      1,
+      0.09
+    ],
+    [
+      3,
+      0.17
+    ],
+    [
+      6,
+      0.24
+    ],
+    [
+      12,
+      0.29
+    ],
+    [
+      18,
+      0.32
+    ]
+  ],
+  "n_by_point": [
+    2412,
+    2412,
+    2187,
+    1655,
+    981
+  ],
+  "observed_through_month": 18,
+  "ultimate": 0.35,
+  "tail_factor": 1.0938,
+  "tail_note": "months 18–72 beyond history: documented judgment (Steer 2020 benchmark 18% for cancellations)",
+  "version": "LH-v1"
+}

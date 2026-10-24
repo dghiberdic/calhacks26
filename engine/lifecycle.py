@@ -47,7 +47,8 @@ from engine.trace import TraceStore
 
 PREFIX = {Role.CLAIMS_LEAD: "R-CL", Role.LEGAL: "R-LEG", Role.CONTROLLER: "R-CTL"}
 NO_RULE_PATTERNS = frozenset({"window_unknown", "weather_code_contradicted", "cause_unknown", "technical_unverified",
-                              "crew", "atc", "challenge_new_fact", "unresolved_subject"})
+                              "crew", "atc", "challenge_new_fact", "unresolved_subject", "occ_code_in_window",
+                              "airport_restriction", "aog_unverified"})
 WIDEN_QUESTION = {
     "cohort": "All storm cohorts?",
     "flight.departs_eu": "Also flights arriving into the EU (e.g. BOS→DUB)?",

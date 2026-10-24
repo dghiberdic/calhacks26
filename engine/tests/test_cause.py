@@ -174,11 +174,13 @@ def _tl(w: World, **upd):
             setattr(t, k, v)
 
 
-def test_aog_inside_window_is_concurrent(engine, world):
-    w = edit(world, lambda w: _tl(w, logged_at=mw.z("08:00")))
-    d = decide(engine, w, "NS31")
-    assert sig(d) == (Cause.CONCURRENT, Extraordinary.NEEDS_LEGAL, False, "escalated", Role.LEGAL)
-    assert d.question_id == "Q-4"
+def test_aog_inside_an_earlier_window_is_not_concurrent(engine, world):
+    """F9 eval E2/E3: concurrent causes need the flight itself in a window. NS31 (STD 16:30Z) is out at both ends."""
+    early = edit(world, lambda w: _tl(w, logged_at=mw.z("04:00")))        # in the window, before the 05:12Z batch
+    assert sig(decide(engine, early, "NS31"))[:3] == (Cause.TECHNICAL, Extraordinary.NO, True)   # owed, recoded
+    late = edit(world, lambda w: _tl(w, logged_at=mw.z("08:00")))         # after the batch had cancelled it
+    d = decide(engine, late, "NS31")
+    assert d.cause != Cause.CONCURRENT and d.cause != Cause.TECHNICAL and d.routed_to == Role.OPS
 
 
 def test_aog_before_window_but_flight_in_window_is_concurrent(engine, world):
@@ -221,9 +223,10 @@ def test_no_metar_is_unknown_to_ops(engine, world):
 
 
 def test_tech_log_not_known_yet(engine, world):
-    w = edit(world, lambda w: _tl(w, logged_at=mw.z("16:20")))
-    before = decide(engine, w, "NS31", known_at=mw.z("16:10"))
-    after = decide(engine, w, "NS31", known_at=mw.z("16:25"))
+    # logged before the 05:12Z OCC batch (so it can be the cause), but not yet known at 03:50Z
+    w = edit(world, lambda w: _tl(w, logged_at=mw.z("04:00")))
+    before = decide(engine, w, "NS31", known_at=mw.z("03:50"))
+    after = decide(engine, w, "NS31", known_at=mw.z("04:10"))
     assert before.cause == Cause.UNKNOWN and before.routed_to == Role.OPS
     assert after.cause == Cause.TECHNICAL and after.recoded
 

@@ -37,8 +37,9 @@ FEATURES = frozenset({
     "sources.disagree", "precedent.count",
 })
 
-# Scope may also pin the case's context (widen removes these one rung at a time).
-CONTEXT_KEYS = frozenset({"storm", "cohort", "flight", "station", "segment", "coupon"})
+# Scope may also pin the case's context (widen removes these one rung at a time). ``pattern`` is the question a cause
+# ruling answers; the engine sets it (never the drafter) and widen never removes it.
+CONTEXT_KEYS = frozenset({"storm", "cohort", "flight", "station", "segment", "coupon", "pattern"})
 
 OPS = frozenset({"eq", "ne", "lt", "le", "gt", "ge", "in", "nin", "exists"})
 

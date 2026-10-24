@@ -1,0 +1,1 @@
+{"status":422,"json":{"error":{"code":"unknown_airport","message":"Airport 'XXXX' was not found in the airport database."}}}

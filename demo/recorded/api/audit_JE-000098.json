@@ -1,0 +1,2309 @@
+{
+  "je": {
+    "id": "JE-000098",
+    "event_date": "2025-01-23",
+    "period": "2025-01",
+    "memo": "Sale (posted by the PSS / revenue accounting, recorded by Books) · NS40@2025-01-23: 249 coupons · fares incl. carrier surcharges YQ/YR €110,374.00 → 2100 ATL · taxes €22,410.00 → 2110 taxes payable (the PSS extract carries no sale dates; dated at departure)",
+    "lines": [
+      {
+        "account": "1110",
+        "account_name": "Card acquirer",
+        "dr_cents": 13278400,
+        "cr_cents": 0,
+        "dims": {
+          "cohort": "EIDW@2025-01-24",
+          "flight": "NS40@2025-01-23",
+          "storm": "EIDW@2025-01-24"
+        }
+      },
+      {
+        "account": "2100",
+        "account_name": "ATL",
+        "dr_cents": 0,
+        "cr_cents": 11037400,
+        "dims": {
+          "cohort": "EIDW@2025-01-24",
+          "flight": "NS40@2025-01-23",
+          "storm": "EIDW@2025-01-24"
+        }
+      },
+      {
+        "account": "2110",
+        "account_name": "Taxes payable",
+        "dr_cents": 0,
+        "cr_cents": 2241000,
+        "dims": {
+          "cohort": "EIDW@2025-01-24",
+          "flight": "NS40@2025-01-23",
+          "storm": "EIDW@2025-01-24"
+        }
+      }
+    ],
+    "kind": "sale",
+    "ias8_class": "none",
+    "reverses": null,
+    "estimate_ref": null,
+    "source_decision_id": null,
+    "status": "posted",
+    "preparer": "system.pss",
+    "approver": null,
+    "built_from": 249,
+    "ties_to": [
+      "2100",
+      "2110"
+    ]
+  },
+  "lines": [
+    {
+      "line_id": "JE-000098:1",
+      "account": "1110",
+      "account_name": "Card acquirer",
+      "dr_cents": 13278400,
+      "cr_cents": 0,
+      "dims": {
+        "cohort": "EIDW@2025-01-24",
+        "flight": "NS40@2025-01-23",
+        "storm": "EIDW@2025-01-24"
+      }
+    },
+    {
+      "line_id": "JE-000098:2",
+      "account": "2100",
+      "account_name": "ATL",
+      "dr_cents": 0,
+      "cr_cents": 11037400,
+      "dims": {
+        "cohort": "EIDW@2025-01-24",
+        "flight": "NS40@2025-01-23",
+        "storm": "EIDW@2025-01-24"
+      }
+    },
+    {
+      "line_id": "JE-000098:3",
+      "account": "2110",
+      "account_name": "Taxes payable",
+      "dr_cents": 0,
+      "cr_cents": 2241000,
+      "dims": {
+        "cohort": "EIDW@2025-01-24",
+        "flight": "NS40@2025-01-23",
+        "storm": "EIDW@2025-01-24"
+      }
+    }
+  ],
+  "events": [
+    {
+      "kind": "posted",
+      "principal": "system.pss",
+      "role": "system.pss",
+      "reason": "external posting recorded by Books",
+      "at": "2025-01-25T06:00:00.000000Z"
+    }
+  ],
+  "period": {
+    "period": "2025-01",
+    "locked": false,
+    "locked_at": null
+  },
+  "register": [
+    {
+      "seq": 4313,
+      "coupon_id": "NS40@2025-01-23:10A",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4314,
+      "coupon_id": "NS40@2025-01-23:10C",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "voucher",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000100"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4315,
+      "coupon_id": "NS40@2025-01-23:10D",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4316,
+      "coupon_id": "NS40@2025-01-23:10E",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reroute_partner",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000101"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4317,
+      "coupon_id": "NS40@2025-01-23:10F",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4318,
+      "coupon_id": "NS40@2025-01-23:10G",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4319,
+      "coupon_id": "NS40@2025-01-23:10H",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4320,
+      "coupon_id": "NS40@2025-01-23:10K",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4321,
+      "coupon_id": "NS40@2025-01-23:11A",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reroute_partner",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000101"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4322,
+      "coupon_id": "NS40@2025-01-23:11C",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4323,
+      "coupon_id": "NS40@2025-01-23:11D",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4324,
+      "coupon_id": "NS40@2025-01-23:11E",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4325,
+      "coupon_id": "NS40@2025-01-23:11F",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4326,
+      "coupon_id": "NS40@2025-01-23:11G",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "voucher",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000100"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4327,
+      "coupon_id": "NS40@2025-01-23:11H",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4328,
+      "coupon_id": "NS40@2025-01-23:11K",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4329,
+      "coupon_id": "NS40@2025-01-23:12A",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4330,
+      "coupon_id": "NS40@2025-01-23:12C",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reroute_partner",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000101"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4331,
+      "coupon_id": "NS40@2025-01-23:12D",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4332,
+      "coupon_id": "NS40@2025-01-23:12E",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "refund",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000099"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4333,
+      "coupon_id": "NS40@2025-01-23:12F",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "voucher",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000100"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4334,
+      "coupon_id": "NS40@2025-01-23:12G",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reroute_partner",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000101"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4335,
+      "coupon_id": "NS40@2025-01-23:12H",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "voucher",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000100"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4336,
+      "coupon_id": "NS40@2025-01-23:12K",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4337,
+      "coupon_id": "NS40@2025-01-23:13A",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4338,
+      "coupon_id": "NS40@2025-01-23:13C",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4339,
+      "coupon_id": "NS40@2025-01-23:13D",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "voucher",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000100"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4340,
+      "coupon_id": "NS40@2025-01-23:13E",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "refund",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000099"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4341,
+      "coupon_id": "NS40@2025-01-23:13F",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4342,
+      "coupon_id": "NS40@2025-01-23:13G",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4343,
+      "coupon_id": "NS40@2025-01-23:13H",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "refund",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000099"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4344,
+      "coupon_id": "NS40@2025-01-23:13K",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4345,
+      "coupon_id": "NS40@2025-01-23:14A",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4346,
+      "coupon_id": "NS40@2025-01-23:14C",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "refund",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000099"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4347,
+      "coupon_id": "NS40@2025-01-23:14D",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "refund",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000099"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4348,
+      "coupon_id": "NS40@2025-01-23:14E",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "voucher",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000100"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4349,
+      "coupon_id": "NS40@2025-01-23:14F",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4350,
+      "coupon_id": "NS40@2025-01-23:14G",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4351,
+      "coupon_id": "NS40@2025-01-23:14H",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4352,
+      "coupon_id": "NS40@2025-01-23:14K",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4353,
+      "coupon_id": "NS40@2025-01-23:15A",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4354,
+      "coupon_id": "NS40@2025-01-23:15C",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "voucher",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000100"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4355,
+      "coupon_id": "NS40@2025-01-23:15D",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reroute_partner",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000101"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4356,
+      "coupon_id": "NS40@2025-01-23:15E",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4357,
+      "coupon_id": "NS40@2025-01-23:15F",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4358,
+      "coupon_id": "NS40@2025-01-23:15G",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reroute_partner",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098",
+        "JE-000101"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4359,
+      "coupon_id": "NS40@2025-01-23:15H",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4360,
+      "coupon_id": "NS40@2025-01-23:15K",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4361,
+      "coupon_id": "NS40@2025-01-23:16A",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    },
+    {
+      "seq": 4362,
+      "coupon_id": "NS40@2025-01-23:16C",
+      "flight_id": "NS40@2025-01-23",
+      "cohort": "EIDW@2025-01-24",
+      "segment": "long_haul_gt3500",
+      "band_eur": 600,
+      "distance_km": 5896.0,
+      "status": "no_compensation",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "voucher_offset_cents": 0,
+      "voucher_signed_sha256": null,
+      "election": "reaccommodated_own",
+      "article": "EU261 Art.5(3)",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ],
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "cause": "weather",
+      "recoded": false,
+      "confidence": 0.9995,
+      "claim_ids": [],
+      "settlement": null,
+      "je_ids": [
+        "JE-000098"
+      ],
+      "event_date": "2025-01-23",
+      "limitation_expiry": "2031-01-23",
+      "reason": "post_storm",
+      "known_at": "2025-01-25T06:00:00.000000Z",
+      "recorded_at": "2025-01-25T06:00:00.000000Z"
+    }
+  ],
+  "register_count": 249,
+  "coupon_events": [
+    {
+      "coupon_id": "NS40@2025-01-23:10A",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:10C",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 44200,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:10D",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 44200,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:10E",
+      "kind": "sale",
+      "channel": "agency_gds",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:10F",
+      "kind": "sale",
+      "channel": "agency_gds",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:10G",
+      "kind": "sale",
+      "channel": "ota",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:10H",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 44200,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:10K",
+      "kind": "sale",
+      "channel": "ota",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:11A",
+      "kind": "sale",
+      "channel": "ota",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:11C",
+      "kind": "sale",
+      "channel": "ota",
+      "crm_event_id": null,
+      "amount_cents": 64000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:11D",
+      "kind": "sale",
+      "channel": "ota",
+      "crm_event_id": null,
+      "amount_cents": 64000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:11E",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 44200,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:11F",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 44200,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:11G",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 64000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:11H",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 64000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:11K",
+      "kind": "sale",
+      "channel": "ota",
+      "crm_event_id": null,
+      "amount_cents": 44200,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:12A",
+      "kind": "sale",
+      "channel": "ota",
+      "crm_event_id": null,
+      "amount_cents": 44200,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:12C",
+      "kind": "sale",
+      "channel": "ota",
+      "crm_event_id": null,
+      "amount_cents": 44200,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:12D",
+      "kind": "sale",
+      "channel": "ota",
+      "crm_event_id": null,
+      "amount_cents": 44200,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:12E",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:12F",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:12G",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:12H",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 64000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:12K",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 64000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:13A",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 64000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:13C",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 64000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:13D",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 64000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:13E",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 64000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:13F",
+      "kind": "sale",
+      "channel": "ota",
+      "crm_event_id": null,
+      "amount_cents": 44200,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:13G",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:13H",
+      "kind": "sale",
+      "channel": "ota",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:13K",
+      "kind": "sale",
+      "channel": "ota",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:14A",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 44200,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:14C",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:14D",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:14E",
+      "kind": "sale",
+      "channel": "agency_gds",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:14F",
+      "kind": "sale",
+      "channel": "agency_gds",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:14G",
+      "kind": "sale",
+      "channel": "agency_gds",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:14H",
+      "kind": "sale",
+      "channel": "agency_gds",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:14K",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:15A",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:15C",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:15D",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:15E",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:15F",
+      "kind": "sale",
+      "channel": "agency_gds",
+      "crm_event_id": null,
+      "amount_cents": 64000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:15G",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:15H",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 53000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:15K",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 64000,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:16A",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 44200,
+      "event_date": "2025-01-23",
+      "detail": null
+    },
+    {
+      "coupon_id": "NS40@2025-01-23:16C",
+      "kind": "sale",
+      "channel": "direct",
+      "crm_event_id": null,
+      "amount_cents": 44200,
+      "event_date": "2025-01-23",
+      "detail": null
+    }
+  ],
+  "coupon_events_count": 249,
+  "care": [],
+  "claims": [],
+  "decisions": [
+    {
+      "flight_id": "NS40@2025-01-23",
+      "cause": "weather",
+      "extraordinary": "extraordinary",
+      "recoded": false,
+      "recode_label": null,
+      "decision_commit": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "sources": [
+        "SRC-METAR-EIDW@2025-01-24",
+        "SRC-OCC-2025-01-24T0512Z"
+      ],
+      "rules": [
+        "R-REG-ART5-3@1"
+      ],
+      "legal_basis": [
+        "EU261 Art.5(3)",
+        "EU261 Recital 14",
+        "CJEU C-549/07"
+      ]
+    }
+  ],
+  "decision_commits": [
+    {
+      "hash": "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+      "parent": "43f696face04219fcc654178509655a0cb9814aa506707e3bb4f213cc818ca37",
+      "kind": "decision",
+      "at": "2025-01-25T06:00:00Z",
+      "actor": "agent.engine",
+      "payload_hash": "8a1aa10982b1415e78fd592a7e470bdd432cbe846c842c2035583593b1e672ae",
+      "payload_ref": "NS40@2025-01-23",
+      "inputs": [
+        "2e6ca7d9c6ee373757c58d72478da7611058c4946c41d10ef62fbd15350372f2",
+        "3d2a4de73468fbf9d83095bb84094e5fafa6c7dc451f6c33313adfea906c78d8",
+        "43f696face04219fcc654178509655a0cb9814aa506707e3bb4f213cc818ca37",
+        "b8b9587910b8c001c745a9ccca2ffc4d8a101c52fd29ece330513a4d56db9742",
+        "engine@8fe9371",
+        "cal@cal-default-v1"
+      ],
+      "message": "NS40 · weather · extraordinary · 1.00",
+      "recorded_at": null
+    }
+  ],
+  "sources": [
+    "SRC-METAR-EIDW@2025-01-24",
+    "SRC-OCC-2025-01-24T0512Z"
+  ],
+  "rules": [
+    "R-REG-ART5-3@1"
+  ],
+  "ties": {
+    "1110": 145364900,
+    "2100": 82839000,
+    "2110": 18736400
+  },
+  "blame_target": "JE-000098:3",
+  "je_commits": [
+    {
+      "hash": "df609e2096594cea965dd05f10439db6b6f5c1d8a7a168a069331ba1417e176a",
+      "parent": "05e000b5d241d25f70774002e40f96b21b0766a86d816523f05892838ff9cd39",
+      "kind": "journal_event",
+      "at": "2025-01-25T06:00:00Z",
+      "actor": "agent.books",
+      "payload_hash": "1e946ad0e6b859156d25c53b1e80b21e316e8bc232f535edf3c1530fff19b4ff",
+      "payload_ref": "JE-000098",
+      "inputs": [
+        "c433750faffaea6bdf699fcafa08ec09f28295ee17d383f377ea5605e66de41e",
+        "e103c7e1fc0a42b8fe0fb61895b96ca9eda2c367f712eec48a10fa7dab63a595",
+        "engine@8fe9371",
+        "cal@cal-default-v1"
+      ],
+      "message": "JE-000098 drafted · sale · 2025-01 · €132,784",
+      "recorded_at": null
+    }
+  ]
+}
