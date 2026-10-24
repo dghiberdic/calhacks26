@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 // Runs against the mock world by default (no backend needed). Against the stub or the real server:
 //   E2E_API_MODE=http API_TARGET=http://localhost:8000 pnpm e2e
 const mode = process.env.E2E_API_MODE ?? "mock";
-const port = Number(process.env.E2E_PORT ?? 5180);
+const port = Number(process.env.E2E_PORT ?? 5281);
 
 export default defineConfig({
   testDir: "e2e",
@@ -18,7 +18,8 @@ export default defineConfig({
   webServer: {
     command: `pnpm exec vite --port ${port} --strictPort${mode === "mock" ? " --mode mock" : ""}`,
     url: `http://localhost:${port}`,
-    reuseExistingServer: true,
+    // Never reuse whatever already listens on the port: it may be another app. A busy port fails loudly.
+    reuseExistingServer: false,
     timeout: 60_000,
   },
 });
