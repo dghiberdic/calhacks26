@@ -11,6 +11,8 @@ import { longDate, shortId, zuluDay } from "@/lib/format";
 import { iataOf } from "@/lib/airports";
 import { stormName } from "@/lib/storms";
 import { ChallengePanel } from "./ChallengePanel";
+import { weatherDefence } from "./defence";
+import { WeatherDefenceRows } from "./WeatherDefence";
 import { ConfidenceCard } from "./ConfidenceCard";
 import { FlightTimeline } from "./FlightTimeline";
 import { JournalDrafts } from "./JournalDrafts";
@@ -59,7 +61,7 @@ export default function FlightFileView({ flightId }: { flightId: string }) {
   const stormLabel = storm ? [stormName(storm.id) ?? storm.station, longDate(storm.date)].join(" · ") : null;
   return (
     <MotionConfig reducedMotion="user">
-      <FileBody file={file.data} stormLabel={stormLabel} stormId={storm?.id} hub={iataOf(run.data?.station ?? storm?.station ?? "")} windows={run.data?.windows} metar={run.data?.metar} />
+      <FileBody file={file.data} stormLabel={stormLabel} stormId={storm?.id} hub={iataOf(run.data?.station ?? storm?.station ?? "")} windows={run.data?.windows} metar={run.data?.metar} realContext={run.data?.real_context} />
     </MotionConfig>
   );
 }
@@ -99,8 +101,9 @@ function useRailTop(header: number) {
   return [ref, top] as const;
 }
 
-function FileBody({ file, stormLabel, stormId, hub, windows, metar }: { file: FlightFile; stormLabel: string | null; stormId?: string; hub: string; windows?: StormWindow[]; metar?: MetarObs[] }) {
+function FileBody({ file, stormLabel, stormId, hub, windows, metar, realContext }: { file: FlightFile; stormLabel: string | null; stormId?: string; hub: string; windows?: StormWindow[]; metar?: MetarObs[]; realContext?: Record<string, unknown> }) {
   const kind = useMemo(() => verdictOf({ flight: file.flight, decision: file.decision }), [file]);
+  const defence = useMemo(() => (kind === "weather" ? weatherDefence(file, hub, windows, realContext) : null), [kind, file, hub, windows, realContext]);
   const [railRef, railTop] = useRailTop(80);
   const d = file.decision;
   const tiers = [...new Set(d.evidence.map((e) => e.trust_tier))].sort();
@@ -147,6 +150,17 @@ function FileBody({ file, stormLabel, stormId, hub, windows, metar }: { file: Fl
           >
             {d.evidence.length ? <EvidenceList evidence={d.evidence} /> : <p className="py-2 text-[13.5px] text-slate-500">No evidence recorded.</p>}
           </Section>
+
+          {defence ? (
+            <Section
+              title="Defence prepared · Art. 5(3)"
+              note="What the airline would answer a compensation claim on this flight, from this file's evidence."
+              testId="weather-defence"
+              footer={<span className="text-[12px] text-slate-400">A draft: verdict and amounts unchanged, and nothing goes to a passenger until the Claims Lead approves it.</span>}
+            >
+              <WeatherDefenceRows defence={defence} />
+            </Section>
+          ) : null}
 
           {file.timeline?.length ? (
             <Section title="Timeline" note="Tech log, MCC, OCC, METAR and CRM, in UTC. Hover a mark for its line.">
