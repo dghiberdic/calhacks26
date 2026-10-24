@@ -19,6 +19,7 @@ const b612Mono = B612_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://stormcheck-chi.vercel.app"),
   title: "StormCheck — the disruption-liability seat",
   description:
     "The morning after every storm, StormCheck works out the real cause of each cancelled flight from real weather and the aircraft's own logs, and drafts what every passenger is owed.",
