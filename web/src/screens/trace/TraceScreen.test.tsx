@@ -36,6 +36,14 @@ const CONTROLS: ControlMapping[] = [
   { control: "ACL broker", framework_ref: "CC6.1", implemented_by: "server/acl.py", evidence_endpoint: "/api/access/matrix" },
 ];
 
+/** Q-1 as the API serves it to the Judge: the passenger's name already replaced by the broker. */
+const Q1_AS_JUDGE = {
+  id: "Q-1",
+  case_refs: ["NS31@2025-01-24:14C"],
+  found: "On 24 Jan the T2 service desk gave passenger 14C ([redacted]) a €300 voucher. CRM records it as accepted.",
+  evidence: [{ fact_id: "f2", source_id: "claim:CLM-1", field: "claim.passenger_name", value: "[redacted]", quote: "[redacted]", role: "context", trust_tier: 4 }],
+};
+
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 
 beforeAll(() => {
@@ -47,6 +55,7 @@ beforeAll(() => {
     if (path === "/access/matrix") return json(MATRIX);
     if (path === "/access/log") return json(LOG);
     if (path === "/controls") return json(CONTROLS);
+    if (path.startsWith("/questions")) return json([Q1_AS_JUDGE]);
     if (path === "/storms" || path === "/rules") return json([]);
     return json({ error: { code: "not_found", message: "Not here." } }, 404);
   });
@@ -103,6 +112,15 @@ describe("Trace screen", () => {
     const log = await screen.findByTestId("denied-log");
     expect(log).toHaveTextContent("agent.drafterapprove_payout→DENIED · SoD");
     expect(log).not.toHaveTextContent("confirm_rule");
+  });
+
+  it("masks passenger PII for the Judge as for Ops, and offers the Claims Lead's seat", async () => {
+    renderAt("/trace?tab=access");
+    const panel = await screen.findByRole("region", { name: "PII mask" });
+    expect(await within(panel).findByText("Masked for you too, as Judge.")).toBeInTheDocument();
+    expect(within(panel).getAllByRole("img", { name: "redacted" }).length).toBeGreaterThanOrEqual(4);
+    expect(panel).not.toHaveTextContent("[redacted]");
+    expect(within(panel).getByRole("button", { name: "View as Claims Lead" })).toBeInTheDocument();
   });
 
   it("labels the SOC 2 controls as a mapping, sorted, with links to evidence", async () => {

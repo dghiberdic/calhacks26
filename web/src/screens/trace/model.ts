@@ -1,4 +1,4 @@
-import type { AccessCell, AccessMatrix, BlameStep, Commit, CommitKind, Role, Rule, StormRun } from "@/api/types";
+import type { AccessCell, AccessMatrix, BlameStep, Commit, CommitKind, Question, Role, Rule, StormRun } from "@/api/types";
 import { ROLE_LABEL, shortId } from "@/lib/format";
 
 // ---------- tabs ----------
@@ -153,8 +153,14 @@ export const STEP_NAME: Record<StepKind, string> = {
   other: "Step",
 };
 
-/** A rule reference inside a label ("R-LEG-1@1"). */
-export const ruleRefIn = (text: string) => text.match(/\bR-[A-Z0-9]+(?:-[A-Z0-9]+)*(?:@\d+)?\b/)?.[0] ?? null;
+/** A rule reference inside a label: "R-LEG-1@1", "REG-C549-TECHNICAL@1", "HC-SOD-1". */
+export const ruleRefIn = (text: string) => text.match(/\b(?:R|REG|HC)-[A-Z0-9]+(?:-[A-Z0-9]+)*(?:@\d+)?\b/)?.[0] ?? null;
+
+/** A ref the blame tab can walk back from: a flight or coupon, a journal, or a rule version. */
+export function blameTarget(ref: string): string | null {
+  const bare = ref.replace(/^(decision|entitlement|rule|je|journal|question|ruling|fact|flight|coupon):/i, "");
+  return /^[A-Z]{2}\d{1,4}@\d{4}-\d{2}-\d{2}(:[0-9A-Z]+)?$/.test(bare) || /^(?:R|REG|HC)-[A-Z0-9-]+@\d+$/.test(bare) || /^JE-\d+$/.test(bare) ? bare : null;
+}
 
 /** The plain-text receipt an auditor can paste into a working paper. */
 export function receiptText(target: string, steps: BlameStep[], origin: string) {
@@ -195,4 +201,46 @@ export function suggestTargets(run: StormRun | undefined, rules: Rule[] | undefi
   }
   const seen = new Set<string>();
   return out.filter((t) => (seen.has(t.id) ? false : (seen.add(t.id), true)));
+}
+
+// ---------- the PII record ----------
+/** What the API puts where it removed PII. */
+export const REDACTED = "[redacted]";
+
+/** Evidence fields that carry a person's identity (a name, an email, a phone number, a booking reference). */
+export const isPiiField = (field: string) => /(^|[._])(name|email|e_mail|phone|address|dob|passport|booking_ref|pnr)$/i.test(field);
+
+export type PiiRecord = { question: Question; fields: { field: string; value: string }[]; text: string; values: string[] };
+
+/** The first served question that carries passenger identity in its evidence, with the PII values in the clear (if this seat got them). */
+export function findPiiRecord(questions: Question[] | undefined): PiiRecord | null {
+  for (const q of questions ?? []) {
+    const fields = q.evidence.filter((e) => isPiiField(e.field)).map((e) => ({ field: e.field, value: String(e.value ?? e.quote ?? "") }));
+    if (!fields.length) continue;
+    const values = [...new Set(fields.map((f) => f.value).filter((v) => v && v !== REDACTED))];
+    return { question: q, fields, text: q.found, values };
+  }
+  return null;
+}
+
+/** Split text into plain runs and PII runs: the clear values this seat was given, and the API's redaction marks. */
+export function splitPii(text: string, values: string[]): { text: string; pii: boolean }[] {
+  const needles = [...values, REDACTED].filter(Boolean).sort((a, b) => b.length - a.length);
+  const out: { text: string; pii: boolean }[] = [];
+  let rest = text;
+  while (rest) {
+    let best: { at: number; len: number } | null = null;
+    for (const n of needles) {
+      const at = rest.indexOf(n);
+      if (at >= 0 && (!best || at < best.at)) best = { at, len: n.length };
+    }
+    if (!best) {
+      out.push({ text: rest, pii: false });
+      break;
+    }
+    if (best.at > 0) out.push({ text: rest.slice(0, best.at), pii: false });
+    out.push({ text: rest.slice(best.at, best.at + best.len), pii: true });
+    rest = rest.slice(best.at + best.len);
+  }
+  return out;
 }

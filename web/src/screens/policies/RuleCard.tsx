@@ -179,7 +179,9 @@ function RulerWords({ rule, origin }: { rule: Rule; origin: "ruled" | "rejected"
   return (
     <div className="mt-4">
       <p className="flex items-start gap-2 text-[13px] text-slate-500">
-        <RoleAvatar role={ruler} size="sm" className="mt-px" />
+        <span aria-hidden="true" className="mt-px inline-flex">
+          <RoleAvatar role={ruler} size="sm" />
+        </span>
         <span className="min-w-0">
           <span className="font-medium text-navy-900">{ROLE_LABEL[ruler]}</span> {origin === "rejected" ? (rule.kind === "release" || rule.action === "deny_release" || rule.action === "keep_tail" ? "rejected a release proposal" : "rejected a proposal") : "ruled"}
           {about ? <> · {about}</> : null}
@@ -243,7 +245,9 @@ function Record({ family }: { family: RuleFamily }) {
     <dl className="grid grid-cols-2 content-start gap-x-4 gap-y-4 border-t border-cloud-100 px-5 py-5 text-[13px] sm:grid-cols-3 md:grid-cols-2 md:border-l md:border-t-0 md:px-5 md:py-6">
       <Item label="Authority">
         <span className="inline-flex items-center gap-1.5">
-          <RoleAvatar role={rule.authority_required} size="sm" />
+          <span aria-hidden="true" className="inline-flex">
+            <RoleAvatar role={rule.authority_required} size="sm" />
+          </span>
           <span className="text-navy-900">{ROLE_LABEL[rule.authority_required]}</span>
         </span>
       </Item>

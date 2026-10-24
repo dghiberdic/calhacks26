@@ -79,7 +79,9 @@ export function HardControls({ families }: { families: RuleFamily[] }) {
               <span>{ruleRef(rule)}</span>
               <span aria-hidden="true">·</span>
               <span className="inline-flex items-center gap-1">
-                <RoleAvatar role={rule.authority_required} size="sm" className="size-4 text-[7px]" />
+                <span aria-hidden="true" className="inline-flex">
+                  <RoleAvatar role={rule.authority_required} size="sm" className="size-4 text-[7px]" />
+                </span>
                 {ROLE_LABEL[rule.authority_required]}
               </span>
               {rule.times_cited ? (

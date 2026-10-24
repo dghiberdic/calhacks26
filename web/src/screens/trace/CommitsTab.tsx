@@ -9,16 +9,11 @@ import type { Commit, CommitKind } from "@/api/types";
 import { Empty, ErrorNote, Shimmer } from "@/components/kit";
 import { longDate, zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { KIND_ORDER, shortHash } from "./model";
+import { KIND_ORDER, blameTarget, shortHash } from "./model";
 import { Mono, Principal } from "./parts";
 
 const PAGE = 100;
 
-/** A ref the blame tab can walk back from: flights, coupons, journals and rule versions. */
-function blameTarget(ref: string): string | null {
-  const bare = ref.replace(/^(decision|entitlement|rule|je|journal|question|ruling|fact|flight|coupon):/i, "");
-  return /^[A-Z]{2}\d{1,4}@\d{4}-\d{2}-\d{2}/.test(bare) || /^R-[A-Z0-9-]+@\d+$/.test(bare) || /^JE-\d+/.test(bare) ? bare : null;
-}
 
 /** J5 · Commits: `git log --oneline`, made legible. Newest first; each commit opens to its payload, inputs and parent. */
 export function CommitsTab() {

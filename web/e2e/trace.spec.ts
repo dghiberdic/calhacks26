@@ -30,6 +30,15 @@ test("the denied log shows DENIED · SoD", async ({ page }) => {
   await expect(page.getByRole("table")).toContainText("redacted");
 });
 
+test("view as Ops: passenger PII stays masked for Ops, in the clear only for the Claims Lead", async ({ page }) => {
+  await page.goto("/trace?tab=access");
+  const panel = page.getByRole("region", { name: "PII mask" });
+  await expect(panel.getByText("Masked for you too, as Judge.")).toBeVisible();
+  await panel.getByRole("button", { name: "View as Claims Lead" }).click();
+  await expect(panel.getByText("Masked for you too", { exact: false })).toHaveCount(0);
+  await expect(panel.getByRole("article", { name: "Ops's view" }).getByRole("img", { name: "redacted" }).first()).toBeVisible();
+});
+
 test("controls are a SOC 2 mapping, not a certification", async ({ page }) => {
   await page.goto("/trace?tab=controls");
   await expect(page.getByRole("heading", { name: "SOC 2 is the floor" })).toBeVisible();

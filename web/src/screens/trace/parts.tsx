@@ -26,11 +26,17 @@ export function Mono({ children, className }: { children: string; className?: st
 /** People and agents get their role avatar; anything else (books, parsers, the OCC duty manager) gets a quiet monogram. */
 export function PrincipalAvatar({ principal, className }: { principal: string; className?: string }) {
   const role = principalRole(principal);
-  if (role) return <RoleAvatar role={role} size="sm" className={className} />;
   const letters = principal.replace(/[^A-Za-z]/g, "").slice(0, 2).toUpperCase() || "··";
+  // Decorative: a label always follows, so screen readers hear "Claims Lead", not "CL Claims Lead".
   return (
-    <span title={principal} className={cn("inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-transparent font-mono text-[8.5px] font-bold text-slate-500 shadow-[inset_0_0_0_1px_var(--color-cloud-300)]", className)}>
-      {letters}
+    <span aria-hidden="true" className="inline-flex shrink-0">
+      {role ? (
+        <RoleAvatar role={role} size="sm" className={className} />
+      ) : (
+        <span title={principal} className={cn("inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-transparent font-mono text-[8.5px] font-bold text-slate-500 shadow-[inset_0_0_0_1px_var(--color-cloud-300)]", className)}>
+          {letters}
+        </span>
+      )}
     </span>
   );
 }

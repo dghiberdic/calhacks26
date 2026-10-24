@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { BlameStep, Commit, FlightRow, Rule, StormRun } from "@/api/types";
-import { suggestTargets, compareFrameworkRef, denialTag, evidenceTarget, isTab, orderPrincipals, principalLabel, principalRole, receiptText, ruleRefIn, shortHash, stepKind } from "./model";
+import type { BlameStep, Commit, FlightRow, Question, Rule, StormRun } from "@/api/types";
+import { REDACTED, blameTarget, findPiiRecord, isPiiField, splitPii, suggestTargets, compareFrameworkRef, denialTag, evidenceTarget, isTab, orderPrincipals, principalLabel, principalRole, receiptText, ruleRefIn, shortHash, stepKind } from "./model";
 
 const commit = (over: Partial<Commit> = {}): Commit => ({
   hash: "9f2c41ab77de0c55aa13",
@@ -84,7 +84,18 @@ describe("blame", () => {
     expect(ruleRefIn("Rule R-LEG-1@1 cited")).toBe("R-LEG-1@1");
     expect(ruleRefIn("Rule R-CL-1")).toBe("R-CL-1");
     expect(ruleRefIn("no rule here")).toBeNull();
+    expect(ruleRefIn("Rule REG-C549-TECHNICAL@1 applied")).toBe("REG-C549-TECHNICAL@1");
   });
+  it("finds what a commit's payload can be blamed from", () => {
+    expect(blameTarget("decision:NS31@2025-01-24")).toBe("NS31@2025-01-24");
+    expect(blameTarget("NS31@2025-01-24:14C")).toBe("NS31@2025-01-24:14C");
+    expect(blameTarget("R-MIN-1@1")).toBe("R-MIN-1@1");
+    expect(blameTarget("REG-C549-TECHNICAL@1")).toBe("REG-C549-TECHNICAL@1");
+    expect(blameTarget("JE-000101")).toBe("JE-000101");
+    expect(blameTarget("Q-1")).toBeNull();
+    expect(blameTarget("tech_log:EI-NSB@2025-01-23")).toBeNull();
+  });
+
   it("writes a plain-text receipt with the link", () => {
     const text = receiptText("NS31@2025-01-24", [step("METAR obs", "fact", "EIDW 232130Z")], "https://x.test");
     expect(text).toContain("01  METAR obs");
@@ -115,5 +126,41 @@ describe("blame targets", () => {
 
   it("copes with nothing loaded yet", () => {
     expect(suggestTargets(undefined, undefined)).toEqual([]);
+  });
+});
+
+describe("the PII record", () => {
+  const q = (name: string) =>
+    ({
+      id: "Q-1",
+      found: `The desk gave passenger 14C (${name}) a €300 voucher.`,
+      evidence: [
+        { fact_id: "f1", source_id: "crm", field: "voucher.signed", value: false, quote: "SIGNATURE: NONE CAPTURED", role: "supports", trust_tier: 3 },
+        { fact_id: "f2", source_id: "claim", field: "claim.passenger_name", value: name, quote: name, role: "context", trust_tier: 4 },
+      ],
+    }) as unknown as Question;
+
+  it("recognises identity fields only", () => {
+    expect(isPiiField("claim.passenger_name")).toBe(true);
+    expect(isPiiField("claim.email")).toBe(true);
+    expect(isPiiField("voucher.signed")).toBe(false);
+    expect(isPiiField("flight.route_region")).toBe(false);
+  });
+
+  it("finds the served record, in the clear for the Claims Lead and masked for anyone else", () => {
+    const clear = findPiiRecord([q("Orla Keane")]);
+    expect(clear?.values).toEqual(["Orla Keane"]);
+    const masked = findPiiRecord([q(REDACTED)]);
+    expect(masked?.values).toEqual([]);
+    expect(findPiiRecord([])).toBeNull();
+  });
+
+  it("splits text into plain and PII runs", () => {
+    expect(splitPii("passenger 14C (Orla Keane) a voucher", ["Orla Keane"])).toEqual([
+      { text: "passenger 14C (", pii: false },
+      { text: "Orla Keane", pii: true },
+      { text: ") a voucher", pii: false },
+    ]);
+    expect(splitPii(`(${REDACTED})`, []).map((r) => r.pii)).toEqual([false, true, false]);
   });
 });
