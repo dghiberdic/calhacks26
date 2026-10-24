@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# StormCheck web
 
-## Getting Started
-
-First, run the development server:
+Justin's part: the immersive landing page and the product app. Next.js 16 (App Router), React 19,
+Tailwind 4, GSAP (ScrollTrigger, DrawSVG) + Lenis, three.js, Motion, d3.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Route | What it is |
+|---|---|
+| `/` | Landing. Storm Bram time-lapse hero → split-flap board → METAR storm window → A321 blueprint → verdict → trace → ask-once |
+| `/moment` | The 20-second "moment" as a self-playing film for the Devpost video (Space pauses, R restarts). Record at 1920×1080 |
+| `/app` | Overview: KPIs, the day at Dublin, routes, cancellations, flight side sheet |
+| `/app/inbox` | Escalations as handoff packets → answers become versioned rules |
+| `/app/payouts`, `/app/ledger`, `/app/rules` | Payout review, provision + journal, versioned rules |
+| `/app/desk` | Judge's desk: any ICAO station + date, live METAR, verdict and euros move as you edit the tech log |
+| `/api/metar` | `?station=EIDW&date=2025-12-09&limit=40` live METAR from the IEM archive + computed storm windows |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Data (all real unless marked)
+- `public/data/bram/` Storm Bram, 9 Dec 2025: EUMETSAT MTG GeoColour frames every 30 min (CC BY 4.0,
+  "Contains modified EUMETSAT data, 2025"), ERA5 hourly MSLP + 10 m wind (Open-Meteo archive), EIDW METAR (IEM).
+- `public/data/storm-2025-01-24.json`, `sat-2025-01-24.jpg` Storm Éowyn (ERA5 + NASA GIBS MODIS), kept as a replay.
+- `src/data/geo/land.ts` Natural Earth coastlines pre-projected by `scripts/build-geo.ts`.
+- `src/data/scenario.ts`, `src/data/app.ts` **Simulated**: Northstar Air, flights, passengers, tech log, claims.
+  Shapes follow `API_CONTRACT.md` so the engine can replace them.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Refetch: `node scripts/fetch-storm.mjs --date 2025-12-09 …`, `node scripts/fetch-mtg.mjs`, `npx tsx scripts/fetch-metar.ts`.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Design rules
+Colour only means a verdict (weather grey, owed vermilion, review amber, settled green, interactive blue).
+B612 Mono only for machine text (METAR, tech log, codes, amounts). Evidence inks the drawing: pencil until the
+sources agree. Art direction lives on the Claude Design canvas "StormCheck — Design".

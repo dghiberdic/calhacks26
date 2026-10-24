@@ -232,7 +232,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* mobile nav */}
       <nav aria-label="Main" className="fixed inset-x-3 bottom-3 z-40 flex justify-between rounded-2xl bg-ink/95 p-1.5 text-[13px] text-chart shadow-lg backdrop-blur md:hidden">
-        {[...NAV, { href: "/app/desk", label: "Desk" }].map((n) => {
+        {[...NAV.map((n) => (n.href === "/app" ? { ...n, label: "Home" } : n)), { href: "/app/desk", label: "Desk" }].map((n) => {
           const active = n.href === "/app" ? path === "/app" : path.startsWith(n.href);
           return (
             <Link key={n.href} href={n.href} className={cn("flex-1 rounded-xl py-2 text-center", active && "bg-white/15 font-semibold")}>

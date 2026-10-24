@@ -17,6 +17,8 @@ export function registerGsap() {
   CustomEase.create("settle", "M0,0 C0.12,0.6 0.24,1.02 0.44,1.01 0.62,1 0.8,1 1,1");
   gsap.defaults({ ease: "power3.out", duration: 0.9 });
   if (process.env.NODE_ENV !== "production") Object.assign(window, { gsap, ScrollTrigger });
+  // Reduced motion: time-based tweens resolve instantly; scroll-scrubbed ones stay user-driven.
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) gsap.globalTimeline.timeScale(50);
   registered = true;
 }
 
