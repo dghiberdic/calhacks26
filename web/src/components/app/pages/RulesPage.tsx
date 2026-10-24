@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useApp } from "@/lib/store";
 import { QUESTIONS, type Rule } from "@/data/app";
 import { Card } from "@/components/app/ui";
 import { cn } from "@/lib/cn";
+import { FLIGHTS, METAR, tier } from "@/data/scenario";
+import { stormWindow } from "@/lib/metar";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -22,6 +24,47 @@ function statLine(rule: Rule) {
   const applied = rule.applied.toLocaleString("en-IE");
   if (rule.asked === 0) return `Applied ${applied}×`;
   return `Asked ${rule.asked === 1 ? "once" : `${rule.asked}×`} · applied ${applied}×`;
+}
+
+/** Re-run this storm's real METAR under an older rule version and show what flips. */
+function WindowReplay() {
+  const [on, setOn] = useState(false);
+  const result = useMemo(() => {
+    const within = (sched: string, w: { start: string; end: string }[]) => {
+      const m = Number(sched.slice(0, 2)) * 60 + Number(sched.slice(3, 5));
+      return w.some((x) => m >= Number(x.start.slice(0, 2)) * 60 + Number(x.start.slice(3, 5)) - 30 && m <= Number(x.end.slice(0, 2)) * 60 + Number(x.end.slice(3, 5)) + 30);
+    };
+    const v1 = stormWindow(METAR, 50, 120);
+    const v2 = stormWindow(METAR, 40, 120);
+    const weather = FLIGHTS.filter((f) => f.verdict === "weather");
+    const flips = weather.filter((f) => within(f.sched, v2) && !within(f.sched, v1));
+    return { v1, v2, flips, exposure: flips.reduce((s, f) => s + f.pax * tier(f.km), 0) };
+  }, []);
+  return (
+    <div className="mt-4 rounded-xl bg-chart p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[14px] font-medium">Replay Storm Bram under v1</p>
+        <button type="button" onClick={() => setOn((v) => !v)} aria-pressed={on} className="rounded-lg bg-ink px-3 py-1.5 text-[13px] font-semibold text-chart">
+          {on ? "Back to v2" : "Replay with v1 (50 kt)"}
+        </button>
+      </div>
+      <p className="mt-2 text-[13.5px] text-graphite">
+        v2 window from the real METAR: <span className="font-mono text-ink">{result.v2.map((w) => `${w.start}–${w.end}Z`).join(", ")}</span>
+      </p>
+      {on && (
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease }} className="mt-3 space-y-2">
+          <p className="text-[13.5px] text-graphite">
+            v1 window: <span className="font-mono text-ink">{result.v1.length ? result.v1.map((w) => `${w.start}–${w.end}Z`).join(", ") : "none"}</span>
+          </p>
+          <p className="text-[15px]">
+            <span className="font-semibold text-owed-ink">{result.flips.length} of 13</span> weather verdicts would flip to owed, adding{" "}
+            <span className="tabular font-mono text-owed-ink">€{result.exposure.toLocaleString("en-IE")}</span> of exposure. That is why the rule version is stored on every decision.
+          </p>
+          <p className="font-mono text-[12px] text-graphite">{result.flips.map((f) => f.id).join("  ")}</p>
+        </motion.div>
+      )}
+    </div>
+  );
 }
 
 function RuleHistory({ rule }: { rule: Rule }) {
@@ -56,6 +99,7 @@ function RuleHistory({ rule }: { rule: Rule }) {
         ))}
       </ol>
       <p className="text-[13px] text-graphite">Replay impact: {replay ?? `No change to ${rule.applied.toLocaleString("en-IE")} past decisions if this runs again.`}</p>
+      {rule.id === "R-1" && <WindowReplay />}
     </motion.div>
   );
 }
