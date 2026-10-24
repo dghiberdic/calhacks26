@@ -93,6 +93,21 @@ describe("Trace screen", () => {
     await waitFor(() => expect(within(list).getAllByRole("listitem")).toHaveLength(1));
   });
 
+  it("opens blame for a bare ?target= (what Flight File links to)", async () => {
+    renderAt("/trace?target=NS31%402025-01-24");
+    expect(await screen.findByRole("tab", { name: "Blame", selected: true })).toBeInTheDocument();
+    const chain = await screen.findByTestId("blame-chain");
+    expect(chain.querySelectorAll(":scope > li")[0]).toHaveTextContent("€34,650");
+  });
+
+  it("filters the live trace to a question's events", async () => {
+    renderAt("/trace?target=Q-9");
+    expect(await screen.findByRole("tab", { name: "Live", selected: true })).toBeInTheDocument();
+    expect(await screen.findByText("No events about Q-9 yet.")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Show every event, not just Q-9" }));
+    expect(await screen.findByRole("list", { name: "Trace events, newest first" })).toBeInTheDocument();
+  });
+
   it("lists commits newest first with their kind, and filters by kind", async () => {
     renderAt("/trace?tab=commits");
     const list = await screen.findByRole("list", { name: "Commits, newest first" });
@@ -135,7 +150,7 @@ describe("Trace screen", () => {
     renderAt("/trace?tab=access");
     const panel = await screen.findByRole("region", { name: "PII mask" });
     expect(await within(panel).findByText("Masked for you too, as Judge.")).toBeInTheDocument();
-    expect(within(panel).getAllByRole("img", { name: "redacted" }).length).toBeGreaterThanOrEqual(4);
+    expect(within(panel).getAllByText("hidden").length).toBeGreaterThanOrEqual(4);
     expect(panel).not.toHaveTextContent("[redacted]");
     expect(within(panel).getByRole("button", { name: "View as Claims Lead" })).toBeInTheDocument();
   });

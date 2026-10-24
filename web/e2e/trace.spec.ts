@@ -34,6 +34,15 @@ test("the blame chain ends in a METAR observation", async ({ page }) => {
   await expect(steps.last()).toContainText("METAR");
 });
 
+test("a bare ?target= opens its blame, and the live trace filters to it", async ({ page }) => {
+  await page.goto("/trace?target=NS31%402025-01-24");
+  await expect(page.getByRole("tab", { name: "Blame" })).toHaveAttribute("aria-selected", "true", FIRST_PAINT);
+  await expect(page.getByTestId("blame-chain").locator(":scope > li").last()).toContainText("METAR", FIRST_PAINT);
+  await page.getByRole("tab", { name: "Live" }).click();
+  await expect(page.getByRole("button", { name: "Show every event, not just NS31@2025-01-24" })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Trace events, newest first" }).getByRole("listitem").first()).toContainText("NS31");
+});
+
 test("the denied log shows DENIED · SoD", async ({ page }) => {
   await page.goto("/trace?tab=access");
   const log = page.getByTestId("denied-log");
@@ -48,7 +57,7 @@ test("view as Ops: passenger PII stays masked for Ops, in the clear only for the
   await expect(panel.getByText("Masked for you too, as Judge.")).toBeVisible(FIRST_PAINT);
   await panel.getByRole("button", { name: "View as Claims Lead" }).click();
   await expect(panel.getByText("Masked for you too", { exact: false })).toHaveCount(0);
-  await expect(panel.getByRole("article", { name: "Ops's view" }).getByRole("img", { name: "redacted" }).first()).toBeVisible();
+  await expect(panel.getByRole("article", { name: "Ops's view" }).getByText("hidden", { exact: true }).first()).toBeVisible();
 });
 
 test("controls are a SOC 2 mapping, not a certification", async ({ page }) => {

@@ -21,7 +21,8 @@ export function StaticRegulationCard({ rule, highlighted, index = 0 }: { rule: R
   );
   return (
     <motion.article
-      id={rule.id}
+      id={ruleRef(rule)}
+      data-family={rule.id}
       data-testid="static-regulation-card"
       initial={reduce ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -71,7 +72,7 @@ export function HardControls({ families }: { families: RuleFamily[] }) {
   return (
     <ul className="grid gap-px overflow-hidden rounded-xl bg-cloud-200 shadow-[0_0_0_1px_var(--color-cloud-200)] md:grid-cols-2">
       {families.map(({ current: rule }) => (
-        <li key={rule.id} id={rule.id} className="flex scroll-mt-24 items-start gap-3 bg-card px-5 py-4">
+        <li key={rule.id} id={ruleRef(rule)} data-family={rule.id} className="flex scroll-mt-24 items-start gap-3 bg-card px-5 py-4">
           <Lock className="mt-0.5 size-3.5 shrink-0 text-slate-400" aria-hidden="true" />
           <div className="min-w-0 flex-1">
             <HardControlText rule={rule} />

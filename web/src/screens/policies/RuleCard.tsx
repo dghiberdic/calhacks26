@@ -31,7 +31,8 @@ export function RuleCard({ family, index = 0, highlighted, actions }: { family: 
 
   return (
     <motion.article
-      id={family.id}
+      id={ruleRef(rule)}
+      data-family={family.id}
       data-testid={`rule-${family.id}`}
       initial={reduce ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -40,13 +41,13 @@ export function RuleCard({ family, index = 0, highlighted, actions }: { family: 
         "relative scroll-mt-24 rounded-xl bg-card shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04)] transition-shadow duration-700",
         highlighted && "shadow-[0_0_0_2px_var(--color-navy-800),0_8px_28px_rgba(13,21,36,0.12)]",
       )}
-      aria-labelledby={`${family.id}-ref`}
+      aria-labelledby={`${family.id}-title`}
     >
       <div className="grid md:grid-cols-[minmax(0,1fr)_268px]">
         <div className="min-w-0 p-5 md:p-6">
           <header className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 pt-0.5">
-              <h3 id={`${family.id}-ref`} className="font-mono text-[13px] font-bold text-navy-900">
+              <h3 id={`${family.id}-title`} className="font-mono text-[13px] font-bold text-navy-900">
                 {ruleRef(rule)}
               </h3>
               <Tooltip>

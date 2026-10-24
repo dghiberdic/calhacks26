@@ -7,7 +7,8 @@ import { useSession } from "@/app/session";
 import { RoleAvatar, Shimmer } from "@/components/kit";
 import { ROLE_LABEL, shortId } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { findPiiRecord, piiResource, principalRole, splitPii, type PiiRecord } from "./model";
+import { MaskedText } from "@/components/evidence";
+import { REDACTED, findPiiRecord, piiResource, principalRole, splitPii, type PiiRecord } from "./model";
 
 /** The seat that reads passenger PII in the clear, and the one the demo masks. */
 const CLEAR: Role = "claims_lead";
@@ -140,15 +141,9 @@ function Clear({ children }: { children: string }) {
   return <span className="rounded-sm bg-cloud-100 px-0.5 font-medium text-navy-900 [box-decoration-break:clone]">{children}</span>;
 }
 
+/** The same quiet "hidden" mark the evidence lists use for what the broker removed. */
 function Masked() {
-  return (
-    <span
-      role="img"
-      aria-label="redacted"
-      title="redacted"
-      className="inline-block h-[1.05em] w-[8ch] rounded-[3px] align-[-0.18em] shadow-[inset_0_0_0_1px_var(--color-cloud-300)] bg-[repeating-linear-gradient(135deg,transparent,transparent_3px,var(--color-cloud-300)_3px,var(--color-cloud-300)_4.5px)]"
-    />
-  );
+  return <MaskedText text={REDACTED} />;
 }
 
 /** The sentence of the question's finding that names the passenger (or shows where the name was removed). */

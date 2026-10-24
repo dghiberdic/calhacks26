@@ -58,6 +58,17 @@ test("revert replays history and shows the diff", async ({ page }) => {
   await expect(dialog.getByText(/^flips \d+ · Δ/)).toBeVisible();
 });
 
+test("a versioned link (as Flight File writes it) lands on the card", async ({ page }) => {
+  await page.goto("/policies");
+  const card = page.locator('[data-testid^="rule-"]').last();
+  await expect(card).toBeAttached(FIRST_PAINT);
+  const ref = (await card.getAttribute("id"))!;
+  expect(ref).toMatch(/@\d+$/);
+  await page.goto("about:blank");
+  await page.goto(`/policies#${encodeURIComponent(ref)}`);
+  await expect(page.locator(`[id="${ref}"]`)).toBeInViewport(FIRST_PAINT);
+});
+
 test("a deep link scrolls to its rule", async ({ page }) => {
   await page.goto("/policies");
   const first = page.locator('[data-testid^="rule-"]').last();

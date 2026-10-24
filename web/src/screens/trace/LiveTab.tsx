@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight, Search, X } from "lucide-react";
 import { useTrace } from "@/api/queries";
 import { mergeFeed, useLiveFeed, type StreamStatus } from "@/api/stream";
 import type { TraceChip as TraceChipKind, TraceEvent } from "@/api/types";
@@ -9,7 +9,7 @@ import { TraceChip } from "@/components/chips";
 import { Empty, ErrorNote, Money, Shimmer } from "@/components/kit";
 import { longDate, zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { eventRef, timeOrdered } from "./model";
+import { eventRef, matchesTarget, timeOrdered } from "./model";
 import { FilterChip, Principal } from "./parts";
 
 const CHIP_ORDER: TraceChipKind[] = ["APPLIED", "DRAFTED", "HELD", "ASKED", "RULED", "LEARNED", "CITED", "DENIED", "LOCKED", "INFO"];
@@ -23,7 +23,8 @@ export function LiveTab() {
   const trace = useTrace();
   const live = useLiveFeed((s) => s.events);
   const status = useLiveFeed((s) => s.status);
-  const [, setParams] = useSearchParams();
+  const [params, setParams] = useSearchParams();
+  const target = params.get("target");
   const all = useMemo(() => mergeFeed(trace.data ?? [], live), [trace.data, live]);
   const [chip, setChip] = useState<TraceChipKind | "all">("all");
   const [grep, setGrep] = useState("");
@@ -35,7 +36,17 @@ export function LiveTab() {
     return CHIP_ORDER.filter((c) => m.has(c)).map((c) => [c, m.get(c)!] as const);
   }, [all]);
   const needle = grep.trim().toLowerCase();
-  const filtered = all.filter((e) => (chip === "all" || e.chip === chip) && (!needle || [e.summary, e.actor, e.ref ?? "", e.kind].some((s) => s.toLowerCase().includes(needle))));
+  const about = target ? all.filter((e) => matchesTarget(e.ref, target)) : all;
+  const filtered = about.filter((e) => (chip === "all" || e.chip === chip) && (!needle || [e.summary, e.actor, e.ref ?? "", e.kind].some((s) => s.toLowerCase().includes(needle))));
+  const clearTarget = () =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("target");
+        return next;
+      },
+      { replace: true },
+    );
   const shown = filtered.slice(0, limit);
   const headed = timeOrdered(shown);
 
@@ -64,6 +75,21 @@ export function LiveTab() {
         </label>
       </div>
 
+      {target ? (
+        <p className="mt-3 flex flex-wrap items-center gap-2 text-[13px] text-slate-500">
+          Events about
+          <span className="inline-flex h-7 items-center gap-1 rounded-md bg-navy-900 pl-2 pr-1 font-mono text-[11.5px] text-cloud-50">
+            {target}
+            <button type="button" onClick={clearTarget} aria-label={`Show every event, not just ${target}`} className="inline-flex size-5 items-center justify-center rounded text-cloud-400 hover:bg-navy-800 hover:text-cloud-50">
+              <X className="size-3.5" aria-hidden="true" />
+            </button>
+          </span>
+          <span className="font-mono text-[11px] text-slate-400">
+            {about.length} of {all.length}
+          </span>
+        </p>
+      ) : null}
+
       <div className="mt-4 overflow-hidden rounded-xl bg-card shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04)]">
         <div className="flex items-center justify-between gap-3 border-b border-cloud-100 px-5 py-2.5">
           <StreamState status={status} />
@@ -72,7 +98,7 @@ export function LiveTab() {
           </span>
         </div>
         {shown.length === 0 ? (
-          <p className="px-5 py-10 text-center text-[13.5px] text-slate-500">No events match.</p>
+          <p className="px-5 py-10 text-center text-[13.5px] text-slate-500">{target && !about.length ? `No events about ${target} yet.` : "No events match."}</p>
         ) : (
           <ol aria-label="Trace events, newest first" aria-live="polite" aria-relevant="additions" className="relative">
             <AnimatePresence initial={false}>

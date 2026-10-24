@@ -8,13 +8,15 @@ import { BlameTab } from "./BlameTab";
 import { CommitsTab } from "./CommitsTab";
 import { ControlsTab } from "./ControlsTab";
 import { LiveTab } from "./LiveTab";
-import { TABS, TAB_LABEL, isTab, type TraceTab } from "./model";
+import { TABS, TAB_LABEL, isTab, tabForTarget, type TraceTab } from "./model";
 
 /** J5 · Trace: the whole live trace (Live), the git-like record (Commits, Blame), who may do what (Access) and the SOC 2 mapping (Controls). */
 export default function TraceScreen() {
   const [params, setParams] = useSearchParams();
   const raw = params.get("tab");
-  const tab: TraceTab = isTab(raw) ? raw : "live";
+  const target = params.get("target");
+  // A bare ?target= (Flight File, Questions) opens its blame, or a question's events.
+  const tab: TraceTab = isTab(raw) ? raw : target ? tabForTarget(target) : "live";
 
   useEffect(() => {
     document.title = `${TAB_LABEL[tab]} · Trace · StormCheck`;
@@ -26,7 +28,7 @@ export default function TraceScreen() {
       (prev) => {
         const next = new URLSearchParams(prev);
         next.set("tab", value);
-        if (value !== "blame") next.delete("target");
+        if (value !== "blame" && value !== "live") next.delete("target");
         if (value !== "commits") {
           next.delete("commit");
           next.delete("q");

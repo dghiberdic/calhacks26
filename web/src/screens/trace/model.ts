@@ -9,6 +9,27 @@ export const isTab = (v: string | null | undefined): v is TraceTab => !!v && (TA
 
 export const TAB_LABEL: Record<TraceTab, string> = { live: "Live", commits: "Commits", blame: "Blame", access: "Access", controls: "Controls" };
 
+// ---------- targets (?target=) ----------
+const RULE_REF = /^((?:R|REG|HC)-[A-Z0-9-]+?)(?:@\d+)?$/;
+const COUPON_REF = /^([A-Z]{2}\d{1,4}@\d{4}-\d{2}-\d{2}):[0-9A-Z]+$/;
+
+/**
+ * Whether an event's ref is about a target: the same id, a coupon of the target flight, the flight of a
+ * target coupon, or another version of the same rule.
+ */
+export function matchesTarget(ref: string | null | undefined, target: string): boolean {
+  if (!ref) return false;
+  if (ref === target || ref.startsWith(`${target}:`)) return true;
+  const coupon = target.match(COUPON_REF);
+  if (coupon && ref === coupon[1]) return true;
+  const a = ref.match(RULE_REF);
+  const b = target.match(RULE_REF);
+  return !!a && !!b && a[1] === b[1];
+}
+
+/** The tab a bare `?target=` opens: its blame, except questions, which have events rather than a chain. */
+export const tabForTarget = (target: string): TraceTab => (/^Q-\d+$/.test(target) ? "live" : "blame");
+
 // ---------- event refs ----------
 /** Where an event's `ref` lives in the app: a flight or coupon, a storm, a rule, a journal, a question. */
 export function eventRef(ref: string | null | undefined): { to: string | null; label: string } | null {

@@ -67,6 +67,12 @@ describe("Policies screen", () => {
     expect(screen.getByText("There is no rule editor.", { exact: false })).toBeInTheDocument();
   });
 
+  it("gives each card its versioned ref as its id, for links like /policies#R-CL-1@1", async () => {
+    renderScreen();
+    expect(await screen.findByTestId("rule-R-CL-1")).toHaveAttribute("id", "R-CL-1@1");
+    expect(screen.getByTestId("static-regulation-card")).toHaveAttribute("id", "REG-2026-2202@1");
+  });
+
   it("shows mined support, the ruler's grounded words and the case-only scope", async () => {
     renderScreen();
     expect(await screen.findByText("41 of 42")).toBeInTheDocument();

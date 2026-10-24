@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BlameStep, Commit, FlightRow, Question, Rule, StormRun } from "@/api/types";
-import { REDACTED, blameTarget, chainOrder, eventRef, piiResource, timeOrdered, findPiiRecord, isPiiField, splitPii, suggestTargets, compareFrameworkRef, denialTag, evidenceTarget, isTab, orderPrincipals, principalLabel, principalRole, receiptText, ruleRefIn, shortHash, stepKind } from "./model";
+import { REDACTED, blameTarget, chainOrder, eventRef, matchesTarget, piiResource, tabForTarget, timeOrdered, findPiiRecord, isPiiField, splitPii, suggestTargets, compareFrameworkRef, denialTag, evidenceTarget, isTab, orderPrincipals, principalLabel, principalRole, receiptText, ruleRefIn, shortHash, stepKind } from "./model";
 
 const commit = (over: Partial<Commit> = {}): Commit => ({
   hash: "9f2c41ab77de0c55aa13",
@@ -25,6 +25,26 @@ describe("tabs and hashes", () => {
     expect(shortHash("9f2c41ab77de0c55")).toBe("9f2c41a");
     expect(shortHash("sha256:9f2c41ab77", 8)).toBe("9f2c41ab");
     expect(shortHash(null)).toBe("");
+  });
+});
+
+describe("targets", () => {
+  it("finds the events about a target", () => {
+    expect(matchesTarget("NS31@2025-01-24", "NS31@2025-01-24")).toBe(true);
+    expect(matchesTarget("NS31@2025-01-24:14C", "NS31@2025-01-24")).toBe(true);
+    expect(matchesTarget("NS31@2025-01-24", "NS31@2025-01-24:14C")).toBe(true);
+    expect(matchesTarget("R-CL-1@1", "R-CL-1@2")).toBe(true);
+    expect(matchesTarget("R-CL-1", "R-CL-1@1")).toBe(true);
+    expect(matchesTarget("R-CL-10@1", "R-CL-1@1")).toBe(false);
+    expect(matchesTarget("NS310@2025-01-24", "NS31@2025-01-24")).toBe(false);
+    expect(matchesTarget("Q-1", "Q-1")).toBe(true);
+    expect(matchesTarget(null, "Q-1")).toBe(false);
+  });
+  it("opens blame for things with a chain and the feed for questions", () => {
+    expect(tabForTarget("NS31@2025-01-24")).toBe("blame");
+    expect(tabForTarget("JE-000101")).toBe("blame");
+    expect(tabForTarget("R-CL-1@1")).toBe("blame");
+    expect(tabForTarget("Q-1")).toBe("live");
   });
 });
 

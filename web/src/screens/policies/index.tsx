@@ -100,14 +100,17 @@ function useRuleActions() {
   return { actions: { onWiden: startWiden, onRevert: setRevertFor } satisfies CardActions, dialogs };
 }
 
-/** `#R-CL-1` (or `#R-CL-1@1`) scrolls to the card and outlines it for a moment. */
+/**
+ * `#R-CL-1@1` (what Flight File links to), `#R-CL-1`, or an older version's ref scrolls to the rule's card
+ * (its id is the version in force) and outlines it for a moment.
+ */
 function useDeepLinkFlash(ready: boolean) {
   const { hash } = useLocation();
   const reduce = useReducedMotion();
   const [flash, setFlash] = useState<string | null>(null);
   useEffect(() => {
     const id = ready ? familyFromHash(hash) : null;
-    const el = id ? document.getElementById(id) : null;
+    const el = id ? document.querySelector<HTMLElement>(`[data-family="${CSS.escape(id)}"]`) : null;
     if (!id || !el) return;
     const raf = requestAnimationFrame(() => {
       el.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });

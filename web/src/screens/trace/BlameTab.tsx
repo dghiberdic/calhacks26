@@ -1,7 +1,8 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router";
 import { motion, useReducedMotion } from "motion/react";
-import { CornerDownRight } from "lucide-react";
+import { ArrowRight, CornerDownRight } from "lucide-react";
+import { ApiError } from "@/api/client";
 import { useBlame, useRules, useStormRun, useStorms } from "@/api/queries";
 import type { Blame, BlameStep } from "@/api/types";
 import { MicroLabel } from "@/components/chips";
@@ -52,7 +53,25 @@ export function BlameTab() {
         ) : blame.isLoading ? (
           <ReceiptSkeleton />
         ) : blame.isError ? (
-          <ErrorNote error={blame.error} onRetry={() => void blame.refetch()} />
+          <div>
+            <ErrorNote error={blame.error} onRetry={blame.error instanceof ApiError && blame.error.status === 404 ? undefined : () => void blame.refetch()} />
+            <button
+              type="button"
+              onClick={() =>
+                setParams(
+                  (prev) => {
+                    const next = new URLSearchParams(prev);
+                    next.set("tab", "live");
+                    return next;
+                  },
+                  { replace: true },
+                )
+              }
+              className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-metar-ink hover:underline"
+            >
+              Events about {target} <ArrowRight className="size-3.5" aria-hidden="true" />
+            </button>
+          </div>
         ) : blame.data && blame.data.steps.length ? (
           <Receipt blame={blame.data} />
         ) : (
