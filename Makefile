@@ -1,14 +1,21 @@
-.PHONY: help stub stub-fixtures openapi test test-david dev demo demo-offline verify smoke-1 smoke-2 smoke-3 record
+.PHONY: help stub stub-fixtures golden openapi test test-david dev dev-reload web-build web-build-offline demo \
+        demo-offline verify smoke-1 smoke-2 smoke-3 record
+
+PORT ?= 8000
 
 help:
-	@echo "stub | stub-fixtures | openapi | test | test-david | dev | demo | demo-offline | verify | smoke-1|2|3 | record"
+	@echo "stub | stub-fixtures | golden | openapi | test | test-david | dev | dev-reload | demo | demo-offline |"
+	@echo "verify | smoke-1 | smoke-2 | smoke-3 | record"
 
-# ---- contracts (D0a)
+# ---- contracts
 stub:                       ## contract stub API on :8001 (fixtures in contracts/fixtures/api/)
 	uv run uvicorn contracts.stub_app:app --port 8001 --reload
 
-stub-fixtures:              ## rebuild contracts/fixtures/api/ (lands with D0b: scripts/build_api_fixtures.py)
-	@if [ -f scripts/build_api_fixtures.py ]; then uv run python scripts/build_api_fixtures.py; else uv run python scripts/build_stub_fixtures.py; fi
+stub-fixtures:              ## rebuild contracts/fixtures/api/ + injections/ from golden + fakes
+	uv run python scripts/build_api_fixtures.py
+
+golden:                     ## rebuild contracts/fixtures/golden/world.json + curves.json (expected/ is frozen)
+	uv run python scripts/build_golden.py
 
 openapi:                    ## write contracts/openapi.json from the stub
 	uv run python scripts/write_openapi.py
@@ -18,29 +25,43 @@ test:
 	uv run pytest -q
 
 test-david:
-	uv run pytest contracts engine server -q
+	uv run pytest contracts engine server scripts -q
 
-# ---- placeholders (later David-B tasks)
-dev:
-	@echo "make dev: real server on :8000 lands with D10a (use 'make stub' on :8001 until then)"
+# ---- real server (server/app.py; serves web/dist at / when built)
+dev:                        ## real server on :8000
+	uv run uvicorn server.app:app --host 127.0.0.1 --port $(PORT)
 
-demo:
-	@echo "make demo: lands with D11"
+dev-reload:
+	uv run uvicorn server.app:app --host 127.0.0.1 --port $(PORT) --reload
 
-demo-offline:
-	@echo "make demo-offline: lands with D11"
+web-build:                  ## build web/dist if the frontend and pnpm are there (else the API runs alone)
+	@if [ -f web/package.json ] && command -v pnpm >/dev/null 2>&1; then \
+	  cd web && pnpm install --frozen-lockfile && pnpm build; \
+	else echo "web-build: skipped (no web/package.json or no pnpm); serving the API only"; fi
 
-verify:
-	@echo "make verify: lands with D11"
+web-build-offline:          ## no network: reuse web/dist, or build from an existing node_modules
+	@if [ -f web/dist/index.html ]; then echo "web: using existing web/dist"; \
+	elif [ -d web/node_modules ] && command -v pnpm >/dev/null 2>&1; then cd web && pnpm build; \
+	else echo "web-build-offline: no web/dist and no node_modules; serving the API only"; fi
 
-smoke-1:
-	@echo "make smoke-1: lands with D11 (CP1)"
+demo: web-build             ## one process on :8000 (API + web/dist), cache mode
+	STORMCHECK_MODE=cache uv run uvicorn server.app:app --host 0.0.0.0 --port $(PORT)
 
-smoke-2:
-	@echo "make smoke-2: lands with D11 (CP2)"
+demo-offline: web-build-offline   ## wifi off: pinned METAR, LLM_MODE=offline, no uv sync
+	STORMCHECK_MODE=offline LLM_MODE=offline UV_OFFLINE=1 uv run --offline uvicorn server.app:app --host 0.0.0.0 --port $(PORT)
 
-smoke-3:
-	@echo "make smoke-3: lands with D11 (CP3)"
+# ---- verification and checkpoints
+verify:                     ## recompute every commit hash + replay every decision offline
+	STORMCHECK_MODE=offline LLM_MODE=offline uv run python scripts/verify.py
 
-record:
-	@echo "make record: lands with D11"
+smoke-1:                    ## CP1: golden decisions + Books numbers from the real server
+	bash scripts/smoke_cp1.sh
+
+smoke-2:                    ## CP2: desk, inject → SSE, Q1 → Herminia, blame → METAR
+	bash scripts/smoke_cp2.sh
+
+smoke-3:                    ## CP3: offline, 8 injections + 20 fuzz, eval, recorded build, verify
+	bash scripts/smoke_cp3.sh
+
+record:                     ## capture every GET route into demo/recorded/api/ (Justin commits it)
+	STORMCHECK_MODE=offline LLM_MODE=offline uv run python scripts/record.py
