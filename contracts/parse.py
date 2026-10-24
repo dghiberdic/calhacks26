@@ -161,8 +161,15 @@ def parse_ata(span: str, ref: Any = None) -> str:
     raise ParseError(f"no ATA code in {span!r}")
 
 
-_TAIL_RE = re.compile(r"(?<![A-Z0-9-])([A-Z]{1,2}-[A-Z0-9]{3,5})(?![A-Z0-9-])")
-_N_TAIL_RE = re.compile(r"(?<![A-Z0-9])(N[1-9]\d{0,4}[A-Z]{0,2})(?![A-Z0-9])")
+# ICAO nationality prefixes Northstar's world can meet (Europe, North America, the Gulf, lessors' registries).
+# An allowlist, not the pattern alone: "EX-TLS" (ex-Toulouse in an MCC line) is shaped like a registration.
+# No "B" (China): "B-NUT" in a tech-log line would read as a tail.
+REG_PREFIXES = ("EI", "G", "D", "F", "I", "M", "C", "EC", "PH", "OO", "HB", "OE", "LN", "SE", "OY", "OH", "SP",
+                "OK", "OM", "HA", "YR", "LZ", "SX", "CS", "LX", "TF", "ES", "YL", "LY", "S5", "9A", "9H", "5B", "TC",
+                "UR", "4X", "A6", "A7", "VH", "ZS", "VT", "9V", "HS", "VP", "VQ", "2")
+_TAIL_RE = re.compile(rf"(?<![A-Z0-9-])((?:{'|'.join(sorted(REG_PREFIXES, key=len, reverse=True))})-[A-Z0-9]{{3,4}})"
+                      r"(?![A-Z0-9-])")
+_N_TAIL_RE = re.compile(r"(?<![A-Z0-9-])(N[1-9]\d{1,4}[A-Z]{0,2}|N[1-9]\d{0,3}[A-Z]{1,2})(?![A-Z0-9-])")
 
 
 def parse_tail(span: str, ref: Any = None) -> str:
@@ -364,6 +371,17 @@ def parse_disputed(span: str, ref: Any = None) -> bool:
     raise ParseError(f"no agreement statement in {span!r}")
 
 
+def parse_not_weather(span: str, ref: Any = None) -> bool:
+    """'NS31 is NOT a wx cancel' / 'not wx related' / 'it was AOG anyway' → True; 'weather cancel' → False."""
+    s = span.upper()
+    if re.search(r"\bNOT\s+(A\s+)?(WX|WEATHER)\b|\bNOT\s+WX[- ]RELATED|\bAOG\s+ANYWAY|\bWAS\s+AOG\b|"
+                 r"\bNOT\s+(THE\s+)?(STORM|WEATHER)\b", s):
+        return True
+    if re.search(r"\b(WX|WEATHER|STORM)\b", s):
+        return False
+    raise ParseError(f"no weather statement in {span!r}")
+
+
 def _guard(fn: Callable[..., Any]) -> Callable[..., Any]:
     """Every parser's contract: return a value or raise ParseError, never anything else. An impossible time or date
     (`24JAN 25:99Z`, `2025-02-30`), a non-string span or an odd number token becomes ParseError, so verify() can
@@ -386,7 +404,7 @@ def _guard(fn: Callable[..., Any]) -> Callable[..., Any]:
 for _name in ("parse_time", "parse_times", "parse_date", "parse_ata", "parse_tail", "parse_flight_number",
               "parse_iata", "parse_seat", "parse_delay_code", "parse_int", "parse_float", "parse_pct", "parse_money",
               "parse_eur", "parse_gbp", "parse_minutes", "parse_duration_h", "parse_bool", "parse_mel_relief",
-              "parse_aog", "parse_signed", "parse_disputed"):
+              "parse_aog", "parse_signed", "parse_disputed", "parse_not_weather"):
     globals()[_name] = _guard(globals()[_name])
 
 
@@ -395,7 +413,7 @@ PARSERS: dict[str, Callable[..., Any]] = {
     "iata": parse_iata, "seat": parse_seat, "delay_code": parse_delay_code, "int": parse_int, "float": parse_float,
     "pct": parse_pct, "eur": parse_eur, "gbp": parse_gbp, "minutes": parse_minutes, "duration_h": parse_duration_h,
     "bool": parse_bool, "mel_relief": parse_mel_relief, "aog": parse_aog, "signed": parse_signed,
-    "disputed": parse_disputed,
+    "disputed": parse_disputed, "not_weather": parse_not_weather,
 }
 
 
@@ -434,13 +452,21 @@ def values_match(a: Any, b: Any) -> bool:
     return a == b
 
 
+def norm_ws(text: str) -> str:
+    """NFC, every run of whitespace (incl. newlines) collapsed to one space, trimmed. Case is kept."""
+    import unicodedata
+    return re.sub(r"\s+", " ", unicodedata.normalize("NFC", text)).strip()
+
+
 def verify(field: str, value: Any, span: str | None, source_text: str | None,
            ref: datetime | date | None = None) -> tuple[bool, str]:
-    """The Reader's acceptance test: (ok, reason). ok only if the field is registered, the span is a verbatim
-    substring of the source text, and re-parsing the span gives the claimed value (when the field has a parser)."""
+    """The Reader's acceptance test: (ok, reason). ok only if the field is registered, the span is a substring of
+    the source text once whitespace runs are collapsed on both sides (the stored quote stays verbatim), and
+    re-parsing the span gives the claimed value (when the field has a parser)."""
     if not _fields.is_registered(field):
         return False, "unregistered_field"
-    if not span or not source_text or span not in source_text:
+    if not isinstance(span, str) or not isinstance(source_text, str) or not norm_ws(span) or (
+            norm_ws(span) not in norm_ws(source_text)):
         return False, "span_not_in_source"
     if _fields.get(field).parse is None:
         return True, "structured"

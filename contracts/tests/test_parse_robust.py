@@ -38,6 +38,7 @@ BAD = {
     "aog": ["", "A/C", "ground"],
     "signed": ["", "signature", "sig"],
     "disputed": ["", "voucher"],
+    "not_weather": ["", "AOG", "cancelled"],
 }
 
 
@@ -110,3 +111,42 @@ def test_fuzz_out_of_range_time_and_date_tokens(day, month, hh, mm, year):
 def test_fuzz_verify_never_raises(field, span, value):
     ok, reason = parse.verify(field, value, span, TECH + span, REF)
     assert isinstance(ok, bool) and isinstance(reason, str)
+
+
+# ---------------------------------------------------------------- Reader requests (llm/DECISIONS.md)
+@pytest.mark.parametrize("span", ["EI-NSB", "ei-nsb", "23JAN 21:40Z EI-NSB DUB N/S.", "G-EUPT", "D-AIBL", "F-HPJA",
+                                  "OE-LBA", "C-FKAU", "4X-EKA", "tail N123AB at BOS", "N12345"])
+def test_parse_tail_accepts_registrations(span):
+    assert parse.parse_tail(span) == parse.parse_tail(span.upper())
+    assert "-" in parse.parse_tail(span) or parse.parse_tail(span).startswith("N")
+
+
+@pytest.mark.parametrize("span", ["EX-TLS", "POOL UNIT EX-TLS VIA CDG 25JAN ETA 14:00Z", "UNIT EX-HAM", "XX-ABC",
+                                  "EI-NSBXY", "EI-", "-NSB", "A/C AOG", "RTS-EST", "ENG 1 N1 HIGH", "EDP PRESS LINE B-NUT",
+                                  "NS-31", "ZZ-1234"])
+def test_parse_tail_rejects_look_alikes(span):
+    with pytest.raises(parse.ParseError):
+        parse.parse_tail(span)
+
+
+def test_parse_tail_skips_ex_station_and_finds_the_real_tail():
+    assert parse.parse_tail("FW: EI-NSB AOG · POOL UNIT EX-TLS VIA CDG") == "EI-NSB"
+    assert parse.parse_tail("POOL UNIT EX-TLS VIA CDG FOR EI-NSB") == "EI-NSB"
+
+
+def test_verify_collapses_whitespace_but_keeps_case():
+    text = "From: mcc.dub\n\nocc - pls note NS31 is NOT a wx cancel,\n  ac was u/s since last nite."
+    assert parse.verify("ops.not_weather", True, "NS31 is NOT a wx cancel, ac was u/s", text, REF) == (
+        True, "reparsed")
+    assert parse.verify("ops.not_weather", True, "NS31  is\nNOT a wx cancel", text, REF)[0]
+    assert parse.verify("ops.not_weather", True, "ns31 is not a wx cancel", text, REF) == (False, "span_not_in_source")
+    assert parse.verify("ops.not_weather", True, "   ", text, REF) == (False, "span_not_in_source")
+
+
+def test_new_fields_ops_not_weather_and_mcc_rts_est():
+    assert fields.get("ops.not_weather").type == "bool" and fields.get("mcc.rts_est").type == "datetime"
+    assert parse.parse_not_weather("NS31 is NOT a wx cancel") is True
+    assert parse.parse_not_weather("it was AOG anyway") is True
+    assert parse.parse_not_weather("storm weather cancel") is False
+    assert parse.verify("mcc.rts_est", "2025-01-25T20:00:00Z", "RTS EST 20:00Z",
+                        "ETA 14:00Z, RTS EST 20:00Z.", datetime(2025, 1, 25, 14, 0, tzinfo=timezone.utc))[0]
