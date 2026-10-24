@@ -13,6 +13,8 @@ import { seatPhrase } from "./lib";
 import { useViewAs } from "./viewAs";
 
 const START: Flow = { step: "answer" };
+/** Seats that never rule: they see questions read-only, so "waiting on" would be the wrong words. */
+const READ_ONLY: Role[] = ["judge", "cfo"];
 
 /** Questions are role-scoped by the server; a new seat starts with a clean slate. */
 export default function QuestionsScreen() {
@@ -141,7 +143,7 @@ function NothingRouted({ role }: { role: Role }) {
   const others = useOtherSeats(role, []);
   return (
     <div className="mt-8 rounded-2xl bg-card px-6 py-12 text-center shadow-[0_0_0_1px_var(--color-cloud-200)] md:py-16" data-testid="questions-empty">
-      <p className="display-tight text-[22px] text-navy-900">Nothing is waiting on {seatPhrase(role)}.</p>
+      <p className="display-tight text-[22px] text-navy-900">{READ_ONLY.includes(role) ? "No open questions." : `Nothing is waiting on ${seatPhrase(role)}.`}</p>
       <p className="mx-auto mt-2 max-w-[52ch] text-[14px] leading-relaxed text-slate-500">
         StormCheck asks only where the evidence disagrees or there is no precedent, and only the person who can rule on it.
         {others.length ? " The open questions are with:" : ""}

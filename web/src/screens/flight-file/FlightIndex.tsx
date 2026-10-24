@@ -208,7 +208,11 @@ function FlightRowLink({ row, runDate, expanded }: { row: FlightRow; runDate: st
         </span>
         <span className="hidden font-mono text-[12px] text-slate-500 md:block">{recode ? <Recode from={recode.from} to={recode.to} size="sm" /> : code ? `RSN ${code}` : "—"}</span>
         <span className="justify-self-end md:justify-self-start">
-          <StatusChip tone={chip.tone}>{chip.text}</StatusChip>
+          {/* phones: the group header already names the verdict, so the chip keeps only the outcome */}
+          <StatusChip tone={chip.tone}>
+            <span className="md:hidden">{chip.text.split(" · ").pop()}</span>
+            <span className="hidden md:inline">{chip.text}</span>
+          </StatusChip>
         </span>
         <ChevronRight className="hidden size-4 text-slate-400 transition-transform group-hover:translate-x-0.5 md:block" aria-hidden="true" />
 

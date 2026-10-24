@@ -8,7 +8,7 @@ import { RoleAvatar } from "@/components/kit";
 import { VERDICT_COLOR, verdictChip, type VerdictKind } from "@/components/verdict";
 import { count, duration, longDate, zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { cityOf, consequence, splitRecode, VERDICT_HEADLINE } from "./lib";
+import { cityOf, consequence, splitRecode, summaryText, VERDICT_HEADLINE } from "./lib";
 import { routedPhrase } from "../questions/lib";
 import { Recode } from "./Recode";
 
@@ -43,7 +43,8 @@ export function VerdictCover({ file, kind, stormLabel }: { file: FlightFile; kin
   const chip = verdictChip(decision);
   const recode = decision.recoded ? splitRecode(decision.recode_label, decision) : null;
   const payouts = kind === "notweather" ? payoutsDrafted(file.entitlements_summary ?? {}) : null;
-  const effect = kind === "notweather" ? (payouts ? `${count(payouts)} payouts drafted, pending Claims Lead approval` : null) : consequence(kind);
+  // The server's own status line first ("172 payouts drafted, pending Claims Lead approval"), else the plan's wording.
+  const effect = summaryText(file.entitlements_summary, "status_line") ?? (kind === "notweather" ? (payouts ? `${count(payouts)} payouts drafted, pending Claims Lead approval` : null) : consequence(kind));
   const window = windowChip(file);
 
   return (

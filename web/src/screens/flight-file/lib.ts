@@ -92,9 +92,10 @@ export function bandMarginText(e: Pick<Entitlement, "distance_km" | "band_eur" |
   if (!Number.isFinite(margin)) return km;
   const i = BANDS.indexOf(e.band_eur);
   const next = BANDS[i + 1];
-  // Negative margin, or a band with nothing above it, means the edge is below; otherwise the next band up.
-  if (e.band_margin_km < 0 || next === undefined) return `${km} · ${count(margin)} km inside the €${e.band_eur} band`;
-  return `${km} · ${count(margin)} km under the €${next} band`;
+  // The lowest band can only move up and the highest only down; the middle one could go either way.
+  if (i === 0 && next !== undefined) return `${km} · ${count(margin)} km under the €${next} band`;
+  if (next === undefined || e.band_margin_km < 0) return `${km} · ${count(margin)} km into the €${e.band_eur} band`;
+  return `${km} · ${count(margin)} km from the nearest band edge`;
 }
 
 /** The compensation liability a decision drafted: Cr 2140 on its compensation-estimate journals. */
@@ -113,12 +114,12 @@ const SUMMARY_LABEL: Record<string, string> = {
   payouts_drafted: "Payouts drafted",
   no_compensation: "No compensation",
   held: "Held",
-  needs_ruling: "Needs a ruling",
+  needs_ruling: "Waiting on a ruling",
   exempt_notice: "Notice ≥14 days (exempt)",
   staff_ticket: "Staff tickets",
   out_of_scope: "Out of scope",
   refunds: "Refunds",
-  refunds_already_initiated: "Refunds already initiated",
+  refunds_already_initiated: "Refunds already initiated by the CRM bot",
   vouchers: "Refund vouchers",
   reaccommodated: "Reaccommodated",
   reaccommodated_own: "Reaccommodated on Northstar",
@@ -127,6 +128,11 @@ const SUMMARY_LABEL: Record<string, string> = {
   art7_2_50pct: "Art. 7(2) 50% reduction",
   claims: "Claims received",
   claims_received: "Claims received",
+  claims_unassessed: "Claims not yet assessed",
+  voucher_cases: "Service-desk vouchers in lieu",
+  atl_cents: "Air traffic liability (2100)",
+  taxes_payable_cents: "Taxes payable (2110)",
+  refund_cents: "Refunds elected",
   compensation_cents: "Full Art. 7 entitlement if every passenger claims",
   entitlement_cents: "Full Art. 7 entitlement if every passenger claims",
   full_entitlement_cents: "Full Art. 7 entitlement if every passenger claims",
@@ -144,27 +150,67 @@ export function summaryLabel(key: string) {
   return SUMMARY_LABEL[key] ?? featureLabel(key);
 }
 
-export type SummaryItem = { key: string; label: string; text: string; kind: "money" | "count" | "rate" | "text" };
+export type SummaryItem = { key: string; label: string; text: string; kind: "money" | "count" | "rate" };
 
-/** Turn the summary dict into display rows: cents → €, rates → %, counts → "5,292". Nested values are skipped. */
+/** Keys that are geometry or display text, not figures for the grid (the band and the lines render elsewhere). */
+const NOT_A_FIGURE = new Set(["distance_km", "band_eur", "band_margin_km", "care_due"]);
+
+/**
+ * The loose summary dict as grid figures: cents → €, rates → %, counts → "5,292". Strings (labels, status
+ * lines, ids) and nested values are left to the components that know them; unknown numeric keys still show.
+ */
 export function summaryItems(summary: Record<string, unknown> | null | undefined): SummaryItem[] {
   if (!summary) return [];
   const out: SummaryItem[] = [];
   for (const [key, value] of Object.entries(summary)) {
-    if (value === null || value === undefined || typeof value === "object") continue;
+    if (typeof value !== "number" || !Number.isFinite(value) || NOT_A_FIGURE.has(key)) continue;
     const label = summaryLabel(key);
-    if (typeof value === "number") {
-      if (key.endsWith("_cents")) out.push({ key, label, text: eur(value), kind: "money" });
-      else if (/rate|pct|share/.test(key) && value <= 1) out.push({ key, label, text: pct(value), kind: "rate" });
-      else out.push({ key, label, text: count(value), kind: "count" });
-    } else if (typeof value === "boolean") {
-      out.push({ key, label, text: value ? "yes" : "no", kind: "text" });
-    } else {
-      out.push({ key, label, text: String(value), kind: "text" });
-    }
+    if (key.endsWith("_cents")) out.push({ key, label, text: eur(value), kind: "money" });
+    else if (/rate|pct|share/.test(key) && value <= 1) out.push({ key, label, text: pct(value), kind: "rate" });
+    else out.push({ key, label, text: count(value), kind: "count" });
   }
   return out;
 }
+
+/** A display string the server wrote into the summary (status_line, band_label, …), if it did. */
+export function summaryText(summary: Record<string, unknown> | null | undefined, key: string): string | null {
+  const v = summary?.[key];
+  return typeof v === "string" && v.trim() ? v : null;
+}
+
+/** `statuses` ({owed: 171, needs_ruling: 1}) as pairs, largest first. */
+export function statusesOf(summary: Record<string, unknown> | null | undefined): [string, number][] {
+  const s = summary?.statuses;
+  if (!s || typeof s !== "object" || Array.isArray(s)) return [];
+  return Object.entries(s as Record<string, unknown>)
+    .filter((p): p is [string, number] => typeof p[1] === "number" && p[1] > 0)
+    .sort((a, b) => b[1] - a[1]);
+}
+
+/** `compensation_breakdown` ([{count, band_eur}]) as "158 × €600 + 14 × €300". */
+export function breakdownText(summary: Record<string, unknown> | null | undefined): string | null {
+  const b = summary?.compensation_breakdown;
+  if (!Array.isArray(b) || !b.length) return null;
+  const parts = b.filter((r): r is { count: number; band_eur: number } => !!r && typeof r.count === "number" && typeof r.band_eur === "number").map((r) => `${count(r.count)} × €${count(r.band_eur)}`);
+  return parts.length ? parts.join(" + ") : null;
+}
+
+export type Reduction = { coupons: number | null; ruleRef: string | null; support: string | null; label: string };
+
+/** `reduction_7_2`: the learned Art. 7(2) cut, if this flight applies it. */
+export function reductionOf(summary: Record<string, unknown> | null | undefined): Reduction | null {
+  const r = summary?.reduction_7_2;
+  if (!r || typeof r !== "object" || Array.isArray(r)) return null;
+  const o = r as Record<string, unknown>;
+  return {
+    coupons: typeof o.coupons === "number" ? o.coupons : null,
+    ruleRef: typeof o.rule_ref === "string" ? o.rule_ref : null,
+    support: typeof o.support === "string" ? o.support : null,
+    label: typeof o.label === "string" ? o.label : "Art. 7(2) 50% reduction",
+  };
+}
+
+export const capitalize = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
 /** Passenger elections (Election.kind) in plain words, in the order they are drawn. */
 export const ELECTION_LABEL: Record<string, string> = {

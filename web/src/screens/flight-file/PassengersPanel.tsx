@@ -5,10 +5,10 @@ import { Money } from "@/components/kit";
 import { entitlementChip } from "@/components/verdict";
 import { count } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { ELECTION_LABEL, electionsOf, featureLabel, summaryItems, type SummaryItem } from "./lib";
+import { ELECTION_LABEL, electionsOf, featureLabel, statusesOf, summaryItems, type SummaryItem } from "./lib";
 
-/** Keys the money card already shows; the passengers panel shows how the cabin splits. */
-const SHOWN_IN_MONEY = /(_cents$|rate$)/;
+/** Figures the money card already shows; this panel shows how the cabin splits. */
+const SHOWN_IN_MONEY = /^(full_entitlement|entitlement|compensation|drafted_liability|liability_drafted|liability|refund_due|refunds_due|refund)_cents$|rate$/;
 
 /** "NS31@2025-01-24:14C" → "14C". */
 const seat = (couponId: string) => couponId.split(":").slice(1).join(":") || couponId;
@@ -22,10 +22,12 @@ function notes(e: Entitlement): string[] {
 }
 
 export function PassengersPanel({ file }: { file: FlightFile }) {
-  const items = summaryItems(file.entitlements_summary).filter((i) => !SHOWN_IN_MONEY.test(i.key));
+  const elections = electionsOf(file.entitlements_summary);
+  // The elections bar already states the coupon total.
+  const items = summaryItems(file.entitlements_summary).filter((i) => !SHOWN_IN_MONEY.test(i.key) && !(elections.length && i.key === "coupons"));
   const sample = file.sample_entitlements ?? [];
   const total = file.flight.pax;
-  if (!items.length && !sample.length) return null;
+  if (!items.length && !sample.length && !elections.length) return null;
   return (
     <section aria-labelledby="pax-title" className="rounded-xl bg-card shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04)]">
       <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-5 pt-4">
@@ -35,12 +37,13 @@ export function PassengersPanel({ file }: { file: FlightFile }) {
         <p className="text-[12.5px] text-slate-500">EU261 entitlement per coupon, worked out by the engine</p>
       </header>
 
-      <Elections pairs={electionsOf(file.entitlements_summary)} />
+      <Elections pairs={elections} />
+      <Statuses pairs={statusesOf(file.entitlements_summary)} />
       {items.length ? <SummaryGrid items={items} /> : null}
 
       {sample.length ? (
-        <div className="mt-2">
-          <div className="flex items-baseline justify-between px-5 pb-2 pt-3">
+        <div className="mt-4 border-t border-cloud-100">
+          <div className="flex items-baseline justify-between px-5 pb-2 pt-3.5">
             <MicroLabel>
               Sample entitlements · {count(sample.length)} of {count(total)}
             </MicroLabel>
@@ -110,13 +113,32 @@ function Elections({ pairs }: { pairs: [string, number][] }) {
   );
 }
 
+/** Entitlement status across the flight's coupons: "owed 171 · needs-ruling 1". */
+function Statuses({ pairs }: { pairs: [string, number][] }) {
+  if (!pairs.length) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 px-5 pt-3.5">
+      <MicroLabel className="mr-1.5">Status</MicroLabel>
+      {pairs.map(([status, n]) => {
+        const chip = entitlementChip({ status: status as Entitlement["status"] });
+        return (
+          <StatusChip key={status} tone={chip.tone}>
+            {chip.text}
+            <span className="figure font-sans text-[12px] font-semibold">{count(n)}</span>
+          </StatusChip>
+        );
+      })}
+    </div>
+  );
+}
+
 function SummaryGrid({ items }: { items: SummaryItem[] }) {
   return (
-    <dl className="mt-3 grid grid-cols-2 gap-px overflow-hidden border-y border-cloud-100 bg-cloud-100 sm:grid-cols-3 lg:grid-cols-4">
+    <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-cloud-100 px-5 pt-4 sm:grid-cols-3 xl:grid-cols-4">
       {items.map((i) => (
-        <div key={i.key} className="bg-card px-5 py-3">
+        <div key={i.key} className="min-w-0">
           <dt className="text-[12px] leading-snug text-slate-500">{i.label}</dt>
-          <dd className="figure mt-1 text-[18px] font-semibold text-navy-900">{i.text}</dd>
+          <dd className="figure mt-0.5 text-[18px] font-semibold text-navy-900">{i.text}</dd>
         </div>
       ))}
     </dl>
