@@ -350,6 +350,9 @@ export function Hero() {
             worker.postMessage({ mslp: s.mslp, grid: GRID, steps: STEPS, from: STILL_STEP } satisfies IsobarJob);
           }
           const v = document.createElement("video");
+          // in the DOM (tiny, invisible): some mobile browsers only play inline video that is in the page
+          v.className = "pointer-events-none absolute left-0 top-0 h-px w-px opacity-0";
+          v.setAttribute("aria-hidden", "true");
           v.muted = true;
           v.defaultMuted = true;
           v.playsInline = true;
@@ -357,6 +360,7 @@ export function Hero() {
           v.setAttribute("muted", "");
           v.setAttribute("playsinline", "");
           v.src = asset("eowyn-ir.mp4");
+          el.appendChild(v);
           // start on the 12:00Z frame the still shows, so the swap is invisible
           v.addEventListener("loadedmetadata", () => (v.currentTime = STILL_MIN / LOOP.rate), { once: true });
           v.addEventListener(
@@ -414,6 +418,7 @@ export function Hero() {
         video.pause();
         video.removeAttribute("src");
         video.load();
+        video.remove();
       }
       sat?.dispose();
     };

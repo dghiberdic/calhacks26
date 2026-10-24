@@ -101,6 +101,7 @@ export class SatelliteLayer {
   private w = 1;
   private h = 1;
   private ratio = 0;
+  private everyTick = false;
 
   constructor(opts: { canvas: HTMLCanvasElement; image: string; satBox: Box; origin: [number, number]; night: string }) {
     this.renderer = new THREE.WebGLRenderer({ canvas: opts.canvas, antialias: false, alpha: false, powerPreference: "high-performance" });
@@ -151,11 +152,16 @@ export class SatelliteLayer {
     tex.flipY = false;
     this.video = tex;
     this.material.uniforms.uSat.value = tex;
+    // count decoded frames where the browser says when they land; elsewhere redraw every tick
+    if (typeof el.requestVideoFrameCallback !== "function") {
+      this.everyTick = true;
+      return;
+    }
     const count = () => {
       this.frames++;
-      if (this.video) el.requestVideoFrameCallback?.(count);
+      if (this.video) el.requestVideoFrameCallback(count);
     };
-    el.requestVideoFrameCallback?.(count);
+    el.requestVideoFrameCallback(count);
   }
 
   setSize(w: number, h: number) {
@@ -197,7 +203,7 @@ export class SatelliteLayer {
     if (reveal <= 0.0005) return false;
     const washing = reveal < 0.999;
     this.fit(washing);
-    const key = `${view.map((n) => n.toFixed(4)).join(",")}|${washing ? time : reveal}|${u.uFade.value}|${this.frames}|${u.uSat.value ? 1 : 0}`;
+    const key = `${view.map((n) => n.toFixed(4)).join(",")}|${washing || this.everyTick ? time : reveal}|${u.uFade.value}|${this.frames}|${u.uSat.value ? 1 : 0}`;
     if (key === this.last) return true;
     this.last = key;
     u.uView.value.set(...view);
