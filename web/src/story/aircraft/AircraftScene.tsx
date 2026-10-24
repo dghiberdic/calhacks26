@@ -193,10 +193,15 @@ function Leak({ progress, label }: { progress: RefObject<AircraftProgress>; labe
     v.copy(LEAK_AT).project(camera);
     const px = ((v.x + 1) / 2) * size.width;
     const py = ((1 - v.y) / 2) * size.height;
-    // Reads to the right of the pump unless that runs off the canvas (phones); then it flips to the left.
-    const flip = px + el.offsetWidth > size.width - 8;
-    el.style.flexDirection = flip ? "row-reverse" : "row";
-    el.style.transform = `translate(${flip ? px - el.offsetWidth + 6 : px - 6}px, ${py}px) translate(0, -50%)`;
+    // Reads to the right of the pump; flips to the left if that runs off the canvas; on a canvas too narrow
+    // for either, it sits under the pump, kept inside the edges.
+    const w = el.offsetWidth;
+    const right = px + w <= size.width - 8;
+    const left = px - w >= 8;
+    el.style.flexDirection = right || !left ? "row" : "row-reverse";
+    const x = right ? px - 6 : left ? px - w + 6 : Math.min(Math.max(8, px - 6), size.width - w - 8);
+    const y = right || left ? py : py + 18;
+    el.style.transform = `translate(${x}px, ${y}px) translate(0, -50%)`;
     el.style.opacity = String(progress.current?.leak ?? 0);
   });
   return null;

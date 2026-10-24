@@ -169,7 +169,7 @@ export function Verdict() {
           </Figure>
         </div>
 
-        <div className="mt-20 grid grid-cols-1 gap-10 rounded-2xl bg-white p-6 shadow-[0_0_0_1px_var(--color-cloud-200),0_30px_60px_-40px_rgba(13,21,36,0.25)] md:mt-24 md:p-10 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
+        <div className="mt-20 grid grid-cols-1 gap-10 rounded-2xl bg-white p-4 shadow-[0_0_0_1px_var(--color-cloud-200),0_30px_60px_-40px_rgba(13,21,36,0.25)] sm:p-6 md:mt-24 md:p-10 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
           <div className="vd-reveal flex min-w-0 flex-col gap-6">
             {m.je ? <JournalCard entry={m.je} dense className="shadow-[0_0_0_1px_var(--color-cloud-200)]" /> : <div className="h-[148px] animate-pulse rounded-xl bg-navy-900/5" aria-hidden="true" />}
             <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-3 text-[14.5px]">

@@ -1,4 +1,5 @@
 import type { Blame, Cents, CfoMetrics, Evidence, FlightDecision, FlightFile, FlightRow, JournalEntry, MetarObs, Question, Role, Rule, StormRun, StormWindow } from "@/api/types";
+import { mainWindowOf } from "@/components/storm/model";
 import { verdictOf, type VerdictKind } from "@/components/verdict";
 import { airport, iataOf } from "@/lib/airports";
 import { count, eur, zulu, zuluDay } from "@/lib/format";
@@ -29,11 +30,8 @@ export function nearestObs(metar: MetarObs[] | undefined, iso: string): MetarObs
   return metar.reduce((a, b) => (Math.abs(ms(b.valid) - t) < Math.abs(ms(a.valid) - t) ? b : a));
 }
 
-/** The storm's main window: the longest one the engine computed. */
-export function mainWindow(windows: StormWindow[] | undefined): StormWindow | null {
-  if (!windows?.length) return null;
-  return windows.reduce((a, b) => (ms(b.end) - ms(b.start) > ms(a.end) - ms(a.start) ? b : a));
-}
+/** The storm's main window (the shared helper: the longest one the engine computed). */
+export const mainWindow = (windows: StormWindow[] | undefined): StormWindow | null => (windows?.length ? mainWindowOf(windows) : null);
 
 /** The flight the re-check recoded (NS31 on Éowyn). */
 export function focusRow(run: StormRun | undefined): FlightRow | null {

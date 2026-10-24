@@ -23,7 +23,7 @@ let satModule: Promise<typeof import("./SatelliteLayer")> | null = null;
 const loadSat = () => (satModule ??= import("./SatelliteLayer"));
 
 /** The storm, then the network it grounded. Boxes in lon/lat; the view fits them to any screen. */
-const STORM_BOX = { desk: [-33, 3, 46.5, 63.5], phone: [-17, 1, 47, 61] } as const;
+const STORM_BOX = { desk: [-33, 3, 46.5, 63.5], phone: [-17, 1, 44, 58] } as const;
 const ROUTES_BOX = { desk: [-92, 28, 33, 61], phone: [-19, 9, 41, 62] } as const;
 
 const ease = (t: number) => t * t * (3 - 2 * t);

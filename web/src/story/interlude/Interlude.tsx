@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { count, zulu } from "@/lib/format";
 import { asset } from "../data/assets";
 import { HERO_LINES } from "../data/lineart";
@@ -22,6 +22,14 @@ export function Interlude() {
   const obs = std ? nearestObs(story.run?.metar, std) : null;
   const operated = story.run?.counters.operated;
   const win = story.window;
+  // A portrait phone shows a slice of the 16:9 render: keep the nose (left), and the line art with it.
+  const [narrow, setNarrow] = useState(() => window.matchMedia("(max-aspect-ratio: 1/1)").matches);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-aspect-ratio: 1/1)");
+    const on = () => setNarrow(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
 
   useGSAP(
     () => {
@@ -53,14 +61,14 @@ export function Interlude() {
         srcSet={`${asset("ns31-render-1280.webp")} 1280w, ${asset("ns31-render.webp")} 2560w`}
         sizes="100vw"
         alt={`Rendering of Northstar's A321 ${f?.aircraft ?? ""} parked on a wet stand at Dublin`}
-        className="il-img absolute inset-0 h-full w-full object-cover"
+        className="il-img absolute inset-0 h-full w-full object-cover [@media(max-aspect-ratio:1/1)]:object-left"
         style={{
           ["--r" as string]: "175%",
           maskImage: "radial-gradient(circle at 22% 46%, #000 calc(var(--r) - 22%), transparent var(--r))",
           WebkitMaskImage: "radial-gradient(circle at 22% 46%, #000 calc(var(--r) - 22%), transparent var(--r))",
         }}
       />
-      <svg className="il-lines pointer-events-none absolute inset-0 h-full w-full motion-reduce:opacity-[0.12]" viewBox="0 0 2560 1440" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <svg className="il-lines pointer-events-none absolute inset-0 h-full w-full motion-reduce:opacity-[0.12]" viewBox="0 0 2560 1440" preserveAspectRatio={narrow ? "xMinYMid slice" : "xMidYMid slice"} aria-hidden="true">
         {HERO_LINES.map((d, i) => (
           <path key={i} className="il-line" d={d} fill="none" stroke="#e9edf2" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" {...PLOTTED} />
         ))}

@@ -42,9 +42,14 @@ function drum(from: string, to: string): string[] {
   return seq.length > MAX_STEPS ? [...seq.slice(0, 2), ...seq.slice(-(MAX_STEPS - 2))] : seq;
 }
 
+const PUNCT = new Set([":", ",", "."]);
+
 function setText(cell: HTMLElement, part: string, c: string) {
   const el = cell.querySelector<HTMLElement>(`.${part} > span`);
-  if (el && el.textContent !== c) el.textContent = c;
+  if (!el || el.textContent === c) return;
+  el.textContent = c;
+  if (PUNCT.has(c)) el.dataset.p = "";
+  else delete el.dataset.p;
 }
 
 /** Flip one cell to `target`, starting `delay` ms from now, `step` ms per character. */

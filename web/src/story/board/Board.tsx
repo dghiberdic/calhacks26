@@ -26,11 +26,11 @@ function FlapBoard({ title, rows, phase, entitlement, side }: { title: string; r
     <div className="w-fit min-w-0">
       <p className="micro mb-3 px-1 text-cloud-300">{title}</p>
       <div className="rounded-lg bg-[#0a1220] p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05),0_30px_60px_-30px_rgba(0,0,0,0.8)] md:p-4">
-        <div className={cn(COLS, "mb-2 px-1 text-[0.62em] uppercase tracking-[0.08em] text-cloud-500")} aria-hidden="true">
+        <div className={cn(COLS, "mb-2 px-1 text-[0.6em] uppercase tracking-[0.06em] text-cloud-500")} aria-hidden="true">
           <span>{side === "dep" ? "STD" : "STA"}</span>
           <span>Flight</span>
           <span>{side === "dep" ? "To" : "From"}</span>
-          <span>Reason</span>
+          <span>Code</span>
           <span>Art. 7</span>
         </div>
         <div className="flex flex-col gap-[0.3em]">
@@ -87,7 +87,7 @@ export function Board() {
         // Flip when NS31's row (the last departure) is well on screen, so the change is seen, not missed.
         ScrollTrigger.create({
           trigger: ".board-dep",
-          start: "bottom 72%",
+          start: "bottom 86%",
           onEnter: () => setPhase("checked"),
           onLeaveBack: () => setPhase("coded"),
         });
