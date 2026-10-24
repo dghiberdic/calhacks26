@@ -25,7 +25,7 @@ function Copy({ log, reg }: { log: ReturnType<typeof useStory>["log"]; reg: stri
           At <span className="figure">{zulu(log.at.toISOString())}</span> on {zuluDay(log.at.toISOString()).split(" ").slice(0, 2).join(" ")},{" "}
         </>
       ) : null}
-      {reg ?? "the aircraft"}&rsquo;s engine-2 pump was leaking yellow-system fluid beyond limits. No MEL relief, so it couldn&rsquo;t fly. A technical fault isn&rsquo;t weather.
+      {reg ?? "the aircraft"}&rsquo;s engine-2 pump was leaking yellow-system fluid beyond the maintenance manual&rsquo;s limit. With no MEL relief, it could not fly. Under EU261, a technical fault is not an extraordinary circumstance.
     </>
   );
 }
@@ -75,6 +75,7 @@ export function Blueprint() {
           .from(".bp-hyd-green", { ...UNPLOTTED, duration: 0.8 }, 2.75)
           .from(".bp-hyd-yellow", { ...UNPLOTTED, duration: 0.8 }, 2.9)
           .from(".bp-legend", { opacity: 0, y: 8, duration: 0.4 }, 3.1)
+          .from(".bp-flows", { opacity: 0, duration: 0.5 }, 3.2)
           .to(".bp-hyd-blue, .bp-hyd-green", { opacity: 0.22, duration: 0.4 }, 3.6)
           .from(".bp-leak", { scale: 0, opacity: 0, transformOrigin: "50% 50%", duration: 0.4, ease: "back.out(3)" }, 3.7)
           .from(".bp-log", { opacity: 0, x: -16, duration: 0.5, ease: "power3.out" }, 3.9)
@@ -117,13 +118,14 @@ export function Blueprint() {
   return (
     <section
       ref={root}
-      aria-label="The aircraft as evidence" data-section="blueprint"
+      aria-label={`${reg ?? "The aircraft"} and its tech log`} data-section="blueprint"
       className="relative flex min-h-svh flex-col justify-center overflow-hidden bg-[var(--story-cyan)] py-12 text-[var(--story-ink)] max-lg:py-6 [@media(max-height:760px)]:py-6"
     >
-      <div className="bp-grid story-grid pointer-events-none absolute inset-0 opacity-[0.22]" aria-hidden="true" />
-      <svg className="bp-grain pointer-events-none absolute inset-0 h-full w-full opacity-[0.16] mix-blend-overlay" aria-hidden="true">
+      {/* the light table: the drafting grid slides one square diagonally, slowly, forever (motion only) */}
+      <div className="bp-grid story-grid story-grid-drift pointer-events-none absolute -inset-[120px] opacity-[0.22]" aria-hidden="true" />
+      <svg className="bp-grain story-grain pointer-events-none absolute -inset-[6%] h-[112%] w-[112%] opacity-[0.2] mix-blend-overlay" aria-hidden="true">
         <filter id="bp-grain">
-          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" />
+          <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch" />
           <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0" />
         </filter>
         <rect width="100%" height="100%" filter="url(#bp-grain)" />
@@ -136,12 +138,12 @@ export function Blueprint() {
               <Contained
                 fallback={
                   <div className="absolute inset-0 grid place-items-center">
-                    <img src={asset("ns31-render.webp")} alt="Rendering of EI-NSB on a wet stand at Dublin" className="aspect-video w-full rounded-xl object-cover shadow-[0_30px_80px_-30px_rgba(0,0,0,0.8)]" />
+                    <img src={asset("ns31-render-2560.webp")} alt="Rendering of EI-NSB on a wet stand at Dublin" className="aspect-video w-full rounded-xl object-cover shadow-[0_30px_80px_-30px_rgba(0,0,0,0.8)]" />
                   </div>
                 }
               >
                 <Suspense fallback={null}>
-                  <AircraftScene progress={progress} leak={leak} fallback={asset("ns31-render.webp")} className="absolute inset-0" />
+                  <AircraftScene progress={progress} leak={leak} fallback={asset("ns31-render-2560.webp")} className="absolute inset-0" />
                 </Suspense>
               </Contained>
             ) : null}
@@ -184,6 +186,12 @@ export function Blueprint() {
             {(["blue", "green", "yellow"] as const).map((s) => (
               <path key={s} className={`bp-hyd-${s}`} d={HYDRAULICS[s].d} fill="none" stroke={HYD_COLOR[s]} strokeWidth={s === LEAK.system ? 0.22 : 0.17} strokeLinecap="round" strokeLinejoin="round" {...PLOTTED} />
             ))}
+            {/* fluid moving through each system; the leaking yellow system runs weak (motion only) */}
+            <g className="bp-flows motion-reduce:hidden" aria-hidden="true">
+              {(["blue", "green", "yellow"] as const).map((s) => (
+                <path key={s} className={s === LEAK.system ? "bp-flow bp-flow-weak" : "bp-flow"} d={HYDRAULICS[s].d} fill="none" stroke={HYD_COLOR[s]} strokeWidth={0.34} strokeLinecap="round" strokeDasharray="0.01 1.9" />
+              ))}
+            </g>
             <g className="bp-leak">
               <circle className="bp-leak-pulse" cx={LEAK.x} cy={LEAK.y} r="0.9" fill="none" stroke="var(--color-notweather)" strokeWidth="0.12" />
               <circle cx={LEAK.x} cy={LEAK.y} r="0.55" fill="var(--color-notweather)" />
@@ -209,7 +217,9 @@ export function Blueprint() {
 
         <aside className="flex flex-col justify-center gap-8">
           <div>
-            <h2 className="display text-[clamp(38px,4.2vw,68px)] text-white">Grounded the night before.</h2>
+            <h2 className="text-balance display text-[clamp(36px,3.9vw,64px)] text-white">
+              A hydraulic leak grounded <span className="whitespace-nowrap">{reg ?? "the aircraft"}</span>.
+            </h2>
             <p className="bp-copy mt-5 max-w-[36ch] text-[16.5px] leading-relaxed text-[var(--story-ink-soft)] max-lg:motion-safe:hidden">
               <Copy log={log} reg={reg} />
             </p>
@@ -249,7 +259,7 @@ export function Blueprint() {
                 </figure>
               </div>
               <p className="bp-caption-3d max-w-[34ch] self-start text-[15px] leading-relaxed text-[var(--story-ink-soft)] opacity-0 [grid-area:1/1] motion-reduce:hidden">
-                The same aircraft, from the same drawing. It stays in pencil until the evidence agrees, then it inks in.
+                The same A321 in 3D. The leak is at the engine-2 driven pump, low on the starboard engine.
               </p>
             </div>
           </div>

@@ -7,13 +7,17 @@ const MAX_STEPS = 7;
 
 // One rAF loop for every cell on the page: flips are queued with a due time and run in frame order,
 // so a board of ~900 cells costs a few text writes and two compositor animations per flip, not a React render.
+// At most PER_FRAME flips run in one frame (the rest slip a frame), so filling the board never stalls a phone.
 type Job = { at: number; run: () => void };
 let queue: Job[] = [];
 let raf = 0;
+const PER_FRAME = 140;
 function pump() {
   const now = performance.now();
-  const due = queue.filter((j) => j.at <= now);
-  if (due.length) queue = queue.filter((j) => j.at > now);
+  const due: Job[] = [];
+  const later: Job[] = [];
+  for (const j of queue) (j.at <= now && due.length < PER_FRAME ? due : later).push(j);
+  queue = later;
   for (const j of due) j.run();
   raf = queue.length ? requestAnimationFrame(pump) : 0;
 }
@@ -44,10 +48,24 @@ function drum(from: string, to: string): string[] {
 
 const PUNCT = new Set([":", ",", "."]);
 
-function setText(cell: HTMLElement, part: string, c: string) {
-  const el = cell.querySelector<HTMLElement>(`.${part} > span`);
-  if (!el || el.textContent === c) return;
-  el.textContent = c;
+/** Each cell's four glyph spans and two leaves, found once. */
+type Parts = { "flap-top": HTMLElement; "flap-bottom": HTMLElement; "flap-leaf-front": HTMLElement; "flap-leaf-back": HTMLElement; front: HTMLElement; back: HTMLElement };
+const parts = new WeakMap<HTMLElement, Parts>();
+function partsOf(cell: HTMLElement): Parts {
+  let p = parts.get(cell);
+  if (!p) {
+    const g = (c: string) => cell.querySelector<HTMLElement>(`.${c} > span`)!;
+    p = { "flap-top": g("flap-top"), "flap-bottom": g("flap-bottom"), "flap-leaf-front": g("flap-leaf-front"), "flap-leaf-back": g("flap-leaf-back"), front: cell.querySelector<HTMLElement>(".flap-leaf-front")!, back: cell.querySelector<HTMLElement>(".flap-leaf-back")! };
+    parts.set(cell, p);
+  }
+  return p;
+}
+
+/** Glyphs live in a data attribute drawn by CSS (::before), so the board's ~900 cells stay out of the page's text. */
+function setText(cell: HTMLElement, part: "flap-top" | "flap-bottom" | "flap-leaf-front" | "flap-leaf-back", c: string) {
+  const el = partsOf(cell)[part];
+  if (!el || el.dataset.c === c) return;
+  el.dataset.c = c;
   if (PUNCT.has(c)) el.dataset.p = "";
   else delete el.dataset.p;
 }
@@ -57,12 +75,12 @@ function flipCell(cell: HTMLElement, target: string, delay: number, step: number
   const to = CHARSET.includes(target) ? target : " ";
   if (instant) {
     cell.dataset.c = to;
-    for (const part of ["flap-top", "flap-bottom"]) setText(cell, part, to);
+    setText(cell, "flap-top", to);
+    setText(cell, "flap-bottom", to);
     return;
   }
   const seq = drum(cell.dataset.c ?? " ", to);
-  const front = cell.querySelector<HTMLElement>(".flap-leaf-front");
-  const back = cell.querySelector<HTMLElement>(".flap-leaf-back");
+  const { front, back } = partsOf(cell);
   const t0 = performance.now() + delay;
   seq.forEach((next, k) => {
     schedule(
@@ -87,16 +105,16 @@ function flipCell(cell: HTMLElement, target: string, delay: number, step: number
 const Cell = () => (
   <span className="flap-cell" aria-hidden="true">
     <span className="flap-half flap-top">
-      <span> </span>
+      <span data-c=" " />
     </span>
     <span className="flap-half flap-bottom">
-      <span> </span>
+      <span data-c=" " />
     </span>
     <span className="flap-half flap-leaf-front">
-      <span> </span>
+      <span data-c=" " />
     </span>
     <span className="flap-half flap-leaf-back">
-      <span> </span>
+      <span data-c=" " />
     </span>
     <span className="flap-axis" />
   </span>

@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { scaleLinear, scaleUtc } from "d3-scale";
 import { area, curveMonotoneX, line } from "d3-shape";
 import { metarSeries, stormFacts } from "@/components/storm/model";
@@ -7,7 +7,7 @@ import { count, duration, zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { focusRow, hhmm, mainWindow, ms, nearestObs } from "../data/model";
 import { useStory } from "../data/context";
-import { gsap, MEDIA, PLOTTED, UNPLOTTED, useGSAP } from "../motion/gsap";
+import { gsap, MEDIA, PLOTTED, prefersReducedMotion, UNPLOTTED, useGSAP } from "../motion/gsap";
 import { PIN_PRIORITY } from "../motion/useAutoRefresh";
 import { Pending } from "../ui";
 import { windBarb } from "./barbs";
@@ -36,6 +36,10 @@ const ecamOf = (quote: string | null | undefined) => quote?.match(/ECAM\s+([^.]+
 export function StormWindow() {
   const story = useStory();
   const root = useRef<HTMLElement>(null);
+  const gustRef = useRef<SVGPathElement>(null);
+  const headRef = useRef<SVGGElement>(null);
+  /** The chart is drawn far enough for the reading to ride the gust line (set by the scroll timeline). */
+  const drawn = useRef(false);
   const run = story.run;
 
   const g = useMemo(() => {
@@ -56,7 +60,7 @@ export function StormWindow() {
       return o && o.drct !== null && o.drct !== undefined && o.sknt !== null && o.sknt !== undefined ? [{ at: h, ...windBarb(x(h), M.t - 46, o.drct, o.sknt, 20) }] : [];
     });
     const midnight = new Date(facts.domain[0].getTime() + 6 * 3600_000);
-    return { facts, x, y, gust, mean, fill, hours, barbs, midnight };
+    return { facts, series, x, y, gust, mean, fill, hours, barbs, midnight };
   }, [run]);
 
   const focus = focusRow(run);
@@ -70,6 +74,9 @@ export function StormWindow() {
   const opFirst = operated.length ? operated.reduce((a, b) => (ms(b.flight.sched_dep) < ms(a.flight.sched_dep) ? b : a)) : null;
   const opLast = operated.length ? operated.reduce((a, b) => (ms(b.flight.sched_dep) > ms(a.flight.sched_dep) ? b : a)) : null;
   const margin = focus?.decision?.window_margin_min ?? (win && focus ? Math.round((ms(focus.flight.sched_dep) - ms(win.end)) / 60_000) : null);
+  const limit = g?.facts.gustLimitKt ?? null;
+  // a shorter window the engine also found, before the main one (the burst around midnight on Éowyn)
+  const earlier = win ? (run?.windows ?? []).filter((w) => ms(w.end) <= ms(win.start)).sort((a, b) => ms(b.start) - ms(a.start))[0] ?? null : null;
 
   useGSAP(
     () => {
@@ -81,6 +88,7 @@ export function StormWindow() {
         const tl = gsap.timeline({
           defaults: { ease: "none" },
           scrollTrigger: { trigger: ".sw-stage", start: "top top", end: phone ? "+=190%" : "+=140%", scrub: 0.6, pin: true, anticipatePin: 1, invalidateOnRefresh: true, refreshPriority: PIN_PRIORITY.window },
+          onUpdate: () => void (drawn.current = tl.progress() > 0.42),
         });
         // Every step targets elements that exist (the tech log and NS31 arrive with the Flight File).
         const has = (sel: string) => !!root.current?.querySelector(sel);
@@ -133,15 +141,87 @@ export function StormWindow() {
     { scope: root, dependencies: [!!g, !!focus, !!win, !!log?.at, operated.length], revertOnUpdate: true },
   );
 
+  // A reading that rides the gust line from the evening before to midnight, again and again: the time and
+  // the gust in the latest METAR at that minute. Only while the chart is on screen, never with reduced motion.
+  useEffect(() => {
+    const path = gustRef.current;
+    const head = headRef.current;
+    const el = root.current;
+    if (!g || !path || !head || !el || prefersReducedMotion()) return;
+    const total = path.getTotalLength();
+    const lut = Array.from({ length: 700 }, (_, i) => path.getPointAtLength((i / 699) * total));
+    const yAt = (x: number) => {
+      let lo = 0;
+      let hi = lut.length - 1;
+      while (hi - lo > 1) {
+        const mid = (lo + hi) >> 1;
+        if (lut[mid].x < x) lo = mid;
+        else hi = mid;
+      }
+      const a = lut[lo];
+      const b = lut[hi];
+      return b.x === a.x ? a.y : a.y + ((x - a.x) / (b.x - a.x)) * (b.y - a.y);
+    };
+    const [d0, d1] = g.facts.domain.map((d) => d.getTime());
+    const dot = head.querySelector<SVGCircleElement>("circle");
+    const stem = head.querySelector<SVGLineElement>("line");
+    const label = head.querySelector<SVGTextElement>("text");
+    const PERIOD = 15000;
+    let shownAt = "";
+    let raf = 0;
+    let t0 = performance.now();
+    const loop = (now: number) => {
+      raf = requestAnimationFrame(loop);
+      head.style.opacity = drawn.current ? "1" : "0";
+      if (!drawn.current) {
+        t0 = now;
+        return;
+      }
+      const t = d0 + (((now - t0) % PERIOD) / PERIOD) * (d1 - d0);
+      const x = g.x(new Date(t));
+      const y = yAt(x);
+      head.setAttribute("transform", `translate(${x.toFixed(2)} 0)`);
+      dot?.setAttribute("cy", y.toFixed(2));
+      stem?.setAttribute("y1", (y + 6).toFixed(2));
+      // the report nearest the reading, so the number matches where the dot sits on the line
+      let obs = null;
+      for (const o of g.series) if (!obs || Math.abs(o.at.getTime() - t) < Math.abs(obs.at.getTime() - t)) obs = o;
+      const text = obs ? `${hhmm(obs.at.toISOString())}Z · ${obs.gust ? `gust ${obs.gust}` : `${obs.sknt ?? 0}`} kt` : "";
+      if (label && text !== shownAt) {
+        label.textContent = text;
+        shownAt = text;
+      }
+      label?.setAttribute("y", (y - 14).toFixed(2));
+    };
+    const io = new IntersectionObserver(([e]) => {
+      cancelAnimationFrame(raf);
+      if (e.isIntersecting) raf = requestAnimationFrame(loop);
+    });
+    io.observe(el);
+    return () => {
+      cancelAnimationFrame(raf);
+      io.disconnect();
+    };
+  }, [g]);
+
   const winLabel = win ? `${zulu(win.start)}–${zulu(win.end)}` : null;
   const aria = g && win ? `Gusts at Dublin from METAR, ${zulu(g.facts.domain[0].toISOString())} the evening before to midnight. The storm window ran ${winLabel}. ${focus ? `${focus.flight.number} was due out at ${zulu(focus.flight.sched_dep)}, after it.` : ""}` : "Gusts at Dublin from METAR, with the storm window.";
 
   return (
-    <section ref={root} aria-label="Weather has a window" data-section="window" className="relative bg-navy-950">
+    <section ref={root} aria-label="The storm window at Dublin" data-section="window" className="relative bg-navy-950">
       <div className="mx-auto max-w-[1180px] px-5 pt-28 md:px-0 md:pt-36">
-        <h2 className="display max-w-[15ch] text-[clamp(38px,5.4vw,88px)] text-cloud-50">Weather has a window.</h2>
-        <p className="mt-6 max-w-[48ch] text-[16.5px] leading-relaxed text-cloud-400 md:text-[19px]">
-          The airport&rsquo;s own METAR says when the gusts were above limits{winLabel ? <>: <span className="figure text-cloud-100">{winLabel}</span></> : null}. {inside !== undefined ? count(inside) : <Pending ch={2} />} cancelled departures fall inside it. {focus?.flight.number ?? "NS31"} doesn&rsquo;t.
+        <h2 className="text-balance display max-w-[16ch] text-[clamp(38px,5.4vw,88px)] text-cloud-50">
+          The storm window closed at {win ? zulu(win.end) : <Pending ch={5} />}.
+        </h2>
+        <p className="mt-6 max-w-[50ch] text-[16.5px] leading-relaxed text-cloud-400 md:text-[19px]">
+          Dublin&rsquo;s METAR puts the gusts above {limit ? <span className="figure text-cloud-100">{limit} kt</span> : "limits"}{win ? <> from <span className="figure text-cloud-100">{zulu(win.start)}</span> to <span className="figure text-cloud-100">{zulu(win.end)}</span></> : null}
+          {earlier ? <>, after a shorter burst from <span className="figure text-cloud-100">{zulu(earlier.start)}</span></> : null}. {inside !== undefined ? count(inside) : <Pending ch={2} />} of the cancelled departures were inside that window.{" "}
+          {focus ? (
+            <>
+              {focus.flight.number} was due out at <span className="figure text-cloud-100">{zulu(focus.flight.sched_dep)}</span>
+              {margin !== null && margin > 0 ? <>, {duration(margin)} after it closed</> : null}.
+            </>
+          ) : null}
         </p>
       </div>
 
@@ -153,6 +233,12 @@ export function StormWindow() {
                 <defs>
                   <pattern id="sw-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
                     <line x1="0" y1="0" x2="0" y2="8" stroke="#4f9fe0" strokeWidth="1" strokeOpacity="0.32" />
+                  </pattern>
+                  {/* rain inside the storm window: short streaks falling along their own slant (motion only) */}
+                  <pattern id="sw-rain" width="16" height="30" patternUnits="userSpaceOnUse" patternTransform="rotate(14)">
+                    <line x1="3" y1="0" x2="3" y2="9" stroke="#9cc8f0" strokeOpacity="0.5" strokeWidth="1" />
+                    <line x1="11" y1="15" x2="11" y2="21" stroke="#9cc8f0" strokeOpacity="0.32" strokeWidth="1" />
+                    {prefersReducedMotion() ? null : <animateTransform attributeName="patternTransform" type="translate" from="0 0" to="0 30" dur="0.75s" repeatCount="indefinite" additive="sum" />}
                   </pattern>
                   <linearGradient id="sw-gfill" x1="0" x2="0" y1="0" y2="1">
                     <stop offset="0" stopColor="#f4f6f9" stopOpacity="0.16" />
@@ -169,6 +255,7 @@ export function StormWindow() {
                     <g key={i} className="sw-window" style={{ transformBox: "fill-box" }}>
                       <rect x={x0} y={M.t - 12} width={x1 - x0} height={PLOT_BOTTOM - M.t + 12} fill="url(#sw-hatch)" />
                       <rect x={x0} y={M.t - 12} width={x1 - x0} height={PLOT_BOTTOM - M.t + 12} fill="#4f9fe0" fillOpacity={0.08} />
+                      <rect x={x0} y={M.t - 12} width={x1 - x0} height={PLOT_BOTTOM - M.t + 12} fill="url(#sw-rain)" opacity={0.55} />
                     </g>
                   );
                 })}
@@ -178,7 +265,7 @@ export function StormWindow() {
                       Storm window {winLabel}
                     </text>
                     <text x={g.x(new Date(win.end)) - 12} y={M.t + 26} textAnchor="end" className="fill-cloud-500 text-[12px]">
-                      computed from METAR, not typed in
+                      computed by the engine from METAR
                     </text>
                   </g>
                 ) : null}
@@ -224,13 +311,13 @@ export function StormWindow() {
 
                 <path className="sw-fill" d={g.fill} fill="url(#sw-gfill)" />
                 <path className="sw-mean" d={g.mean} fill="none" stroke="#73839a" strokeWidth="1.5" {...PLOTTED} />
-                <path className="sw-gust" d={g.gust} fill="none" stroke="#f4f6f9" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" {...PLOTTED} />
+                <path ref={gustRef} className="sw-gust" d={g.gust} fill="none" stroke="#f4f6f9" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" {...PLOTTED} />
 
                 {g.facts.gustLimitKt ? (
                   <>
                     <line className="sw-limit" style={{ transformBox: "fill-box" }} x1={M.l} x2={W - M.r} y1={g.y(g.facts.gustLimitKt)} y2={g.y(g.facts.gustLimitKt)} stroke="#4f9fe0" strokeOpacity={0.7} strokeWidth="1.3" strokeDasharray="6 5" />
                     <text x={W - M.r} y={g.y(g.facts.gustLimitKt) - 8} textAnchor="end" className="sw-limit-label tabular fill-metar text-[12.5px]">
-                      gust {g.facts.gustLimitKt} kt
+                      gust limit {g.facts.gustLimitKt} kt
                     </text>
                   </>
                 ) : null}
@@ -283,7 +370,7 @@ export function StormWindow() {
                   <>
                     <g className="sw-ns31">
                       <circle cx={g.x(new Date(focus.flight.sched_dep))} cy={DEP_Y} r="8" fill={TONE.notweather} />
-                      <circle cx={g.x(new Date(focus.flight.sched_dep))} cy={DEP_Y} r="15" fill="none" stroke={TONE.notweather} strokeOpacity="0.5" />
+                      <circle className="sw-ns31-ring" cx={g.x(new Date(focus.flight.sched_dep))} cy={DEP_Y} r="15" fill="none" stroke={TONE.notweather} strokeOpacity="0.5" />
                     </g>
                     <g className="sw-margin" style={{ transformBox: "fill-box" }}>
                       <line x1={g.x(new Date(win.end))} x2={g.x(new Date(focus.flight.sched_dep))} y1={DEP_Y + 24} y2={DEP_Y + 24} stroke="#ff8d72" strokeWidth="1.2" />
@@ -296,6 +383,13 @@ export function StormWindow() {
                     </text>
                   </>
                 ) : null}
+
+                {/* the reading that rides the gust line (positioned by the effect above) */}
+                <g ref={headRef} className="sw-head" style={{ opacity: 0, transition: "opacity 0.4s" }} aria-hidden="true">
+                  <line x1="0" x2="0" y1={M.t} y2={PLOT_BOTTOM} stroke="#f4f6f9" strokeOpacity="0.35" strokeDasharray="2 3" />
+                  <circle cx="0" cy={PLOT_BOTTOM} r="4.5" fill="#f4f6f9" stroke="#080d17" strokeWidth="2" />
+                  <text x="0" y={PLOT_BOTTOM} textAnchor="middle" className="tabular fill-cloud-100 font-mono text-[11.5px]" style={{ paintOrder: "stroke", stroke: "#080d17", strokeWidth: 4, strokeLinejoin: "round" }} />
+                </g>
 
                 {/* the tech log, the evening before */}
                 {log?.at ? (
@@ -323,7 +417,7 @@ export function StormWindow() {
         </div>
         <div className="sw-legend mx-auto mt-2 flex w-full max-w-[1280px] flex-wrap gap-x-6 gap-y-2 px-5 text-[12.5px] text-cloud-400 md:px-12 md:pl-[calc(3rem+70px*var(--sw-scale,1))]">
           {[
-            ["weather", "weather: no compensation"],
+            ["weather", "weather: no compensation; refunds and care still due"],
             ["held", "held: one question to Legal"],
             ["notweather", "not weather"],
           ].map(([tone, label]) => (
