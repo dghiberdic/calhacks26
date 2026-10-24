@@ -28,3 +28,12 @@ export const prefersReducedMotion = () =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export { gsap, ScrollTrigger, DrawSVGPlugin, SplitText, CustomEase, useGSAP };
+
+/**
+ * Line art that plots itself without being measured. pathLength=1 normalises every path, so a dash
+ * offset of 1.01 → 0 draws it on; the gap of 2 keeps round caps from leaving a dot at either end.
+ * DrawSVG measures each path (style recalc, getBBox, getTotalLength): ~250 ms at load across the
+ * landing's ~650 line-art paths. Spread PLOTTED on the paths and UNPLOTTED into a .from() tween.
+ */
+export const PLOTTED = { pathLength: 1, strokeDasharray: "1 2", strokeDashoffset: 0 } as const;
+export const UNPLOTTED = { attr: { "stroke-dashoffset": 1.01 } };

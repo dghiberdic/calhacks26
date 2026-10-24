@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { gsap, useGSAP } from "@/components/motion/gsap";
+import { gsap, PLOTTED, UNPLOTTED, useGSAP } from "@/components/motion/gsap";
 import { metarAt } from "@/data/scenario";
 import { HERO_LINES } from "@/data/geo/lineart";
 
@@ -19,7 +19,7 @@ export function Interlude() {
           defaults: { ease: "none" },
           scrollTrigger: { trigger: root.current, start: "top top", end: "+=150%", scrub: 0.8, pin: true, anticipatePin: 1 },
         });
-        tl.from(".il-line", { drawSVG: 0, duration: 0.5, stagger: { amount: 3.2 }, ease: "plotter" }, 0)
+        tl.from(".il-line", { ...UNPLOTTED, duration: 0.5, stagger: { amount: 3.2 }, ease: "plotter" }, 0)
           .fromTo(".il-img", { "--r": "0%" }, { "--r": "175%", duration: 3.2, ease: "power1.inOut" }, 3.0)
           .to(".il-lines", { opacity: 0.12, duration: 1.6 }, 4.4)
           .fromTo(".il-rain", { opacity: 0 }, { opacity: 0.38, duration: 1.2 }, 5.2)
@@ -48,7 +48,7 @@ export function Interlude() {
       />
       <svg className="il-lines pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 2560 1440" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         {HERO_LINES.map((d, i) => (
-          <path key={i} className="il-line" d={d} fill="none" stroke="#e9edf2" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
+          <path key={i} className="il-line" d={d} fill="none" stroke="#e9edf2" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" {...PLOTTED} />
         ))}
       </svg>
       <div

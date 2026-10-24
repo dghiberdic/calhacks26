@@ -196,6 +196,25 @@ function Leak({ progress, label }: { progress: React.RefObject<AircraftProgress>
   return null;
 }
 
+/**
+ * Mounted with the model, while the canvas is still invisible: compiles every program in parallel
+ * (KHR_parallel_shader_compile) and draws one hidden frame, so the environment map and the contact
+ * shadow are baked before the handoff instead of stalling its first visible frame.
+ */
+function Warmup() {
+  const { gl, scene, camera, invalidate } = useThree();
+  useEffect(() => {
+    let live = true;
+    gl.compileAsync(scene, camera)
+      .then(() => live && invalidate())
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [gl, scene, camera, invalidate]);
+  return null;
+}
+
 /** With frameloop="demand", a frame is drawn only while the canvas is on screen and not faded out. */
 function Pump({ wrap, progress }: { wrap: React.RefObject<HTMLDivElement | null>; progress: React.RefObject<AircraftProgress> }) {
   const invalidate = useThree((s) => s.invalidate);
@@ -252,6 +271,7 @@ export function AircraftScene({ progress, className }: { progress: React.RefObje
           <Leak progress={progress} label={label} />
           {/* the aircraft never moves, so its shadow is drawn once */}
           <ContactShadows frames={1} position={[22, 0.01, 0]} scale={[70, 50]} far={10} blur={2.4} opacity={0.55} resolution={512} color="#000000" />
+          <Warmup />
         </Suspense>
         <CameraRig progress={progress} />
         <Pump wrap={wrap} progress={progress} />
