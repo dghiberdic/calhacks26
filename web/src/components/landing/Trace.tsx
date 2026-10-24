@@ -76,7 +76,7 @@ export function Trace() {
               <p
                 className={cn(
                   "display-tight text-[clamp(26px,2.6vw,40px)] leading-tight",
-                  n.mono && "font-mono text-[clamp(22px,2.2vw,34px)] font-normal tracking-normal",
+                  n.mono && "figure text-[clamp(22px,2.2vw,34px)] font-medium",
                   n.tone === "owed" && "text-owed-ink",
                   n.tone === "weather" && "text-weather-ink",
                 )}

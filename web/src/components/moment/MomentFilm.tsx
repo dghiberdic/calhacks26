@@ -193,7 +193,7 @@ export function MomentFilm() {
           <span className="mf-owed-a">Owed, per the cause codes</span>
           <span className="mf-owed-b absolute right-0 top-0 whitespace-nowrap text-[#ff9a80] opacity-0">Owed, per StormCheck</span>
         </p>
-        <span ref={owed} className="display-tight block font-mono text-[clamp(40px,4.6vw,88px)] font-normal tracking-normal">
+        <span ref={owed} className="display-tight figure block text-[clamp(40px,4.6vw,88px)]">
           €0
         </span>
       </div>
@@ -266,11 +266,11 @@ export function MomentFilm() {
       {/* 4: the money */}
       <div className={`${scene} mf-s4 left-[5vw] top-[22vh]`}>
         <p className="font-mono text-[clamp(28px,2.6vw,52px)] text-haze">212 × €600 =</p>
-        <span className="display-tight mt-2 block font-mono text-[clamp(56px,6.4vw,124px)] font-normal tracking-normal text-[#f4f6f8]">€127,200</span>
+        <span className="display-tight figure mt-2 block text-[clamp(56px,6.4vw,124px)] text-[#f4f6f8]">€127,200</span>
         <p className="mt-2 text-[clamp(15px,1.2vw,22px)] text-haze">if every passenger claims</p>
         <div className="mf-prov mt-[5vh] translate-y-4 opacity-0">
           <p className="text-[clamp(15px,1.2vw,22px)] text-haze">Provision at the learned 35% claim rate</p>
-          <span ref={prov} className="display-tight block font-mono text-[clamp(64px,7.4vw,148px)] font-normal tracking-normal text-[#ff7a5c]">
+          <span ref={prov} className="display-tight figure block text-[clamp(64px,7.4vw,148px)] text-[#ff7a5c]">
             €0
           </span>
           <p className="mt-2 inline-flex rounded-full bg-white/10 px-4 py-2 text-[clamp(13px,1vw,18px)]">
@@ -294,7 +294,7 @@ export function MomentFilm() {
             ].map(([v, l], i) => (
               <li key={v} className="mf-node">
                 <span className={`block h-[38px] w-[38px] rounded-full border-[3px] ${i === 0 ? "border-[#ff7a5c] bg-[#ff7a5c]" : "border-[#f4f6f8] bg-night"}`} />
-                <p className={`mt-4 font-mono text-[clamp(18px,1.6vw,30px)] ${i === 0 ? "text-[#ff9a80]" : ""}`}>{v}</p>
+                <p className={`figure mt-4 text-[clamp(18px,1.6vw,30px)] font-medium ${i === 0 ? "text-[#ff9a80]" : ""}`}>{v}</p>
                 <p className="text-[clamp(13px,1vw,18px)] text-haze">{l}</p>
               </li>
             ))}

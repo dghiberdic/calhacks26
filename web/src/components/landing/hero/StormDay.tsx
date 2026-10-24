@@ -349,7 +349,7 @@ export function StormDay() {
       {/* time-lapse HUD */}
       <div className="sd-hud pointer-events-none absolute inset-0 opacity-0">
         <div className="absolute left-5 top-20 md:left-16 md:top-24">
-          <span ref={(el) => void (hud.current.clock = el)} className="block font-mono text-[clamp(40px,5.2vw,76px)] leading-none text-[#f4f6f8]">
+          <span ref={(el) => void (hud.current.clock = el)} className="figure block text-[clamp(40px,5.2vw,76px)] font-medium leading-none text-[#f4f6f8]">
             07:00Z
           </span>
           <p ref={(el) => void (hud.current.metar = el)} className="mt-3 hidden max-w-[62ch] font-mono text-[13px] text-haze md:block">

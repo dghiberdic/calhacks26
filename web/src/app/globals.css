@@ -106,6 +106,14 @@ html.lenis body {
   .tabular {
     font-variant-numeric: tabular-nums;
   }
+  /* Clocks and money at display size. B612 Mono sets its colon and comma at the left of a full cell,
+     which reads as "13: 50Z" this large; Archivo's tabular figures keep a ticking value from jittering. */
+  .figure {
+    font-family: var(--font-archivo);
+    font-variant-numeric: tabular-nums;
+    font-stretch: 112%;
+    letter-spacing: -0.02em;
+  }
   .hairline {
     border-color: var(--color-rule);
   }
