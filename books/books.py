@@ -201,7 +201,7 @@ class Books(OpsMixin, ReportingMixin):
                    estimate_ref: str | None = None, source_decision_id: str | None = None, built_from: int = 0,
                    ties_to: Iterable[str] = (), gated: bool = False, run_id: str | None = None,
                    cohort: str | None = None, flight_id: str | None = None, flags: dict[str, str] | None = None,
-                   period: str | None = None) -> str:
+                   period: str | None = None, external: bool = False) -> str:
         if kind not in JE_KINDS:
             raise BooksError(f"unknown JE kind {kind!r}")
         if ias8_class not in IAS8_CLASSES:
@@ -242,8 +242,10 @@ class Books(OpsMixin, ReportingMixin):
             "VALUES (?,?,?,?,?,?,?,?,?)",
             [(je_id, i, a, d, c, dims.get("cohort"), dims.get("segment"), dims.get("flight"),
               json.dumps(dims, sort_keys=True)) for i, (a, d, c, dims) in enumerate(clean, start=1)])
+        role = preparer if preparer.startswith(("agent.", "system.")) else "human"
         conn.execute("INSERT INTO books_je_events(je_id, kind, principal, role, reason, at) VALUES (?,?,?,?,?,?)",
-                     (je_id, "drafted", preparer, preparer if preparer.startswith("agent.") else "human", None, now))
+                     (je_id, "posted" if external else "drafted", preparer, role,
+                      "external posting recorded by Books" if external else None, now))
         return je_id
 
     def post_entry(self, *, kind: str, event_date: date, lines: list[JournalLine | dict], memo: str,
@@ -290,7 +292,7 @@ class Books(OpsMixin, ReportingMixin):
                     id=je_id, event_date=date.fromisoformat(h["event_date"]), period=h["period"], memo=h["memo"],
                     lines=lines[je_id], kind=h["kind"], ias8_class=h["ias8_class"], reverses=h["reverses"],
                     estimate_ref=h["estimate_ref"], source_decision_id=h["source_decision_id"],
-                    status="approved" if h["status"] == "approved" else "draft", preparer=h["preparer"],
+                    status=h["status"] if h["status"] in ("approved", "posted") else "draft", preparer=h["preparer"],
                     approver=h["approver"], built_from=h["built_from"], ties_to=json.loads(h["ties_to"])))
         return out
 
@@ -312,10 +314,8 @@ class Books(OpsMixin, ReportingMixin):
             parse_period(period)
             sql += " AND j.period = ?"
             args.append(period)
-        if status:
-            if status == "posted":                 # StormCheck never posts beyond approved (parked)
-                return []
-            if status not in ("draft", "approved"):
+        if status:                                 # "posted": external postings only (StormCheck never posts)
+            if status not in ("draft", "approved", "posted"):
                 raise ValueError(f"status must be draft|approved|posted, got {status!r}")
             sql += " AND s.status = ?"
             args.append(status)
@@ -562,15 +562,12 @@ class Books(OpsMixin, ReportingMixin):
             self._ensure_cohort(run_id, cohort_date, "storm")
             self._record_decisions(run_id, decisions, known_at)
             self._record_run(run_id, world, run_flights, cohort_date, known_at)
-            ops_ids, atl_by_coupon = self._post_atl(run_id, world, set(by_flight), known_at, fim_values, cohort_date)
-            late_atl: dict[str, list[str]] = {}
+            new_flights: list[tuple[str, date, str | None]] = []   # (flight, event date, day-1 JE)
             for fid in sorted(by_flight):
                 done = self._q("SELECT je_id FROM books_storm_flights WHERE flight_id = ?", [fid])
                 if done:                                              # idempotent: re-runs go through post_recode
                     if done[0][0]:
                         out_ids.append(done[0][0])
-                    late_atl.update({e.coupon_id: atl_by_coupon[e.coupon_id] for e in by_flight[fid]
-                                     if e.coupon_id in atl_by_coupon})
                     continue
                 fents = by_flight[fid]
                 ev = flight_date(fid) or cohort_date
@@ -609,13 +606,18 @@ class Books(OpsMixin, ReportingMixin):
                     out_ids.append(je_id)
                 self._conn.execute("INSERT INTO books_storm_flights(flight_id, run_id, je_id, known_at, recorded_at) "
                                    "VALUES (?,?,?,?,?)", (fid, run_id, je_id, iso(known_at), self._now()))
+                new_flights.append((fid, ev, je_id))
+            # the PSS side after the estimates, so each flight's EU261 estimate is its first journal entry
+            ops_ids, atl_by_coupon = self._post_atl(run_id, world, set(by_flight), known_at, fim_values, cohort_date)
+            fresh = {e.coupon_id for fid, _ev, _je in new_flights for e in by_flight[fid]}
+            for fid, ev, je_id in new_flights:
                 self._reg_insert([self._reg_from_ent(
                     e, cohort=run_id, event_date=ev, known_at=known_at, reason="post_storm",
                     je_ids=([je_id] if je_id and _accrues(e.status, e.compensation_cents) else [])
                     + atl_by_coupon.get(e.coupon_id, []),
                     prev=self._register_one(e.coupon_id), decision=dec.get(fid),
-                    election=elections.get(e.coupon_id), signed=signed.get(e.coupon_id)) for e in fents])
-            self._reg_append(late_atl, known_at, "pss")
+                    election=elections.get(e.coupon_id), signed=signed.get(e.coupon_id)) for e in by_flight[fid]])
+            self._reg_append({c: ids for c, ids in atl_by_coupon.items() if c not in fresh}, known_at, "pss")
             ops_ids += self._post_in_lieu(run_id, world, set(by_flight), known_at)
             ops_ids += self._post_care(run_id, world, set(by_flight), known_at)
             fl = sorted(by_flight)
@@ -1022,6 +1024,10 @@ class Books(OpsMixin, ReportingMixin):
                 raise
             if head["status"] == kind:
                 return self._je(je_id)
+            if head["status"] == "posted":
+                verb = "approve" if kind == "approved" else "reject"
+                raise BooksError(f"{je_id} is an external posting by {head['preparer']}; there is nothing to {verb}",
+                                 je_id=je_id)
             if head["status"] != "draft":
                 raise BooksError(f"{je_id} is {head['status']}; cannot mark it {kind}", je_id=je_id)
             if self._is_locked(head["period"]):
@@ -1087,7 +1093,9 @@ class Books(OpsMixin, ReportingMixin):
         pend = period_end(period)
         end_iso = end_of_day_iso(pend)
         out: list[RollforwardRow] = []
-        for cohort in sorted(rows):
+        newest = {c: -d.toordinal() for c, d in self._cohorts()}
+        # newest storm first (as expected/rollforward_2025-02.json), unassigned last
+        for cohort in sorted(rows, key=lambda c: (c == UNASSIGNED, newest.get(c, 0), c)):
             v = rows[cohort]
             closing = (v["opening"] + v["new"] - v["claims"] - v["settled"] - v["derecognised"] + v["cie"]
                        + v["recode"] + v["oop"])

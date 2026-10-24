@@ -29,7 +29,8 @@ from .errors import BooksError, NotFound
 from .money import eur
 from .periods import date_in_id, iso, period_of, to_utc, utc_date
 
-CRM_BOT = Role.CRM_BOT.value                      # "agent.crm_bot"
+CRM_BOT = Role.CRM_BOT.value                      # "agent.crm_bot": its refund postings are external, already posted
+PSS = "system.pss"                                # the PSS / revenue accounting that posted the sale
 REFUND_EVENTS = ("refund_initiated", "bsp_refund", "chargeback")
 EXEC_CHANNEL = {"refund_initiated": "crm_bot", "bsp_refund": "bsp", "chargeback": "chargeback"}
 REFUND_CHANNELS = frozenset({"crm_bot", "bsp", "chargeback", "queued"})
@@ -345,17 +346,18 @@ class OpsMixin:
         ties: list[str] = ["2100", "2110"]
         if bucket == "sale":
             kind = "sale"
+            preparer = PSS
             lines = [ln("1110", dr=fare + tax), ln("2100", cr=fare), ln("2110", cr=tax)]
-            memo = (f"ATL brought forward · {fid}: {n} coupons · fares incl. carrier surcharges YQ/YR {eur(fare)} → "
-                    f"2100 ATL · taxes {eur(tax)} → 2110 taxes payable (the PSS extract carries no sale dates; dated "
-                    f"at departure)")
+            memo = (f"Sale (posted by the PSS / revenue accounting, recorded by Books) · {fid}: {n} coupons · fares "
+                    f"incl. carrier surcharges YQ/YR {eur(fare)} → 2100 ATL · taxes {eur(tax)} → 2110 taxes payable "
+                    f"(the PSS extract carries no sale dates; dated at departure)")
         elif bucket == "bot":
             amt = sum(p.amount for p in grp)
             preparer = CRM_BOT
             lines = [ln("2125", dr=amt), ln("1110", cr=amt)]
             ties = ["2125"]
-            memo = (f"CRM bot · {fid}: {n} refunds initiated to the card acquirer {eur(amt)} (posted by the CRM bot "
-                    f"to 2125 refund clearing) · Dr 2125 / Cr 1110")
+            memo = (f"CRM bot (posted by the bot, recorded by Books) · {fid}: {n} refunds initiated to the card "
+                    f"acquirer {eur(amt)} → 2125 refund clearing · Dr 2125 / Cr 1110")
         elif bucket.startswith("settle:"):
             channel = bucket.split(":", 1)[1]
             amt = sum(p.amount for p in grp)
@@ -405,7 +407,7 @@ class OpsMixin:
                               f"within 7 days) · drafted, pending approval",
                 }[channel]
         eff, flags = self._target(day, known_at)
-        kw: dict[str, Any] = {} if preparer is None else {"preparer": preparer}
+        kw: dict[str, Any] = {} if preparer is None else {"preparer": preparer, "external": True}
         return self._insert_je(kind=kind, event_date=eff, memo=self._flag_memo(memo, flags, eff), lines=lines,
                                known_at=known_at, run_id=run_id, cohort=cohort, flight_id=fid, flags=flags,
                                ties_to=ties, built_from=n, **kw)
@@ -657,9 +659,10 @@ class OpsMixin:
         ids = {f.id for f in day}
         occ_entries = [e for e in world.ops_log if e.kind == "occ"]
         occ = None
-        if occ_entries:
+        if occ_entries:              # flights named in a CNL message, less those that operated ("…OPERATE AS SCHED")
+            flown = {f.id for f in day if f.status != "cancelled"}
             occ = sorted({fid for e in occ_entries if _is_cancel_message(e.text) for fid in e.flight_ids
-                          if fid in ids})
+                          if fid in ids and fid not in flown})
         care_flights = sorted({c.flight_id for c in world.care if c.flight_id in ids and not c.invoiced})
         ctx = world.real_context.get(run_id) or {}
         euro = ctx.get("eurocontrol_departures")

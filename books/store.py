@@ -115,12 +115,16 @@ INDEXES = [
 ]
 
 VIEWS = {
+    # posted = an external system's own posting recorded in the ledger (PSS sale, CRM-bot refund); StormCheck's own
+    # entries never go past approved
     "books_je_status": """
         SELECT j.je_id,
           CASE WHEN EXISTS (SELECT 1 FROM books_je_events e WHERE e.je_id = j.je_id AND e.kind = 'approved')
                  THEN 'approved'
                WHEN EXISTS (SELECT 1 FROM books_je_events e WHERE e.je_id = j.je_id AND e.kind = 'rejected')
                  THEN 'rejected'
+               WHEN EXISTS (SELECT 1 FROM books_je_events e WHERE e.je_id = j.je_id AND e.kind = 'posted')
+                 THEN 'posted'
                ELSE 'draft' END AS status,
           (SELECT e.principal FROM books_je_events e WHERE e.je_id = j.je_id AND e.kind = 'approved'
              ORDER BY e.seq LIMIT 1) AS approver,
@@ -156,7 +160,8 @@ def init_schema(conn: sqlite3.Connection) -> None:
                 f"BEGIN SELECT RAISE(ABORT, '{name} is append-only'); END")
     for sql in INDEXES:
         conn.execute(sql)
-    for name, sql in VIEWS.items():
-        conn.execute(f"CREATE VIEW IF NOT EXISTS {name} AS {sql}")
+    for name, sql in VIEWS.items():                 # views hold no data: recreate so a newer definition wins
+        conn.execute(f"DROP VIEW IF EXISTS {name}")
+        conn.execute(f"CREATE VIEW {name} AS {sql}")
     conn.executemany("INSERT OR IGNORE INTO books_accounts(code, name, grp) VALUES (?, ?, ?)",
                      [(c, n, GROUP[c]) for c, n in ACCOUNTS.items()])

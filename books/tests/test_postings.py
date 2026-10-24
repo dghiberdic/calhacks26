@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from collections import Counter
 from datetime import date
+from fractions import Fraction
 
 import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
 from books import Books, BooksError
+from books.money import round_half_up
 from contracts.models import Cause, Coupon, CrmEvent, Election, Extraordinary, JournalEntry
 
 from .helpers import (
@@ -70,7 +72,12 @@ def test_sale_fares_incl_yq_yr_to_atl_and_taxes_to_2110(books: Books):
     assert dr(sale, "1110") == 8_772_000                          # 172 × (€450 + €60)
     assert cr(sale, "2100") == 7_740_000 and cr(sale, "2110") == 1_032_000    # ATL €77,400 · taxes €10,320
     assert "YQ/YR" in sale.memo and sale.event_date == date(2025, 1, 24) and sale.built_from == 172
-    assert len([e for e in books.coupon_events(kind="sale")]) == 172
+    assert len(books.coupon_events(kind="sale")) == 172
+    # the sale is the PSS's own posting: recorded as posted, never a StormCheck draft to approve
+    assert sale.status == "posted" and sale.preparer == "system.pss"
+    assert sale.id in {j.id for j in books.journal(status="posted")}
+    with pytest.raises(BooksError):
+        books.approve(sale.id, CONTROLLER)
 
 
 # ---------------------------------------------------------------- refunds: CRM bot via 2125, BSP duplicate
@@ -78,8 +85,9 @@ def test_sale_fares_incl_yq_yr_to_atl_and_taxes_to_2110(books: Books):
 def test_crm_bot_refunds_clear_2125_to_zero_and_bsp_duplicate_is_detected(books: Books):
     *_, jes = day1(books, ns100=False)
     bot = only(jes, "refund", preparer="agent.crm_bot")
-    assert dr(bot, "2125") == 1_632_000 and cr(bot, "1110") == 1_632_000
+    assert dr(bot, "2125") == 1_632_000 and cr(bot, "1110") == 1_632_000 and bot.status == "posted"
     clear = only(jes, "refund", NS31, preparer="agent.engine")
+    assert clear.status == "draft"
     assert dr(clear, "2100") == 1_440_000 and dr(clear, "2110") == 192_000      # ATL €14,400 + tax €1,920
     assert cr(clear, "2125") == 1_632_000 and {l.account for l in clear.lines} == {"2100", "2110", "2125"}
     assert books.gl_balance("2125") == 0                                         # no double refund
@@ -305,11 +313,13 @@ def test_weather_to_technical_with_evidence_before_the_lock_is_a_prior_period_er
     assert len(jes) == 1
     je = jes[0]
     assert je.kind == "out_of_period_adjustment" and je.ias8_class == "prior_period_error" and je.period == "2025-02"
-    assert liability_delta(je) == 690_857                                        # 4,650,000 × (20% − 9% × 20/35)
+    sh = books.curve("short_le1500")                     # golden SH-v1: M1 5.14% → 4,650,000 × 14.86% = 690,990
+    expected = round_half_up(4_650_000 * (Fraction(str(sh.ultimate)) - Fraction(str(dict(sh.points)[1]))))
+    assert liability_delta(je) == expected > 0
     assert "prior-period error, corrected in current period (immaterial)" in je.memo
     assert books.rollforward("2025-01") == jan
     feb = books.rollforward("2025-02")
-    assert feb.ties_to_gl and feb.rows[0].out_of_period_cents == 690_857
+    assert feb.ties_to_gl and feb.rows[0].out_of_period_cents == expected
 
 
 # ---------------------------------------------------------------- every entry balances

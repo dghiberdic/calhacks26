@@ -110,6 +110,7 @@ Judgment calls made while building the books core. Golden numbers (CONTRACTS §5
   `post_recode`.
 
 ## Rollforward
+- **Row order:** newest cohort first (by event date), `unassigned` last, as in `expected/rollforward_2025-02.json`.
 - **Sign convention:** `claims_approved_cents`, `settled_in_kind_cents` and `derecognised_cents` are positive
   magnitudes; `change_in_estimate_cents`, `recode_cents` and `out_of_period_cents` are signed. So:
   `closing = opening + new − claims − settled − derecognised + change_in_estimate + recode + out_of_period`.
@@ -184,6 +185,17 @@ carry `storm`, `cohort` and `flight` dims; `built_from` = coupons) and dated at 
   (the open accrual of every flight the batch invoices) / Cr 2000 invoiced / ± 6100 for the difference
   (22,700,000 / 22,130,000 / Cr 570,000). An invoice batch closes the accrual of each flight it covers.
   Idempotent per care / invoice id.
+
+## External postings (`status = "posted"`)
+- The **sale** (preparer `system.pss`) and the **CRM bot's own refund posting** (preparer `agent.crm_bot`) are
+  postings other systems already made; Books records them so the ledger is whole (2125 can net to 0, ATL exists to
+  relieve), with status `posted` (a `posted` JE event). They count in the GL and can't be approved or rejected
+  (BooksError). Every entry StormCheck itself drafts still stops at `approved`. This matches
+  `expected/journal_NS31.json`: `external` = the bot's posting; `day1` = StormCheck's drafts, in this order:
+  estimate, 2125 clearing, refund vouchers, FIM, 14C in-lieu voucher.
+- `post_storm` drafts every flight's EU261 estimate before the PSS side, so a flight's estimate is its first
+  journal entry (the server's Flight File shows `journal_preview[0]`).
+- Views are dropped and recreated at start-up (they hold no data), so a newer view definition always wins.
 
 ## Re-runs and later events
 - `post_storm` returns every JE of the run's flights (existing and new), sorted by id. The compensation estimate
