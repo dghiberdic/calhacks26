@@ -1,0 +1,378 @@
+{
+  "_about": "Expected flight decisions by construction of the golden world (plan §1.2). Compare (cause, extraordinary, recoded, outcome, routed_to) exactly; recode_label exactly where given; confidence by band only (min/max); never the reason text. Operated flights have no decision.",
+  "compare": [
+    "cause",
+    "extraordinary",
+    "recoded",
+    "outcome",
+    "routed_to"
+  ],
+  "storms": {
+    "EIDW@2025-01-24": {
+      "NS100@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS101@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS102@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS103@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS104@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS105@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS106@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS107@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS108@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS109@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS110@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS111@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS112@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS113@2025-01-24": {
+        "cause": "knock_on",
+        "extraordinary": "needs_legal",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "escalated",
+        "routed_to": "legal",
+        "confidence": {
+          "max": 0.6
+        }
+      },
+      "NS114@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS115@2025-01-24": {
+        "cause": "knock_on",
+        "extraordinary": "needs_legal",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "escalated",
+        "routed_to": "legal",
+        "confidence": {
+          "max": 0.6
+        }
+      },
+      "NS116@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS117@2025-01-24": {
+        "cause": "knock_on",
+        "extraordinary": "needs_legal",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "escalated",
+        "routed_to": "legal",
+        "confidence": {
+          "max": 0.6
+        }
+      },
+      "NS118@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS20@2025-01-23": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS21@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS30@2025-01-23": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS31@2025-01-24": {
+        "cause": "technical",
+        "extraordinary": "not_extraordinary",
+        "recoded": true,
+        "recode_label": "71 → 41",
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS40@2025-01-23": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS41@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS50@2025-01-23": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS51@2025-01-24": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      }
+    },
+    "EIDW@2025-01-26": {
+      "NS106@2025-01-26": {
+        "cause": "technical",
+        "extraordinary": "not_extraordinary",
+        "recoded": true,
+        "recode_label": "71 → 41",
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS110@2025-01-26": {
+        "cause": "technical",
+        "extraordinary": "not_extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS114@2025-01-26": {
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      },
+      "NS30@2025-01-25": {
+        "cause": "technical",
+        "extraordinary": "not_extraordinary",
+        "recoded": false,
+        "recode_label": null,
+        "outcome": "auto",
+        "routed_to": null,
+        "confidence": {
+          "min": 0.9
+        }
+      }
+    }
+  },
+  "operated": {
+    "EIDW@2025-01-24": [
+      "NS120@2025-01-24",
+      "NS122@2025-01-24",
+      "NS124@2025-01-24",
+      "NS126@2025-01-24",
+      "NS128@2025-01-24",
+      "NS130@2025-01-24",
+      "NS132@2025-01-24",
+      "NS134@2025-01-24",
+      "NS136@2025-01-24",
+      "NS138@2025-01-24",
+      "NS140@2025-01-24"
+    ],
+    "EIDW@2025-01-26": [
+      "NS100@2025-01-26",
+      "NS102@2025-01-26",
+      "NS120@2025-01-26",
+      "NS124@2025-01-26"
+    ]
+  }
+}
