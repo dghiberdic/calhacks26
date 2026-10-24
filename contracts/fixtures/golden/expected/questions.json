@@ -116,7 +116,8 @@
           "NS30@2025-01-25:23F"
         ]
       },
-      "times_cited_after_herminia": 31
+      "times_cited_on_herminia": 31,
+      "times_cited_after_herminia": 32
     },
     "Q2": {
       "rule": "R-LEG-1@1",
