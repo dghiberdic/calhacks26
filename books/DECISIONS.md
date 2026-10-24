@@ -223,6 +223,61 @@ carry `storm`, `cohort` and `flight` dims; `built_from` = coupons) and dated at 
   `derecognise(cohort, known_at, session, rule_ref)` does it on demand; before limitation it needs a Controller
   session citing a Controller rule (recorded as a `derecognise` policy event).
 
+# F8c: invariants, CFO view, estimate card, audit (`books/reporting.py`)
+
+## Invariants (`invariants()`, 16 results for the 11 THREAD_FILIP invariants)
+Each has a test that plants a violation and checks that exactly that result fails (`books/tests/test_invariants.py`).
+INV-2, INV-9b and INV-11 are also hard guards on every insert (an unbalanced, locked-period or cut-off-breaking entry
+raises); the rest are evaluated on demand. Running all of them on every post would cost ~50 ms a post, so the
+server reads `GET /books/invariants` instead.
+
+| id | checks |
+|---|---|
+| INV-1 / 1b | 2140 rollforward ties to GL 2140 in every period with entries · 2141 = approved-unpaid claims |
+| INV-2 | every JE balances and has lines |
+| INV-3 | per run: scheduled − operated = cancelled = register flights = OCC-log cancellations; operated departures from the station ≤ Eurocontrol's count. The schedule is the run's flights plus that day's flights touching the station (the union over the run's `post_storm` calls); OCC cancellations are flights named in a CNL message less those that operated (the 15:20Z "NS120–NS140 OPERATE AS SCHED. NS31 REMAINS CNL" message). Runs without a schedule are skipped |
+| INV-4 / 4b | each coupon relieved once; reaccommodated coupons never relieved by an election channel; GL 2100 and 2110 tie to the coupon subledger · GL 2125 = 0 (lists double-refunded coupons) |
+| INV-5 | ≤ 1 approved compensation claim and ≤ 1 payout entry per coupon; claims + in-kind settlements ≤ the register's entitlement; no direct payment approved at or after an assignment notice on the coupon |
+| INV-6 | 0 ≤ cohort closing ≤ unclaimed entitlement (0 once time-barred) |
+| INV-7 / 7b | flights whose latest decision is extraordinary carry no compensation; every flight with care issued has care accrued · every accruing non-zero entitlement has a decision commit and an article |
+| INV-8 | no register offset, in-kind settlement or reduced approval without a signed acceptance hash |
+| INV-9a / 9b / 9c | preparer ≠ approver · nothing written or decided in a locked period after its lock · a derecognition before limitation has a Controller `derecognise` rule |
+| INV-10 | every refund (elected or made): paid within 7 days of the cancellation, or a refund draft queued in 2120; an elected refund with nothing drafted fails once 7 days have passed |
+| INV-11 | `JE.period` = the event date's period |
+
+## CFO view (`cfo_metrics(known_at, *, cohort=None)`)
+- **Scope.** By default, every storm cohort (from `post_storm`) whose event date is ≤ known_at. Migrated opening
+  balances (Isha) appear in `liability_bridge` (the 2140 rollforward rows for known_at's period) but not in the
+  headline. `cohort=` narrows the headline to one cohort (any kind).
+- **cash basis** = compensation actually paid (approved payouts, Cr 1000). **full entitlement** = owed Art. 7
+  compensation (owed + needs_ruling, e.g. 14C) if every passenger claims. **held for Legal** = the book on coupons
+  whose flight waits on Legal (status `held`, or `needs_ruling` with a needs_legal decision), at the BF remaining
+  rate, ≤ the segment book. **drafted** = GL 2140 for the scope less held for Legal, so drafted + held = GL 2140.
+  Day 1 on golden: €0 · €99,000 · €34,650 (±5pp ±€4,950) and €47,496 held; `cfo_bridge(m)` renders the line.
+- **Method range** = (Σ min, Σ max) over expected-loss, BF and chain-ladder on owed entitlement. Before M1 the three
+  agree (no development), so the range is a point (the ±5pp sensitivity is reported separately). Feb: (€21,750,
+  €37,266.67).
+- **recodes** = flights recoded by the engine (71 → 41) with their 2140 book. **refunds within 7 days** = % of
+  refund cases paid or drafted within 7 days (100.0 when there are none). **vouchers outstanding** = 2131 + 2132.
+  **care** = Σ accrued (Cr 2150) and Σ invoiced (Cr 2000 on care invoices).
+
+## Estimate card polish
+- `estimate_card(cohort, known_at, *, segment=None)`: one segment, or the cohort (`mixed` when several segments,
+  curve versions joined with `+`).
+- Preparer, approver and the IAS 8 class are those of the cohort's **latest estimate entry** (day-1 estimate,
+  change in estimate, recode, out-of-period adjustment, derecognition; release proposals excluded): `none` on day 1,
+  `change_in_estimate` after a true-up, `approver = None` while it is a draft.
+- The constraint note adds the amount held pending Legal (IFRS 15.56), the keep-tail policy when it applies, and the
+  policy disclosure (presented in full within passenger revenue, IAG approach; IFRIC left the nil cap open).
+- **BF stays the selected method** (as F8a).
+
+## audit(je_id)
+Returns the JE, its lines with blame ids (`JE-000123:2`), approval events (drafted / posted / denied / approved),
+the period and lock, register rows linked to the JE (for a cohort-level estimate, the cohort's accruing coupons;
+50 shown + the count), coupon and care subledger rows, claims, the engine decisions of its flights (cause,
+extraordinary, recoded, evidence source ids, rules), decision commits, rules, GL tie-outs of every account on the
+JE through its period, and `blame_target` (the 2140 line when there is one).
+
 ## Contract gaps (not changed; `contracts/` is David's)
 1. `SoDViolation` / `PeriodLocked` aren't in `contracts/`. The server must import them from `books.errors`, or
    David can add `contracts/errors.py`.
