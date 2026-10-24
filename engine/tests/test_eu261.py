@@ -25,16 +25,18 @@ from . import mini_world as mw
 KNOWN = datetime(2025, 1, 25, 6, 0, tzinfo=UTC)
 
 
-def decision(flight_id: str, ext: Extraordinary, *, cause: str | None = None, rules=(), qid=None) -> FlightDecision:
+def decision(flight_id: str, ext: Extraordinary, *, cause: str | None = None, rules=(), qid=None, outcome=None,
+             routed_to=None) -> FlightDecision:
     cause = cause or {Extraordinary.YES: "weather", Extraordinary.NO: "technical",
                       Extraordinary.NEEDS_LEGAL: "knock_on"}[ext]
+    outcome = outcome or ("auto" if ext != Extraordinary.NEEDS_LEGAL else "escalated")
     return FlightDecision(
         flight_id=flight_id, cause=cause, extraordinary=ext, ops_cause_code="71", recoded=False,
         in_window_dep="out", in_window_arr="out",
         confidence=Confidence(score=0.9, kind="cause", label="cause-finding confidence", features={},
                               calibration_version="test"),
         reason="test", evidence=[], rules_applied=list(rules), legal_basis=[],
-        outcome="auto" if ext != Extraordinary.NEEDS_LEGAL else "escalated", question_id=qid, known_at=KNOWN)
+        outcome=outcome, routed_to=routed_to, question_id=qid, known_at=KNOWN)
 
 
 def rule(rid: str, action: RuleAction, *, tier="mined", scope=None, condition=None, status="active",
@@ -320,3 +322,135 @@ def test_chargeback_after_refund_flagged(world):
                           actor="acquirer", text="Chargeback"))
     e = by_seat(ents_for(w, "NS31", Extraordinary.NO), "2A")
     assert e.refund_due_cents == 0 and "chargeback" in e.reason
+
+
+# ---------- domain-review regressions (probes p3, p5, p7, p8, p9; item 7) ----------
+
+def _ns31_coupons(world: World, kind: str) -> list[str]:
+    return sorted(e.coupon_id for e in world.elections if e.coupon_id.startswith(mw.fid("NS31") + ":")
+                  and e.kind == kind)
+
+
+def _by_id(ents, cid):
+    return next(e for e in ents if e.coupon_id == cid)
+
+
+@pytest.mark.parametrize("ext,outcome", [(Extraordinary.YES, "escalated"), (Extraordinary.YES, "human"),
+                                         (Extraordinary.NO, "escalated"), (Extraordinary.NO, "human")])
+def test_unsettled_decision_is_held_at_the_band(world, ext, outcome):
+    """p8: an escalated or batch-review decision is not final, so no coupon is `owed` or `no_compensation` yet.
+    Each is held at the band amount and Books accrues it (IFRS 15.56), like the knock-ons."""
+    d = decision(mw.fid("NS31"), ext, outcome=outcome, routed_to=Role.OPS)
+    ents = entitlements(d, world, [REDUCE])
+    assert {e.status for e in ents} == {"held"}
+    assert sum(e.compensation_cents for e in ents) == 172 * 60_000
+    assert all(e.reduction == "none" and e.voucher_offset_cents == 0 and e.care_due for e in ents)
+    assert all("Held" in e.reason for e in ents)
+    assert by_seat(ents, "14C").status == "held"                # the flight-level hold dominates the voucher question
+    assert "R-MINED-REDUCE@1" not in {r for e in ents for r in e.rules_applied}
+
+
+def test_unsettled_decision_keeps_coupon_level_exclusions(world):
+    w = world.model_copy(deep=True)
+    for c in w.coupons:
+        if c.id == f"{mw.fid('NS31')}:20A":
+            c.fare_type = "staff_id90"
+    d = decision(mw.fid("NS31"), Extraordinary.YES, outcome="escalated", routed_to=Role.OPS)
+    assert by_seat(entitlements(d, w, [REDUCE]), "20A").status == "staff_ticket"
+
+
+@pytest.mark.parametrize("tier,kind", [("mined", "mined_policy"), ("claims_lead_ruling", "voucher"),
+                                       ("controller_ruling", "voucher"), ("regulation", "regime")])
+def test_allow_offset_only_from_a_legal_ruling(world, tier, kind):
+    """p7: the statutory floor. An unsigned in-lieu voucher is offset only under a Legal ruling (Art. 7(3); plan §2
+    rule 4: only Legal may lower EU261 compensation). Any other tier's ALLOW_OFFSET is ignored where money is
+    computed."""
+    allow = rule("R-X-OFFSET", RuleAction.ALLOW_OFFSET, tier=tier, kind=kind,
+                 condition={"all": [{"f": "voucher.in_lieu", "op": "eq", "v": True}]})
+    d = decision(mw.fid("NS31"), Extraordinary.NO)
+    e = by_seat(entitlements(d, world, [REDUCE, allow]), "14C")
+    assert e.status == "needs_ruling" and e.voucher_offset_cents == 0 and e.compensation_cents == 60_000
+    assert "R-X-OFFSET@1" not in e.rules_applied
+    e2 = by_seat(entitlements(d, world, [REDUCE, allow, R_CL_1], known_at=AFTER_RULING), "14C")
+    assert e2.status == "owed" and e2.voucher_offset_cents == 0 and "R-CL-1@1" in e2.rules_applied
+
+
+def test_chargeback_without_a_carrier_refund_is_the_reimbursement(world):
+    """p5: the card scheme already returned the money. No second refund is drafted, and the chargeback is flagged."""
+    w = world.model_copy(deep=True)
+    cid = _ns31_coupons(w, "reaccommodated_own")[0]
+    refund_cid = next(e.coupon_id for e in w.elections if e.coupon_id.startswith(mw.fid("NS108") + ":")
+                      and e.kind == "refund")
+    for i, c in enumerate((cid, refund_cid)):
+        w.crm.append(CrmEvent(id=f"CRM-CB-{i}", coupon_id=c, at=mw.z("20:00"), kind="chargeback", amount_cents=51_000,
+                              actor="acquirer", text="Chargeback 4855 goods/services not provided"))
+    e = _by_id(ents_for(w, "NS31", Extraordinary.NO), cid)
+    assert e.refund_due_cents == 0 and e.refund_already_initiated
+    assert "chargeback" in e.reason and "duplicate" in e.reason
+    assert e.status == "owed" and e.compensation_cents == 60_000          # a chargeback is not a waiver
+    r = _by_id(ents_for(w, "NS108", Extraordinary.YES), refund_cid)
+    assert r.refund_due_cents == 0 and r.refund_already_initiated and "chargeback" in r.reason
+
+
+def test_refund_voucher_needs_signed_agreement(world):
+    """p9: Art. 8(1)(a) reimbursement may be a travel voucher only with the passenger's signed agreement (via
+    Art. 7(3)). The passenger's own self-service (web) election is their agreement. A voucher recorded *for* them
+    (desk, call centre, OCC, CRM bot) needs a known signed voucher event, else the refund is still due, flagged."""
+    vouchers = _ns31_coupons(world, "voucher")
+    assert len(vouchers) == 14
+    ents = ents_for(world, "NS31", Extraordinary.NO)
+    for cid in vouchers:                                           # the mini world's vouchers were chosen on the web
+        e = _by_id(ents, cid)
+        assert e.refund_due_cents == 0 and "signed agreement" not in e.reason
+    w = world.model_copy(deep=True)
+    for el in w.elections:
+        if el.coupon_id in vouchers:
+            el.recorded_by = "call-centre" if vouchers.index(el.coupon_id) % 3 else "service-desk"
+    ents = ents_for(w, "NS31", Extraordinary.NO)
+    for cid in vouchers:
+        e = _by_id(ents, cid)
+        assert e.refund_due_cents == 51_000 and not e.refund_already_initiated and "signed agreement" in e.reason
+    for i, cid in enumerate(vouchers):
+        w.crm.append(CrmEvent(id=f"CRM-VCH-{i}", coupon_id=cid, at=mw.z("11:00") if i < 12 else mw.z("11:00", 26),
+                              kind="voucher_issued", amount_cents=51_000, actor="web", text="REFUND VOUCHER ISSUED",
+                              signed_acceptance_sha256=("ab" * 32) if i % 2 == 0 else None))
+    ents = ents_for(w, "NS31", Extraordinary.NO)
+    for i, cid in enumerate(vouchers):
+        e = _by_id(ents, cid)
+        signed_and_known = i % 2 == 0 and i < 12                  # i = 12 is signed but recorded after known_at
+        assert e.refund_due_cents == (0 if signed_and_known else 51_000), (i, e.reason)
+        assert ("signed agreement" in e.reason) is not signed_and_known
+    assert sum(e.compensation_cents for e in ents) == 9_900_000      # a refund question never moves compensation
+
+
+def test_band_on_unrounded_distance_in_entitlements(world):
+    """p3: a true 1,500.04 km is band (b) €400, not (a) €250; the distance is rounded for display only."""
+    w = world.model_copy(update={"meta": {**world.meta, "distances_km": {**world.meta["distances_km"],
+                                                                          "DUB-BCN": 1500.04}}})
+    e = ents_for(w, "NS108", Extraordinary.NO)[0]
+    assert e.band_eur == 400 and e.compensation_cents in (40_000, 20_000) and e.distance_km == 1500.0
+    w = world.model_copy(update={"meta": {**world.meta, "distances_km": {**world.meta["distances_km"],
+                                                                          "DUB-BCN": 1500.0}}})
+    e = ents_for(w, "NS108", Extraordinary.NO)[0]
+    assert e.band_eur == 250 and e.band_margin_km == 0.0
+
+
+def test_flight_notice_exemption_helper(world):
+    """Item 7: the cause stage can see that compensation is moot before it routes a cause question."""
+    f = next(f for f in world.flights if f.number == "NS31")
+    assert eu261.flight_notice_exemption(f) is None                                       # told on the day
+    assert eu261.flight_notice_exemption(
+        f.model_copy(update={"notified_at": f.sched_dep - timedelta(days=14)})) == "Art.5(1)(c)(i)"
+    assert eu261.flight_notice_exemption(
+        f.model_copy(update={"notified_at": f.sched_dep - timedelta(days=13, hours=23)})) is None
+    assert eu261.flight_notice_exemption(f.model_copy(update={"notified_at": None})) is None
+
+
+def test_notice_7_to_14_days_without_reroute_departure_is_paid(world):
+    """Item 7: Art. 5(1)(c)(ii)/(iii) need the offered reroute's departure time, which no world model carries, so the
+    engine cannot show the condition and pays (a conservative overpay, documented in engine/DECISIONS.md D3)."""
+    f = next(f for f in world.flights if f.number == "NS31")
+    w = _with_flight_update(world, "NS31", notified_at=f.sched_dep - timedelta(days=10))
+    ents = ents_for(w, "NS31", Extraordinary.NO)
+    assert "exempt_notice" not in {e.status for e in ents}
+    assert sum(e.compensation_cents for e in ents) == 9_900_000
