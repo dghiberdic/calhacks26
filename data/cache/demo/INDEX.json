@@ -1,0 +1,147 @@
+{
+  "0368a593f8a9f5461786b4925a3b224a761c6063a1881d00fb4298785fe3c6bb": {
+    "label": "claim_14c",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "06e0900e48ce94c40b28e5f08bd2e0a2b1dac73a3428871dd865e65ef6ce9a5a": {
+    "label": "chargeback_5b",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "070ceff8ee4c8d3c09a93a33b23bd03895b2e71b0c1089ccbea8bab9d389d4a7": {
+    "label": "inj08_uk261_520_on_dub_lhr",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "1b36d4a6e3dee320d88667348e1b0c6e312f2394572f0d0ca133bedf52be0af8": {
+    "label": "mcc_ns31",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "35e015af0d4a321858cc158f234ade66e56d90599da4862ba981ebb98e0be68a": {
+    "label": "inj04_chargeback_after_bot_refund",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "40ebc9b9bebe3f9d5935286ffe7e4df4fe5320fae4d727613f2ea7738d038481": {
+    "label": "techlog_ns31",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "5024ef0c56653ee06ace975c588aa7f814ad96d577c1e9beefcb89915455a650": {
+    "label": "messy_agency_letter",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "57b9fbd45c0bb14117f7f703fa882cfff51151e05a9591ebb7c7309eb5c37775": {
+    "label": "inj01_aog_inside_window",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "6081c0ed4323eda7542c00acafa3c908deae7a139ca8e28f5ceb64b679d944b7": {
+    "label": "inj07_challenge_storm_anyway",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "625c1299a91d54b2780ea96457a90a3b58457305366da4af79f78aedfc831ca0": {
+    "label": "occ_herminia",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "6297c9bb50b16a7d3320835332bc321c570a96716760ee88d6cef6b4ee239539": {
+    "label": "bot_mail_3a",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "7dbcbc175c2ac170050b4f4d98d57aa4728d0069d59c72670325223d043e752b": {
+    "label": "messy_crm_bot_template",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "90665d5e29bedb742bf17b904728ed7070baf381ff5a13c6c474ba47898d3f2d": {
+    "label": "bsp_duplicate_26e",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "9271c319d4719dc0590a58452543ade5f648eff07cf1362b27b4d09d2a8805f5": {
+    "label": "herminia_voucher_ns106_12d",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "939cfce6875b829a65bf20d69651d50218a885ebdd031d9d9703b3e938fec04c": {
+    "label": "inj02_duplicate_direct_plus_agency",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "a10991d2c97eaf08fbd3f2fad650923d0ff5828876f05a0083e2a50563313254": {
+    "label": "bot_refund_3a",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "a113bfe95545043b6256b69b3d95b73f2659fea711096d530520144656a23a93": {
+    "label": "messy_met_eireann_forward",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "a386ece0741571809b7d47db12f81757f2ef5711a52f820ff497e3f2b00f5a40": {
+    "label": "messy_occ_handover",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "abcb0d88fcea83ea0d5b3f61ffbe3edae6ef85687727101da0910bdf1a115cbb": {
+    "label": "inj06_claim_after_limitation",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "c2d26b9fc12345e4141e34bbcb3c5b154272e161ab05ad4ded82148635d7fad3": {
+    "label": "inj05_airbus_hidden_defect_notice",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "d44f9ced7aa865b7545fb9146606f814712977673d5f65563fbb034506a086c2": {
+    "label": "messy_hotel_invoice",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "d614e570381f2a1a303df632fa127dbb158b503dc1a6dbeb0227d99141ea031b": {
+    "label": "inj03_prompt_injection_email",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "d8bef59f3bd9cea8656d4034566fc81c2161ab20add21e8edf7a4d0d283271b3": {
+    "label": "spares_ns117",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "d9f5ce4ea54175aac40a27a11d9e6751354858757666d239ad44473d8f655b03": {
+    "label": "occ_eowyn",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "da589e4cb35787ae12755d48f988d44dac1245ca3bac35a283e9b60d973e6b14": {
+    "label": "messy_mcc_forward",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "ea62d5d9ff54487b4dfb9ef3363c2a58b95cb0e986837b21f51edd6e0af5f468": {
+    "label": "refund_voucher_11d",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "eb7acc561eb3e01a8e58f6681b7c452e45b89cfff0a72dcf553d91c264405b33": {
+    "label": "crm_14c_voucher",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "ef17edf7979cdaf48ac65b4d950f0d290a0238e2b4cb1022c0e215706ec08d8c": {
+    "label": "messy_injection_email",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "ef51988a4e01ebe4aaa5e864494b75d9793a02eddfb3daf8dd7b538469f81f16": {
+    "label": "messy_call_note_14c",
+    "provenance": "hand-written",
+    "role": "reader"
+  }
+}
