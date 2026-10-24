@@ -48,23 +48,24 @@ export const RULER: Partial<Record<RuleTier, Role>> = {
 export type RuleFamily = {
   id: string;
   versions: Rule[];
-  /** The version in force: the newest that isn't proposed or retired, else the newest. */
+  /** The version in force: the newest active (or suspect) one; before any is confirmed, the newest draft. */
   current: Rule;
-  /** A newer version waiting for confirmation (a widen or a ruling's draft). */
+  /** A newer version waiting for confirmation (a widen's shadow version, or a proposal). */
   pending: Rule | null;
 };
 
-const LIVE: RuleStatus[] = ["shadow", "active", "suspect"];
+const IN_FORCE: RuleStatus[] = ["active", "suspect"];
+const DRAFT: RuleStatus[] = ["shadow", "proposed"];
 
 export function families(rules: Rule[]): RuleFamily[] {
   const byId = new Map<string, Rule[]>();
   for (const r of rules) byId.set(r.id, [...(byId.get(r.id) ?? []), r]);
   return [...byId.entries()].map(([id, list]) => {
     const versions = [...list].sort((a, b) => a.version - b.version);
-    const newest = versions[versions.length - 1];
-    const live = [...versions].reverse().find((v) => LIVE.includes(v.status));
-    const current = live ?? newest;
-    const pending = newest.status === "proposed" && newest !== current ? newest : null;
+    const newestFirst = [...versions].reverse();
+    const current =
+      newestFirst.find((v) => IN_FORCE.includes(v.status)) ?? newestFirst.find((v) => v.status === "shadow") ?? newestFirst.find((v) => v.status === "proposed") ?? newestFirst[0];
+    const pending = newestFirst.find((v) => v.version > current.version && DRAFT.includes(v.status)) ?? null;
     return { id, versions, current, pending };
   });
 }

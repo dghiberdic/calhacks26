@@ -174,12 +174,7 @@ export function WidenDialog({ rule, proposal, pending, error, onRetry, onClose }
                 </ul>
               </div>
               <Diff diff={proposal.would_flip} empty="No past decision would change." />
-              {typeof proposal.widen_next?.question === "string" ? (
-                <p className="-mt-2 px-6 pb-5 text-[13px] text-slate-500">
-                  <span className="micro mr-2 text-slate-400">next rung</span>
-                  {proposal.widen_next.question}
-                </p>
-              ) : null}
+              <NextRung proposal={proposal} />
               {confirm.error ? <Denied error={confirm.error} role={rule.authority_required} onSwitched={() => confirm.reset()} /> : null}
             </>
           ) : null}
@@ -214,6 +209,21 @@ export function WidenDialog({ rule, proposal, pending, error, onRetry, onClose }
         </>
       ) : null}
     </Shell>
+  );
+}
+
+/** What a further widen would drop, when there is one: the question if the API words it, else the condition. */
+function NextRung({ proposal }: { proposal: RuleProposal }) {
+  const next = proposal.widen_next;
+  if (!next) return null;
+  const drop = typeof next.drop === "string" ? next.drop : null;
+  const text = typeof next.question === "string" ? next.question : drop && proposal.rule.scope[drop] !== undefined ? `drop “${caseClause(drop, proposal.rule.scope[drop])}”` : null;
+  if (!text) return null;
+  return (
+    <p className="-mt-2 px-6 pb-5 text-[13px] text-slate-500">
+      <span className="micro mr-2 text-slate-400">next rung</span>
+      {text}
+    </p>
   );
 }
 

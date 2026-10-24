@@ -24,9 +24,10 @@ export function RuleCard({ family, index = 0, highlighted, actions }: { family: 
   const reduce = useReducedMotion();
   const rule = family.current;
   const origin = originOf(rule);
-  const learnedOrRuled = origin === "learned" || origin === "ruled" || origin === "rejected";
-  const canWiden = learnedOrRuled && caseKeys(rule).length > 0 && rule.status !== "retired";
-  const canRevert = learnedOrRuled && rule.status !== "retired";
+  // Only a rule in force can be widened or reverted; regulation and hard controls never can.
+  const live = (origin === "learned" || origin === "ruled" || origin === "rejected") && rule.status === "active";
+  const canWiden = live && caseKeys(rule).length > 0 && !family.pending;
+  const canRevert = live;
 
   return (
     <motion.article
@@ -86,7 +87,7 @@ export function RuleCard({ family, index = 0, highlighted, actions }: { family: 
             <CaseScope rule={rule} />
           </div>
 
-          {family.pending ? <PendingNote pending={family.pending} /> : null}
+          {family.pending ? <PendingNote pending={family.pending} onReview={live && actions.onWiden ? () => actions.onWiden?.(rule) : undefined} /> : null}
 
           <footer className="mt-5 flex flex-wrap items-center gap-2">
             {canWiden && actions.onWiden ? (
@@ -225,12 +226,18 @@ function aboutText(rule: Rule): ReactNode {
   return storm ? `on the ${storm} cohort` : <span className="font-mono text-[12px]">on {ex}</span>;
 }
 
-function PendingNote({ pending }: { pending: Rule }) {
+/** A wider version drafted and replayed, not yet confirmed: v1 stays in force meanwhile. */
+function PendingNote({ pending, onReview }: { pending: Rule; onReview?: () => void }) {
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg px-3 py-2 text-[13px] text-slate-600 shadow-[inset_0_0_0_1px_var(--color-cloud-300)]">
       <RuleStatusChip status={pending.status} />
-      <span className="font-mono text-[12px]">{ruleRef(pending)}</span>
+      <span className="font-mono text-[12px] text-navy-900">{ruleRef(pending)}</span>
       <span>waiting for confirmation</span>
+      {onReview ? (
+        <button type="button" onClick={onReview} className="ml-auto rounded-md px-2 py-1 text-[12.5px] font-medium text-metar-ink hover:bg-cloud-50">
+          Review
+        </button>
+      ) : null}
     </div>
   );
 }

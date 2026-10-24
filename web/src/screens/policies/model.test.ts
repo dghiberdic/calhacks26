@@ -53,6 +53,18 @@ describe("versions", () => {
     expect(f.pending?.version).toBe(2);
   });
 
+  it("keeps the active version in force while a newer one sits in shadow", () => {
+    const [f] = families([rule({ version: 1, status: "active" }), rule({ version: 2, status: "shadow", supersedes: "R-X-1@1" })]);
+    expect(f.current.version).toBe(1);
+    expect(f.pending?.version).toBe(2);
+  });
+
+  it("shows a fresh ruling's shadow version as the card until it is confirmed", () => {
+    const [f] = families([rule({ version: 1, status: "shadow" })]);
+    expect(f.current.version).toBe(1);
+    expect(f.pending).toBeNull();
+  });
+
   it("falls back to the newest version when a revert retired everything", () => {
     const [f] = families([rule({ version: 1, status: "retired" })]);
     expect(f.current.version).toBe(1);
