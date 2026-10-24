@@ -1,0 +1,164 @@
+/*
+ * The story's own surfaces. Colour still means what it means in the app (index.css): red only for
+ * "Not weather", amber for held, cool blue for METAR / the storm window, green only for ties-to-GL.
+ * Two extra grounds live here: the cyanotype of the blueprint, and the A320 hydraulic system names
+ * (green / blue / yellow are the systems' names, drawn on the blueprint only, never as a status).
+ */
+.story {
+  --story-night: var(--color-navy-950);
+  --story-cyan: #11355a;
+  --story-cyan-deep: #0b2641;
+  --story-ink: #e8f0fa;
+  --story-ink-soft: #b4c8de;
+  --hyd-green: #79d6a2;
+  --hyd-blue: #93c9ff;
+  --hyd-yellow: #f2c94c;
+  background: var(--story-night);
+  color: var(--color-cloud-50);
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent],
+.lenis.lenis-smooth [data-lenis-prevent-horizontal] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ── Split-flap (Solari) cells ──────────────────────────────────────────────────────────────── */
+.flap-cell {
+  position: relative;
+  display: inline-block;
+  width: 0.72em;
+  height: 1.32em;
+  border-radius: 0.09em;
+  background: linear-gradient(180deg, #172238 0%, #131d30 49.5%, #0f1828 50.5%, #141e31 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 1px 0 rgba(0, 0, 0, 0.6);
+  font-family: var(--font-mono);
+  color: var(--color-cloud-50);
+  perspective: 4em;
+  transition: color 0.6s var(--ease-out-quart);
+}
+.flap-half {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  backface-visibility: hidden;
+}
+.flap-half > span {
+  display: block;
+  height: 1.32em;
+  line-height: 1.32em;
+  text-align: center;
+}
+.flap-top,
+.flap-leaf-front {
+  top: 0;
+  border-radius: 0.09em 0.09em 0 0;
+}
+.flap-bottom,
+.flap-leaf-back {
+  bottom: 0;
+  border-radius: 0 0 0.09em 0.09em;
+}
+.flap-bottom > span,
+.flap-leaf-back > span {
+  transform: translateY(-50%);
+}
+.flap-leaf-front {
+  background: #172238;
+  transform-origin: 50% 100%;
+  visibility: hidden;
+}
+.flap-leaf-back {
+  background: #0f1828;
+  transform-origin: 50% 0%;
+  visibility: hidden;
+}
+.flap-axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% - 0.5px);
+  height: 1px;
+  background: rgba(0, 0, 0, 0.75);
+}
+/* Re-checked rows: weather dims to cloud grey (about 4.5:1 on the cell), held reads amber, NS31 red. */
+.flap-row[data-tone="weather"] .flap-cell {
+  color: var(--color-weather);
+}
+.flap-row[data-tone="held"] .flap-cell {
+  color: var(--color-held);
+}
+.flap-row[data-tone="notweather"] .flap-cell {
+  color: #ff8d72;
+}
+
+/* Rain over the render: a tileable streak layer, moved on the compositor while in view. */
+.story-rain {
+  background-repeat: repeat-y;
+  background-size: 100% 50%;
+  will-change: transform;
+}
+.story-rain[data-on="true"] {
+  animation: story-rain 0.9s linear infinite;
+}
+@keyframes story-rain {
+  from {
+    transform: translate3d(0, -50%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* The blueprint's drafting grid. */
+.story-grid {
+  background-image:
+    linear-gradient(to right, rgba(232, 240, 250, 0.16) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(232, 240, 250, 0.16) 1px, transparent 1px),
+    linear-gradient(to right, rgba(232, 240, 250, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(232, 240, 250, 0.07) 1px, transparent 1px);
+  background-size:
+    120px 120px,
+    120px 120px,
+    24px 24px,
+    24px 24px;
+}
+
+/* A scroll cue that breathes (motion only). */
+@media (prefers-reduced-motion: no-preference) {
+  .story-cue {
+    animation: story-cue 2.4s var(--ease-out-quart) infinite;
+  }
+}
+@keyframes story-cue {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  45% {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  55% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+}
