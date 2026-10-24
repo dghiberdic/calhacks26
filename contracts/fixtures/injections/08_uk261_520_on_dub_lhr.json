@@ -1,0 +1,10 @@
+{
+  "id": "08_uk261_520_on_dub_lhr",
+  "title": "UK261 £520 claim on DUB–LHR",
+  "request": {
+    "kind": "claim",
+    "text": "UK261 claim: NS100 DUB-LHR 24 Jan 2025 cancelled, claiming £520.",
+    "flight_id": "NS100@2025-01-24"
+  },
+  "expected": "EU261 applies to a DUB departure · weather · no compensation · paid once, never under both"
+}

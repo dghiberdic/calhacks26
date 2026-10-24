@@ -662,15 +662,15 @@ RULES = [
          title="Take the 50% reroute cut (Art. 7(2)) when the reroute arrives within the band's limit"),
     Rule(id="R-HC-PAYOUT", version=1, kind="routing", scope={}, condition={"all": []}, action=RuleAction.ROUTE_TO,
          action_arg="claims_lead", tier="hard_control", authority_required=Role.CLAIMS_LEAD,
-         valid_from=None, recorded_at=ONBOARDED_AT, status="active", times_cited=1,
+         valid_from=None, recorded_at=ONBOARDED_AT, status="active", times_cited=1, static_card=True,
          title="Payouts need Claims Lead approval"),
     Rule(id="R-HC-MATERIALITY", version=1, kind="routing", scope={}, condition={"all": []},
          action=RuleAction.ROUTE_TO, action_arg="claims_lead", tier="hard_control",
          authority_required=Role.CONTROLLER, valid_from=None, recorded_at=ONBOARDED_AT, status="active",
-         times_cited=27, title="Auto-draft only if per-flight liability < €50k and confidence ≥ 0.90"),
+         times_cited=27, static_card=True, title="Auto-draft only if per-flight liability < €50k and confidence ≥ 0.90"),
     Rule(id="R-HC-SOD", version=1, kind="routing", scope={}, condition={"all": []}, action=RuleAction.ROUTE_TO,
          action_arg="controller", tier="hard_control", authority_required=Role.CONTROLLER, valid_from=None,
-         recorded_at=ONBOARDED_AT, status="active", times_cited=1,
+         recorded_at=ONBOARDED_AT, status="active", times_cited=1, static_card=True,
          title="Preparer ≠ approver; external parties never satisfy an internal approval"),
     Rule(id="R-REG-2026-2202", version=1, kind="regime", scope={}, condition={"all": []},
          action=RuleAction.ROUTE_TO, action_arg="legal", tier="regulation", authority_required=Role.LEGAL,
@@ -1162,7 +1162,8 @@ def main() -> None:
     dump("injections.json", INJECTIONS)
     dump("eval.json", EVAL)
     dump("month_end_je.json", JE_MONTH_END)
-    print(f"wrote {len(list(OUT.glob('*.json')))} fixtures to {OUT.relative_to(ROOT)}")
+    where = OUT.relative_to(ROOT) if OUT.is_relative_to(ROOT) else OUT
+    print(f"wrote {len(list(OUT.glob('*.json')))} fixtures to {where}")
 
 
 if __name__ == "__main__":

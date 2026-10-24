@@ -1,0 +1,147 @@
+{
+  "3a60981600b0449abd4e3c38184a02d66e32c20bba607be40cde5d64c64ed3a5": {
+    "label": "messy_agency_letter",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "41e78cf822cda6d4572d7435b6cde4e2bb98ed71af9f3c64dfd2867b744bc4ce": {
+    "label": "occ_herminia",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "4bcb704730d99b0341a48a843d06989c9db99fb8e4801eb0b92dc1024881ec92": {
+    "label": "inj01_aog_inside_window",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "4e26093ab15b3ae8837fc46d5c151504fa87a8cf178c509dd4eb4082093265d5": {
+    "label": "inj05_airbus_hidden_defect_notice",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "5f806d172e8304b55123ce654a423c6be5cb3d2a376293426e2418612a0bf278": {
+    "label": "messy_crm_bot_template",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "63d765705c203019ed54cc79a6576e57d93447eb7b656ee9c55dac6eec5aa928": {
+    "label": "refund_voucher_11d",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "66c2043eb585a4a467cb50025e1781ef6fe279c323190ae1e935fab4e12365a2": {
+    "label": "inj02_duplicate_direct_plus_agency",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "6bd06bcf77e3fff4aa130e4db77e7e5cd798ed5554c8886d998df372b71a0afa": {
+    "label": "inj03_prompt_injection_email",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "6c184b99b9366e3fe98a996c68afeaba1febfb563bddb259a8dc93789667e513": {
+    "label": "messy_hotel_invoice",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "6f7ce37e6769e9283bb0d1dbd98f1adc279744dc90ac64a94a429c58bd84df6a": {
+    "label": "inj06_claim_after_limitation",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "71e3452b95dd0e751ae767a650c3abc98e300b0e7cecd72829be720005226b03": {
+    "label": "crm_14c_voucher",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "7f79785e478da9590516ec2f98b9d313226b7fd908fbc6d6283e71b1487bde64": {
+    "label": "claim_14c",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "87bdeafe0d62217d21c29e11225fa4d21ead360971e8be8219c0eefddc061783": {
+    "label": "occ_eowyn",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "880aec6e2a1c0c4987ae1c37d261c6f3667b3bfb5c1d4bbcf4c9e46933cde31b": {
+    "label": "chargeback_5b",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "9867015be51189d98fbd57942ad9f08ddd93b14fc23a2c6bfbb1721e3c818611": {
+    "label": "messy_call_note_14c",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "9ae181e3c75bbd88fd8f517deed3ce77289bc5a84d9774235b1128b1cb78c6ca": {
+    "label": "spares_ns117",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "9dc5fa3da69e4fd21a9f46a32d25483e0cca6d1828bc6c87443621304eb14453": {
+    "label": "inj04_chargeback_after_bot_refund",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "ae15581a4518a6eb56922868678ac0e5e5ab2ab559ef1b862dc7540e36e3b18b": {
+    "label": "messy_mcc_forward",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "b0dea3a32d57085471eadc192aa9926afe00c8d37c55d9f2d091a0584a9776e3": {
+    "label": "herminia_voucher_ns106_12d",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "b5fe9cc9be97bf78c430c73cadcb7c67d3f30785ae60269ee30d99106c7e9350": {
+    "label": "inj08_uk261_520_on_dub_lhr",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "b64982ba05e89d1d9412eeae3888a6286395ea1e7901814daccc68d7cbe42898": {
+    "label": "bot_refund_3a",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "c0deb979957099c5ae989e3739911ccecee38669291c855353bfe38c6f15f730": {
+    "label": "techlog_ns31",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "c70d066f597a92ad514b5fc660925b004718199f1ae295f8318a3c0e7d2664d1": {
+    "label": "messy_occ_handover",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "ca3599c011b9198d74fcb2d7b4b076e811cb2653e47c7bdf80ee09980344ac06": {
+    "label": "mcc_ns31",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "cc477f3db520f277b9aa6f45095448403dd7dfaf29bcf1bcf5e1e147c31df00a": {
+    "label": "bot_mail_3a",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "cdef8e9f17e032e9dda09374faf4d075bc06c182ee1e441873efa83716090789": {
+    "label": "bsp_duplicate_26e",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "e74b598b0a543482e607b88d9f5fb905fddb6dcea6f7ceaecc68a93a62885ba9": {
+    "label": "messy_met_eireann_forward",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "e79a7dc3eb05ea40974760c51f55d0a89f645bb33eb50b425176b2cfe9349b6f": {
+    "label": "messy_injection_email",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "f2e8bc9926d967af86e8617b43006ddbb92f30cf16c5d514cb9050bba1401fe6": {
+    "label": "inj07_challenge_storm_anyway",
+    "provenance": "hand-written",
+    "role": "reader"
+  }
+}

@@ -164,7 +164,7 @@ def schema_json(schema: type[BaseModel] | None) -> dict[str, Any] | None:
     try:
         from anthropic.lib._parse._transform import to_json_output_format
         return dict(to_json_output_format(schema))
-    except Exception:  # pragma: no cover - SDK internals moved; keep a stable key anyway
+    except Exception:  # noqa: BLE001  # pragma: no cover - SDK internals moved; keep a stable key anyway
         return {"type": "json_schema", "schema": schema.model_json_schema()}
 
 
@@ -356,7 +356,8 @@ class ScriptedBackend:
 class LlmClient:
     def __init__(self, *, mode: str | None = None, cache_dir: str | Path | None = None,
                  read_dirs: Sequence[str | Path] | None = None, backend: Any = None,
-                 cap_usd: float | None = None, clock: Callable[[], datetime] | None = None):
+                 cap_usd: float | None = None, clock: Callable[[], datetime] | None = None,
+                 spend_dir: str | Path | None = None):
         mode = mode or os.environ.get("LLM_MODE") or os.environ.get("STORMCHECK_MODE") or "cache"
         if mode not in MODES:
             raise ValueError(f"LLM_MODE must be one of {MODES}, got {mode!r}")
@@ -368,11 +369,12 @@ class LlmClient:
         self.backend = backend if backend is not None else AnthropicBackend()
         self.cap_usd = float(cap_usd if cap_usd is not None else os.environ.get("LLM_CAP_USD", DEFAULT_CAP_USD))
         self._clock = clock or (lambda: datetime.now(UTC))
+        self.spend_dir = Path(spend_dir) if spend_dir is not None else self.cache_dir
 
     # -- spend ledger
     @property
     def _spend_path(self) -> Path:
-        return self.cache_dir / SPEND_FILE
+        return self.spend_dir / SPEND_FILE
 
     @property
     def spent_usd(self) -> float:
@@ -384,7 +386,7 @@ class LlmClient:
     def _add_spend(self, usd: float) -> None:
         if usd <= 0:
             return
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.spend_dir.mkdir(parents=True, exist_ok=True)
         try:
             data = orjson.loads(self._spend_path.read_bytes())
         except (FileNotFoundError, ValueError):

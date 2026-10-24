@@ -19,17 +19,17 @@
     ],
     "evidence": [
       {
-        "fact_id": "F-CRM-NS31-14C-voucher",
+        "fact_id": "F:CRM-NS31-14C-2025-01-24T1420Z:voucher.in_lieu",
         "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
         "field": "voucher.in_lieu",
         "value": true,
-        "quote": "EUR300 VOUCHER IN LIEU OF COMPENSATION",
+        "quote": "IN LIEU OF COMPENSATION",
         "role": "context",
         "trust_tier": 3,
         "struck": false
       },
       {
-        "fact_id": "F-CRM-NS31-14C-accepted",
+        "fact_id": "F:CRM-NS31-14C-2025-01-24T1420Z:voucher.accepted",
         "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
         "field": "voucher.accepted",
         "value": true,
@@ -39,27 +39,27 @@
         "struck": false
       },
       {
-        "fact_id": "F-CRM-NS31-14C-signed",
+        "fact_id": "F:CRM-NS31-14C-2025-01-24T1420Z:voucher.signed",
         "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
         "field": "voucher.signed",
         "value": false,
-        "quote": null,
+        "quote": "SIGNATURE: NOT CAPTURED",
         "role": "supports",
         "trust_tier": 3,
         "struck": false
       },
       {
-        "fact_id": "F-CLAIM-NS31-14C-dispute",
-        "source_id": "SRC-CLAIM-NS31-14C-2025-01-25T0131Z",
+        "fact_id": "F:CLM-NS31-14C-2025-01-25T0131Z:claim.voucher_disputed",
+        "source_id": "SRC-CLM-NS31-14C-2025-01-25T0131Z",
         "field": "claim.voucher_disputed",
         "value": true,
-        "quote": "I never agreed to take a voucher instead of my compensation",
+        "quote": "I never agreed to take a voucher instead of my compensation and I did not sign anything",
         "role": "supports",
         "trust_tier": 4,
         "struck": false
       },
       {
-        "fact_id": "F-CRM-NS31-14C-amount",
+        "fact_id": "F:CRM-NS31-14C-2025-01-24T1420Z:voucher.amount_cents",
         "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
         "field": "voucher.amount_cents",
         "value": 30000,
@@ -82,7 +82,7 @@
       "caps": [
         "capped:sources-disagree"
       ],
-      "calibration_version": "cal-v1"
+      "calibration_version": "cal-plan-fixture"
     },
     "reason_tag": "sources-disagree",
     "holds": [
@@ -114,91 +114,91 @@
     ],
     "evidence": [
       {
-        "fact_id": "F-ROT-NS113-prev",
-        "source_id": "SRC-OCC-2025-01-24T0512Z",
-        "field": "rotation.prev_cancelled",
-        "value": true,
-        "quote": "NS112/113",
-        "role": "supports",
-        "trust_tier": 3,
-        "struck": false
-      },
-      {
-        "fact_id": "F-METAR-EIDW-20250124T1600Z",
-        "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-        "field": "metar.sknt",
-        "value": 11,
+        "fact_id": "F:METAR-EIDW-20250124T1600Z:metar.gust_kt",
+        "source_id": "SRC-METAR-EIDW@2025-01-24",
+        "field": "metar.gust_kt",
+        "value": null,
         "quote": "EIDW 241600Z 24011KT 200V290 9999 -RA FEW012 SCT020 BKN050 05/M01 Q0989 NOSIG",
         "role": "contradicts",
         "trust_tier": 1,
         "struck": false
       },
       {
-        "fact_id": "F-SPARE-NS113",
-        "source_id": "SRC-SPARES-2025-01-24",
+        "fact_id": "F:SPARES-2025-01-24T1330Z-NS113:NS113@2025-01-24:spare.available_within_h",
+        "source_id": "SRC-SPARES-2025-01-24T1330Z-NS113",
         "field": "spare.available_within_h",
         "value": 5.58,
-        "quote": "No tail at LIS. Earliest ferry ex-DUB 15:30Z → LIS dep 18:55Z = STD+5h35.",
+        "quote": "STD+5h35",
         "role": "context",
         "trust_tier": 2,
         "struck": false
       },
       {
-        "fact_id": "F-ROT-NS115-prev",
-        "source_id": "SRC-OCC-2025-01-24T0512Z",
-        "field": "rotation.prev_cancelled",
+        "fact_id": "F:NS113@2025-01-24:reroute:pax.reroute_earliest_offered",
+        "source_id": "SRC-PSS-NS113@2025-01-24",
+        "field": "pax.reroute_earliest_offered",
         "value": true,
-        "quote": "NS114/115",
-        "role": "supports",
-        "trust_tier": 3,
-        "struck": false
-      },
-      {
-        "fact_id": "F-METAR-EIDW-20250124T1700Z",
-        "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-        "field": "metar.sknt",
-        "value": 14,
-        "quote": "EIDW 241700Z 22014G25KT 200V260 9999 -RA FEW012 SCT020 BKN050 04/M00 Q0990 NOSIG",
-        "role": "contradicts",
-        "trust_tier": 1,
-        "struck": false
-      },
-      {
-        "fact_id": "F-SPARE-NS115",
-        "source_id": "SRC-SPARES-2025-01-24",
-        "field": "spare.available_within_h",
-        "value": 5.08,
-        "quote": "No tail at FCO. Earliest ferry ex-DUB 15:30Z → FCO dep 19:15Z = STD+5h05.",
+        "quote": "EARLIEST REROUTE OFFERED: TP via LHR",
         "role": "context",
         "trust_tier": 2,
         "struck": false
       },
       {
-        "fact_id": "F-ROT-NS117-prev",
-        "source_id": "SRC-OCC-2025-01-24T0512Z",
-        "field": "rotation.prev_cancelled",
-        "value": true,
-        "quote": "NS116/117",
-        "role": "supports",
-        "trust_tier": 3,
-        "struck": false
-      },
-      {
-        "fact_id": "F-METAR-EIDW-20250124T1630Z",
-        "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-        "field": "metar.sknt",
-        "value": 11,
+        "fact_id": "F:METAR-EIDW-20250124T1630Z:metar.gust_kt",
+        "source_id": "SRC-METAR-EIDW@2025-01-24",
+        "field": "metar.gust_kt",
+        "value": 22,
         "quote": "EIDW 241630Z 23011G22KT 190V270 9999 -RA FEW012 SCT020 BKN050 05/00 Q0990 NOSIG",
         "role": "contradicts",
         "trust_tier": 1,
         "struck": false
       },
       {
-        "fact_id": "F-SPARE-NS117",
-        "source_id": "SRC-SPARES-2025-01-24",
+        "fact_id": "F:SPARES-2025-01-24T1330Z-NS117:NS117@2025-01-24:spare.available_within_h",
+        "source_id": "SRC-SPARES-2025-01-24T1330Z-NS117",
         "field": "spare.available_within_h",
         "value": 4.33,
-        "quote": "No tail at MUC. Earliest ferry ex-DUB 15:30Z → MUC dep 18:25Z = STD+4h20.",
+        "quote": "STD+4h20",
+        "role": "context",
+        "trust_tier": 2,
+        "struck": false
+      },
+      {
+        "fact_id": "F:NS117@2025-01-24:reroute:pax.reroute_earliest_offered",
+        "source_id": "SRC-PSS-NS117@2025-01-24",
+        "field": "pax.reroute_earliest_offered",
+        "value": true,
+        "quote": "EARLIEST REROUTE OFFERED: LH via FRA",
+        "role": "context",
+        "trust_tier": 2,
+        "struck": false
+      },
+      {
+        "fact_id": "F:METAR-EIDW-20250124T1700Z:metar.gust_kt",
+        "source_id": "SRC-METAR-EIDW@2025-01-24",
+        "field": "metar.gust_kt",
+        "value": 25,
+        "quote": "EIDW 241700Z 22014G25KT 200V260 9999 -RA FEW012 SCT020 BKN050 04/M00 Q0990 NOSIG",
+        "role": "contradicts",
+        "trust_tier": 1,
+        "struck": false
+      },
+      {
+        "fact_id": "F:SPARES-2025-01-24T1330Z-NS115:NS115@2025-01-24:spare.available_within_h",
+        "source_id": "SRC-SPARES-2025-01-24T1330Z-NS115",
+        "field": "spare.available_within_h",
+        "value": 5.08,
+        "quote": "STD+5h05",
+        "role": "context",
+        "trust_tier": 2,
+        "struck": false
+      },
+      {
+        "fact_id": "F:NS115@2025-01-24:reroute:pax.reroute_earliest_offered",
+        "source_id": "SRC-PSS-NS115@2025-01-24",
+        "field": "pax.reroute_earliest_offered",
+        "value": true,
+        "quote": "EARLIEST REROUTE OFFERED: AZ via LHR",
         "role": "context",
         "trust_tier": 2,
         "struck": false
@@ -222,7 +222,7 @@
       "caps": [
         "capped:no-precedent"
       ],
-      "calibration_version": "cal-v1"
+      "calibration_version": "cal-plan-fixture"
     },
     "reason_tag": "no-precedent",
     "holds": [
@@ -254,31 +254,31 @@
     ],
     "evidence": [
       {
-        "fact_id": "F-OB-EIDW@2024-01-21-balance",
+        "fact_id": "F:OB-EIDW@2024-01-21-2140:cohort.balance_cents",
         "source_id": "SRC-GL-2140-2024-12",
         "field": "cohort.balance_cents",
         "value": 360000,
-        "quote": "2140 EIDW@2024-01-21 LH 3,600.00",
+        "quote": "2140 EIDW@2024-01-21 LH 3,600.00 · ENTITLEMENT 60,000.00 · CLAIMED 17,400.00 (29%) · LAST CLAIM 2024-10-19",
         "role": "supports",
         "trust_tier": 2,
         "struck": false
       },
       {
-        "fact_id": "F-OB-EIDW@2024-01-21-claimed",
-        "source_id": "SRC-CLAIMS-EIDW@2024-01-21",
+        "fact_id": "F:OB-EIDW@2024-01-21-2140:cohort.claimed_pct",
+        "source_id": "SRC-GL-2140-2024-12",
         "field": "cohort.claimed_pct",
         "value": 0.29,
-        "quote": "claimed 29% of entitlement by M12",
+        "quote": "2140 EIDW@2024-01-21 LH 3,600.00 · ENTITLEMENT 60,000.00 · CLAIMED 17,400.00 (29%) · LAST CLAIM 2024-10-19",
         "role": "context",
         "trust_tier": 2,
         "struck": false
       },
       {
-        "fact_id": "F-OB-EIDW@2024-01-21-lastclaim",
-        "source_id": "SRC-CLAIMS-EIDW@2024-01-21",
-        "field": "cohort.months_since_last_claim",
-        "value": 3,
-        "quote": "last claim 2024-10-19",
+        "fact_id": "F:OB-EIDW@2024-01-21-2140:cohort.last_claim_at",
+        "source_id": "SRC-GL-2140-2024-12",
+        "field": "cohort.last_claim_at",
+        "value": "2024-10-19",
+        "quote": "LAST CLAIM 2024-10-19",
         "role": "supports",
         "trust_tier": 2,
         "struck": false
@@ -291,11 +291,10 @@
       "features": {
         "cohort_age_months": 12.0,
         "months_since_last_claim": 3.0,
-        "claimed_pct": 0.29,
-        "limitation_expired": 0.0
+        "precedent_count": 0.0
       },
       "caps": [],
-      "calibration_version": "cal-v1"
+      "calibration_version": "cal-plan-fixture"
     },
     "reason_tag": "release-proposal",
     "holds": [

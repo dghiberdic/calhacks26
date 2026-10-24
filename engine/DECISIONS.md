@@ -165,3 +165,90 @@ A no-go line (`mel_relief` False or None) beats one with relief; ties go to the 
 - `new_legal_pattern` → Legal question `Q-<flight>:new_legal_pattern`, tag `new-legal-pattern`. Confidence is the decision's features with `sources_disagree = 1` (NS31: 0.45, plan says 52%, both < 0.6) plus cap `capped:challenge-tier-4`.
 - `new_fact` → Ops question `Q-<flight>:challenge_new_fact`.
 - The Drafter writes the reply prose; the server assembles `ChallengeResponse`.
+
+## D4 · `engine/rules.py`, `engine/controls.py`
+
+**Authority, by action first and kind second.**
+- Legal: `set_extraordinary`, `set_not_extraordinary`, `allow_offset`.
+- Claims Lead: `deny_offset`, `apply_7_2_reduction`.
+- Controller: `keep_tail`, `deny_release`.
+- `route_to` goes by kind: cause/entitlement/regime → Legal, voucher → Claims Lead, release/routing → Controller.
+- The author must also match the rule's tier (claims_lead → `claims_lead_ruling`, …).
+- Agents, Ops, CFO and the judge never author rules. Nobody authors a `hard_control` or `regulation` rule (code and regulation versions only). Mined rules have no human author and may only carry mined policy.
+
+**Statutory floor.** "Lower EU261 compensation" means going below what the Regulation itself gives:
+- `allow_offset` (offsetting without Art. 7(3) signed consent) and `set_extraordinary` are Legal only.
+- The Art. 7(2) reduction is the statute's own reduction, and the engine enforces its limits, so a Claims Lead / mined policy may apply it. That keeps R-MINED-REDUCE's `authority_required = claims_lead`, as on the stub card.
+
+**Hard-control screening.** A proposal fails `no_hard_control` when:
+- its tier is `hard_control`; or
+- it routes to a non-internal party; or
+- the ruling text, rule title, scope or condition matches the hard-control phrases in `controls._HC_PATTERNS`: SoD ("approve their own", "requesters approve"…), payout bypass, locked-period writes, materiality bypass, or external approval.
+
+The checks themselves are code in `controls.py`:
+- `check_approval`: agents never approve; external or unknown principals never satisfy an approval; preparer ≠ approver; payouts need the Claims Lead; everything else needs the Controller (same split as Books).
+- `check_period_write`, `materiality_ok` and `check_answer` (only the routed role, never an agent or external party).
+- Each result renders as an `AccessDecision`, or as a `TraceEvent` such as "agent.drafter approve_payout → DENIED · SoD".
+
+**Grounding.**
+- Literals map to phrases through a per-(feature, value) lexicon, a per-feature numeric unit table ("within 3 h of STD", "M12", "4,804 km") and the action lexicon ("no offset", "Never release the tail").
+- Keys follow the stub: numbers → `"3"`; others → `"voucher.signed=false"`; the action → `"action=deny_offset"`. Phrases are verbatim substrings of the ruling.
+- An ungrounded scope key is copied from the case as `case:<v>`, which still constrains and is the rung `widen` removes. An ungrounded condition literal or action fails `grounded`.
+- On golden text: R-CL-1 grounds `voucher.signed=false` → "No signed acceptance" and copies `flight.departs_eu` from the case as `case:true`, unless the ruler says "leaving the EU". R-LEG-1 grounds "within 3 h of STD". R-CTL-1 grounds "M12" and "until the six-year limitation", and copies the cohort from the case.
+
+**Conflicts.**
+- `resolve()` returns a conflict, applying nothing, when the strongest applicable rule has an equal-tier, equal-specificity rival with the opposite action (`set_extraordinary` ↔ `set_not_extraordinary`, `allow_offset` ↔ `deny_offset`).
+- In the engine, conflicting Legal rulings make the case `needs_legal` → Legal, pattern `rule_conflict`, cap `capped:rule-conflict`. Conflicting voucher rules leave the coupon `needs_ruling`.
+- A proposal whose action opposes an active same-tier rule with an overlapping scope gets `no_conflict = False`.
+- Shuffling the rule order never changes the result (hypothesis).
+
+**Cause rules in the engine (changed with D4).**
+- Only a `legal_ruling` may settle or override `extraordinary`.
+- Regulation and hard-control cards are only *cited* when they agree. The stub's R-REG-ART5-3 card ("in window at either end → extraordinary") would otherwise have flipped every concurrent-AOG case to "extraordinary".
+- `route_to` rules apply only from ruling tiers (claims_lead / controller / legal), never from the `R-HC-*` display cards, which carry `route_to` with an empty condition.
+
+**Versions (`RuleBook`).**
+- Append-only events: `version` (immutable `Rule` snapshot, version number assigned on add, `supersedes` = the previous version), `status` and `cite`.
+- `rules_known_at(K)` replays the events up to K. A version is shown `retired` while a newer version is active, so retiring (reverting) the newer version brings the older one back. To retire a rule entirely, retire each version.
+- `times_cited` is Σ cite events. The server and trace own persistence; `RuleBook` is the pure view.
+
+## D5 · `engine/lifecycle.py`
+
+**Store.** `Lifecycle(engine, world, trace, books=, drafter=)` keeps rules, rulings, question events, decisions and citations in `engine.trace.TraceStore`.
+- `rules_at(t)` = the latest active version per rule id as known at t.
+- `record_run(decisions, ents, at)` records a run and one `cited` event per case per rule: flight-level rules once per decision, coupon-level rules once per coupon not already cited on its decision. Only rules the trace knows are cited.
+- The server can call `record_run` for every storm it runs.
+
+**decide_fn for replay.** `Lifecycle.decide_fn(flight_ids)` overlays the stored facts on the base world (`engine.case.overlay_facts`) and re-decides those flights plus their entitlements.
+- The overlay ignores facts that only restate the world, so replaying `contracts.normalize.world_to_facts(golden)` (73,517 facts) gives byte-identical decisions for all 27 Éowyn flights (checked).
+- `aog.defect_text` (the registry's name) is accepted as the tech-log text.
+
+**Drafting.**
+- An injected `DrafterAPI.propose_rule` drafts. If there is none, or its draft does not compile, `template_rule` builds one from the ruling's own words for the known patterns:
+  - voucher → `deny_offset` (or `allow_offset` if the ruling says "offset the voucher"), condition `in_lieu ∧ ¬signed`, scope `flight.departs_eu` from the case;
+  - knock-on → `set_extraordinary` (or `set_not_extraordinary`), `is_return_sector ∧ prev_cancelled`, plus `spare > N` when the ruling says "within N h" and `reroute_earliest_offered` when it says "earliest reroute", scope `rotation.prev_cause` from the case;
+  - cohort release → `keep_tail` (or `deny_release`), `age ≥ M<n>` plus `limitation_expired = false` when "limitation" is said, scope `cohort`.
+- Ops patterns (data gaps, contradictions, crew/ATC, challenge facts) produce no rule: an Ops answer is a fact, not a policy.
+- The engine always sets `id` (`R-CL-n` / `R-LEG-n` / `R-CTL-n`, next free number), `version`, `tier` (from the author's role), `authority_required`, `origin_*`, `recorded_at` and `status=proposed`.
+- `valid_from` is None for interpretations (Legal, and Claims Lead voucher rulings, so R-CL-1 settles 14C on the flight it came from). It is `at` for Controller release policy (prospective; the cohort check passes no flight date).
+
+**Verify + preview.**
+- `engine.rules.checks` grounds the rule (ungrounded scope → `case:`) and runs all six checks.
+- `would_flip` = `TraceStore.replay(at, decide_fn(on-record flights), rules_override = rules in force + the candidate active, preview_fn = BooksAPI.preview)`. Only flights already on record are re-decided: a later storm whose METAR isn't known yet is never pre-decided.
+- Release rules (`keep_tail`, `deny_release`) don't change flights. Their preview is one flip per matching opening-balance cohort: `release_proposed_cents` balance → 0, Δ 0. Nothing booked changes; the proposal was gated. R-CTL-1 keeps 360,000.
+
+**Confirm.**
+- Refused (`validation`) unless every check passed. Refused (`forbidden`, with an `access_denied` commit) unless the confirmer holds the authority.
+- Then: record `active`, `replay_run`, `BooksAPI.post_recode(before, after)` for changed coupons, record the re-decided decisions/entitlements linked to the rule commit, and cite.
+- Results: Q2 settles NS113/115/117 (Δ −4,749,600, Éowyn 2140 → 3,465,000, cited 3×). Q1 settles 14C (cited 1×). On Herminia, `record_run` cites R-CL-1 31× and BOS→DUB asks again.
+- **`times_cited` for R-CL-1 is therefore 32** (14C + 31). `expected/questions.json` says `times_cited_after_herminia: 31`, but `q2_rule_cited: 3` counts the question's own cases. Counting the origin case is the only reading consistent with both, so the tests assert "+31 on Herminia" and the plan beat "31 settled, ruling cited" holds.
+
+**Reject.**
+- `reject(question, explanation)` records a `rejection` ruling against the question's recommended option and drafts from the explanation. That is the Q3 path: "Never release the tail…" → R-CTL-1 `keep_tail`, scope `cohort: case:EIDW@2024-01-21`, `widen_next = {"remove": "cohort", "question": "All storm cohorts?"}`.
+- `reject(rule_ref, explanation)` retires a proposed/active rule and drafts a new proposal from the rejection, if the origin question is known.
+
+**Widen.**
+- Exactly one rung: drop the first `case:` scope key and any condition clause on that feature, giving a new version (`supersedes` = the old ref).
+- The widened rule is re-checked with the original ruling's words and the confirmer's role.
+- `widen_next` names the next case key, or None. Widening a rule with no case keys is a `validation` error.
+- R-LEG-1's `rotation.prev_cause` is grounded by "storm" in Legal's text, so it is a literal, not `case:`, and R-LEG-1 cannot be widened. That differs from the stub's canned card.

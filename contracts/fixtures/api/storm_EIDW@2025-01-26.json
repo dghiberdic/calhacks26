@@ -1,0 +1,1266 @@
+{
+  "id": "EIDW@2025-01-26",
+  "station": "EIDW",
+  "date": "2025-01-26",
+  "windows": [
+    {
+      "station": "EIDW",
+      "start": "2025-01-26T11:30:00Z",
+      "end": "2025-01-26T13:00:00Z",
+      "peak_gust_kt": 43,
+      "definition": "gust>=35kt or sknt>=30kt or vsby<0.5sm or wx in {SN,FZ,TS,GR}; gaps<2h merged",
+      "obs_count": 3
+    }
+  ],
+  "metar": [
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T00:00:00Z",
+      "sknt": 9,
+      "gust": null,
+      "drct": 210,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260000Z 21009KT 190V250 9999 FEW015 02/M01 Q1000 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T00:30:00Z",
+      "sknt": 8,
+      "gust": null,
+      "drct": 220,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260030Z 22008KT 9999 FEW015 02/M01 Q0999 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T01:00:00Z",
+      "sknt": 6,
+      "gust": null,
+      "drct": 240,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260100Z 24006KT 210V280 9999 FEW015 02/M01 Q0999 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T01:30:00Z",
+      "sknt": 5,
+      "gust": null,
+      "drct": 230,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260130Z 23005KT 200V280 9999 FEW015 01/M02 Q0998 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T02:00:00Z",
+      "sknt": 5,
+      "gust": null,
+      "drct": 180,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260200Z 18005KT 160V220 9999 FEW015 01/M02 Q0998 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T02:30:00Z",
+      "sknt": 3,
+      "gust": null,
+      "drct": 170,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260230Z 17003KT 9999 FEW015 00/M02 Q0998 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T03:00:00Z",
+      "sknt": 4,
+      "gust": null,
+      "drct": 170,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260300Z 17004KT 9999 FEW015 00/M02 Q0997 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T03:30:00Z",
+      "sknt": 5,
+      "gust": null,
+      "drct": 160,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260330Z 16005KT 9999 FEW015 01/M03 Q0997 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T04:00:00Z",
+      "sknt": 6,
+      "gust": null,
+      "drct": 140,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260400Z 14006KT 9999 FEW015 02/M03 Q0996 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T04:30:00Z",
+      "sknt": 5,
+      "gust": null,
+      "drct": 140,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260430Z 14005KT 9999 FEW015 01/M04 Q0996 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T05:00:00Z",
+      "sknt": 6,
+      "gust": null,
+      "drct": 150,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260500Z 15006KT 9999 FEW015 01/M03 Q0995 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T05:30:00Z",
+      "sknt": 5,
+      "gust": null,
+      "drct": 120,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260530Z 12005KT 9999 FEW015 BKN200 02/M02 Q0994 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T06:00:00Z",
+      "sknt": 5,
+      "gust": null,
+      "drct": 130,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260600Z 13005KT 100V160 9999 FEW015 BKN200 02/M01 Q0993 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T06:30:00Z",
+      "sknt": 6,
+      "gust": null,
+      "drct": 100,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260630Z 10006KT 9999 FEW015 SCT030 BKN200 02/M00 Q0992 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T07:00:00Z",
+      "sknt": 11,
+      "gust": null,
+      "drct": 120,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260700Z 12011KT 9999 FEW015 SCT030 BKN200 04/01 Q0990 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T07:30:00Z",
+      "sknt": 12,
+      "gust": null,
+      "drct": 110,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260730Z 11012KT 9999 FEW013 SCT022 BKN035 05/02 Q0989 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T08:00:00Z",
+      "sknt": 13,
+      "gust": null,
+      "drct": 110,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260800Z 11013KT 090V150 9999 FEW013 SCT017 BKN022 06/03 Q0988 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T08:30:00Z",
+      "sknt": 13,
+      "gust": 27,
+      "drct": 120,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260830Z 12013G27KT 9999 FEW013 BKN017 BKN140 06/03 Q0987 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T09:00:00Z",
+      "sknt": 16,
+      "gust": 27,
+      "drct": 130,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260900Z 13016G27KT 9999 FEW013 BKN018 BKN140 06/03 Q0986 WS RWY10L NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T09:30:00Z",
+      "sknt": 17,
+      "gust": 27,
+      "drct": 110,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 260930Z 11017G27KT 9999 FEW010 BKN013 BKN140 06/04 Q0985 WS RWY10L TEMPO 4000 BKN010"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T10:00:00Z",
+      "sknt": 20,
+      "gust": 32,
+      "drct": 120,
+      "vsby_sm": 3.73,
+      "wxcodes": "-RA",
+      "raw": "EIDW 261000Z 12020G32KT 6000 -RA FEW010 BKN014 BKN019 06/04 Q0983 WS RWY10L TEMPO 4000 BKN010"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T10:30:00Z",
+      "sknt": 20,
+      "gust": 32,
+      "drct": 120,
+      "vsby_sm": 3.11,
+      "wxcodes": "RA",
+      "raw": "EIDW 261030Z 12020G32KT 5000 RA FEW010 BKN015 BKN019 06/04 Q0982 WS RWY10L TEMPO 4000 BKN010"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T11:00:00Z",
+      "sknt": 22,
+      "gust": 33,
+      "drct": 110,
+      "vsby_sm": 4.35,
+      "wxcodes": "-RA",
+      "raw": "EIDW 261100Z 11022G33KT 7000 -RA FEW010 BKN014 BKN019 06/05 Q0980 RERA TEMPO 4000 BKN010"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T11:30:00Z",
+      "sknt": 24,
+      "gust": 38,
+      "drct": 100,
+      "vsby_sm": 3.11,
+      "wxcodes": "RA",
+      "raw": "EIDW 261130Z 10024G38KT 5000 RA FEW010 BKN014 BKN016 06/04 Q0978 TEMPO 4000 BKN010"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T12:00:00Z",
+      "sknt": 23,
+      "gust": 38,
+      "drct": 110,
+      "vsby_sm": 3.73,
+      "wxcodes": "RA",
+      "raw": "EIDW 261200Z 11023G38KT 6000 RA SCT010 BKN012 BKN015 06/05 Q0977 TEMPO 4000"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T12:30:00Z",
+      "sknt": 20,
+      "gust": 32,
+      "drct": 120,
+      "vsby_sm": 2.17,
+      "wxcodes": "RA",
+      "raw": "EIDW 261230Z 12020G32KT 090V150 3500 RA FEW009 BKN011 BKN015 06/05 Q0975 TEMPO 2500"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T13:00:00Z",
+      "sknt": 23,
+      "gust": 43,
+      "drct": 130,
+      "vsby_sm": 2.49,
+      "wxcodes": "-RA",
+      "raw": "EIDW 261300Z 13023G43KT 100V160 4000 -RA FEW009 BKN012 BKN015 06/05 Q0973 WS RWY10L RERA BECMG 7000"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T13:30:00Z",
+      "sknt": 18,
+      "gust": 29,
+      "drct": 140,
+      "vsby_sm": 3.11,
+      "wxcodes": "-RA",
+      "raw": "EIDW 261330Z 14018G29KT 5000 -RA SCT006 BKN009 BKN012 07/06 Q0972 WS RWY10L BECMG BKN012"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T14:00:00Z",
+      "sknt": 19,
+      "gust": 32,
+      "drct": 140,
+      "vsby_sm": 2.49,
+      "wxcodes": "-RADZ",
+      "raw": "EIDW 261400Z 14019G32KT 4000 -RADZ SCT006 BKN009 BKN012 07/06 Q0972 WS RWY10L BECMG BKN012"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T14:30:00Z",
+      "sknt": 20,
+      "gust": 31,
+      "drct": 150,
+      "vsby_sm": 3.11,
+      "wxcodes": "-RADZ",
+      "raw": "EIDW 261430Z 15020G31KT 5000 -RADZ FEW004 SCT006 BKN009 08/07 Q0971 WS RWY10L BECMG BKN012"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T15:00:00Z",
+      "sknt": 17,
+      "gust": null,
+      "drct": 150,
+      "vsby_sm": 6.21,
+      "wxcodes": "-RA",
+      "raw": "EIDW 261500Z 15017KT 9999 -RA FEW006 SCT013 BKN025 08/07 Q0970 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T15:30:00Z",
+      "sknt": 13,
+      "gust": null,
+      "drct": 160,
+      "vsby_sm": 6.21,
+      "wxcodes": "-RA",
+      "raw": "EIDW 261530Z 16013KT 9999 -RA FEW008 SCT017 BKN032 08/07 Q0970 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T16:00:00Z",
+      "sknt": 11,
+      "gust": null,
+      "drct": 170,
+      "vsby_sm": 6.21,
+      "wxcodes": "-RA",
+      "raw": "EIDW 261600Z 17011KT 9999 -RA FEW015 SCT028 BKN042 08/06 Q0970 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T16:30:00Z",
+      "sknt": 14,
+      "gust": 24,
+      "drct": 180,
+      "vsby_sm": 6.21,
+      "wxcodes": "-RA",
+      "raw": "EIDW 261630Z 18014G24KT 140V210 9999 -RA FEW018 BKN042 08/06 Q0970 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T17:00:00Z",
+      "sknt": 15,
+      "gust": null,
+      "drct": 180,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 261700Z 18015KT 9999 FEW018 BKN031 BKN190 09/05 Q0969 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T17:30:00Z",
+      "sknt": 14,
+      "gust": null,
+      "drct": 180,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 261730Z 18014KT 9999 FEW018 SCT030 09/05 Q0969 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T18:00:00Z",
+      "sknt": 15,
+      "gust": null,
+      "drct": 170,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 261800Z 17015KT 9999 FEW028 08/05 Q0969 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T18:30:00Z",
+      "sknt": 14,
+      "gust": null,
+      "drct": 170,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 261830Z 17014KT 9999 FEW028 08/04 Q0969 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T19:00:00Z",
+      "sknt": 12,
+      "gust": null,
+      "drct": 160,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 261900Z 16012KT 9999 FEW019 08/04 Q0970 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T19:30:00Z",
+      "sknt": 10,
+      "gust": null,
+      "drct": 170,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 261930Z 17010KT 9999 FEW019 BKN130 08/03 Q0970 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T20:00:00Z",
+      "sknt": 11,
+      "gust": null,
+      "drct": 180,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 262000Z 18011KT 9999 FEW019 SCT080 BKN110 08/02 Q0970 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T20:30:00Z",
+      "sknt": 15,
+      "gust": null,
+      "drct": 180,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 262030Z 18015KT 9999 FEW019 BKN110 08/03 Q0969 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T21:00:00Z",
+      "sknt": 11,
+      "gust": null,
+      "drct": 180,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 262100Z 18011KT 9999 FEW019 08/03 Q0969 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T21:30:00Z",
+      "sknt": 12,
+      "gust": null,
+      "drct": 180,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 262130Z 18012KT 140V210 9999 FEW019 BKN140 08/03 Q0969 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T22:00:00Z",
+      "sknt": 13,
+      "gust": null,
+      "drct": 150,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 262200Z 15013KT 9999 FEW018 SCT120 07/03 Q0969 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T22:30:00Z",
+      "sknt": 13,
+      "gust": null,
+      "drct": 150,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 262230Z 15013KT 9999 FEW018 SCT120 06/03 Q0969 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T23:00:00Z",
+      "sknt": 12,
+      "gust": null,
+      "drct": 150,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 262300Z 15012KT 9999 FEW018 SCT140 06/03 Q0969 NOSIG"
+    },
+    {
+      "station": "EIDW",
+      "valid": "2025-01-26T23:30:00Z",
+      "sknt": 11,
+      "gust": null,
+      "drct": 160,
+      "vsby_sm": 6.21,
+      "wxcodes": null,
+      "raw": "EIDW 262330Z 16011KT 9999 FEW018 06/04 Q0969 NOSIG"
+    }
+  ],
+  "flights": [
+    {
+      "flight": {
+        "id": "NS30@2025-01-25",
+        "number": "NS30",
+        "date": "2025-01-25",
+        "origin": "BOS",
+        "dest": "DUB",
+        "sched_dep": "2025-01-26T00:10:00Z",
+        "sched_arr": "2025-01-26T05:30:00Z",
+        "aircraft": "EI-NSN",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 168,
+        "ops_cause_code": "41",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-25T22:30:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS30@2025-01-25",
+        "cause": "technical",
+        "extraordinary": "not_extraordinary",
+        "ops_cause_code": "41",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "out",
+        "in_window_arr": "out",
+        "window_margin_min": 360,
+        "confidence": {
+          "score": 0.96,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 4.0,
+            "aog_before_window": 1.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 1.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Not weather: EI-NSN AOG with no MEL relief, logged before the storm; out of window at both ends.",
+        "evidence": [
+          {
+            "fact_id": "F:TECHLOG-EI-NSN-2025-01-25T2205Z:aog.logged_at",
+            "source_id": "SRC-TECHLOG-EI-NSN-2025-01-25T2205Z",
+            "field": "aog.logged_at",
+            "value": "2025-01-25T22:05:00Z",
+            "quote": "25JAN 22:05Z",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:TECHLOG-EI-NSN-2025-01-25T2205Z:aog.ata_chapter",
+            "source_id": "SRC-TECHLOG-EI-NSN-2025-01-25T2205Z",
+            "field": "aog.ata_chapter",
+            "value": "2913",
+            "quote": "ATA 2913",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:TECHLOG-EI-NSN-2025-01-25T2205Z:aog.mel_relief",
+            "source_id": "SRC-TECHLOG-EI-NSN-2025-01-25T2205Z",
+            "field": "aog.mel_relief",
+            "value": false,
+            "quote": "NO MEL RELIEF",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:MCC-2025-01-25T2215Z:NS30@2025-01-25:mcc.part_eta",
+            "source_id": "SRC-MCC-2025-01-25T2215Z",
+            "field": "mcc.part_eta",
+            "value": "2025-01-26T06:00:00Z",
+            "quote": "26JAN ETA 06:00Z",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:METAR-EIDW-20250126T0530Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-26",
+            "field": "metar.gust_kt",
+            "value": null,
+            "quote": "EIDW 260530Z 12005KT 9999 FEW015 BKN200 02/M02 Q0994 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS30@2025-01-25:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-25T2230Z",
+            "field": "flight.ops_cause_code",
+            "value": "41",
+            "quote": "RSN 41",
+            "role": "contradicts",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "CJEU C-549/07",
+          "CJEU C-257/14"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-27T06:00:00Z",
+        "commit": "ded431aa07b008be29d9eeefefd9fdfe5700f379841a040b252a631532c38cc3"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS106@2025-01-26",
+        "number": "NS106",
+        "date": "2025-01-26",
+        "origin": "DUB",
+        "dest": "FRA",
+        "sched_dep": "2025-01-26T07:30:00Z",
+        "sched_arr": "2025-01-26T09:15:00Z",
+        "aircraft": "EI-NSF",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 188,
+        "ops_cause_code": "71",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-26T05:55:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS106@2025-01-26",
+        "cause": "technical",
+        "extraordinary": "not_extraordinary",
+        "ops_cause_code": "71",
+        "recoded": true,
+        "recode_label": "71 → 41",
+        "in_window_dep": "out",
+        "in_window_arr": "out",
+        "window_margin_min": 240,
+        "confidence": {
+          "score": 0.96,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 4.0,
+            "aog_before_window": 1.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 1.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Not weather: EI-NSF AOG with no MEL relief, logged before the storm; out of window at both ends.",
+        "evidence": [
+          {
+            "fact_id": "F:TECHLOG-EI-NSF-2025-01-25T2250Z:aog.logged_at",
+            "source_id": "SRC-TECHLOG-EI-NSF-2025-01-25T2250Z",
+            "field": "aog.logged_at",
+            "value": "2025-01-25T22:50:00Z",
+            "quote": "25JAN 22:50Z",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:TECHLOG-EI-NSF-2025-01-25T2250Z:aog.ata_chapter",
+            "source_id": "SRC-TECHLOG-EI-NSF-2025-01-25T2250Z",
+            "field": "aog.ata_chapter",
+            "value": "2751",
+            "quote": "ATA 2751",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:TECHLOG-EI-NSF-2025-01-25T2250Z:aog.mel_relief",
+            "source_id": "SRC-TECHLOG-EI-NSF-2025-01-25T2250Z",
+            "field": "aog.mel_relief",
+            "value": false,
+            "quote": "NO MEL RELIEF",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:MCC-2025-01-25T2310Z:NS106@2025-01-26:mcc.part_eta",
+            "source_id": "SRC-MCC-2025-01-25T2310Z",
+            "field": "mcc.part_eta",
+            "value": "2025-01-26T14:00:00Z",
+            "quote": "26JAN ETA 14:00Z",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:METAR-EIDW-20250126T0730Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-26",
+            "field": "metar.gust_kt",
+            "value": null,
+            "quote": "EIDW 260730Z 11012KT 9999 FEW013 SCT022 BKN035 05/02 Q0989 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS106@2025-01-26:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-26T0550Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "contradicts",
+            "trust_tier": 3,
+            "struck": true
+          }
+        ],
+        "rules_applied": [],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "CJEU C-549/07",
+          "CJEU C-257/14"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-27T06:00:00Z",
+        "commit": "6068bc2d3afd3c55f1e92a3d84ca5620fb8f8a3547d2b03215187d48374e1968"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS110@2025-01-26",
+        "number": "NS110",
+        "date": "2025-01-26",
+        "origin": "DUB",
+        "dest": "MAD",
+        "sched_dep": "2025-01-26T09:00:00Z",
+        "sched_arr": "2025-01-26T11:20:00Z",
+        "aircraft": "EI-NSH",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 190,
+        "ops_cause_code": "41",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-26T05:55:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS110@2025-01-26",
+        "cause": "technical",
+        "extraordinary": "not_extraordinary",
+        "ops_cause_code": "41",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "out",
+        "in_window_arr": "out",
+        "window_margin_min": 150,
+        "confidence": {
+          "score": 0.94,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 2.5,
+            "aog_before_window": 1.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 1.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Not weather: EI-NSH AOG with no MEL relief, logged before the storm; out of window at both ends.",
+        "evidence": [
+          {
+            "fact_id": "F:TECHLOG-EI-NSH-2025-01-26T0535Z:aog.logged_at",
+            "source_id": "SRC-TECHLOG-EI-NSH-2025-01-26T0535Z",
+            "field": "aog.logged_at",
+            "value": "2025-01-26T05:35:00Z",
+            "quote": "26JAN 05:35Z",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:TECHLOG-EI-NSH-2025-01-26T0535Z:aog.ata_chapter",
+            "source_id": "SRC-TECHLOG-EI-NSH-2025-01-26T0535Z",
+            "field": "aog.ata_chapter",
+            "value": "3411",
+            "quote": "ATA 3411",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:TECHLOG-EI-NSH-2025-01-26T0535Z:aog.mel_relief",
+            "source_id": "SRC-TECHLOG-EI-NSH-2025-01-26T0535Z",
+            "field": "aog.mel_relief",
+            "value": false,
+            "quote": "NO MEL RELIEF",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:MCC-2025-01-26T0545Z:NS110@2025-01-26:mcc.part_eta",
+            "source_id": "SRC-MCC-2025-01-26T0545Z",
+            "field": "mcc.part_eta",
+            "value": "2025-01-26T16:00:00Z",
+            "quote": "26JAN ETA 16:00Z",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:METAR-EIDW-20250126T0900Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-26",
+            "field": "metar.gust_kt",
+            "value": 27,
+            "quote": "EIDW 260900Z 13016G27KT 9999 FEW013 BKN018 BKN140 06/03 Q0986 WS RWY10L NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS110@2025-01-26:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-26T0550Z",
+            "field": "flight.ops_cause_code",
+            "value": "41",
+            "quote": "RSN 41",
+            "role": "contradicts",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "CJEU C-549/07",
+          "CJEU C-257/14"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-27T06:00:00Z",
+        "commit": "d2792c56ad90510effcd8b90abfd82425b3a68b5d4b43b847ff45cf825b31aea"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS114@2025-01-26",
+        "number": "NS114",
+        "date": "2025-01-26",
+        "origin": "DUB",
+        "dest": "FCO",
+        "sched_dep": "2025-01-26T12:00:00Z",
+        "sched_arr": "2025-01-26T14:55:00Z",
+        "aircraft": "EI-NSK",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 184,
+        "ops_cause_code": "71",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-26T05:55:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS114@2025-01-26",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "in",
+        "in_window_arr": "unknown",
+        "window_margin_min": -30,
+        "confidence": {
+          "score": 0.93,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 1.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 0.5,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STD 12:00Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250126T1200Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-26",
+            "field": "metar.gust_kt",
+            "value": 38,
+            "quote": "EIDW 261200Z 11023G38KT 6000 RA SCT010 BKN012 BKN015 06/05 Q0977 TEMPO 4000",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS114@2025-01-26:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-26T0550Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-27T06:00:00Z",
+        "commit": "97ef00e641c674ca6e96f8a1d71a4b303cde96bc6200d35cc3e36318eda9864c"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS100@2025-01-26",
+        "number": "NS100",
+        "date": "2025-01-26",
+        "origin": "DUB",
+        "dest": "LHR",
+        "sched_dep": "2025-01-26T06:10:00Z",
+        "sched_arr": "2025-01-26T07:25:00Z",
+        "aircraft": "EI-NSC",
+        "status": "operated",
+        "actual_dep": "2025-01-26T06:14:00Z",
+        "actual_arr": "2025-01-26T07:26:00Z",
+        "pax": 171,
+        "ops_cause_code": null,
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": null,
+        "operating_carrier_eu": true
+      },
+      "decision": null
+    },
+    {
+      "flight": {
+        "id": "NS102@2025-01-26",
+        "number": "NS102",
+        "date": "2025-01-26",
+        "origin": "DUB",
+        "dest": "CDG",
+        "sched_dep": "2025-01-26T06:40:00Z",
+        "sched_arr": "2025-01-26T08:15:00Z",
+        "aircraft": "EI-NSD",
+        "status": "operated",
+        "actual_dep": "2025-01-26T06:47:00Z",
+        "actual_arr": "2025-01-26T08:19:00Z",
+        "pax": 165,
+        "ops_cause_code": null,
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": null,
+        "operating_carrier_eu": true
+      },
+      "decision": null
+    },
+    {
+      "flight": {
+        "id": "NS120@2025-01-26",
+        "number": "NS120",
+        "date": "2025-01-26",
+        "origin": "DUB",
+        "dest": "LHR",
+        "sched_dep": "2025-01-26T15:30:00Z",
+        "sched_arr": "2025-01-26T16:45:00Z",
+        "aircraft": "EI-NSC",
+        "status": "operated",
+        "actual_dep": "2025-01-26T15:48:00Z",
+        "actual_arr": "2025-01-26T17:00:00Z",
+        "pax": 176,
+        "ops_cause_code": null,
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": null,
+        "operating_carrier_eu": true
+      },
+      "decision": null
+    },
+    {
+      "flight": {
+        "id": "NS124@2025-01-26",
+        "number": "NS124",
+        "date": "2025-01-26",
+        "origin": "DUB",
+        "dest": "CDG",
+        "sched_dep": "2025-01-26T15:50:00Z",
+        "sched_arr": "2025-01-26T17:25:00Z",
+        "aircraft": "EI-NSD",
+        "status": "operated",
+        "actual_dep": "2025-01-26T16:02:00Z",
+        "actual_arr": "2025-01-26T17:34:00Z",
+        "pax": 170,
+        "ops_cause_code": null,
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": null,
+        "operating_carrier_eu": true
+      },
+      "decision": null
+    }
+  ],
+  "counters": {
+    "passengers": 730,
+    "cancelled": 4,
+    "operated": 4,
+    "drafted": 546,
+    "held": 0,
+    "questions": 1,
+    "people": 1,
+    "repeat_questions": 0,
+    "rules_cited": 32,
+    "recoded": 1,
+    "weather": 1,
+    "settled_by_rule": 31
+  },
+  "entitlement_cents": 19530000,
+  "liability_drafted_cents": 5418000,
+  "learned": [
+    {
+      "text": "Read 18 months of claims history (Jul 2023 → Dec 2024)",
+      "support": "history to M18",
+      "rule_ref": null
+    },
+    {
+      "text": "35% expected ultimate claim rate for owed long-haul passengers (history to M18 + tail judgment)",
+      "support": "curve LH-v1",
+      "rule_ref": null
+    },
+    {
+      "text": "Takes the 50% reroute cut (Art. 7(2)) when a reroute arrives within the band's limit",
+      "support": "41 of 42",
+      "rule_ref": "R-MINED-REDUCE@1"
+    },
+    {
+      "text": "Asks Legal about cause patterns, the Claims Lead about vouchers, the Controller about releases",
+      "support": null,
+      "rule_ref": null
+    }
+  ],
+  "questions": [
+    {
+      "id": "Q-EIDW@2025-01-26:voucher_in_lieu_unsigned",
+      "case_refs": [
+        "NS30@2025-01-25:23F"
+      ],
+      "pattern": "voucher_in_lieu_unsigned",
+      "routed_to": "claims_lead",
+      "asked_at": "2025-01-27T06:00:00Z",
+      "title": "Does a service-desk voucher 'in lieu of compensation' offset the compensation without a signed acceptance?",
+      "found": "1 passenger(s) were handed a voucher 'in lieu of compensation'; CRM records them as accepted, but there is no signed acceptance on file.",
+      "why_flagged": "Sources disagree, and Art. 7(3) needs signed agreement for vouchers. No precedent.",
+      "recommends": "No signed acceptance, no offset: pay the compensation in cash; the voucher stays as goodwill.",
+      "recommended_option": "Pay €600 cash; the voucher stays as goodwill",
+      "options": [
+        "Pay €600 cash; the voucher stays as goodwill",
+        "Offset the voucher: pay the difference",
+        "Ask the passenger to sign the acceptance first"
+      ],
+      "evidence": [],
+      "confidence": {
+        "score": 0.39,
+        "kind": "voucher",
+        "label": "voucher-offset confidence",
+        "features": {
+          "in_lieu": 1.0,
+          "signed": 0.0,
+          "sources_disagree": 1.0,
+          "precedent_count": 0.0
+        },
+        "caps": [
+          "capped:sources-disagree"
+        ],
+        "calibration_version": "cal-plan-fixture"
+      },
+      "reason_tag": "sources-disagree",
+      "holds": [
+        "NS30@2025-01-25:23F"
+      ],
+      "holds_cents": 60000,
+      "status": "open",
+      "remind_at": "2025-01-27T09:00:00Z"
+    }
+  ],
+  "feed": [
+    {
+      "seq": 1,
+      "at": "2025-01-27T06:00:00Z",
+      "kind": "info",
+      "actor": "agent.engine",
+      "summary": "Read 48 METAR obs · storm window 11:30Z–13:00Z · peak gust 43 kt",
+      "ref": "EIDW@2025-01-26",
+      "chip": "INFO",
+      "amount_cents": null
+    },
+    {
+      "seq": 2,
+      "at": "2025-01-27T06:00:02Z",
+      "kind": "decision",
+      "actor": "agent.engine",
+      "summary": "1 flights confirmed weather · no compensation; refunds and care still due",
+      "ref": "EIDW@2025-01-26",
+      "chip": "APPLIED",
+      "amount_cents": null
+    },
+    {
+      "seq": 3,
+      "at": "2025-01-27T06:00:04Z",
+      "kind": "decision",
+      "actor": "agent.engine",
+      "summary": "NS106 recoded 71 → 41 · 188 payouts drafted",
+      "ref": "NS106@2025-01-26",
+      "chip": "APPLIED",
+      "amount_cents": null
+    },
+    {
+      "seq": 4,
+      "at": "2025-01-27T06:00:06Z",
+      "kind": "question",
+      "actor": "agent.engine",
+      "summary": "Asked Claims Lead: voucher_in_lieu_unsigned · confidence 39% · sources-disagree",
+      "ref": "Q-EIDW@2025-01-26:voucher_in_lieu_unsigned",
+      "chip": "ASKED",
+      "amount_cents": 60000
+    },
+    {
+      "seq": 5,
+      "at": "2025-01-27T06:00:40Z",
+      "kind": "rule",
+      "actor": "agent.engine",
+      "summary": "R-CL-1@1 cited 31× · 31 voucher cases settled, ruling cited",
+      "ref": "R-CL-1@1",
+      "chip": "CITED",
+      "amount_cents": null
+    },
+    {
+      "seq": 6,
+      "at": "2025-01-27T06:00:42Z",
+      "kind": "question",
+      "actor": "agent.engine",
+      "summary": "Asked Claims Lead again: NS30@2025-01-25:23F departs BOS (not the EU) · outside R-CL-1's scope",
+      "ref": "Q-EIDW@2025-01-26:voucher_in_lieu_unsigned",
+      "chip": "ASKED",
+      "amount_cents": null
+    }
+  ],
+  "real_context": {
+    "storm_name": "Herminia",
+    "peak_gust_kt": 43
+  },
+  "message": null,
+  "airports": [
+    {
+      "icao": "EIDW",
+      "iata": "DUB",
+      "name": "Dublin Airport",
+      "lat": 53.428713,
+      "lon": -6.262121,
+      "country": "IE",
+      "eu": true,
+      "tz": "Europe/Dublin"
+    },
+    {
+      "icao": "KBOS",
+      "iata": "BOS",
+      "name": "Boston Logan International Airport",
+      "lat": 42.36197,
+      "lon": -71.0079,
+      "country": "US",
+      "eu": false,
+      "tz": "America/New_York"
+    },
+    {
+      "icao": "LFPG",
+      "iata": "CDG",
+      "name": "Charles de Gaulle International Airport",
+      "lat": 49.00896,
+      "lon": 2.554117,
+      "country": "FR",
+      "eu": true,
+      "tz": "Europe/Paris"
+    },
+    {
+      "icao": "LIRF",
+      "iata": "FCO",
+      "name": "Rome–Fiumicino Leonardo da Vinci International Airport",
+      "lat": 41.804532,
+      "lon": 12.251998,
+      "country": "IT",
+      "eu": true,
+      "tz": "Europe/Rome"
+    },
+    {
+      "icao": "EDDF",
+      "iata": "FRA",
+      "name": "Frankfurt Main Airport",
+      "lat": 50.026706,
+      "lon": 8.55835,
+      "country": "DE",
+      "eu": true,
+      "tz": "Europe/Berlin"
+    },
+    {
+      "icao": "EGLL",
+      "iata": "LHR",
+      "name": "London Heathrow Airport",
+      "lat": 51.470748,
+      "lon": -0.459909,
+      "country": "GB",
+      "eu": false,
+      "tz": "Europe/London"
+    },
+    {
+      "icao": "LEMD",
+      "iata": "MAD",
+      "name": "Adolfo Suárez Madrid–Barajas Airport",
+      "lat": 40.493407,
+      "lon": -3.572249,
+      "country": "ES",
+      "eu": true,
+      "tz": "Europe/Madrid"
+    }
+  ]
+}
