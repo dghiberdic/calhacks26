@@ -9,7 +9,7 @@ import type { TraceEvent } from "./types";
  * (a ruling confirmed, the month-end run), moves every screen forward to that step.
  */
 
-type Manifest = { recorded_at: string; base: string; roles: string[]; steps: { name: string; unlock: { method: string; path: string } | null }[] };
+type Manifest = { format?: number; recorded_at: string; base: string; roles: string[]; steps: { name: string; unlock: { method: string; path: string } | null }[] };
 type Recorded = { status: number; json: unknown };
 
 const ROOT = `${import.meta.env.BASE_URL}recorded`;
@@ -68,6 +68,15 @@ async function getJson(url: string): Promise<unknown | undefined> {
   }
 }
 
+// Format 2: each step and role has a small index (slug → blob); bodies are stored once in blobs/<hash>.json.
+const indexes = new Map<string, Promise<Record<string, string> | undefined>>();
+async function fromIndex(step: number, role: string, key: string): Promise<unknown | undefined> {
+  const id = `${step}/${role}`;
+  if (!indexes.has(id)) indexes.set(id, getJson(`${ROOT}/step-${step}/${role}.json`) as Promise<Record<string, string> | undefined>);
+  const hash = (await indexes.get(id))?.[key];
+  return hash ? getJson(`${ROOT}/blobs/${hash}.json`) : undefined;
+}
+
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 const notRecorded = (message: string) => json(404, { error: { code: "not_found", message } });
 
@@ -85,7 +94,7 @@ export function createRecordedFetch(): ApiFetch {
       const lookup = tracePoll ? "/trace?since=0" : path;
       for (let s = step; s >= 0; s--) {
         for (const r of [role, "judge"]) {
-          const body = await getJson(`${ROOT}/step-${s}/${r}/get/${slug(lookup)}.json`);
+          const body = m.format === 2 ? await fromIndex(s, r, slug(lookup)) : await getJson(`${ROOT}/step-${s}/${r}/get/${slug(lookup)}.json`);
           if (body === undefined) continue;
           if (tracePoll) return json(200, (body as TraceEvent[]).filter((e) => e.seq > Number(tracePoll[1])));
           return json(200, body);

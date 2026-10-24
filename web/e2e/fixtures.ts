@@ -8,7 +8,8 @@ import { test as base, expect } from "@playwright/test";
 export const test = base.extend<{ freshWorld: void }>({
   freshWorld: [
     async ({ request }, use) => {
-      if ((process.env.E2E_API_MODE ?? "mock") !== "mock") {
+      // Only a live server (stub or real) holds shared state; the mock world and the recording start fresh per page.
+      if ((process.env.E2E_API_MODE ?? "mock") === "http") {
         const res = await request.post("/api/reset");
         expect(res.ok(), "POST /api/reset before the test").toBeTruthy();
       }

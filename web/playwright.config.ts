@@ -21,7 +21,8 @@ export default defineConfig({
   // The Chrome already on the machine: no Playwright browser download.
   projects: [{ name: "chrome", use: { ...devices["Desktop Chrome"], channel: "chrome" } }],
   webServer: {
-    command: `pnpm exec vite --port ${port} --strictPort${mode === "mock" ? " --mode mock" : ""}`,
+    // mock and recorded are Vite modes (src/api/client.ts reads them); http proxies /api to API_TARGET.
+    command: `pnpm exec vite --port ${port} --strictPort${mode === "http" ? "" : ` --mode ${mode}`}`,
     url: `http://localhost:${port}`,
     // Never reuse whatever already listens on the port: it may be another app. A busy port fails loudly.
     reuseExistingServer: false,

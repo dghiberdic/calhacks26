@@ -5,13 +5,14 @@
 //
 // What it saves (demo/recorded/):
 //   manifest.json                       steps, the write that unlocks each step, roles, when/where recorded
-//   step-<n>/<role>/get/<slug>.json     every GET each role makes on each screen, at each step of the demo
+//   step-<n>/<role>.json                each role's GETs at that step: slug → blob
+//   blobs/<hash>.json                   each distinct response body, once
 //   posts/<role>/<slug>[__<hash>].json  the response (status + body) to each scripted write
 // Steps follow plan §4: baseline → Claims Lead rules on Q1 → Legal on the knock-on returns → Controller
 // rejects the Isha release → February month-end. The recorded build advances a step when the presenter
 // performs that step's write, so a click-through tells the same story as the live demo.
 import { createHash } from "node:crypto";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const arg = (name, fallback) => {
@@ -21,6 +22,8 @@ const arg = (name, fallback) => {
 const BASE = arg("base", "http://localhost:8000").replace(/\/$/, "");
 const OUT = resolve(arg("out", "../demo/recorded"));
 const ROLES = ["judge", "claims_lead", "legal", "controller", "ops", "cfo"];
+/** Options that reject a release proposal (as web/src/screens/questions/lib.ts REJECT_RE). */
+const REJECT = /^\s*reject\b|\bnever release\b|\bdo not release\b|\bdon'?t release\b|^\s*keep the (expected )?tail\b/i;
 const NAMES = { judge: "Judge", claims_lead: "Claims Lead", legal: "Legal", controller: "Controller", ops: "Ops", cfo: "CFO" };
 
 export const slug = (path) => {
@@ -51,6 +54,20 @@ function save(file, data) {
   writeFileSync(file, JSON.stringify(data));
 }
 
+// Most responses repeat across roles and steps, so each distinct body is stored once (blobs/<hash>.json) and
+// every step and role gets a small index of slug → blob. 200 MB of copies becomes a few MB.
+const blobs = new Set();
+function blob(data) {
+  const text = JSON.stringify(data);
+  const hash = createHash("sha256").update(text).digest("hex").slice(0, 16);
+  if (!blobs.has(hash)) {
+    mkdirSync(join(OUT, "blobs"), { recursive: true });
+    writeFileSync(join(OUT, "blobs", `${hash}.json`), text);
+    blobs.add(hash);
+  }
+  return hash;
+}
+
 let files = 0;
 async function snapshot(step) {
   // Discover what to fetch from the API itself: storms → runs → flights, journals → audits, …
@@ -60,7 +77,18 @@ async function snapshot(step) {
   const flightIds = [...new Set(runs.flatMap((r) => (r?.flights ?? []).map((f) => f.flight.id)))];
   const journal = (await call("GET", "/books/journal")).json ?? [];
   const periods = [...new Set(["2025-01", "2025-02", ...journal.map((j) => j.period)])];
-  const blameTargets = [...new Set([...flightIds.slice(0, 40), ...journal.map((j) => j.id), ...runs.flatMap((r) => (r?.questions ?? []).map((q) => q.id))])];
+  // Blame and audit only where the demo can click: the flights that aren't plain weather (recoded, held,
+  // technical) plus a few weather ones, the estimate and true-up entries and the newest drafts, and every
+  // question. Fetching them for every one of 100+ entries at every step was 12 of the first 16 MB.
+  const rows = runs.flatMap((r) => r?.flights ?? []);
+  const notWeather = rows.filter((f) => f.decision && f.decision.cause !== "weather").map((f) => f.flight.id);
+  const someWeather = rows.filter((f) => f.decision?.cause === "weather").slice(0, 4).map((f) => f.flight.id);
+  const KIND_ORDER = ["change_in_estimate", "compensation_estimate", "claims_approved", "care_accrual"];
+  const keyJournal = [...journal]
+    .sort((a, b) => ((KIND_ORDER.indexOf(a.kind) + 1 || 99) - (KIND_ORDER.indexOf(b.kind) + 1 || 99)) || (b.status === "draft") - (a.status === "draft"))
+    .slice(0, 14)
+    .map((j) => j.id);
+  const blameTargets = [...new Set([...notWeather, ...someWeather, ...keyJournal, ...runs.flatMap((r) => (r?.questions ?? []).map((q) => q.id))])];
 
   const shared = [
     "/health",
@@ -71,7 +99,7 @@ async function snapshot(step) {
     "/trace?since=0",
     "/commits?limit=100",
     ...blameTargets.map((t) => `/blame?target=${encodeURIComponent(t)}`),
-    ...journal.map((j) => `/audit/${encodeURIComponent(j.id)}`),
+    ...keyJournal.map((id) => `/audit/${encodeURIComponent(id)}`),
     ...periods.map((p) => `/books/rollforward?period=${p}`),
     ...storms.map((s) => `/books/estimate?cohort=${encodeURIComponent(s.id)}`),
     "/books/journal",
@@ -85,17 +113,19 @@ async function snapshot(step) {
     "/injections",
     "/eval",
   ];
-  const scoped = ["/questions?status=open", "/questions?status=answered", "/questions?status=all"];
+  const scoped = ["/questions?status=open", "/questions?status=answered", "/questions"];
 
   for (const role of ROLES) {
-    // Role-scoped and redacted responses differ per role; everything is saved per role so the replay is exact.
+    // Role-scoped and redacted responses differ per role, so each role gets its own index; identical bodies share a blob.
+    const index = {};
     for (const path of [...shared, ...scoped]) {
       const { status, json } = await call("GET", path, { role });
       if (status === 200) {
-        save(join(OUT, `step-${step}`, role, "get", `${slug(path)}.json`), json);
+        index[slug(path)] = blob(json);
         files += 1;
       }
     }
+    save(join(OUT, `step-${step}`, `${role}.json`), index);
   }
   return { storms, runs };
 }
@@ -124,8 +154,9 @@ async function recordApprovals() {
 async function main() {
   const health = await call("GET", "/health").catch(() => null);
   if (!health || health.status !== 200) throw new Error(`No server at ${BASE}. Start it first (make dev / make demo / make stub).`);
-  rmSync(OUT, { recursive: true, force: true });
+  // Clear only this recorder's own files: demo/recorded/api/ is `make record`'s (scripts/record.py) and stays.
   mkdirSync(OUT, { recursive: true });
+  for (const name of readdirSync(OUT)) if (name === "manifest.json" || name === "posts" || name === "blobs" || /^step-\d+$/.test(name)) rmSync(join(OUT, name), { recursive: true, force: true });
   await call("POST", "/reset");
   for (const role of ROLES) {
     const s = await call("POST", "/session", { body: { role, name: NAMES[role] } });
@@ -164,8 +195,12 @@ async function main() {
     const q = byRole(role);
     if (!q) continue;
     const answer =
+      // A release proposal is rejected: through its proposed rule when the server names one, otherwise by
+      // answering with the question's own rejecting option (David's server: "Keep the expected tail…").
       q.reason_tag === "release-proposal"
-        ? await post(role, `/rules/${encodeURIComponent(q.id)}/reject`, { explanation: scripted[role] })
+        ? q.proposal_rule_id
+          ? await post(role, `/rules/${encodeURIComponent(q.proposal_rule_id)}/reject`, { explanation: scripted[role] })
+          : await post(role, `/questions/${encodeURIComponent(q.id)}/answer`, { decision: q.options.find((o) => REJECT.test(o)) ?? q.recommended_option, explanation: scripted[role] })
         : await post(role, `/questions/${encodeURIComponent(q.id)}/answer`, { decision: q.recommended_option, explanation: scripted[role] });
     const ruleId = answer.json?.proposal?.rule?.id;
     if (ruleId) await post(role, `/proposals/${encodeURIComponent(ruleId)}/confirm`);
@@ -183,7 +218,7 @@ async function main() {
   await recordApprovals();
   steps.push({ name: "February month-end", unlock: { method: "POST", path: "/books/month-end" } });
 
-  save(join(OUT, "manifest.json"), { recorded_at: new Date().toISOString(), base: BASE, roles: ROLES, steps });
+  save(join(OUT, "manifest.json"), { format: 2, recorded_at: new Date().toISOString(), base: BASE, roles: ROLES, steps });
   console.log(`\nRecorded ${files} responses in ${steps.length} steps → ${OUT}`);
 }
 

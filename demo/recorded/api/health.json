@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "mode": "offline",
+  "impl": {
+    "engine": "real",
+    "books": "real",
+    "reader": "real",
+    "drafter": "real",
+    "world": "real",
+    "engine.acl": "real",
+    "engine.cause": "real",
+    "engine.confidence": "real",
+    "engine.eu261": "real",
+    "engine.lifecycle": "real",
+    "engine.miner": "real",
+    "engine.routing": "real",
+    "engine.rules": "real",
+    "engine.timeline": "real",
+    "engine.trace": "real",
+    "pipeline": "golden",
+    "trace": "engine.TraceStore",
+    "sessions": "engine.acl"
+  }
+}
