@@ -50,6 +50,13 @@ export function chainOrder(commits: Commit[]): { ordered: Commit[]; linked: bool
   return { ordered: [...commits].sort((a, b) => b.at.localeCompare(a.at)), linked: false };
 }
 
+/**
+ * Whether a newest-first list also runs newest-first in time. Commits and events can carry the time they
+ * are about (a journal's event date, a decision's known-at) rather than when they were written, so day
+ * headers are only honest when this holds; otherwise each row shows its own date.
+ */
+export const timeOrdered = (items: { at: string }[]) => items.every((x, i) => i === 0 || items[i - 1].at >= x.at);
+
 /** Commit kinds in the order a storm night produces them. */
 export const KIND_ORDER: CommitKind[] = ["fact", "llm_call", "decision", "entitlement", "question", "ruling", "rule_event", "journal_event", "period_lock", "revert", "access_denied", "clock"];
 

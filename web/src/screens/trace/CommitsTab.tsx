@@ -9,7 +9,7 @@ import type { Commit, CommitKind } from "@/api/types";
 import { Empty, ErrorNote, Shimmer } from "@/components/kit";
 import { longDate, zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { KIND_ORDER, blameTarget, chainOrder, shortHash } from "./model";
+import { KIND_ORDER, blameTarget, chainOrder, shortHash, timeOrdered } from "./model";
 import { FilterChip, Principal } from "./parts";
 
 const PAGE = 100;
@@ -45,6 +45,7 @@ export function CommitsTab() {
     return [...m.entries()].sort((a, b) => KIND_ORDER.indexOf(a[0]) - KIND_ORDER.indexOf(b[0]));
   }, [sorted]);
 
+  const headed = useMemo(() => timeOrdered(sorted), [sorted]);
   const needle = grep.trim().toLowerCase();
   const shown = sorted.filter(
     (c) => (kind === "all" || c.kind === kind) && (!needle || [c.hash, c.message, c.actor, c.payload_ref, c.kind].some((s) => s.toLowerCase().includes(needle))),
@@ -113,7 +114,7 @@ export function CommitsTab() {
             <span className="pointer-events-none absolute bottom-0 left-[27px] top-0 w-px bg-cloud-200" aria-hidden="true" />
             {shown.map((c, i) => {
               const day = longDate(c.at);
-              const header = i === 0 || longDate(shown[i - 1].at) !== day;
+              const header = headed && (i === 0 || longDate(shown[i - 1].at) !== day);
               return (
                 <Fragment key={c.hash}>
                   {header ? (
@@ -121,7 +122,7 @@ export function CommitsTab() {
                       <span className="micro text-slate-400">{day}</span>
                     </li>
                   ) : null}
-                  <CommitRow commit={c} index={i} open={open === c.hash} flash={flash === c.hash} onToggle={() => setOpen(open === c.hash ? null : c.hash)} byHash={byHash} onJump={jump} />
+                  <CommitRow commit={c} index={i} dated={!headed} open={open === c.hash} flash={flash === c.hash} onToggle={() => setOpen(open === c.hash ? null : c.hash)} byHash={byHash} onJump={jump} />
                 </Fragment>
               );
             })}
@@ -170,7 +171,7 @@ function Legend() {
   );
 }
 
-function CommitRow({ commit: c, index, open, flash, onToggle, byHash, onJump }: { commit: Commit; index: number; open: boolean; flash: boolean; onToggle: () => void; byHash: Map<string, Commit>; onJump: (hash: string) => void }) {
+function CommitRow({ commit: c, index, dated, open, flash, onToggle, byHash, onJump }: { commit: Commit; index: number; dated: boolean; open: boolean; flash: boolean; onToggle: () => void; byHash: Map<string, Commit>; onJump: (hash: string) => void }) {
   const reduce = useReducedMotion();
   return (
     <motion.li
@@ -184,7 +185,7 @@ function CommitRow({ commit: c, index, open, flash, onToggle, byHash, onJump }: 
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="grid w-full grid-cols-[40px_minmax(0,1fr)] items-start gap-x-3 py-2.5 pr-4 text-left transition-colors hover:bg-cloud-25 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-metar-ink md:grid-cols-[40px_72px_112px_minmax(0,1fr)_190px_96px] md:items-center md:pr-5"
+        className="grid w-full grid-cols-[40px_minmax(0,1fr)] items-start gap-x-3 py-2.5 pr-4 text-left transition-colors hover:bg-cloud-25 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-metar-ink md:grid-cols-[40px_72px_112px_minmax(0,1fr)_180px_92px] md:items-center md:pr-5"
       >
         <span className="relative z-10 flex h-5 items-center justify-center pl-[15px] md:h-auto" aria-hidden="true">
           <Node kind={c.kind} />
@@ -196,13 +197,22 @@ function CommitRow({ commit: c, index, open, flash, onToggle, byHash, onJump }: 
             <span className="md:block">
               <KindChip kind={c.kind} />
             </span>
-            <span className="figure ml-auto text-[12px] text-slate-400 md:hidden">{zulu(c.at)}</span>
+            <span className="figure ml-auto text-[12px] text-slate-400 md:hidden">{dated ? `${longDate(c.at)} · ${zulu(c.at)}` : zulu(c.at)}</span>
           </span>
           <span className={cn("mt-1 block text-[13.5px] leading-snug text-navy-900 md:mt-0", !open && "md:truncate")}>{c.message}</span>
           <span className="mt-1.5 flex md:mt-0">
             <Principal principal={c.actor} />
           </span>
-          <span className="figure hidden text-right text-[12px] text-slate-400 md:block">{zulu(c.at)}</span>
+          <span className="figure hidden text-right text-[12px] leading-tight text-slate-400 md:block">
+            {dated ? (
+              <>
+                <span className="block text-slate-500">{longDate(c.at)}</span>
+                {zulu(c.at)}
+              </>
+            ) : (
+              zulu(c.at)
+            )}
+          </span>
         </span>
       </button>
       {open ? <CommitDetail commit={c} byHash={byHash} onJump={onJump} /> : null}

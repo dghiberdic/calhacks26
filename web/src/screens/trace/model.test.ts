@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BlameStep, Commit, FlightRow, Question, Rule, StormRun } from "@/api/types";
-import { REDACTED, blameTarget, chainOrder, eventRef, piiResource, findPiiRecord, isPiiField, splitPii, suggestTargets, compareFrameworkRef, denialTag, evidenceTarget, isTab, orderPrincipals, principalLabel, principalRole, receiptText, ruleRefIn, shortHash, stepKind } from "./model";
+import { REDACTED, blameTarget, chainOrder, eventRef, piiResource, timeOrdered, findPiiRecord, isPiiField, splitPii, suggestTargets, compareFrameworkRef, denialTag, evidenceTarget, isTab, orderPrincipals, principalLabel, principalRole, receiptText, ruleRefIn, shortHash, stepKind } from "./model";
 
 const commit = (over: Partial<Commit> = {}): Commit => ({
   hash: "9f2c41ab77de0c55aa13",
@@ -57,6 +57,11 @@ describe("chain order", () => {
     expect(ordered.map((c) => c.hash)).toEqual(["z", "y"]);
     expect(linked).toBe(true);
   });
+  it("knows when day headers would mislead", () => {
+    expect(timeOrdered([{ at: "2025-02-28T23:00:00Z" }, { at: "2025-01-27T05:59:00Z" }])).toBe(true);
+    expect(timeOrdered([{ at: "2025-02-28T23:00:00Z" }, { at: "2024-12-31T23:00:00Z" }, { at: "2025-01-27T05:59:00Z" }])).toBe(false);
+  });
+
   it("falls back to time when the page holds two chains", () => {
     const { ordered, linked } = chainOrder([mk("p", null, "2025-01-26T00:00:00Z"), mk("q", null, "2025-01-27T00:00:00Z")]);
     expect(ordered.map((c) => c.hash)).toEqual(["q", "p"]);

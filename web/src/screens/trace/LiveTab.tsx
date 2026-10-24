@@ -9,7 +9,7 @@ import { TraceChip } from "@/components/chips";
 import { Empty, ErrorNote, Money, Shimmer } from "@/components/kit";
 import { longDate, zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { eventRef } from "./model";
+import { eventRef, timeOrdered } from "./model";
 import { FilterChip, Principal } from "./parts";
 
 const CHIP_ORDER: TraceChipKind[] = ["APPLIED", "DRAFTED", "HELD", "ASKED", "RULED", "LEARNED", "CITED", "DENIED", "LOCKED", "INFO"];
@@ -37,6 +37,7 @@ export function LiveTab() {
   const needle = grep.trim().toLowerCase();
   const filtered = all.filter((e) => (chip === "all" || e.chip === chip) && (!needle || [e.summary, e.actor, e.ref ?? "", e.kind].some((s) => s.toLowerCase().includes(needle))));
   const shown = filtered.slice(0, limit);
+  const headed = timeOrdered(shown);
 
   if (trace.isLoading && !live.length) return <LiveSkeleton />;
   if (trace.isError && !live.length) return <ErrorNote error={trace.error} onRetry={() => void trace.refetch()} />;
@@ -76,7 +77,7 @@ export function LiveTab() {
           <ol aria-label="Trace events, newest first" aria-live="polite" aria-relevant="additions" className="relative">
             <AnimatePresence initial={false}>
               {shown.map((e, i) => (
-                <LiveRow key={e.seq} event={e} dayBreak={i === 0 || longDate(shown[i - 1].at) !== longDate(e.at)} />
+                <LiveRow key={e.seq} event={e} dated={!headed} dayBreak={headed && (i === 0 || longDate(shown[i - 1].at) !== longDate(e.at))} />
               ))}
             </AnimatePresence>
           </ol>
@@ -127,7 +128,7 @@ function StreamState({ status }: { status: StreamStatus }) {
 }
 
 /** One event, in the feed's grammar: past tense, then `ref · €amount · actor`, then its chip. */
-function LiveRow({ event: e, dayBreak }: { event: TraceEvent; dayBreak: boolean }) {
+function LiveRow({ event: e, dayBreak, dated }: { event: TraceEvent; dayBreak: boolean; dated: boolean }) {
   const ref = eventRef(e.ref);
   return (
     <motion.li
@@ -144,7 +145,10 @@ function LiveRow({ event: e, dayBreak }: { event: TraceEvent; dayBreak: boolean 
         </div>
       ) : null}
       <div className="grid grid-cols-[52px_minmax(0,1fr)_auto] items-start gap-3 px-5 py-2.5 md:grid-cols-[60px_minmax(0,1fr)_auto]">
-        <span className="figure pt-0.5 text-[12px] text-slate-400">{zulu(e.at)}</span>
+        <span className="figure pt-0.5 text-[12px] leading-tight text-slate-400">
+          {dated ? <span className="block text-slate-500">{longDate(e.at).slice(0, -5)}</span> : null}
+          {zulu(e.at)}
+        </span>
         <div className="min-w-0">
           <p className="text-[13.5px] leading-snug text-navy-900">{e.summary}</p>
           <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-slate-400">
