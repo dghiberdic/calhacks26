@@ -17,6 +17,13 @@ fallback is either a static table or a number the UI can't get from the API, whi
 | 10 | Document every `entitlements_summary` key the UI reads, beyond #5: `status_line`, `band_label`, `claim_rate_label`, `full_entitlement_label`, `statuses`, `compensation_breakdown`, `reduction_7_2` | The Flight File money card prints the server's own wording first | falls back to plan §9 wording when a key is missing |
 | 11 | Map a release-proposal question to its proposed rule: `Question.proposal_rule_id: str \| None` | Q3's "Reject" posts `/rules/{id}/reject` with the right id | the UI answers with the server's "Reject: …" option instead |
 | 12 | Say whether `Confidence.features` holds raw inputs or contributions (weights) | The confidence card draws flags as yes/no, measures with units, weights as diverging bars | the card guesses from the values |
+| 13 | `Rule.origin_quote: str \| None` (the ruler's words), or the ruling step with its quote in `/blame?target=<rule@v>` | Policies' Ruled/Rejected cards show the person's own words with the grounded phrases lit | the card shows the grounding phrases alone |
+| 14 | `/rules/{id}/widen` returns `widen_next` with its `question` text ("All storm cohorts?") | The widen dialog names the next rung in words | falls back to "drop <condition>" |
+| 15 | `Commit.recorded_at: ISODateTime \| None` (when the commit was written, beside the event time) | The commit log shows both times | each row shows its own date |
+| 16 | Period lock state: `Rollforward.locked: bool` or `GET /books/periods` | Liability & Close shows "Jan 2025 locked" and gates Lock | inferred from LOCKED trace events and `period_lock` commits |
+| 17 | `POST /books/month-end` is idempotent per period (a second call returns the first draft) | A presenter can click month-end twice on stage | the mock already behaves this way |
+| 18 | `je_ids` on rollforward rows | The "J" (agrees with its journals) check is exact | matched by journal kind |
+| 19 | `CfoMetrics.cohort: str` | The CFO bridge says which cohort it describes | treated as the hero storm's NS31 cohort |
 
 ## Open questions (the demo script hedges on these until answered)
 
