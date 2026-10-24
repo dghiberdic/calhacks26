@@ -45,7 +45,9 @@
         "concurrent_causes": 0.0
       },
       "caps": [],
-      "calibration_version": "cal-plan-fixture"
+      "calibration_version": "cal-plan-fixture",
+      "contributions": {},
+      "intercept": null
     },
     "reason": "Not weather: EI-NSB AOG with no MEL relief, logged before the storm; out of window at both ends.",
     "evidence": [
@@ -120,7 +122,7 @@
     "routed_to": null,
     "question_id": null,
     "known_at": "2025-01-25T06:00:00Z",
-    "commit": "2634c0d274b70dde38d64b2687234640c95eae9998594779ed49245bec72dd82"
+    "commit": "09c0332ac6d451314f81403f271b936836a224056d35bf53a673aada77e6d614"
   },
   "entitlements_summary": {
     "coupons": 172,

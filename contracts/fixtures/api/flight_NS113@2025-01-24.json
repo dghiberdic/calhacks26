@@ -47,7 +47,9 @@
       "caps": [
         "capped:no-precedent"
       ],
-      "calibration_version": "cal-plan-fixture"
+      "calibration_version": "cal-plan-fixture",
+      "contributions": {},
+      "intercept": null
     },
     "reason": "Knock-on: NS112 never left Dublin, so EI-NSJ never reached LIS; calm at both ends. Legal question.",
     "evidence": [
@@ -102,7 +104,7 @@
     "routed_to": "legal",
     "question_id": "Q-2",
     "known_at": "2025-01-25T06:00:00Z",
-    "commit": "7b70b766ecf14fd6ecdf03316698a5e8d9a99bd3c6179945870bb1914e061998"
+    "commit": "611f22d368a8ae24812d28ada8566282bc45a5f6cc938744c485de2e7b76bbbd"
   },
   "entitlements_summary": {
     "coupons": 178,

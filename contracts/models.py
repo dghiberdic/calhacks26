@@ -4,7 +4,7 @@ import re as _re
 from datetime import datetime, date, timezone as _tz
 from enum import Enum
 from typing import Annotated, Any, Literal
-from pydantic import AfterValidator, BaseModel, Strict
+from pydantic import AfterValidator, BaseModel, ConfigDict, Strict, WithJsonSchema
 
 
 def _utc(v: datetime) -> datetime:
@@ -177,6 +177,11 @@ class Confidence(BaseModel):
     features: dict[str, float]              # keys from contracts/calibration_schema.json
     caps: list[str] = []                    # shown as separate chips, e.g. "capped:sources-disagree"
     calibration_version: str
+    # additive (Justin #12): `features` holds the RAW model inputs, already encoded per calibration_schema.json
+    # x-encoding (flags 0/1, margin in hours, precedent count). `contributions` = coef × input per feature, in
+    # log-odds; score = logistic(intercept + Σ contributions). Empty / None when the kind is uncalibrated.
+    contributions: dict[str, float] = {}
+    intercept: float | None = None
 
 class FlightDecision(BaseModel):
     flight_id: ID
@@ -216,6 +221,12 @@ class Question(BaseModel):
     holds: list[ID] = []; holds_cents: Cents = 0
     status: Literal["open", "answered", "reminded"] = "open"     # view over events
     remind_at: UTCDateTime | None = None
+    # additive (Justin #4): other cases in the same storm run settled automatically while this question waits
+    # ("Waiting on Claims Lead 3h · reminder sent · N others settled")
+    others_settled: int = 0
+    # additive (Justin #11): the rule or proposal a "Reject" on this question targets (POST /rules/{id}/reject);
+    # None → answer the question with its reject option instead
+    proposal_rule_id: ID | None = None
 
 class Ruling(BaseModel):
     id: ID; question_id: ID | None = None
@@ -247,6 +258,8 @@ class Rule(BaseModel):
     times_cited: int = 0                    # view over events
     static_card: bool = False               # e.g. Reg 2026/2202 (display only, no logic)
     title: str | None = None                # additive (D0a): plain-language card title, e.g. the ruling sentence or regulation name
+    origin_quote: str | None = None         # additive (Justin #13): the ruler's own words (or the regulation's text)
+    cases_settled_by_storm: dict[str, int] = {}   # additive (Justin #6): storm id → cases settled citing this rule
 
 class ReplayFlip(BaseModel):
     entity_id: str; field: str; before: Any; after: Any; delta_cents: Cents = 0
@@ -275,6 +288,7 @@ class Commit(BaseModel):
     payload_hash: str; payload_ref: str
     inputs: list[str] = []                  # fact/rule hashes + "engine@<git-sha>" + "cal@<version>"
     message: str
+    recorded_at: UTCDateTime | None = None  # additive (Justin #15): when the commit was written (`at` = event time)
 
 class BlameStep(BaseModel):
     commit: Commit; label: str; quote: str | None = None
@@ -307,11 +321,13 @@ class RollforwardRow(BaseModel):
     change_in_estimate_cents: Cents; recode_cents: Cents = 0; out_of_period_cents: Cents = 0
     derecognised_cents: Cents = 0; closing_cents: Cents
     unclaimed_entitlement_cents: Cents
+    je_ids: list[str] = []                  # additive (Justin #18): journal entries behind this row (may be empty)
 
 class Rollforward(BaseModel):
     period: str; account: Literal["2140"] = "2140"
     rows: list[RollforwardRow]; closing_total_cents: Cents
     gl_balance_cents: Cents; ties_to_gl: bool
+    locked: bool = False                    # additive (Justin #16): the period is locked
 
 class ClaimCurve(BaseModel):
     segment: Literal["long_haul_gt3500", "medium_1500_3500", "short_le1500"]
@@ -344,6 +360,7 @@ class CfoMetrics(BaseModel):
     refunds_within_7d_pct: float
     vouchers_outstanding_cents: Cents
     care_accrued_cents: Cents; care_invoiced_cents: Cents
+    cohort: str | None = None               # additive (Justin #19): the cohort the bridge describes (None = all)
 
 # ---------- API views ----------
 class TraceEvent(BaseModel):
@@ -372,12 +389,75 @@ class StormRun(BaseModel):
     real_context: dict[str, Any] = {}
     message: str | None = None              # e.g. "max gust 18 kt · no storm window"
     airports: list[Airport] = []            # additive (D0a): every airport referenced by flights (map coordinates, tz, eu)
+    name: str | None = None                 # additive (Justin #3): "Storm Éowyn" (from real_context.storm_name)
+
+TimelineKind = Literal["tech_log", "mcc", "occ", "spares", "metar", "window_start", "window_end",
+                       "metar_window_start", "metar_window_end", "crm", "operated", "schedule", "pss", "claim",
+                       "care", "warning", "email", "injection", "challenge", "ruling", "info"]
+
+
+class TimelineItem(BaseModel):              # additive (Justin #9): one mark on the Flight File timeline
+    model_config = ConfigDict(extra="allow")
+    at: UTCDateTime; kind: TimelineKind
+    label: str | None = None                # short UI label, e.g. "Tech log EI-NSB · AOG"
+    text: str | None = None                 # verbatim source text (METAR raw, log line) or a count summary
+    source_id: str | None = None            # the document it quotes
+    trust_tier: int | None = None
+
+
+class EntitlementsSummary(BaseModel):       # additive (Justin #5/#10): every key a Flight File summary may carry
+    model_config = ConfigDict(extra="allow")
+    coupons: int | None = None
+    distance_km: float | None = None; band_eur: int | None = None; band_margin_km: float | None = None
+    band_label: str | None = None           # "4,804 km · 1,304 km over the €600 threshold"
+    band_note: str | None = None            # same as band_label (D0a name)
+    compensation_cents: Cents | None = None         # Σ compensation on owed + needs_ruling coupons
+    full_entitlement_cents: Cents | None = None     # full Art. 7 entitlement if every passenger claims (owed + needs_ruling + held)
+    full_entitlement_label: str | None = None       # "€99,000 full Art. 7 entitlement if every passenger claims"
+    drafted_liability_cents: Cents | None = None    # Σ accruing entitlement × the segment's expected ultimate claim rate
+    liability_drafted_cents: Cents | None = None    # same (D0a name)
+    claim_rate: float | None = None                 # expected ultimate claim rate used, e.g. 0.35
+    expected_ultimate_claim_rate: float | None = None   # same (D0a name)
+    claim_rate_label: str | None = None             # "35% expected ultimate claim rate (history to M18 + tail judgment)"
+    status_counts: dict[str, int] | None = None     # {"owed": 171, "needs_ruling": 1}
+    statuses: list[dict[str, Any]] | None = None    # [{"status","count","label"}]
+    status_line: str | None = None                  # one sentence, plan §9 wording
+    elections: dict[str, int] | None = None         # {"refund": 32, "voucher": 14, ...}
+    compensation_breakdown: list[dict[str, Any]] | None = None  # [{"band_eur","reduction","count","each_cents","total_cents"}]
+    formula: str | None = None                      # "158 × €600 + 14 × €300 (Art. 7(2)(c))"
+    reduction_7_2: dict[str, Any] | None = None     # {"count","saved_cents","rules"}
+    reduced: int | None = None
+    refunds_already_initiated: int | None = None; refund_due_cents: Cents | None = None
+    voucher_offset_cents: Cents | None = None
+    claims_received: int | None = None; care_due: bool | None = None
+    accrued_cents: Cents | None = None; accrual_basis: str | None = None   # held flights: the IFRS 15.56 accrual
+    compensation_if_owed_cents: Cents | None = None; question_id: str | None = None
+    headline: str | None = None
+
+
+def _check_summary(v: dict[str, Any]) -> dict[str, Any]:
+    EntitlementsSummary.model_validate(v)   # documented keys must have their types; the dict itself is kept
+    return v
+
+
+def _check_timeline(v: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    for item in v:
+        TimelineItem.model_validate(item)
+    return v
+
+
+# Runtime stays a plain dict / list of dicts (readers index them); validation and the published JSON Schema are typed.
+SummaryDict = Annotated[dict[str, Any], AfterValidator(_check_summary),
+                        WithJsonSchema(EntitlementsSummary.model_json_schema(mode="serialization"))]
+TimelineList = Annotated[list[dict[str, Any]], AfterValidator(_check_timeline),
+                         WithJsonSchema({"type": "array", "items": TimelineItem.model_json_schema(mode="serialization")})]
+
 
 class FlightFile(BaseModel):
     flight: Flight; decision: FlightDecision
-    entitlements_summary: dict[str, Any]; sample_entitlements: list[Entitlement]
+    entitlements_summary: SummaryDict; sample_entitlements: list[Entitlement]   # keys: EntitlementsSummary
     journal_preview: list[JournalEntry]
-    timeline: list[dict[str, Any]]          # ordered: tech log, MCC, OCC, METAR marks, CRM
+    timeline: TimelineList                  # ordered marks; items: TimelineItem (typed, Justin #9)
     handoff: dict[str, Any] | None = None   # {"refunds_already_initiated":32,"not_repeated":true,"rights_notices_drafted":32,"drafter_pii_seen":0}
     explanation: Draft | None = None
 

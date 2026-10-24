@@ -21,7 +21,8 @@
       "out_of_period_cents": 0,
       "derecognised_cents": 0,
       "closing_cents": 3465000,
-      "unclaimed_entitlement_cents": 9900000
+      "unclaimed_entitlement_cents": 9900000,
+      "je_ids": []
     },
     {
       "cohort": "EIDW@2025-01-24:held",
@@ -34,7 +35,8 @@
       "out_of_period_cents": 0,
       "derecognised_cents": 0,
       "closing_cents": 4749600,
-      "unclaimed_entitlement_cents": 18680000
+      "unclaimed_entitlement_cents": 18680000,
+      "je_ids": []
     },
     {
       "cohort": "EIDW@2024-01-21",
@@ -47,7 +49,8 @@
       "out_of_period_cents": 0,
       "derecognised_cents": 0,
       "closing_cents": 360000,
-      "unclaimed_entitlement_cents": 4260000
+      "unclaimed_entitlement_cents": 4260000,
+      "je_ids": []
     }
   ],
   "recodes_count": 1,
@@ -55,5 +58,6 @@
   "refunds_within_7d_pct": 100.0,
   "vouchers_outstanding_cents": 744000,
   "care_accrued_cents": 22700000,
-  "care_invoiced_cents": 0
+  "care_invoiced_cents": 0,
+  "cohort": null
 }
