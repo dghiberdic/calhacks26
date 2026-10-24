@@ -79,6 +79,7 @@ class FlightTruth:
     reroute_earliest_offered: bool | None = None
     ops_code: str | None = None
     note: str = ""
+    golden: bool = False
 
     def to_json(self) -> dict[str, Any]:
         return {k: v for k, v in self.__dict__.items() if v not in (None, [], "", False) or k in ("status",)}
@@ -158,6 +159,7 @@ class DayOutput:
     sectors: dict[str, N.Sector] = field(default_factory=dict)
     cancels: dict[str, Cancel] = field(default_factory=dict)
     meta: dict[str, Any] = field(default_factory=dict)
+    pax: Any = None                      # world.pax.PaxOutput once populate_pax ran
 
 
 class DaySim:
@@ -413,7 +415,7 @@ class DaySim:
                  latent: str) -> Aog:
         narrative = T.fill(defect, r, station)
         text = T.tech_log_line(logged, tail, station, narrative, defect)
-        eid = f"TL-{tail}-{stamp(logged)}"
+        eid = f"TECHLOG-{tail}-{stamp(logged)}"
         if defect.external:
             rts = logged + timedelta(hours=r.randint(3, 8))
             eta = rts
@@ -423,22 +425,26 @@ class DaySim:
         self.out.tech_log.append(TechLogEntry(id=eid, aircraft=tail, logged_at=logged, station=station,
                                               ata=defect.ata, text=text, mel_relief=defect.mel_relief, aog=True,
                                               rts_est=rts))
-        self._source(f"SRC-TECHLOG-{tail}-{stamp(logged)}", SourceKind.TECH_LOG, f"AMOS tech log {tail}", text,
-                     logged, 1, ["maintenance"])
+        self._source(f"SRC-{eid}", SourceKind.TECH_LOG, f"Tech log {tail} {T.ddmon(logged)} {T.hhmmz(logged)}",
+                     T.amos_record(tail, N.FLEET[tail].name, station, logged, defect, text, rts),
+                     logged + timedelta(minutes=2), 1, ["maintenance", "ops"])
         mcc_at = logged + timedelta(minutes=r.choice([25, 35, 40, 55]))
         mtext = T.mcc_line(mcc_at, station, defect, r.choice(T.POOLS), eta, rts)
-        mid = f"MCC-{tail}-{stamp(mcc_at)}"
-        self.out.ops_log.append(OpsLogEntry(id=mid, at=mcc_at, kind="mcc", flight_ids=[], text=mtext, author="MCC"))
-        self._source(f"SRC-{mid}", SourceKind.MCC_LOG, "MCC log", mtext, mcc_at, 1, ["maintenance"])
+        mid = f"MCC-{stamp(mcc_at)}-{tail}"
+        self.out.ops_log.append(OpsLogEntry(id=mid, at=mcc_at, kind="mcc", flight_ids=[], text=mtext,
+                                            author="MCC DUB"))
+        self._source(f"SRC-{mid}", SourceKind.MCC_LOG, f"MCC log {T.ddmon(mcc_at)} {T.hhmmz(mcc_at)} · {tail}",
+                     mtext + "\n", mcc_at + timedelta(minutes=1), 1, ["ops", "maintenance"])
         return Aog(until=rts, entry_id=eid, station=station, logged_at=logged, latent=latent, defect=defect)
 
     def _log_mel(self, tail: str, station: str, logged: datetime, defect: T.Defect, r: random.Random) -> None:
         text = T.tech_log_line(logged, tail, station, T.fill(defect, r, station), defect)
-        eid = f"TL-{tail}-{stamp(logged)}"
+        eid = f"TECHLOG-{tail}-{stamp(logged)}"
         self.out.tech_log.append(TechLogEntry(id=eid, aircraft=tail, logged_at=logged, station=station,
                                               ata=defect.ata, text=text, mel_relief=True, aog=False))
-        self._source(f"SRC-TECHLOG-{tail}-{stamp(logged)}", SourceKind.TECH_LOG, f"AMOS tech log {tail}", text,
-                     logged, 1, ["maintenance"])
+        self._source(f"SRC-{eid}", SourceKind.TECH_LOG, f"Tech log {tail} {T.ddmon(logged)} {T.hhmmz(logged)}",
+                     T.amos_record(tail, N.FLEET[tail].name, station, logged, defect, text, None),
+                     logged + timedelta(minutes=2), 1, ["maintenance", "ops"])
 
     def _source(self, sid: str, kind: SourceKind, title: str, text: str, at: datetime, tier: int,
                 tags: list[str]) -> Source:
@@ -521,7 +527,8 @@ class DaySim:
             oid = f"OCC-{stamp(t_batch)}"
             self.out.ops_log.append(OpsLogEntry(id=oid, at=t_batch, kind="occ", flight_ids=sorted(batch), code="71",
                                                 text=text, author="OCC DM"))
-            self._source(f"SRC-{oid}", SourceKind.OCC_LOG, "OCC cancel list", text, t_batch, 3, ["ops"])
+            self._source(f"SRC-{oid}", SourceKind.OCC_LOG, f"OCC log {T.ddmon(t_batch)} {T.hhmmz(t_batch)}",
+                         text + "\n", t_batch + timedelta(minutes=1), 3, ["ops"])
             for f in batch:
                 codes[f] = "72" if f in inbound else "71"
                 notified[f] = min(sms, by_id[f].std - timedelta(minutes=90))
@@ -551,8 +558,9 @@ class DaySim:
                                      else " ".join(self._groups(group_ids, by_id)), code, reason, sms)
             oid = f"OCC-{stamp(at)}-{s.number}"
             self.out.ops_log.append(OpsLogEntry(id=oid, at=at, kind="occ", flight_ids=sorted(group_ids), code=code,
-                                                text=text, author="OCC"))
-            self._source(f"SRC-{oid}", SourceKind.OCC_LOG, "OCC log", text, at, 3, ["ops"])
+                                                text=text, author="OCC duty manager"))
+            self._source(f"SRC-{oid}", SourceKind.OCC_LOG, f"OCC log {T.ddmon(at)} {T.hhmmz(at)}", text + "\n",
+                         at + timedelta(minutes=1), 3, ["ops"])
             for g in group_ids:
                 codes[g] = code
                 notified[g] = min(sms, by_id[g].std) if sms < by_id[g].std + timedelta(hours=1) else by_id[g].std
@@ -615,19 +623,78 @@ class DaySim:
                 kind = "long-range" if s.pair.long_haul else "narrowbody"
                 text = f"{s.number}: No {kind} spare at DUB before STD {T.hhmmz(s.std)}."
             at = min(s.std, c.known_at + timedelta(minutes=50)).replace(second=0, microsecond=0)
-            oid = f"SPARES-{s.number}-{s.local_date.isoformat()}"
+            oid = f"SPARES-{stamp(at)}-{s.number}"
             self.out.ops_log.append(OpsLogEntry(id=oid, at=at, kind="spares", flight_ids=[fid], text=text,
-                                                author="OCC"))
-            self._source(f"SRC-{oid}", SourceKind.SPARES, "Spares log", text, at, 2, ["ops"])
+                                                author="OCC fleet desk"))
+            self._source(f"SRC-{oid}", SourceKind.SPARES, f"SPARES log {T.ddmon(at)} {T.hhmmz(at)} · {s.number}",
+                         text + "\n", at + timedelta(minutes=1), 2, ["ops"])
 
     def _metar_sources(self) -> None:
         for key, obs in sorted(self.out.metar.items()):
             if not obs:
                 continue
             icao = key.split("@")[0]
-            text = "\n".join(o.raw for o in obs)
-            self._source(f"SRC-METAR-{icao}-{self.day.isoformat()}", SourceKind.METAR, f"IEM METAR {icao}", text,
-                         obs[-1].valid, 1, ["ops"])
+            src = self._source(f"SRC-METAR-{key}", SourceKind.METAR, f"METAR {icao} (IEM ASOS archive)",
+                               T.iem_csv(obs), obs[-1].valid + timedelta(minutes=25), 1, ["ops"])
+            self.out.sources[-1] = src.model_copy(
+                update={"uri": f"https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?station={icao}"})
+
+
+# ---------------------------------------------------------------- passengers, claims, care (F3b)
+
+def populate_pax(out: DayOutput, seed: int) -> None:
+    """Coupons/elections/CRM/care for every cancelled flight of the day, coupon truth, and the day's claims."""
+    from world import pax as P
+
+    po = P.PaxOutput()
+    ids: set[str] = set()
+    flights = {f.id: f for f in out.flights}
+    fps: dict[str, P.FlightPax] = {}
+    for f in out.flights:
+        if f.status == "cancelled":
+            fp = P.FlightPax(seed, f, out.truth[f.id].__dict__, po, ids)
+            fp.run()
+            fps[f.id] = fp
+    elections = {e.coupon_id: e for e in po.elections}
+    for c in po.coupons:
+        po.coupon_truth[c.id] = P.coupon_truth(flights[c.flight_id], out.truth[c.flight_id].__dict__, c,
+                                               elections.get(c.id), po.in_lieu.get(c.id))
+    day = out.meta["date"]
+    event = date.fromisoformat(day)
+    by_seg: dict[str, list] = {}
+    for c in po.coupons:
+        t = po.coupon_truth[c.id]
+        if t["status"] == "owed":
+            by_seg.setdefault(t["segment"], []).append((c, t["compensation_cents"]))
+    for seg in sorted(by_seg):
+        r = rng_for(seed, "claims", day, seg)
+        for c, comp, at in P.quota_claim_times(event, by_seg[seg], seg, r):
+            t = po.coupon_truth[c.id]
+            f = flights[c.flight_id]
+            spec = P.ClaimSpec(c, f, at, pay_cents=t["pay_cents"], reason="valid")
+            if r.random() < P.P_AGENCY:
+                spec.channel, spec.agency = "agency", r.choice(T.AGENCIES)
+                spec.authority = "poa" if r.random() < 0.65 else "assignment"
+            other = f.dest if f.origin == N.HUB else f.origin
+            if other in P.UK_ROUTES and r.random() < 0.1:
+                spec.regime = "UK261"
+            if t["voucher_offset_cents"] >= t["compensation_cents"] > 0:
+                spec.reason = "settled_in_kind_signed_voucher"
+            P.claim_record(po, spec, ids, r)
+    r = rng_for(seed, "claims-invalid", day)
+    for c in po.coupons:
+        t = po.coupon_truth[c.id]
+        if t["status"] in ("no_compensation", "staff_ticket", "exempt_notice") and r.random() < P.P_WEATHER_CLAIM:
+            f = flights[c.flight_id]
+            at = datetime.combine(event, datetime.min.time(), UTC) + timedelta(days=r.randint(1, 90),
+                                                                                minutes=r.randint(0, 1439))
+            reason = {"no_compensation": "extraordinary_circumstances", "staff_ticket": "staff_ticket_art3_3",
+                      "exempt_notice": "notice_14_days"}[t["status"]]
+            spec = P.ClaimSpec(c, f, at, valid=False, reason=reason)
+            if r.random() < P.P_AGENCY:
+                spec.channel, spec.agency, spec.authority = "agency", r.choice(T.AGENCIES), "poa"
+            P.claim_record(po, spec, ids, r)
+    out.pax = po
 
 
 # ---------------------------------------------------------------- the whole world
@@ -656,6 +723,7 @@ def assemble(outputs: Sequence[DayOutput], seed: int, *, extra_meta: dict[str, A
     ops: list[OpsLogEntry] = []
     sources: list[Source] = []
     metar_: dict[str, list[MetarObs]] = {}
+    coupons, elections, crm, claims, care = [], [], [], [], []
     days_meta = []
     for o in outputs:
         flights += o.flights
@@ -664,6 +732,13 @@ def assemble(outputs: Sequence[DayOutput], seed: int, *, extra_meta: dict[str, A
         sources += o.sources
         metar_.update(o.metar)
         days_meta.append(o.meta)
+        if o.pax is not None:
+            coupons += o.pax.coupons
+            elections += o.pax.elections
+            crm += o.pax.crm
+            claims += o.pax.claims
+            care += o.pax.care
+            sources += o.pax.sources
     codes = sorted({f.origin for f in flights} | {f.dest for f in flights})
     meta = {"carrier": CARRIER, "generator": GENERATOR_VERSION, "seed": seed, "hub": N.HUB,
             "split": {"train": "2023-07-01..2024-12-31", "test": "2025-01-01..2025-06-30"},
@@ -673,20 +748,58 @@ def assemble(outputs: Sequence[DayOutput], seed: int, *, extra_meta: dict[str, A
     return World(meta=meta, airports=sorted((airport(c) for c in codes), key=lambda a: a.iata), flights=flights,
                  tech_log=sorted(tech, key=lambda e: (e.logged_at, e.id)),
                  ops_log=sorted(ops, key=lambda e: (e.at, e.id)),
-                 coupons=[], elections=[], crm=[], claims=[], care=[], metar=metar_,
+                 coupons=coupons, elections=elections, crm=sorted(crm, key=lambda e: (e.at, e.id)),
+                 claims=sorted(claims, key=lambda c: (c.received_at, c.id)), care=care, metar=metar_,
                  sources=sorted(sources, key=lambda s: (s.received_at, s.id)))
 
 
 def simulate_days(seed: int = 0, wdays: Sequence[WorldDay] | None = None) -> list[DayOutput]:
     from world.days import world_days
 
-    return [DaySim(w, seed, storm_name=STORM_NAMES.get(w.day.isoformat(), "")).run()
-            for w in (wdays if wdays is not None else world_days())]
+    outs = []
+    for w in (wdays if wdays is not None else world_days()):
+        o = DaySim(w, seed, storm_name=STORM_NAMES.get(w.day.isoformat(), "")).run()
+        populate_pax(o, seed)
+        outs.append(o)
+    return outs
 
 
-def generate_world(seed: int = 0, wdays: Sequence[WorldDay] | None = None) -> Generated:
-    outs = simulate_days(seed, wdays)
+def generate_world(seed: int = 0, wdays: Sequence[WorldDay] | None = None, *,
+                   embed_golden: bool | None = None) -> Generated:
+    """The Northstar world. `embed_golden` (default: only for the full world, when golden exists) splices the
+    golden Éowyn/Herminia world in verbatim instead of simulating those days (F0)."""
+    from world import golden
+    from world.days import split_of, world_days
+
+    if embed_golden is None:
+        embed_golden = wdays is None and golden.available()
+    all_days = list(wdays if wdays is not None else world_days())
+    gdays = golden.golden_days() if embed_golden else frozenset()
+    outs = simulate_days(seed, [w for w in all_days if w.day not in gdays])
     truth = Truth()
     for o in outs:
         truth.flights.update(o.truth)
-    return Generated(assemble(outs, seed), truth)
+        if o.pax is not None:
+            truth.coupons.update(o.pax.coupon_truth)
+            truth.claims.update(o.pax.claim_truth)
+    world = assemble(outs, seed)
+    if embed_golden:
+        g = golden.load_golden()
+        world = golden.embed(world, g)
+        gdays_meta = [{"date": s["local_date"], "storm_id": sid, "kind": "storm", "split": split_of(
+            date.fromisoformat(s["local_date"])), "golden": True, "flights": list(s["flight_ids"]),
+            "cancelled": sorted(f.id for f in g.flights if f.id in s["flight_ids"] and f.status == "cancelled")}
+            for sid, s in g.meta["storms"].items()]
+        days_meta = sorted(world.meta["days"] + gdays_meta, key=lambda m: m["date"])
+        world = world.model_copy(update={"meta": {**world.meta, "days": days_meta}})
+        for fid, t in golden.golden_flight_truth(g).items():
+            f_day = next(m["date"] for m in gdays_meta if fid in m["flights"])
+            truth.flights[fid] = FlightTruth(fid, f_day, split_of(date.fromisoformat(f_day)), t["status"],
+                                             t["latent"], t["cause"], t["extraordinary"],
+                                             root_flight_id=t["root_flight_id"], root_latent=t["root_latent"],
+                                             planted=list(t["planted"]), expected_route=t["expected_route"],
+                                             spare_within_3h=t["spare_within_3h"],
+                                             reroute_earliest_offered=t["reroute_earliest_offered"],
+                                             ops_code=next((f.ops_cause_code for f in g.flights if f.id == fid), None),
+                                             golden=True)
+    return Generated(world, truth)
