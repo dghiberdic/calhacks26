@@ -110,7 +110,7 @@ export function RulePreview({
         </button>
         <p className="text-center text-[12px] text-slate-500">
           {failing.length
-            ? `It can't be saved while ${failing.length === 1 ? "a check fails" : `${count(failing.length)} checks fail`}.`
+            ? `It can't become a policy while ${failing.length === 1 ? "a check fails" : `${count(failing.length)} checks fail`}. Your ruling stands for this case only; the next case like it will be asked again.`
             : question.case_refs.length > 1
               ? `Settles all ${count(question.case_refs.length)} cases, then every match after them.`
               : "Nothing changes until you confirm."}
