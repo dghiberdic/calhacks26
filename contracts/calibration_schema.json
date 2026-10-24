@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stormcheck.example/contracts/calibration_schema.json",
+  "title": "StormCheck calibration file (data/calibration.json, engine/default_calibration.json)",
+  "description": "One logistic model per Confidence.kind: p = 1 / (1 + exp(-(intercept + sum(coef[i] * x[features[i]])))). A kind with no model gives Confidence.score = null (\"uncalibrated\"). Caps are reported as chips and never folded into the score. Logistic regression only (CONTRACTS §6).",
+  "type": "object",
+  "required": ["version", "models"],
+  "properties": {
+    "version": {"type": "string", "minLength": 1, "description": "Shown as Confidence.calibration_version and in commit inputs as cal@<version>"},
+    "note": {"type": "string"},
+    "models": {
+      "type": "object",
+      "propertyNames": {"enum": ["cause", "voucher", "release", "claim_validity"]},
+      "additionalProperties": {"$ref": "#/$defs/model"}
+    }
+  },
+  "$defs": {
+    "model": {
+      "type": "object",
+      "required": ["features", "coef", "intercept"],
+      "properties": {
+        "features": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+        "coef": {"type": "array", "items": {"type": "number"}, "minItems": 1},
+        "intercept": {"type": "number"},
+        "trained_on": {"type": "string", "description": "e.g. \"2023-07..2024-12\" or \"prior\""},
+        "n": {"type": "integer", "minimum": 0},
+        "metrics": {"type": "object"}
+      },
+      "description": "len(coef) == len(features); every feature must be listed for its kind in x-features."
+    }
+  },
+  "x-features": {
+    "cause": ["in_window_dep", "in_window_arr", "window_margin_h", "aog_before_window", "aog_inside_window",
+              "root_cause_internal", "sources_disagree", "precedent_count", "knock_on"],
+    "voucher": ["in_lieu", "signed", "sources_disagree", "precedent_count"],
+    "release": ["cohort_age_months", "months_since_last_claim", "precedent_count", "claimed_pct", "limitation_expired"],
+    "claim_validity": ["channel_agency", "authority_none", "duplicate", "after_limitation", "regime_uk261",
+                       "age_months", "precedent_count"]
+  },
+  "x-encoding": {
+    "in_window_dep": "1.0 if the departure end is \"in\" a storm window, else 0.0 (\"unknown\" is 0.0 and routes to Ops)",
+    "in_window_arr": "1.0 if the arrival end is \"in\", else 0.0",
+    "window_margin_h": "|FlightDecision.window_margin_min| / 60, capped at 4.0; 0.0 when there is no window",
+    "aog_before_window": "1.0 if a no-MEL-relief AOG on the tail was logged before the window",
+    "aog_inside_window": "1.0 if the AOG was logged inside the window (concurrent causes)",
+    "root_cause_internal": "1.0 if engine/ata_table.py classifies the defect as internal",
+    "sources_disagree": "1.0 if the winning evidence contradicts a lower-tier source on the decisive field",
+    "precedent_count": "matching history_cases + 10 per binding ruling, capped at 10",
+    "knock_on": "1.0 if the cause is knock_on",
+    "in_lieu": "1.0 if a voucher was issued in lieu of compensation",
+    "signed": "1.0 if signed_acceptance_sha256 is present",
+    "cohort_age_months": "months since the cohort's M1 (M1 = first month-end ≥28 days after the event)",
+    "months_since_last_claim": "months since the latest approved claim",
+    "claimed_pct": "claimed / entitlement (0..1)",
+    "limitation_expired": "1.0 once the 6-year limitation (Ireland) has passed",
+    "channel_agency": "1.0 if the claim came through an agency",
+    "authority_none": "1.0 if an agency claim has authority=none",
+    "duplicate": "1.0 if another claim/refund exists on the coupon",
+    "after_limitation": "1.0 if received after the limitation date",
+    "regime_uk261": "1.0 if the claim cites UK261",
+    "age_months": "months between the flight and the claim"
+  }
+}
