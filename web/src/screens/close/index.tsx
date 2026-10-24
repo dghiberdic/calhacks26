@@ -107,7 +107,7 @@ export default function CloseScreen() {
         <CfoBridge metrics={cfo.data} curve={cohortCurve} />
       )}
 
-      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-3 xl:grid-cols-[minmax(0,1fr)_304px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-3 min-[87.5rem]:grid-cols-[minmax(0,1fr)_304px]">
         {/* 2140 rollforward */}
         <section aria-labelledby="rollforward-title" className={PANEL}>
           <div className="px-5 pt-4 md:px-6">

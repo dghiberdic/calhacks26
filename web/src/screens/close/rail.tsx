@@ -17,6 +17,9 @@ import { Denied } from "./ui";
 
 const METHOD: Record<string, string> = { bf: "Bornhuetter-Ferguson", expected_loss: "Expected loss", chain_ladder: "Chain ladder" };
 
+/** A rail block after the first: ruled above when stacked, ruled at the left when side by side. */
+const BLOCK = "mx-5 mt-4 border-t border-cloud-100 pt-4 md:mx-0 md:mt-0 md:border-l md:border-t-0 md:px-5 md:pt-0 min-[87.5rem]:mx-5 min-[87.5rem]:mt-4 min-[87.5rem]:border-l-0 min-[87.5rem]:border-t min-[87.5rem]:px-0 min-[87.5rem]:pt-4";
+
 /** The close for one period: run month-end (drafts the change in estimate), then lock once it ties. */
 export function CloseRail({
   period,
@@ -95,56 +98,60 @@ export function CloseRail({
         </h2>
       </div>
 
-      {/* month-end */}
-      <div className="px-5 pt-3">
-        <AnimatePresence mode="wait" initial={false}>
-          {result ? (
-            <MonthEndResult key="result" res={result} />
+      {/* Three blocks: stacked beside the rollforward on wide screens, side by side under it otherwise. */}
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)] pb-4 md:grid-cols-3 min-[87.5rem]:grid-cols-[minmax(0,1fr)]">
+        {/* month-end */}
+        <div className="px-5">
+          <AnimatePresence mode="wait" initial={false}>
+            {result ? (
+              <MonthEndResult key="result" res={result} />
+            ) : (
+              <motion.p key="what" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[13px] leading-relaxed text-slate-500">
+                Re-estimates every cohort on its claim curve and drafts the change in estimate for approval: prospective, per IAS 8.36.
+              </motion.p>
+            )}
+          </AnimatePresence>
+          {canAct && !locked ? (
+            <Button
+              variant={result ? "outline" : "default"}
+              onClick={() => void runMonthEnd()}
+              disabled={busy !== null}
+              className={cn("mt-3 h-9 w-full rounded-lg text-[13.5px]", result ? "" : "bg-navy-900 font-semibold text-cloud-50 hover:bg-navy-800")}
+              data-testid="month-end"
+            >
+              {busy === "month-end" ? "Running month-end…" : result ? `Run ${label} month-end again` : `Run ${label} month-end`}
+            </Button>
+          ) : null}
+          {error?.action === "month-end" ? <Denied error={error.error} className="mt-2.5" /> : null}
+        </div>
+
+        {/* lock */}
+        <div className={BLOCK}>
+          {locked ? (
+            <p className="text-[13px] leading-relaxed text-slate-500">
+              <span className="font-medium text-navy-900">{label} is locked.</span> Nothing is written to it again; anything found later is corrected in the open period.
+            </p>
           ) : (
-            <motion.p key="what" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[13px] leading-relaxed text-slate-500">
-              Re-estimates every cohort on its claim curve and drafts the change in estimate for approval: prospective, per IAS 8.36.
-            </motion.p>
+            <>
+              <p className="text-[13px] leading-relaxed text-slate-500">Lock {label} once it ties. Locked periods are never written; anything found later is corrected in the open period.</p>
+              {canAct ? (
+                <Button variant="outline" onClick={() => setConfirm(true)} disabled={busy !== null} className="mt-3 h-9 w-full rounded-lg text-[13.5px]" data-testid="lock-period">
+                  <Lock className="size-3.5" aria-hidden="true" />
+                  Lock {label}
+                </Button>
+              ) : null}
+            </>
           )}
-        </AnimatePresence>
-        {canAct && !locked ? (
-          <Button
-            variant={result ? "outline" : "default"}
-            onClick={() => void runMonthEnd()}
-            disabled={busy !== null}
-            className={cn("mt-3 h-9 w-full rounded-lg text-[13.5px]", result ? "" : "bg-navy-900 font-semibold text-cloud-50 hover:bg-navy-800")}
-            data-testid="month-end"
-          >
-            {busy === "month-end" ? "Running month-end…" : result ? `Run ${label} month-end again` : `Run ${label} month-end`}
-          </Button>
+          {error?.action === "lock" ? <Denied error={error.error} className="mt-2.5" /> : null}
+          {!canAct ? <p className="mt-3 text-[12.5px] text-slate-400">The Controller runs month-end and locks periods.</p> : null}
+        </div>
+
+        {!locked ? (
+          <div className={BLOCK}>
+            <ReadyToLock monthEnd={!!result} pendingDrafts={pendingDrafts} tiesToGl={tiesToGl} />
+          </div>
         ) : null}
-        {error?.action === "month-end" ? <Denied error={error.error} className="mt-2.5" /> : null}
       </div>
-
-      {/* lock */}
-      <div className="mx-5 mt-4 border-t border-cloud-100 pt-4">
-        {locked ? (
-          <p className="text-[13px] leading-relaxed text-slate-500">
-            <span className="font-medium text-navy-900">{label} is locked.</span> Nothing is written to it again; anything found later is corrected in the open period.
-          </p>
-        ) : (
-          <>
-            <p className="text-[13px] leading-relaxed text-slate-500">Lock {label} once it ties. Locked periods are never written; anything found later is corrected in the open period.</p>
-            {canAct ? (
-              <Button variant="outline" onClick={() => setConfirm(true)} disabled={busy !== null} className="mt-3 h-9 w-full rounded-lg text-[13.5px]" data-testid="lock-period">
-                <Lock className="size-3.5" aria-hidden="true" />
-                Lock {label}
-              </Button>
-            ) : null}
-          </>
-        )}
-        {error?.action === "lock" ? <Denied error={error.error} className="mt-2.5" /> : null}
-      </div>
-
-      {!canAct ? <p className="mx-5 mt-3 text-[12.5px] text-slate-400">The Controller runs month-end and locks periods.</p> : null}
-
-      {!locked ? <ReadyToLock monthEnd={!!result} pendingDrafts={pendingDrafts} tiesToGl={tiesToGl} /> : null}
-
-      <div className="pb-4" />
 
       <Dialog open={confirm} onOpenChange={(o) => busy === null && setConfirm(o)}>
         <DialogContent className="sm:max-w-[420px]">
@@ -184,7 +191,7 @@ function ReadyToLock({ monthEnd, pendingDrafts, tiesToGl }: { monthEnd: boolean;
     { ok: failing === null ? null : failing === 0, text: failing ? `${count(failing)} invariant${failing === 1 ? "" : "s"} failing` : "Every invariant holds", green: true },
   ];
   return (
-    <div className="mx-5 mt-4 border-t border-cloud-100 pt-4">
+    <div>
       <h3 className="text-[13px] font-semibold text-navy-900">Before you lock</h3>
       <ul className="mt-2 flex flex-col gap-1.5" data-testid="ready-to-lock">
         {items.map((it) => (
@@ -240,7 +247,7 @@ function MonthEndResult({ res }: { res: MonthEndResponse }) {
       </ul>
       {drafted ? (
         <a href="#journal" className="mt-2.5 inline-flex items-center gap-1 text-[12.5px] font-medium text-metar-ink hover:underline">
-          {count(drafted)} {drafted === 1 ? "entry" : "entries"} to approve <ArrowDown className="size-3.5" aria-hidden="true" />
+          {drafted === 1 ? "See the drafted entry" : `See the ${count(drafted)} drafted entries`} <ArrowDown className="size-3.5" aria-hidden="true" />
         </a>
       ) : null}
     </motion.div>
