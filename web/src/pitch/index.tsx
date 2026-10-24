@@ -7,15 +7,19 @@ import { usePitchData } from "./data";
 import { clampSlide, clickTarget, keyToAction, parseSlide } from "./nav";
 import { SLIDES } from "./slides";
 import { COVER_IMAGE } from "./slides/Cover";
-import { EASE_OUT, STAGE_H, STAGE_W, useDirection, useFitScale } from "./stage";
+import { EASE_OUT, STAGE_H, STAGE_W, useDirection, useElapsed, useFitScale, useFontsReady } from "./stage";
 
 const TOTAL = SLIDES.length;
 
-// Calm: a short dip through navy, the next slide drifting in from the side it comes from.
+/** On a cold open the deck waits this long at most for its fonts and figures, then shows what it has. */
+const MAX_WAIT_MS = 1600;
+
+// Calm and the same every time: the slide dips through navy, the next one drifts in from the side it comes
+// from. Opacity and transform only: nothing is laid out or repainted while it moves.
 const SLIDE_MOTION: Variants = {
-  enter: (dir: number) => ({ opacity: 0, x: dir * 28 }),
-  center: { opacity: 1, x: 0, transition: { duration: 0.4, ease: EASE_OUT } },
-  exit: (dir: number) => ({ opacity: 0, x: dir * -18, transition: { duration: 0.16, ease: [0.4, 0, 1, 1] } }),
+  enter: (dir: number) => ({ opacity: 0, x: dir * 40 }),
+  center: { opacity: 1, x: 0, transition: { duration: 0.55, ease: EASE_OUT } },
+  exit: (dir: number) => ({ opacity: 0, x: dir * -24, transition: { duration: 0.2, ease: [0.4, 0, 1, 1] } }),
 };
 const SLIDE_STILL: Variants = {
   enter: { opacity: 0 },
@@ -35,6 +39,10 @@ export default function PitchScreen() {
   const scale = useFitScale();
   const reduce = useReducedMotion();
   const idle = useIdle(2600);
+  const fontsReady = useFontsReady();
+  const waited = useElapsed(MAX_WAIT_MS);
+  // A slide lays out once: with its fonts in and its figures answered, so nothing jumps while it plays.
+  const ready = waited || (fontsReady && (!SLIDES[index].usesData || !!data.settled));
 
   // Direction of travel, for the transition (forward slides in from the right).
   const dir = useDirection(index);
@@ -77,7 +85,7 @@ export default function PitchScreen() {
 
   useEffect(() => {
     const previous = document.title;
-    document.title = `${SLIDES[index].label} · StormCheck pitch`;
+    document.title = `Pitch · ${index + 1}/${TOTAL} · StormCheck`;
     return () => {
       document.title = previous;
     };
@@ -113,20 +121,22 @@ export default function PitchScreen() {
         style={{ width: STAGE_W, height: STAGE_H, transform: `translate(-50%, -50%) scale(${scale})` }}
       >
         <AnimatePresence mode="wait" custom={dir}>
-          <motion.section
-            key={index}
-            custom={dir}
-            variants={reduce ? SLIDE_STILL : SLIDE_MOTION}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            className="absolute inset-0"
-            aria-roledescription="slide"
-            aria-label={`${index + 1} of ${TOTAL}: ${label}`}
-            data-testid={`slide-${SLIDES[index].id}`}
-          >
-            <Component data={data} />
-          </motion.section>
+          {ready ? (
+            <motion.section
+              key={index}
+              custom={dir}
+              variants={reduce ? SLIDE_STILL : SLIDE_MOTION}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              className="absolute inset-0"
+              aria-roledescription="slide"
+              aria-label={`${index + 1} of ${TOTAL}: ${label}`}
+              data-testid={`slide-${SLIDES[index].id}`}
+            >
+              <Component data={data} />
+            </motion.section>
+          ) : null}
         </AnimatePresence>
         <Progress index={index} onJump={go} />
       </div>

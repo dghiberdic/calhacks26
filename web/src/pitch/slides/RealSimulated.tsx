@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { count, eur, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { HONEST_FRAMING } from "../copy";
 import { monthRange, proofOf, type PitchData, type Proof } from "../data";
+import { EASE_OUT } from "../stage";
 import { Fig, Num, Reveal, RevealGroup, SlideFrame } from "../ui";
 
 const WORDS = ["no", "one", "two", "three", "four", "five", "six"];
@@ -121,30 +123,47 @@ function Proof({ data }: { data: PitchData }) {
   );
 }
 
+/** The runs build like a keynote: plain Claude's three land one at a time, then StormCheck's three together. */
+const PLAIN_AT = 0.95;
+const RUN_EVERY = 0.3;
+const OURS_AT = PLAIN_AT + 3 * RUN_EVERY + 0.45;
+
+/** A figure that lands on its own beat (seconds after the slide opens); in place at once with reduced motion. */
+function Land({ at, children, className }: { at: number; children: ReactNode; className?: string }) {
+  const reduce = useReducedMotion();
+  return (
+    <motion.span className={cn("inline-block", className)} initial={reduce ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: at, duration: 0.45, ease: EASE_OUT }}>
+      {children}
+    </motion.span>
+  );
+}
+
 /** Three runs each on the same documents: plain Claude's numbers differ, StormCheck's match to the hash. */
 function Runs({ proof }: { proof: Proof | undefined }) {
   const distinct = proof ? new Set(proof.baselineEur).size : 0;
-  const cells = (values: number[] | undefined, className: string) =>
+  const cells = (values: number[] | undefined, className: string, at: (i: number) => number) =>
     (values?.length ? values.map((v) => eur(v * 100)) : [null, null, null]).map((v, i) => (
       <p key={i} className={className}>
-        <Fig value={v} width="4.5ch" />
+        <Land at={at(i)}>
+          <Fig value={v} width="4.5ch" />
+        </Land>
       </p>
     ));
   return (
     <>
       <p className="mt-4 text-[21px] text-cloud-300">Same raw documents, three runs each.</p>
-      <div className="mb-7 mt-5 grid grid-cols-[auto_repeat(3,minmax(0,1fr))] items-baseline gap-x-6">
+      <div className="mb-7 mt-5 grid grid-cols-[auto_repeat(3,minmax(0,1fr))] items-baseline gap-x-6" data-testid="proof-runs">
         <p className="font-mono text-[17px] text-cloud-400">Plain Claude</p>
-        {cells(proof?.baselineEur, "text-[32px] text-cloud-400")}
-        <p className="col-span-3 col-start-2 mt-1 min-h-[24px] text-[18px] text-cloud-500">{distinct > 1 ? `${spell(distinct)} different numbers` : null}</p>
+        {cells(proof?.baselineEur, "text-[32px] text-cloud-400", (i) => PLAIN_AT + i * RUN_EVERY)}
+        <p className="col-span-3 col-start-2 mt-1 min-h-[24px] text-[18px] text-cloud-500">{distinct > 1 ? <Land at={PLAIN_AT + 3 * RUN_EVERY}>{`${spell(distinct)} different numbers`}</Land> : null}</p>
         <p className="mt-4 font-mono text-[17px] text-cloud-50">StormCheck</p>
-        {cells(proof?.stormcheckEur, "mt-4 text-[32px] text-cloud-50")}
+        {cells(proof?.stormcheckEur, "mt-4 text-[32px] text-cloud-50", () => OURS_AT)}
         <p className="col-span-3 col-start-2 mt-1 min-h-[24px] text-[18px] text-cloud-100">
           {proof?.stormcheckSameHash ? (
-            <span className="inline-flex items-center gap-2.5">
+            <Land at={OURS_AT + 0.35} className="inline-flex items-center gap-2.5">
               <span aria-hidden="true" className="size-[7px] rounded-full bg-cloud-50" />
               same number, same hash, every run
-            </span>
+            </Land>
           ) : null}
         </p>
       </div>

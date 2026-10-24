@@ -12,13 +12,16 @@ export type PitchData = {
   evalReport?: EvalReport;
   /** GET /eval failed (e.g. not served yet): the proof slide then shows its method without numbers. */
   evalFailed?: boolean;
+  /** Every request has answered (or failed): a slide opened now lays out once, with no placeholder swaps. */
+  settled?: boolean;
 };
 
 export function usePitchData(): PitchData {
   const run = useStormRun(HERO_STORM);
   const cfo = useCfo();
   const evalReport = useEvalReport();
-  return { run: run.data, cfo: cfo.data, evalReport: evalReport.data, evalFailed: evalReport.isError };
+  const settled = run.status !== "pending" && cfo.status !== "pending" && evalReport.status !== "pending";
+  return { run: run.data, cfo: cfo.data, evalReport: evalReport.data, evalFailed: evalReport.isError, settled };
 }
 
 // ---------- selectors (pure, tested) ----------
@@ -75,6 +78,9 @@ export type Proof = {
 
 const euros = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is number => typeof x === "number" && Number.isFinite(x)) : []);
 
+/** `straight_through_pct` may come as a percentage (96.4) or a fraction (0.964); the slide wants the fraction. */
+export const asFraction = (x: unknown) => (typeof x === "number" && Number.isFinite(x) ? (x > 1 ? x / 100 : x) : undefined);
+
 export function proofOf(r?: EvalReport): Proof | undefined {
   if (!r) return undefined;
   const split = r.split ?? {};
@@ -83,7 +89,7 @@ export function proofOf(r?: EvalReport): Proof | undefined {
     baselineSameHash: r.baseline?.hash_identical === true,
     stormcheckEur: euros(r.stormcheck_runs?.liability_eur),
     stormcheckSameHash: r.stormcheck_runs?.hash_identical === true,
-    straightThrough: r.straight_through_pct,
+    straightThrough: asFraction(r.straight_through_pct),
     miscodes: Number.isFinite(r.miscodes_total) && r.miscodes_total > 0 ? { caught: r.miscodes_caught, total: r.miscodes_total } : undefined,
     repeatQuestions: r.repeat_questions,
     learn: split.learn ?? split.train,
