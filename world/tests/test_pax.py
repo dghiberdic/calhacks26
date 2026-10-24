@@ -11,10 +11,11 @@ from world import pax as P
 
 
 def generated(full_world):
-    """Records of generated (non-golden) flights only."""
+    """Records of generated (non-golden, non-legacy) flights only."""
     gids = golden.golden_ids().flights if golden.available() else frozenset()
     w = full_world.world
-    flights = {f.id: f for f in w.flights if f.id not in gids}
+    legacy = {fid for m in w.meta.get("legacy", []) for fid in m["flights"]}
+    flights = {f.id: f for f in w.flights if f.id not in gids and f.id not in legacy}
     coupons = [c for c in w.coupons if c.flight_id in flights]
     cids = {c.id for c in coupons}
     return w, flights, coupons, cids
@@ -63,7 +64,8 @@ def test_crm_bot_refunds_direct_coupons_and_bsp_the_rest(full_world):
             f = flights[c.flight_id]
             assert ("RSN WX CNL" in e.text) == (f.ops_cause_code in ("71", "72"))
         if e.kind == "bsp_refund":
-            assert c.channel != "direct" and e.at > flights[c.flight_id].notified_at
+            planted = "crm_bot_plus_bsp_refund" in full_world.truth.coupons[c.id].get("planted", [])
+            assert (c.channel != "direct" or planted) and e.at > flights[c.flight_id].notified_at
 
 
 def test_service_desk_vouchers_in_lieu_about_60pct_signed(full_world):
@@ -111,26 +113,14 @@ def test_claims_agencies_overnight_and_uk261(full_world):
 
 def test_claims_reproduce_the_eur_curves_within_1pp_on_the_learn_split(full_world):
     """The generated LH (and medium/short) curves are within ±1 pp of curves.json at every point."""
-    w, flights, coupons, _ = generated(full_world)
-    tc, tcl = full_world.truth.coupons, full_world.truth.claims
-    for seg, pts in P.curve_points().items():
-        owed = [c for c in coupons if tc[c.id]["status"] == "owed" and tc[c.id]["segment"] == seg
-                and flights[c.flight_id].date.year < 2025]
-        if not owed:
-            continue
-        for m, rate in pts:
-            cohort = [c for c in owed if P.dev_month_end(_day(full_world, c.flight_id), m) <= P.CLAIMS_HORIZON]
-            ent = sum(tc[c.id]["compensation_cents"] for c in cohort)
-            ids = {c.id for c in cohort}
-            got = sum(tc[t["coupon_id"]]["compensation_cents"] for t in tcl.values()
-                      if t["valid"] and t["coupon_id"] in ids and t["dev_month"] <= m)
-            assert abs(got / ent - rate) <= 0.01, (seg, m, got / ent, rate)
+    from world.answer_key import generated_curves
 
-
-def _day(full_world, flight_id):
-    from datetime import date
-
-    return date.fromisoformat(full_world.truth.flights[flight_id].day)
+    curves = generated_curves(full_world, "train")["curves"]
+    assert {c["segment"] for c in curves} == {"long_haul_gt3500", "medium_1500_3500", "short_le1500"}
+    for c in curves:
+        for (m, got), (m2, target), n in zip(c["points"], c["target_points"], c["n_by_point"]):
+            assert m == m2 and n > 0
+            assert abs(got - target) <= 0.01, (c["segment"], m, got, target)
 
 
 def test_care_accrual_and_invoice_rows(full_world):

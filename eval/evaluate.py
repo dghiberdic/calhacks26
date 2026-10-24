@@ -36,7 +36,9 @@ def collect(world: World, keys: dict, calibration: dict) -> list[dict]:
     rows = []
     for split in ("train", "test"):
         key = keys[split]
-        days = sorted({f["day"] for f in key["flights"].values()})
+        lower, upper = ("2023-07-01", "2024-12-31") if split == "train" else ("2025-01-01", "2025-06-30")
+        # Legacy fixtures test late claims; their 2017/18 operations are outside this cause-evaluation split.
+        days = sorted({f["day"] for f in key["flights"].values() if lower <= f["day"] <= upper})
         for day_text in days:
             day = date.fromisoformat(day_text)
             sample = day_world(world, day)

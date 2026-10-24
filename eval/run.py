@@ -13,7 +13,8 @@ from engine.confidence import default_calibration
 from eval.calibration import LABEL, fit_calibration, reliability
 from eval.evaluate import collect, summarize
 from eval.golden_flow import replay_three
-from world.answer_key import build_answer_key, write_answer_keys
+from eval.truth import expanded_keys
+from world.answer_key import write as write_answer_keys
 from world.error_cases import CATEGORIES, build_error_cases
 from world.generator import generate_world
 
@@ -121,7 +122,7 @@ def main():
     else:
         print("Generating deterministic world and independent answer keys", flush=True)
         generated = generate_world(seed=0)
-        keys = {split: build_answer_key(generated, split) for split in ("train", "test")}
+        keys = expanded_keys(generated)
         write_answer_keys(generated, ROOT / "data/answer_key")
         cases = build_error_cases()
         stress = {"version": "northstar-errors@1", "label": "controlled simulated regressions; not independent storm samples",

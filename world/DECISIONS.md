@@ -1,8 +1,8 @@
 # world/ decisions (Filip lane A)
 
-## F3a ambiguity coverage
+## F3c integration with the shared world
 
-The original fixed-seed corpus had no ambiguous records. A deterministic hidden-crew draw in the positioned-weather branch now creates the planned unobservable cases in both splits, while leaving METAR and the immutable golden slice untouched. OCC coding still runs normally. Tests check the observed prevalence and hidden-cause semantics; the proof reports exact split counts. This is an intentional simulated error rate, not a claim about real airline operations.
+The team's new world/plant.py implementation owns controlled error and ambiguity coverage. The local experimental hidden-crew draw was removed when integrating upstream, so this branch preserves the shared generator, compact answer keys and all of its acceptance tests. The supplemental error_cases.py corpus remains a separate schema-valid regression input set. Evaluation expands the shared answer key in memory; it does not replace its labels or committed compact format.
 
 ## F3d · Judge-day WorldAPI
 
@@ -200,3 +200,51 @@ Judgment calls made while implementing, newest last. Each one says what we chose
 `answer_key.py` exports independent train/test labels from latent truth and immutable golden inputs, including NS31's 172 coupons and €99,000 face entitlement. Claim labels reject missing agency authority, expired claims, settled vouchers and duplicate coupon claims; they do not copy amounts claimed into amounts owed.
 
 `error_cases.py` provides a separate 140-case controlled regression corpus (five variants of 14 errors in each split). Weather is real pinned METAR, while flights, people, errors and expected actions are simulated. Ordinary technical scenarios require positive calm observations at both ends; concurrent examples retain actual windy observations. These input variants do not count as independent storms or inflate natural-world accuracy. Assignment/payment events are source documents plus metadata pending a typed settlement-event interface.
+
+## F3c · Planted errors, answer key, history
+
+1. **Planted as latent events, then re-simulated** (`world/plant.py`, `DayPlan` in the generator), so the evidence
+   is self-consistent: a miscoded AOG has its AMOS line, MCC line, spares line, and the OCC RSN 71 that contradicts
+   it. The planner dry-runs each split, counts natural cases, and tops each type up to **5** with seeded
+   choices (up to 5 rounds, since a forced cancellation can change its rotation). Planting runs by default for the
+   full world only, so explicit day subsets stay natural and comparable.
+   - `miscoded_technical`: AOG the night before at DUB on a tail's first sector (both legs calm); storm days list
+     it in the batch, calm days get a single OCC line typed 71 (the METAR contradicts it). One DUB–LHR case per
+     split comes first, so the UK261 plant has owed LHR passengers.
+   - `lh_technical` (not a plan §5 type, 4 per split): an XLR/A330 AOG at DUB before a long-haul outbound (the NS31
+     pattern, batch-coded 71 on storm days). Without it the learn split has no owed long-haul passengers, and the
+     LH € curve could not be checked.
+   - `concurrent`: an AOG logged inside the storm at DUB before a departure the storm also cancels. Storm conditions
+     at the DUB end (severity > 0) are enough; the weather cancellation is forced as well.
+   - `knock_on_return`: force the weather cancellation of an outbound that left in storm conditions whose return
+     is calm at both ends.
+   - `notice_ge_14d`: a planned rotation cancellation on a calm day, `notified_at` 15–30 days before STD (both legs,
+     OCC code 09).
+   - `manifest_ops_pax_mismatch`: the OCC message types "OPS PAX: NSxxx PAX n" ≠ manifest (manifest wins).
+   - **Ambiguity (~5–6 % of cancellations per split):** crew shortages batch-coded 71 inside the storm, AOGs never
+     written up in the tech log (batch 71, no tech-log entry), and their knock-ons. Each is flagged `ambiguous`
+     with a note, so calibration is not circular.
+2. **Claim/CRM-level plants** happen after passengers exist: direct+agency, two agencies, lead booker (PNR-scope
+   claim) + member, claim + chargeback on a bot-refunded coupon, agency with `authority=none`, assignment notified
+   then a direct claim (pay the assignee; a direct payment would not discharge), CRM-bot + BSP refund, injection
+   emails (on no-compensation coupons, with an EMAIL source), UK261 £520 on DUB–LHR (EU261 €250 applies, paid once).
+   Natural cases (unsigned in-lieu vouchers, staff tickets) are tagged too.
+3. **Claims after the limitation period:** one legacy NS31 flight per split (2017-03-14 / 2018-09-20), restored from
+   the PSS archive with only its 6 claimant coupons, and 6 claims received in the split, all time-barred (Ireland
+   6 years, C-139/11). Legacy flights are listed in `meta.legacy`, not `meta.days`, and are excluded from the curves.
+4. **Answer key** (`uv run python -m world.answer_key` → `data/answer_key/{train,test}.json`, 1.7 MB + 0.5 MB):
+   - Per flight: cause, extraordinary, latent cause, OCC code, `recode_expected`, expected route, planted tags,
+     ambiguity.
+   - Per coupon, compactly: a default row per cancelled flight plus the seats that differ. Refund due follows the
+     election, so it is not repeated.
+   - Per claim: valid, pay, the coupons it covers, reason, dev month.
+   - Per storm: entitlement, owed pay, and claims paid by M1/M3/M6/M12/M18 (actuals for the liability metric).
+   - `planted` counts distinct records per type: flights for flight-level types, coupons for claim-level types.
+   Golden's coupons and claims are scored by the same `coupon_truth` from golden's flight truth (NS31 = 9,900,000).
+   Two tests guard it: the committed key equals a rebuild, and the generator never imports `engine`.
+5. **Curves:** `data/answer_key/curves_train.json` holds the € curves learned from the generated learn-split history
+   (LH .091/.169/.241/.290/.321 vs plan .09/.17/.24/.29/.32), within ±1 pp at every point (test). It's in lane A's
+   `data/answer_key/`, because `contracts/fixtures/golden/curves.json` is David's.
+6. **History:** the embedded world keeps golden's 48 history cases ("41 of 42"). A golden-free world gets
+   `generated_history`: 42 reroute-reduction cases from learn-split coupons (41 applied, 1 goodwill exception) and
+   6 cause rulings.
