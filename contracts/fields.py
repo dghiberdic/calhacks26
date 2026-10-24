@@ -115,6 +115,9 @@ _f("aog.tail", "str", "aircraft", "Tail registration named in the entry", parse=
 # ---------------------------------------------------------------- MCC / spares / rotation — subject flight or aircraft
 _f("mcc.part_eta", "datetime", "flight", "Part ETA quoted by MCC (UTC)", parse="time")
 _f("mcc.text", "str", "flight", "Verbatim MCC line")
+_f("mcc.rts_est", "datetime", "flight", "Return to service estimated by MCC (UTC)", parse="time")
+_f("ops.not_weather", "bool", "flight", "An ops/maintenance note says the cancellation was not weather (tier 3)",
+   parse="not_weather", feeds=("sources.disagree",))
 _f("spare.available_within_h", "float", "flight", "Hours after STD until a spare tail could operate", unit="h",
    parse="duration_h", feeds=("spare.available_within_h",))
 _f("spare.text", "str", "flight", "Verbatim spares-log line (context only for technical causes)")

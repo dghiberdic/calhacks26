@@ -46,11 +46,36 @@ def _year_for(month: int, ref: date | None) -> int:
 
 
 # ---------------------------------------------------------------- times
-_ISO_RE = re.compile(r"(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?(?:\.\d+)?\s*(Z|[+-]00:?00|UTC)?",
+_OFFSET = r"Z|UTC|GMT|[+-]\d{2}(?::?\d{2})?"
+_ISO_RE = re.compile(rf"(\d{{4}})-(\d{{2}})-(\d{{2}})[T ](\d{{2}}):(\d{{2}})(?::(\d{{2}}))?(?:\.\d+)?\s?({_OFFSET})?",
                      re.IGNORECASE)
 _DMY_TIME_RE = re.compile(
-    rf"(?<![0-9])(\d{{1,2}})\s?({_MON})\.?(?:\s?(\d{{4}}))?(?![A-Z])[^0-9]{{0,12}}?(?<![0-9])(\d{{2}}):?(\d{{2}})\s?(?:Z|UTC)",
-    re.IGNORECASE)
+    rf"(?<![0-9])(\d{{1,2}})\s?({_MON})\.?(?:\s?(\d{{4}}))?(?![A-Z])[^0-9]{{0,12}}?(?<![0-9])(\d{{2}}):?(\d{{2}})\s?"
+    rf"({_OFFSET})", re.IGNORECASE)
+# a local-time zone word right after a time: the span is not UTC and we don't guess the offset
+_ZONE_WORD = re.compile(r"^\s?(?:(?:CEST|CET|BST|IST|WEST|WET|EEST|EET|MSK|EST|EDT|CST|CDT|MST|MDT|PST|PDT|AKST|AKDT|"
+                        r"HST|JST|KST|HKT|SGT|AEST|AEDT|ACST|AWST|NZST|NZDT|LT|LCL)\b|(?i:local\b))")
+_TRAIL_OFFSET = re.compile(r"^\s?([+-]\d{2}(?::?\d{2})?)(?![0-9])")
+
+
+def _offset_min(tok: str | None) -> int:
+    """Minutes east of UTC for 'Z'/'UTC'/'GMT'/'+05:00'/'-0800'/'+01'."""
+    if not tok or tok.upper() in ("Z", "UTC", "GMT"):
+        return 0
+    sign = -1 if tok[0] == "-" else 1
+    digits = tok[1:].replace(":", "")
+    hh, mm = int(digits[:2]), int(digits[2:4] or 0)
+    if hh > 14 or mm > 59:
+        raise ParseError(f"bad UTC offset {tok!r}")
+    return sign * (hh * 60 + mm)
+
+
+def _zone_check(rest: str, span: str) -> int:
+    """Look right after a time: a numeric offset is returned (minutes), a zone word is refused."""
+    if _ZONE_WORD.match(rest):
+        raise ParseError(f"local time zone in {span!r}: only UTC (Z) or a numeric offset is accepted")
+    m = _TRAIL_OFFSET.match(rest)
+    return _offset_min(m.group(1)) if m else 0
 _TIME_RE = re.compile(r"(?<![0-9:])(\d{2}):?(\d{2})\s?(?:Z|UTC)(?![A-Za-z])", re.IGNORECASE)
 _COLON_TIME_RE = re.compile(r"(?<![0-9:])(\d{2}):(\d{2})\s?(?:Z|UTC)?(?![0-9A-Za-z])", re.IGNORECASE)
 _DDHHMM_RE = re.compile(r"(?<![0-9])(\d{2})(\d{2})(\d{2})Z\b")
@@ -76,16 +101,23 @@ def parse_time(span: str, ref: datetime | date | None = None, not_before: dateti
     m = _ISO_RE.search(s)
     if m:
         y, mo, d, hh, mm, ss = (int(x) if x else 0 for x in m.groups()[:6])
-        return datetime(y, mo, d, hh, mm, ss, tzinfo=UTC)
+        off = _offset_min(m.group(7)) if m.group(7) else _zone_check(s[m.end():], span)
+        return datetime(y, mo, d, hh, mm, ss, tzinfo=UTC) - timedelta(minutes=off)
     rd = _ref_date(ref)
     m = _DMY_TIME_RE.search(s)
     if m:
-        day, mon, year, hh, mm = m.groups()
+        day, mon, year, hh, mm, tok = m.groups()
         month = MONTHS[mon.upper()[:3]]
         y = int(year) if year else _year_for(month, rd)
-        return datetime(y, month, int(day), int(hh), int(mm), tzinfo=UTC)
+        return datetime(y, month, int(day), int(hh), int(mm), tzinfo=UTC) - timedelta(minutes=_offset_min(tok))
     m = _COLON_TIME_RE.search(s)
     if m:
+        off = 0 if re.search(r"(Z|UTC)$", m.group(0), re.IGNORECASE) else _zone_check(s[m.end():], span)
+        if off:
+            if rd is None:
+                raise ParseError(f"time without a date and no reference: {span!r}")
+            local = datetime(rd.year, rd.month, rd.day, int(m.group(1)), int(m.group(2)), tzinfo=UTC)
+            return local - timedelta(minutes=off)
         return _on_day(int(m.group(1)), int(m.group(2)), rd, not_before, span)
     m = _DDHHMM_RE.search(s)
     if m and rd is not None:
@@ -161,8 +193,15 @@ def parse_ata(span: str, ref: Any = None) -> str:
     raise ParseError(f"no ATA code in {span!r}")
 
 
-_TAIL_RE = re.compile(r"(?<![A-Z0-9-])([A-Z]{1,2}-[A-Z0-9]{3,5})(?![A-Z0-9-])")
-_N_TAIL_RE = re.compile(r"(?<![A-Z0-9])(N[1-9]\d{0,4}[A-Z]{0,2})(?![A-Z0-9])")
+# ICAO nationality prefixes Northstar's world can meet (Europe, North America, the Gulf, lessors' registries).
+# An allowlist, not the pattern alone: "EX-TLS" (ex-Toulouse in an MCC line) is shaped like a registration.
+# No "B" (China): "B-NUT" in a tech-log line would read as a tail.
+REG_PREFIXES = ("EI", "G", "D", "F", "I", "M", "C", "EC", "PH", "OO", "HB", "OE", "LN", "SE", "OY", "OH", "SP",
+                "OK", "OM", "HA", "YR", "LZ", "SX", "CS", "LX", "TF", "ES", "YL", "LY", "S5", "9A", "9H", "5B", "TC",
+                "UR", "4X", "A6", "A7", "VH", "ZS", "VT", "9V", "HS", "VP", "VQ", "2")
+_TAIL_RE = re.compile(rf"(?<![A-Z0-9-])((?:{'|'.join(sorted(REG_PREFIXES, key=len, reverse=True))})-[A-Z0-9]{{3,4}})"
+                      r"(?![A-Z0-9-])")
+_N_TAIL_RE = re.compile(r"(?<![A-Z0-9-])(N[1-9]\d{1,4}[A-Z]{0,2}|N[1-9]\d{0,3}[A-Z]{1,2})(?![A-Z0-9-])")
 
 
 def parse_tail(span: str, ref: Any = None) -> str:
@@ -216,6 +255,7 @@ def parse_delay_code(span: str, ref: Any = None) -> str:
     return m.group(1)
 
 
+MAX_DIGITS = 15                                        # no count, code or cent amount we parse is longer
 _INT_RE = re.compile(r"(?<![0-9.,])(-?\d{1,3}(?:,\d{3})+|-?\d+)(?![0-9])")
 
 
@@ -224,7 +264,10 @@ def parse_int(span: str, ref: Any = None) -> int:
     m = _INT_RE.search(span)
     if not m:
         raise ParseError(f"no integer in {span!r}")
-    return int(m.group(1).replace(",", ""))
+    digits = m.group(1).replace(",", "")
+    if len(digits.lstrip("-")) > MAX_DIGITS:
+        raise ParseError(f"integer too long in {span[:40]!r}")
+    return int(digits)
 
 
 def parse_float(span: str, ref: Any = None) -> float:
@@ -245,13 +288,16 @@ def parse_pct(span: str, ref: Any = None) -> float:
 
 # ---------------------------------------------------------------- money
 _CUR = {"€": "EUR", "EUR": "EUR", "EURO": "EUR", "EUROS": "EUR", "£": "GBP", "GBP": "GBP", "$": "USD", "USD": "USD"}
-_AMT = r"\d{1,3}(?:[.,\s]\d{3})*(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?"
-_MONEY_PRE = re.compile(rf"(€|£|\$|\bEUR|\bGBP|\bUSD)\s?({_AMT})(?![0-9])", re.IGNORECASE)
-_MONEY_POST = re.compile(rf"(?<![0-9.,])({_AMT})\s?(€|£|EUR\b|EUROS?\b|GBP\b|USD\b)", re.IGNORECASE)
+_SEP = "[., \u00a0\u202f]"                             # thousands: space, no-break/thin space, '.' or ','
+_AMT = rf"\d{{1,3}}(?:{_SEP}\d{{3}})*(?:[.,]\d{{1,2}})?|\d+(?:[.,]\d{{1,2}})?"
+_MONEY_PRE = re.compile(rf"(€|£|\$|\bEUR|\bGBP|\bUSD)[ \u00a0]?({_AMT})(?![0-9])", re.IGNORECASE)
+_MONEY_POST = re.compile(rf"(?<![0-9.,A-Za-z])({_AMT})[ \u00a0]?(€|£|EUR\b|EUROS?\b|GBP\b|USD\b)", re.IGNORECASE)
 
 
 def _amount_to_cents(raw: str) -> int:
-    s = raw.replace(" ", "").replace(" ", "")
+    s = raw.replace(" ", "").replace("\u00a0", "").replace("\u202f", "")
+    if sum(ch.isdigit() for ch in s) > MAX_DIGITS:
+        raise ParseError(f"amount too long: {raw[:40]!r}")
     if "," in s and "." in s:
         dec = "," if s.rfind(",") > s.rfind(".") else "."
         thou = "." if dec == "," else ","
@@ -271,6 +317,8 @@ def parse_money(span: str, ref: Any = None) -> tuple[int, str]:
     """'€300' / 'EUR300' / 'EUR 510.00' / '600,00 €' / '€1,234.56' / '£520' → (cents, ISO currency)."""
     m = _MONEY_PRE.search(span)
     if m:
+        if re.match(r"\s+\d", span[m.end():]):          # "€1\t234": digits split by a tab/newline are ambiguous
+            raise ParseError(f"ambiguous amount in {span[:40]!r}")
         return _amount_to_cents(m.group(2)), _CUR[m.group(1).upper()]
     m = _MONEY_POST.search(span)
     if m:
@@ -364,12 +412,49 @@ def parse_disputed(span: str, ref: Any = None) -> bool:
     raise ParseError(f"no agreement statement in {span!r}")
 
 
+def parse_not_weather(span: str, ref: Any = None) -> bool:
+    """'NS31 is NOT a wx cancel' / 'not wx related' / 'it was AOG anyway' → True; 'weather cancel' → False."""
+    s = span.upper()
+    if re.search(r"\bNOT\s+(A\s+)?(WX|WEATHER)\b|\bNOT\s+WX[- ]RELATED|\bAOG\s+ANYWAY|\bWAS\s+AOG\b|"
+                 r"\bNOT\s+(THE\s+)?(STORM|WEATHER)\b", s):
+        return True
+    if re.search(r"\b(WX|WEATHER|STORM)\b", s):
+        return False
+    raise ParseError(f"no weather statement in {span!r}")
+
+
+def _guard(fn: Callable[..., Any]) -> Callable[..., Any]:
+    """Every parser's contract: return a value or raise ParseError, never anything else. An impossible time or date
+    (`24JAN 25:99Z`, `2025-02-30`), a non-string span or an odd number token becomes ParseError, so verify() can
+    reject the span instead of crashing its caller (a bare ValueError once surfaced as a 500 on /api/inject)."""
+    import functools
+
+    @functools.wraps(fn)
+    def wrapper(span: Any, *args: Any, **kwargs: Any) -> Any:
+        if not isinstance(span, str):
+            raise ParseError(f"span must be text, got {type(span).__name__}")
+        try:
+            return fn(span, *args, **kwargs)
+        except ParseError:
+            raise
+        except (ValueError, OverflowError, TypeError, KeyError, IndexError, AttributeError) as e:
+            raise ParseError(f"unparseable {span[:40]!r}: {e}") from None
+    return wrapper
+
+
+for _name in ("parse_time", "parse_times", "parse_date", "parse_ata", "parse_tail", "parse_flight_number",
+              "parse_iata", "parse_seat", "parse_delay_code", "parse_int", "parse_float", "parse_pct", "parse_money",
+              "parse_eur", "parse_gbp", "parse_minutes", "parse_duration_h", "parse_bool", "parse_mel_relief",
+              "parse_aog", "parse_signed", "parse_disputed", "parse_not_weather"):
+    globals()[_name] = _guard(globals()[_name])
+
+
 PARSERS: dict[str, Callable[..., Any]] = {
     "time": parse_time, "date": parse_date, "ata": parse_ata, "tail": parse_tail, "flight_number": parse_flight_number,
     "iata": parse_iata, "seat": parse_seat, "delay_code": parse_delay_code, "int": parse_int, "float": parse_float,
     "pct": parse_pct, "eur": parse_eur, "gbp": parse_gbp, "minutes": parse_minutes, "duration_h": parse_duration_h,
     "bool": parse_bool, "mel_relief": parse_mel_relief, "aog": parse_aog, "signed": parse_signed,
-    "disputed": parse_disputed,
+    "disputed": parse_disputed, "not_weather": parse_not_weather,
 }
 
 
@@ -379,7 +464,12 @@ def reparse(field: str, span: str, ref: datetime | date | None = None) -> Any:
     if spec.parse is None:
         raise ParseError(f"{field} has no parser (structured-only field)")
     fn = PARSERS[spec.parse]
-    return fn(span, ref)
+    try:
+        return fn(span, ref)
+    except ParseError:
+        raise
+    except (ValueError, OverflowError, TypeError) as e:
+        raise ParseError(f"unparseable span for {field}: {e}") from None
 
 
 def _norm(v: Any) -> Any:
@@ -408,13 +498,21 @@ def values_match(a: Any, b: Any) -> bool:
     return a == b
 
 
+def norm_ws(text: str) -> str:
+    """NFC, every run of whitespace (incl. newlines) collapsed to one space, trimmed. Case is kept."""
+    import unicodedata
+    return re.sub(r"\s+", " ", unicodedata.normalize("NFC", text)).strip()
+
+
 def verify(field: str, value: Any, span: str | None, source_text: str | None,
            ref: datetime | date | None = None) -> tuple[bool, str]:
-    """The Reader's acceptance test: (ok, reason). ok only if the field is registered, the span is a verbatim
-    substring of the source text, and re-parsing the span gives the claimed value (when the field has a parser)."""
+    """The Reader's acceptance test: (ok, reason). ok only if the field is registered, the span is a substring of
+    the source text once whitespace runs are collapsed on both sides (the stored quote stays verbatim), and
+    re-parsing the span gives the claimed value (when the field has a parser)."""
     if not _fields.is_registered(field):
         return False, "unregistered_field"
-    if not span or not source_text or span not in source_text:
+    if not isinstance(span, str) or not isinstance(source_text, str) or not norm_ws(span) or (
+            norm_ws(span) not in norm_ws(source_text)):
         return False, "span_not_in_source"
     if _fields.get(field).parse is None:
         return True, "structured"
@@ -422,4 +520,10 @@ def verify(field: str, value: Any, span: str | None, source_text: str | None,
         got = reparse(field, span, ref)
     except ParseError:
         return False, "unparseable_span"
-    return (True, "reparsed") if values_match(got, value) else (False, "value_mismatch")
+    except Exception:  # noqa: BLE001  (defence in depth: a parser bug must reject the span, never crash)
+        return False, "unparseable_span"
+    try:
+        same = values_match(got, value)
+    except Exception:  # noqa: BLE001
+        same = False
+    return (True, "reparsed") if same else (False, "value_mismatch")

@@ -41,10 +41,24 @@
         "root_cause_internal": 1.0,
         "sources_disagree": 0.0,
         "precedent_count": 3.0,
-        "knock_on": 0.0
+        "knock_on": 0.0,
+        "concurrent_causes": 0.0
       },
       "caps": [],
-      "calibration_version": "cal-plan-fixture"
+      "calibration_version": "cal-plan-fixture",
+      "contributions": {
+        "in_window_dep": 0.0,
+        "in_window_arr": 0.0,
+        "window_margin_h": 0.6,
+        "aog_before_window": 1.0,
+        "aog_inside_window": 0.0,
+        "root_cause_internal": 1.21,
+        "sources_disagree": 0.0,
+        "precedent_count": 0.3,
+        "knock_on": 0.0,
+        "concurrent_causes": 0.0
+      },
+      "intercept": -0.8
     },
     "reason": "Not weather: EI-NSB AOG with no MEL relief, logged before the storm; out of window at both ends.",
     "evidence": [
@@ -119,13 +133,13 @@
     "routed_to": null,
     "question_id": null,
     "known_at": "2025-01-25T06:00:00Z",
-    "commit": "e918af7a868cca89b5b1a70b844486afb8a379b621a7672f474ef93a243f791d"
+    "commit": "bcdf3967db0f12473ed9ad8c988bc429669368b646e09d17112bbdf551e2d186"
   },
   "entitlements_summary": {
     "coupons": 172,
-    "distance_km": 4804,
+    "distance_km": 4804.0,
     "band_eur": 600,
-    "band_margin_km": 1304,
+    "band_margin_km": 1304.0,
     "band_note": "4,804 km · 1,304 km over the €600 threshold",
     "compensation_cents": 9900000,
     "formula": "158 × €600 + 14 × €300 (Art. 7(2)(c))",
@@ -144,8 +158,55 @@
     "refunds_already_initiated": 32,
     "claims_received": 6,
     "care_due": true,
-    "headline": "172 payouts drafted, pending Claims Lead approval",
-    "refund_due_cents": 0
+    "headline": "171 payouts drafted, pending Claims Lead approval · 14C waits on her ruling (Q-1)",
+    "reduced": 14,
+    "refund_due_cents": 0,
+    "voucher_offset_cents": 0,
+    "owed": 171,
+    "needs_ruling": 1,
+    "held": 0,
+    "band_label": "4,804 km · 1,304 km over the €600 threshold",
+    "full_entitlement_cents": 9900000,
+    "drafted_liability_cents": 3465000,
+    "full_entitlement_label": "€99,000 full Art. 7 entitlement if every passenger claims",
+    "claim_rate": 0.35,
+    "claim_rate_label": "35% expected ultimate claim rate (history to M18 + tail judgment)",
+    "statuses": [
+      {
+        "status": "owed",
+        "count": 171,
+        "label": "owed, payout drafted pending Claims Lead approval"
+      },
+      {
+        "status": "needs_ruling",
+        "count": 1,
+        "label": "waits on a ruling"
+      }
+    ],
+    "compensation_breakdown": [
+      {
+        "band_eur": 600,
+        "reduction": "none",
+        "count": 158,
+        "each_cents": 60000,
+        "total_cents": 9480000
+      },
+      {
+        "band_eur": 600,
+        "reduction": "art7_2_50pct",
+        "count": 14,
+        "each_cents": 30000,
+        "total_cents": 420000
+      }
+    ],
+    "reduction_7_2": {
+      "count": 14,
+      "saved_cents": 420000,
+      "rules": [
+        "R-MINED-REDUCE@1"
+      ]
+    },
+    "status_line": "171 payouts drafted, pending Claims Lead approval · 1 waits on a ruling"
   },
   "sample_entitlements": [
     {
@@ -638,7 +699,7 @@
   "explanation": {
     "id": "DRAFT-NS31@2025-01-24-explanation",
     "kind": "explanation",
-    "text": "Not weather. Broken plane. EI-NSB was AOG from 23 Jan 21:40Z: an engine-driven pump leak beyond AMM limits with no MEL relief, logged before any storm window. Dublin's window closed at 15:00Z, 90 min before the 16:30Z STD, and 11 Northstar departures operated 15:30–17:30Z. OCC's code 71 is replaced by 41 (aircraft defect). 172 payouts drafted, pending Claims Lead approval.",
+    "text": "Not weather. Broken plane. EI-NSB was AOG from 23 Jan 21:40Z: an engine-driven pump leak beyond AMM limits with no MEL relief, logged before any storm window. Dublin's window closed at 15:00Z, 90 min before the 16:30Z STD, and 11 Northstar departures operated 15:30–17:30Z. OCC's code 71 is replaced by 41 (aircraft defect). 171 payouts drafted, pending Claims Lead approval; 14C waits on Q-1.",
     "numbers_verified": true,
     "llm_commit": "d70576fb0e12ac3ee3341ead1a06596e31629e7bfb2acd2c06f4c070bdcabe9b",
     "template_fallback": false

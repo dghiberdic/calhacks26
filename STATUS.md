@@ -11,3 +11,11 @@
 | filip-b (llm) | Sat 11:05 | F5 Reader on contracts fields/parse/normalize (29 recordings) | F7 personas | no (F6, F8b, F8c moved to other agents) |
 | justin-a | 11:23 | CP1 from the web side: the app on the D10a real server passes 43/46 e2e (3 skip by design: requests 20–21), incl. the 3:00 demo; stub too | record at CP3 | Q-e: real engine drafts 171 vs plan 172 |
 | justin-b | 11:23 | Weather defence panel (Art. 5(3)) on every weather flight; expansion proposal through a 4-expert critique → PR #5 (contracts/requests only) | /pitch + QA copy done; video | asks in contracts/requests/justin-expansion.md (all after CP2) |
+| filip-a | Sat 11:40 | PR #6: F3d WorldAPI, shared F3c integration, 140 supplemental inputs, F9 proof, Q1/Q2/Q3 replay, Books limitation guard | live baseline and calibration promotion follow-up | API key unavailable; fitted confidence rejected by unchanged acceptance gate |
+| filip-b (llm) | Sat 11:05 | F5 Reader on contracts fields/parse/normalize (29 recordings) | F7 personas | no (F6, F8b, F8c moved to other agents) |
+| filip-a | | | F1 | |
+| filip-b (llm) | Sat 11:40 | F7 personas (stretch) + F5 on contracts fields/parse/normalize | queue done | no (F6, F8b, F8c moved to other agents) |
+| justin-a | | | J0 | |
+| justin-b | | | J10 | |
+| filip-b2 (books agent) | Sat | F8b postings + F8c invariants / CFO / audit, golden-exact vs expected/ | (queue done) | no |
+| filip-a (F3d finish agent) | Sat 13:00 | F3d judge day: airport-local day, METAR across every needed hour, plants re-simulated (DUB fault, no extras), BOS→DUB context on EU days, `.json.gz` load, CPU-time timing tests | — | no |

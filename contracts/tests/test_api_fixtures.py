@@ -35,7 +35,7 @@ def test_storm_fixture_has_the_plan_numbers():
     s = StormRun.model_validate_json((API / "storm_EIDW@2025-01-24.json").read_text())
     c = s.counters
     assert (c["passengers"], c["cancelled"], c["operated"], c["drafted"], c["held"], c["questions"], c["people"]) == (
-        5292, 27, 11, 172, 530, 3, 3)
+        5292, 27, 11, 171, 530, 3, 3)          # 171 payouts drafted + 14C waiting on Q-1 (answers-david.md Q-e)
     assert (s.entitlement_cents, s.liability_drafted_cents) == (9_900_000, 8_214_600)
     conf = {q.id: round(q.confidence.score * 100) for q in s.questions}
     assert conf == {"Q-1": 39, "Q-2": 47, "Q-3": 72}

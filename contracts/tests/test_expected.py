@@ -26,6 +26,18 @@ def world() -> World:
     return World.model_validate_json((GOLDEN / "world.json").read_text(encoding="utf-8"))
 
 
+# The digest of expected/SHA256SUMS itself, pinned OUTSIDE expected/ (and in CONTRACTS.md §5). Changing a golden
+# expected file therefore needs a deliberate edit in three places: the file, SHA256SUMS, and this pin (review #13).
+SHA256SUMS_DIGEST = "b30ef2a332297ec8177e09fb80d2cc796d12fc48a319b3190fdfa2a2d2f7fa1f"
+
+
+def test_sha256sums_itself_is_pinned_outside_expected():
+    got = hashlib.sha256((EXP / "SHA256SUMS").read_bytes()).hexdigest()
+    assert got == SHA256SUMS_DIGEST, "expected/SHA256SUMS changed: update the pin here and in CONTRACTS.md §5"
+    contracts_md = (ROOT / "CONTRACTS.md").read_text(encoding="utf-8")
+    assert SHA256SUMS_DIGEST in contracts_md, "CONTRACTS.md §5 must carry the same SHA256SUMS digest"
+
+
 def test_sha256sums_cover_and_match_every_expected_file():
     listed = {}
     for line in (EXP / "SHA256SUMS").read_text(encoding="utf-8").splitlines():

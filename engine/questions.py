@@ -28,6 +28,7 @@ from contracts.models import (
     RuleAction,
     World,
 )
+from contracts import normalize as nz
 from engine import confidence as conf
 from engine import dsl
 
@@ -159,12 +160,15 @@ def voucher_features(world: World, coupon_id: str, known_at: datetime, rules: Se
              "sources_disagree": 1.0 if disagree else 0.0, "precedent_count": conf.precedents(n_hist)}
     ev: list[Evidence] = []
     if v is not None:
-        src = next((s.id for s in world.sources if s.text and v.text and v.text in s.text), f"SRC-CRM-{v.id}")
-        ev.append(Evidence(fact_id=f"F-CRM-{v.id}-in_lieu", source_id=src, field="voucher.in_lieu", value=True,
-                           quote=v.text, role="supports", trust_tier=3))
-        ev.append(Evidence(fact_id=f"F-CRM-{v.id}-signed", source_id=src, field="voucher.signed", value=signed,
-                           quote=None, role="supports", trust_tier=3))
-        ev.append(Evidence(fact_id=f"F-CRM-{v.id}-amount", source_id=src, field="voucher.amount_cents",
+        ids = {s.id for s in world.sources}
+        src = f"SRC-{v.id}" if f"SRC-{v.id}" in ids else next(
+            (s.id for s in world.sources if s.text and v.text and v.text in s.text), f"SRC-CRM-{v.id}")
+        ev.append(Evidence(fact_id=nz.crm_fact_id(v.id, "voucher.in_lieu"), source_id=src, field="voucher.in_lieu",
+                           value=True, quote=v.text, role="supports", trust_tier=3))
+        ev.append(Evidence(fact_id=nz.crm_fact_id(v.id, "voucher.signed"), source_id=src, field="voucher.signed",
+                           value=signed, quote=None, role="supports", trust_tier=3))
+        ev.append(Evidence(fact_id=nz.crm_fact_id(v.id, "voucher.amount_cents"), source_id=src,
+                           field="voucher.amount_cents",
                            value=v.amount_cents, quote=None, role="context", trust_tier=3))
     for c in claims:
         if _DISPUTED.search(c.text):
@@ -172,7 +176,8 @@ def voucher_features(world: World, coupon_id: str, known_at: datetime, rules: Se
             quote = c.text[max(0, m.start() - 40): m.end() + 40].strip()
             if quote not in c.text:
                 quote = None
-            ev.append(Evidence(fact_id=f"F-CLM-{c.id}-disputed", source_id=f"SRC-CLAIM-{c.id}",
+            csrc = f"SRC-{c.id}" if any(s.id == f"SRC-{c.id}" for s in world.sources) else f"SRC-CLAIM-{c.id}"
+            ev.append(Evidence(fact_id=nz.claim_fact_id(c.id, "claim.voucher_disputed"), source_id=csrc,
                                field="claim.voucher_disputed", value=True, quote=quote, role="contradicts",
                                trust_tier=4))
     return feats, ev
@@ -259,6 +264,8 @@ def release_questions(world: World, rules: Sequence[Rule], known_at: datetime, c
         if age < 12 or msl < 3 or keep:
             continue
         pct = ob.claimed_cents / ob.entitlement_cents if ob.entitlement_cents else 0.0
+        ob_src = next((s.id for s in world.sources if s.kind.value == "finance" and s.text and ob.cohort in s.text),
+                      f"SRC-OB-{ob.cohort}")
         c = conf.score("release", {"cohort_age_months": age, "months_since_last_claim": msl,
                                    "precedent_count": 0.0}, calibration)
         out.append(Question(
@@ -274,11 +281,11 @@ def release_questions(world: World, rules: Sequence[Rule], known_at: datetime, c
             recommended_option="Reduce to nil now",
             options=["Reduce to nil now", "Keep the expected tail until the six-year limitation", "Review again at M18"],
             evidence=[
-                Evidence(fact_id=f"F-OB-{ob.cohort}-balance", source_id=f"SRC-OB-{ob.cohort}",
+                Evidence(fact_id=nz.cohort_fact_id(ob.cohort, "cohort.balance_cents", ob.account), source_id=ob_src,
                          field="cohort.balance_cents", value=ob.balance_cents, role="supports", trust_tier=2),
-                Evidence(fact_id=f"F-OB-{ob.cohort}-claimed", source_id=f"SRC-OB-{ob.cohort}",
+                Evidence(fact_id=nz.cohort_fact_id(ob.cohort, "cohort.claimed_pct", ob.account), source_id=ob_src,
                          field="cohort.claimed_pct", value=round(pct, 4), role="context", trust_tier=2),
-                Evidence(fact_id=f"F-OB-{ob.cohort}-msl", source_id=f"SRC-OB-{ob.cohort}",
+                Evidence(fact_id=f"F-OB-{ob.cohort}-msl", source_id=ob_src,                 # engine-derived
                          field="cohort.months_since_last_claim", value=msl, role="supports", trust_tier=2),
             ],
             confidence=c, reason_tag="release-proposal", holds=[ob.cohort], holds_cents=ob.balance_cents,

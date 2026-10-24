@@ -51,6 +51,42 @@ def test_eu261_territory_flag(code, eu):
     assert airport(code).eu is eu
 
 
+# EU261 territory is decided per airport, not only per country code: the outermost regions with their own ISO codes
+# are in; northern Cyprus (Protocol 10), RAF Akrotiri (Protocol 3) and Svalbard (EEA Protocol 40) are out.
+TERRITORY = [("TFFR", True), ("TFFF", True), ("SOCA", True), ("FMEE", True), ("FMCZ", True), ("TFFG", True),
+             ("LCEN", False), ("LCGK", False), ("LCRA", False), ("ENSB", False),
+             ("LCLK", True), ("LCPH", True), ("ENGM", True), ("EIDW", True), ("LFPG", True), ("GCLP", True),
+             ("EGLL", False), ("KBOS", False), ("LTFM", False), ("BGGH", False), ("EKVG", False)]
+
+
+@pytest.mark.parametrize("code,eu", TERRITORY)
+def test_territory_edge_cases(code, eu):
+    assert airport(code).eu is eu
+    assert airport(airport(code).iata).eu is eu          # the same answer by IATA
+
+
+@pytest.mark.parametrize("code", [c for c, _ in TERRITORY])
+def test_world_and_engine_agree_on_eu261_territory(code):
+    """world.airports (the generator's answer key) and engine.geo (the engine's decisions) must not disagree."""
+    from engine import geo
+
+    a = airport(code)
+    assert a.eu is geo.in_eu261_territory(a.country, a.iata, a.icao)
+    try:
+        engine_view = geo.airport(None, code)        # the engine's own fallback table (airportsdata)
+    except geo.UnknownAirport:                       # e.g. Geçitkale is only in our pinned OurAirports subset
+        return
+    assert a.eu is engine_view.eu
+
+
+def test_no_excluded_airport_is_in_the_generated_network():
+    from world import network as N
+    from world.airports import NOT_EU261_AIRPORTS
+
+    assert not {airport(c).icao for c in N.network_airports()} & NOT_EU261_AIRPORTS
+    assert not set(N.network_airports()) & NOT_EU261_AIRPORTS
+
+
 def test_eu_country_set_is_eu27_eea_ch():
     eu27 = {"AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT",
             "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE"}

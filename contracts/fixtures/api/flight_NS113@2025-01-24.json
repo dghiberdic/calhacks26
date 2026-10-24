@@ -41,12 +41,26 @@
         "root_cause_internal": 0.0,
         "sources_disagree": 0.0,
         "precedent_count": 0.0,
-        "knock_on": 1.0
+        "knock_on": 1.0,
+        "concurrent_causes": 0.0
       },
       "caps": [
         "capped:no-precedent"
       ],
-      "calibration_version": "cal-plan-fixture"
+      "calibration_version": "cal-plan-fixture",
+      "contributions": {
+        "in_window_dep": 0.0,
+        "in_window_arr": 0.0,
+        "window_margin_h": 0.368,
+        "aog_before_window": 0.0,
+        "aog_inside_window": 0.0,
+        "root_cause_internal": 0.0,
+        "sources_disagree": 0.0,
+        "precedent_count": 0.0,
+        "knock_on": 0.3,
+        "concurrent_causes": 0.0
+      },
+      "intercept": -0.8
     },
     "reason": "Knock-on: NS112 never left Dublin, so EI-NSJ never reached LIS; calm at both ends. Legal question.",
     "evidence": [
@@ -101,14 +115,14 @@
     "routed_to": "legal",
     "question_id": "Q-2",
     "known_at": "2025-01-25T06:00:00Z",
-    "commit": "6c8f1009cac609f535957f61699292b85942f7f6efa725e48a923ddbf949c128"
+    "commit": "e0b72f2fbc260f366ee043e60ce4439e4b019adeaad27451a5b26b22740f3332"
   },
   "entitlements_summary": {
     "coupons": 178,
-    "distance_km": 1643,
+    "distance_km": 1643.0,
     "band_eur": 400,
-    "band_margin_km": 143,
-    "band_note": "1,643 km · intra-EU over 1,500 km",
+    "band_margin_km": 143.0,
+    "band_note": "1,643 km · 143 km over the €400 threshold",
     "status_counts": {
       "held": 178
     },
@@ -118,14 +132,46 @@
     "question_id": "Q-2",
     "care_due": true,
     "headline": "Held for Legal · €19,224 accrued at the segment rate",
+    "compensation_cents": 7120000,
+    "reduced": 0,
+    "refunds_already_initiated": 0,
+    "refund_due_cents": 568300,
+    "voucher_offset_cents": 0,
+    "owed": 0,
+    "needs_ruling": 0,
+    "held": 178,
+    "band_label": "1,643 km · 143 km over the €400 threshold",
+    "full_entitlement_cents": 7120000,
+    "drafted_liability_cents": 1922400,
+    "liability_drafted_cents": 1922400,
+    "full_entitlement_label": "€71,200 full Art. 7 entitlement if every passenger claims",
+    "claim_rate": 0.27,
+    "expected_ultimate_claim_rate": 0.27,
+    "claim_rate_label": "27% expected ultimate claim rate (history to M18 + tail judgment)",
+    "statuses": [
+      {
+        "status": "held",
+        "count": 178,
+        "label": "held for Legal"
+      }
+    ],
+    "compensation_breakdown": [
+      {
+        "band_eur": 400,
+        "reduction": "none",
+        "count": 178,
+        "each_cents": 40000,
+        "total_cents": 7120000
+      }
+    ],
+    "formula": "178 × €400",
+    "status_line": "Held for Legal · €19,224 accrued at the segment rate",
     "elections": {
       "reaccommodated_own": 113,
       "refund": 32,
       "reroute_partner": 13,
       "voucher": 20
     },
-    "refunds_already_initiated": 0,
-    "refund_due_cents": 568300,
     "claims_received": 0
   },
   "sample_entitlements": [
@@ -213,6 +259,14 @@
     }
   ],
   "timeline": [
+    {
+      "at": "2025-01-23T16:00:00Z",
+      "kind": "warning",
+      "label": "Weather warning known before deciding",
+      "text": "Subject: FW: Met Eireann Status RED wind - Dublin",
+      "source_id": "SRC-EMAIL-METEIREANN-FWD-2025-01-23T1600Z",
+      "trust_tier": 3
+    },
     {
       "at": "2025-01-24T02:30:00Z",
       "kind": "window_start",

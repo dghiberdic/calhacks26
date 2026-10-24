@@ -82,7 +82,14 @@
       "caps": [
         "capped:sources-disagree"
       ],
-      "calibration_version": "cal-plan-fixture"
+      "calibration_version": "cal-plan-fixture",
+      "contributions": {
+        "in_lieu": -1.0,
+        "signed": 0.0,
+        "sources_disagree": -0.45,
+        "precedent_count": 0.0
+      },
+      "intercept": 1.0
     },
     "reason_tag": "sources-disagree",
     "holds": [
@@ -90,7 +97,9 @@
     ],
     "holds_cents": 60000,
     "status": "open",
-    "remind_at": "2025-01-25T09:00:00Z"
+    "remind_at": "2025-01-25T09:00:00Z",
+    "others_settled": 4761,
+    "proposal_rule_id": null
   },
   {
     "id": "Q-2",
@@ -217,12 +226,26 @@
         "root_cause_internal": 0.0,
         "sources_disagree": 0.0,
         "precedent_count": 0.0,
-        "knock_on": 1.0
+        "knock_on": 1.0,
+        "concurrent_causes": 0.0
       },
       "caps": [
         "capped:no-precedent"
       ],
-      "calibration_version": "cal-plan-fixture"
+      "calibration_version": "cal-plan-fixture",
+      "contributions": {
+        "in_window_dep": 0.0,
+        "in_window_arr": 0.0,
+        "window_margin_h": 0.368,
+        "aog_before_window": 0.0,
+        "aog_inside_window": 0.0,
+        "root_cause_internal": 0.0,
+        "sources_disagree": 0.0,
+        "precedent_count": 0.0,
+        "knock_on": 0.3,
+        "concurrent_causes": 0.0
+      },
+      "intercept": -0.8
     },
     "reason_tag": "no-precedent",
     "holds": [
@@ -232,7 +255,9 @@
     ],
     "holds_cents": 4749600,
     "status": "open",
-    "remind_at": "2025-01-25T09:00:00Z"
+    "remind_at": "2025-01-25T09:00:00Z",
+    "others_settled": 24,
+    "proposal_rule_id": null
   },
   {
     "id": "Q-3",
@@ -294,7 +319,13 @@
         "precedent_count": 0.0
       },
       "caps": [],
-      "calibration_version": "cal-plan-fixture"
+      "calibration_version": "cal-plan-fixture",
+      "contributions": {
+        "cohort_age_months": 1.2,
+        "months_since_last_claim": 0.99,
+        "precedent_count": 0.0
+      },
+      "intercept": -1.25
     },
     "reason_tag": "release-proposal",
     "holds": [
@@ -302,6 +333,8 @@
     ],
     "holds_cents": 360000,
     "status": "open",
-    "remind_at": "2025-01-25T09:00:00Z"
+    "remind_at": "2025-01-25T09:00:00Z",
+    "others_settled": 24,
+    "proposal_rule_id": null
   }
 ]

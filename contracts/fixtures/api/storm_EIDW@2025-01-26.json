@@ -538,10 +538,24 @@
             "root_cause_internal": 1.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
-          "calibration_version": "cal-plan-fixture"
+          "calibration_version": "cal-plan-fixture",
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 1.6,
+            "aog_before_window": 1.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 1.21,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Not weather: EI-NSN AOG with no MEL relief, logged before the storm; out of window at both ends.",
         "evidence": [
@@ -616,7 +630,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-27T06:00:00Z",
-        "commit": "ded431aa07b008be29d9eeefefd9fdfe5700f379841a040b252a631532c38cc3"
+        "commit": "92290ace0f3840249449cdbb6d6948ad991f650ecddc8b2eda92184c07d1567b"
       }
     },
     {
@@ -662,10 +676,24 @@
             "root_cause_internal": 1.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
-          "calibration_version": "cal-plan-fixture"
+          "calibration_version": "cal-plan-fixture",
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 1.6,
+            "aog_before_window": 1.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 1.21,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Not weather: EI-NSF AOG with no MEL relief, logged before the storm; out of window at both ends.",
         "evidence": [
@@ -740,7 +768,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-27T06:00:00Z",
-        "commit": "6068bc2d3afd3c55f1e92a3d84ca5620fb8f8a3547d2b03215187d48374e1968"
+        "commit": "df0f23053c341c95cda0d7c49e1806dc02af8f21c4f172c7b7b7fd7fec2d9497"
       }
     },
     {
@@ -786,10 +814,24 @@
             "root_cause_internal": 1.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
-          "calibration_version": "cal-plan-fixture"
+          "calibration_version": "cal-plan-fixture",
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 1.0,
+            "aog_before_window": 1.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 1.21,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Not weather: EI-NSH AOG with no MEL relief, logged before the storm; out of window at both ends.",
         "evidence": [
@@ -864,7 +906,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-27T06:00:00Z",
-        "commit": "d2792c56ad90510effcd8b90abfd82425b3a68b5d4b43b847ff45cf825b31aea"
+        "commit": "44756c04c7d28ba03c98dc5a24f91387cbcdf9d184c5f5c811b6df61fa3b3ed1"
       }
     },
     {
@@ -910,10 +952,24 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
-          "calibration_version": "cal-plan-fixture"
+          "calibration_version": "cal-plan-fixture",
+          "contributions": {
+            "in_window_dep": 2.9,
+            "in_window_arr": 0.0,
+            "window_margin_h": 0.2,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STD 12:00Z.",
         "evidence": [
@@ -950,7 +1006,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-27T06:00:00Z",
-        "commit": "97ef00e641c674ca6e96f8a1d71a4b303cde96bc6200d35cc3e36318eda9864c"
+        "commit": "8d9c217f6e31a2b93355eb42c9930d92ffc45ef2e2fe42d5e7cd5a615a2bbb80"
       }
     },
     {
@@ -1046,7 +1102,7 @@
     "passengers": 730,
     "cancelled": 4,
     "operated": 4,
-    "drafted": 546,
+    "drafted": 545,
     "held": 0,
     "questions": 1,
     "people": 1,
@@ -1113,7 +1169,14 @@
         "caps": [
           "capped:sources-disagree"
         ],
-        "calibration_version": "cal-plan-fixture"
+        "calibration_version": "cal-plan-fixture",
+        "contributions": {
+          "in_lieu": -1.0,
+          "signed": 0.0,
+          "sources_disagree": -0.45,
+          "precedent_count": 0.0
+        },
+        "intercept": 1.0
       },
       "reason_tag": "sources-disagree",
       "holds": [
@@ -1121,7 +1184,9 @@
       ],
       "holds_cents": 60000,
       "status": "open",
-      "remind_at": "2025-01-27T09:00:00Z"
+      "remind_at": "2025-01-27T09:00:00Z",
+      "others_settled": 729,
+      "proposal_rule_id": null
     }
   ],
   "feed": [
@@ -1262,5 +1327,6 @@
       "eu": true,
       "tz": "Europe/Madrid"
     }
-  ]
+  ],
+  "name": "Storm Herminia"
 }

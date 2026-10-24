@@ -82,7 +82,12 @@ def score(kind: str, features: Mapping[str, float], cal: Mapping[str, Any] | Non
         return Confidence(score=None, kind=kind, label=LABELS[kind], features=feats, caps=list(caps or []),
                           calibration_version=version)
     z = float(m.get("intercept", 0.0)) + sum(float(c) * feats.get(f, 0.0) for f, c in zip(m["features"], m["coef"]))
+    if not math.isfinite(z):                         # a NaN/inf in the file: uncalibrated, never a NaN score
+        return Confidence(score=None, kind=kind, label=LABELS[kind], features=feats, caps=list(caps or []),
+                          calibration_version=version)
+    contributions = {f: round(float(c) * feats.get(f, 0.0), 4) + 0.0 for f, c in zip(m["features"], m["coef"])}
     return Confidence(score=round(logistic(z), 4), kind=kind, label=LABELS[kind], features=feats,
+                      contributions=contributions, intercept=round(float(m.get("intercept", 0.0)), 4),
                       caps=list(dict.fromkeys(caps or [])), calibration_version=version)
 
 

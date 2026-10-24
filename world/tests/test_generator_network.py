@@ -215,9 +215,10 @@ def test_one_day_simulates_fast():
     import time
 
     w = next(x for x in D.world_days() if x.day == date(2024, 12, 7))
-    t0 = time.perf_counter()
+    # CPU time, not wall clock: the bound is about the simulation's cost, which a loaded machine doesn't change
+    t0 = time.process_time()
     DaySim(w, 0).run()
-    assert time.perf_counter() - t0 < 1.5
+    assert time.process_time() - t0 < 1.5
 
 
 def test_generator_never_imports_the_engine():

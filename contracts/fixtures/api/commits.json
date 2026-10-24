@@ -1,49 +1,52 @@
 [
   {
-    "hash": "7af761528c49ea3fc834fadd3c1a4bc890d714748ac319895acc59aa04ed27b4",
-    "parent": "563e2e8baf8efe469d5d61790710494628cc5619e5cb3944cda6676b3f627db6",
+    "hash": "5d1dd3241593b9b0f000cf333fc3c38cb6b5b5daac5ed5a101154cc2be85c0c4",
+    "parent": "8c8fb7c2c3fc4253913f3c8369dfbdc5f8cd3e2abe10b673aeaa360a79b92661",
     "kind": "question",
     "at": "2025-01-25T06:00:28Z",
     "actor": "agent.engine",
-    "payload_hash": "3644bdd201781287087b750610cd0c28bba4505a33095bf10a851761c0c1aac0",
+    "payload_hash": "420c3094b8fb4b4cdb995e86d133b2f56446b3ac13167aa71212a1c4aee66526",
     "payload_ref": "Q-3",
     "inputs": [
       "engine@debeb44",
       "cal@cal-v1"
     ],
-    "message": "Q-3 → controller · cohort_release · 0.72"
+    "message": "Q-3 → controller · cohort_release · 0.72",
+    "recorded_at": "2025-01-25T06:00:28Z"
   },
   {
-    "hash": "563e2e8baf8efe469d5d61790710494628cc5619e5cb3944cda6676b3f627db6",
-    "parent": "7cc5c2b653f98695e493f8c76bfa6ed1f61ecd364c707b5b96227e9b84d8c8ea",
+    "hash": "8c8fb7c2c3fc4253913f3c8369dfbdc5f8cd3e2abe10b673aeaa360a79b92661",
+    "parent": "2c39efdb2dc2d96262d45c8fb152acdb2ff266b23f0deeadb9e564cb601f6ad2",
     "kind": "question",
     "at": "2025-01-25T06:00:26Z",
     "actor": "agent.engine",
-    "payload_hash": "adb73d76911051d911a1c458903a69fe00d5ace627806be51eb3bba2c5aa3ea2",
+    "payload_hash": "c40f691a8aa9bcab86d955a7b781d4de9ed4309b56d842abfdfe7daf35a6a82e",
     "payload_ref": "Q-1",
     "inputs": [
       "engine@debeb44",
       "cal@cal-v1"
     ],
-    "message": "Q-1 → claims_lead · voucher_in_lieu_unsigned · 0.39"
+    "message": "Q-1 → claims_lead · voucher_in_lieu_unsigned · 0.39",
+    "recorded_at": "2025-01-25T06:00:26Z"
   },
   {
-    "hash": "7cc5c2b653f98695e493f8c76bfa6ed1f61ecd364c707b5b96227e9b84d8c8ea",
-    "parent": "151f99a74d9313d842b57d4dad3df764834d4aceeeca49d57e8beb63d07d17e1",
+    "hash": "2c39efdb2dc2d96262d45c8fb152acdb2ff266b23f0deeadb9e564cb601f6ad2",
+    "parent": "e5950d55970a1342c2c55457c0373777d40e00b698d8a1c009dcaddf9855a589",
     "kind": "question",
     "at": "2025-01-25T06:00:22Z",
     "actor": "agent.engine",
-    "payload_hash": "11aa16eecb23145f021bab460a61a1adbab0bc13dec91385d77d626dd3ce0c1f",
+    "payload_hash": "06080e322f32c521fd64ef46ac5f1eea6452e6e05f4e9781d957233dc8ba366a",
     "payload_ref": "Q-2",
     "inputs": [
       "engine@debeb44",
       "cal@cal-v1"
     ],
-    "message": "Q-2 → legal · knock_on_return · 0.47 · no-precedent"
+    "message": "Q-2 → legal · knock_on_return · 0.47 · no-precedent",
+    "recorded_at": "2025-01-25T06:00:22Z"
   },
   {
-    "hash": "151f99a74d9313d842b57d4dad3df764834d4aceeeca49d57e8beb63d07d17e1",
-    "parent": "115df2b54499d75c8a6be6479c61924dc1a1427f4ae996b9f6994d47a5557818",
+    "hash": "e5950d55970a1342c2c55457c0373777d40e00b698d8a1c009dcaddf9855a589",
+    "parent": "03ddf67c6109a4bbead3ad1ec2fda6d91a68d9187555ca3e028b8279c7b8a52b",
     "kind": "access_denied",
     "at": "2025-01-25T06:00:20Z",
     "actor": "agent.drafter",
@@ -53,74 +56,79 @@
       "engine@debeb44",
       "cal@cal-v1"
     ],
-    "message": "agent.drafter approve_payout → DENIED · SoD"
+    "message": "agent.drafter approve_payout → DENIED · SoD",
+    "recorded_at": "2025-01-25T06:00:20Z"
   },
   {
-    "hash": "115df2b54499d75c8a6be6479c61924dc1a1427f4ae996b9f6994d47a5557818",
-    "parent": "645f9c0991dc32ee589c9bddb271a6502668700613fabed014a2645ca4f49734",
+    "hash": "03ddf67c6109a4bbead3ad1ec2fda6d91a68d9187555ca3e028b8279c7b8a52b",
+    "parent": "d10eefc94d21dd2dae5432c95b8ee28c37b40ca4916a5cd04a0026effdd22cbe",
     "kind": "journal_event",
     "at": "2025-01-25T06:00:14Z",
     "actor": "agent.books",
     "payload_hash": "681cd14156fc755141cbcf205177770f58a600c901ce242028261aff3fb9326d",
     "payload_ref": "JE-000101",
     "inputs": [
-      "645f9c0991dc32ee589c9bddb271a6502668700613fabed014a2645ca4f49734",
+      "d10eefc94d21dd2dae5432c95b8ee28c37b40ca4916a5cd04a0026effdd22cbe",
       "engine@debeb44",
       "cal@cal-v1"
     ],
-    "message": "JE-000101 drafted · Dr 4090 / Cr 2140 €34,650"
+    "message": "JE-000101 drafted · Dr 4090 / Cr 2140 €34,650",
+    "recorded_at": "2025-01-25T06:00:14Z"
   },
   {
-    "hash": "645f9c0991dc32ee589c9bddb271a6502668700613fabed014a2645ca4f49734",
-    "parent": "5bca0b867ef16f48483a9f978e4b5acd5db47d7e77df9629a09d63e43bd70b6f",
+    "hash": "d10eefc94d21dd2dae5432c95b8ee28c37b40ca4916a5cd04a0026effdd22cbe",
+    "parent": "13af71797abd0b19220fc0b16a1e483b3213c115f239e3915290ae7900100f04",
     "kind": "entitlement",
     "at": "2025-01-25T06:00:12Z",
     "actor": "agent.engine",
     "payload_hash": "39676dd8aeae5d5ba2d525625e0424fb9912560e335a496cd204391f85f7d3d5",
     "payload_ref": "NS31@2025-01-24",
     "inputs": [
-      "5bca0b867ef16f48483a9f978e4b5acd5db47d7e77df9629a09d63e43bd70b6f",
-      "b91554d7d174a342a575efd21b64607eccd332db804e84536ef409d749fba55f",
+      "13af71797abd0b19220fc0b16a1e483b3213c115f239e3915290ae7900100f04",
+      "a92933f50edbd7c62e5c36273d0272a0edb7fb68a072d238e07e56a102bf06a6",
       "engine@debeb44",
       "cal@cal-v1"
     ],
-    "message": "NS31 · 172 entitlements · €99,000 full Art. 7 entitlement"
+    "message": "NS31 · 172 entitlements · €99,000 full Art. 7 entitlement",
+    "recorded_at": "2025-01-25T06:00:12Z"
   },
   {
-    "hash": "5bca0b867ef16f48483a9f978e4b5acd5db47d7e77df9629a09d63e43bd70b6f",
-    "parent": "88f25bea4f6b5eb60253ed243f1f26677a96c73a9f4496266a09a46889be34f0",
+    "hash": "13af71797abd0b19220fc0b16a1e483b3213c115f239e3915290ae7900100f04",
+    "parent": "0302a4c290d098d4fccb728c319298b0f11a04cb295c9026610aa9933ce27ba3",
     "kind": "decision",
     "at": "2025-01-25T06:00:08Z",
     "actor": "agent.engine",
-    "payload_hash": "065a9d5fe9fbfa5f60f3d9da7bb8fdada3dd3b5670f9d4d82a4b00ca14264af7",
+    "payload_hash": "26d1c56feffa5852ba1419f60ca755fec2a1e55dd2b279356d34b9ccf6e621da",
     "payload_ref": "NS31@2025-01-24",
     "inputs": [
-      "b1f60e71426081b55a24d24cd165caf7686e9d390d2137b4541269be4eed32eb",
-      "5ace9920e0a10afc711c0e7903d666a1150b2bfff36ddff563af9527551ad0d7",
-      "88f25bea4f6b5eb60253ed243f1f26677a96c73a9f4496266a09a46889be34f0",
+      "5cbad934de728aeba79a05bab8127a62fb3ecd08c211db2cb418e7a146d23db6",
+      "5fea3bdc245b1a2352b29efb799e7d2816f719830c4ae1481cf91b59f31d4091",
+      "0302a4c290d098d4fccb728c319298b0f11a04cb295c9026610aa9933ce27ba3",
       "engine@debeb44",
       "cal@cal-v1"
     ],
-    "message": "NS31 technical · not extraordinary · recoded 71 → 41 · 0.91"
+    "message": "NS31 technical · not extraordinary · recoded 71 → 41 · 0.91",
+    "recorded_at": "2025-01-25T06:00:08Z"
   },
   {
-    "hash": "88f25bea4f6b5eb60253ed243f1f26677a96c73a9f4496266a09a46889be34f0",
-    "parent": "25a743be4f4f6c92a7370aa09e0f2a1fbd9a4855c51bb35cc3d9f2b30144c57e",
+    "hash": "0302a4c290d098d4fccb728c319298b0f11a04cb295c9026610aa9933ce27ba3",
+    "parent": "4d52187a35555ce707b58391d72d8802a911a44351d038c445c5b8051248128b",
     "kind": "fact",
     "at": "2025-01-25T06:00:05Z",
     "actor": "agent.reader",
     "payload_hash": "9b890264dc72da1959d6955120c6d225a4043ce8dd4ab6b325dd8b04061c42fa",
     "payload_ref": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
     "inputs": [
-      "25a743be4f4f6c92a7370aa09e0f2a1fbd9a4855c51bb35cc3d9f2b30144c57e",
+      "4d52187a35555ce707b58391d72d8802a911a44351d038c445c5b8051248128b",
       "engine@debeb44",
       "cal@cal-v1"
     ],
-    "message": "tech log EI-NSB 23 Jan 21:40Z · AOG · no MEL relief"
+    "message": "tech log EI-NSB 23 Jan 21:40Z · AOG · no MEL relief",
+    "recorded_at": "2025-01-25T06:00:05Z"
   },
   {
-    "hash": "25a743be4f4f6c92a7370aa09e0f2a1fbd9a4855c51bb35cc3d9f2b30144c57e",
-    "parent": "5ace9920e0a10afc711c0e7903d666a1150b2bfff36ddff563af9527551ad0d7",
+    "hash": "4d52187a35555ce707b58391d72d8802a911a44351d038c445c5b8051248128b",
+    "parent": "5fea3bdc245b1a2352b29efb799e7d2816f719830c4ae1481cf91b59f31d4091",
     "kind": "llm_call",
     "at": "2025-01-25T06:00:04Z",
     "actor": "agent.reader",
@@ -130,11 +138,12 @@
       "engine@debeb44",
       "cal@cal-v1"
     ],
-    "message": "Reader · claude-opus-5-5 · tech log EI-NSB · 4 facts, spans verified"
+    "message": "Reader · claude-opus-5-5 · tech log EI-NSB · 4 facts, spans verified",
+    "recorded_at": "2025-01-25T06:00:04Z"
   },
   {
-    "hash": "5ace9920e0a10afc711c0e7903d666a1150b2bfff36ddff563af9527551ad0d7",
-    "parent": "b1f60e71426081b55a24d24cd165caf7686e9d390d2137b4541269be4eed32eb",
+    "hash": "5fea3bdc245b1a2352b29efb799e7d2816f719830c4ae1481cf91b59f31d4091",
+    "parent": "5cbad934de728aeba79a05bab8127a62fb3ecd08c211db2cb418e7a146d23db6",
     "kind": "fact",
     "at": "2025-01-25T06:00:00Z",
     "actor": "agent.reader",
@@ -144,11 +153,12 @@
       "engine@debeb44",
       "cal@cal-v1"
     ],
-    "message": "OCC cancel list 05:12Z · 27 flights"
+    "message": "OCC cancel list 05:12Z · 27 flights",
+    "recorded_at": "2025-01-25T06:00:00Z"
   },
   {
-    "hash": "b1f60e71426081b55a24d24cd165caf7686e9d390d2137b4541269be4eed32eb",
-    "parent": "b91554d7d174a342a575efd21b64607eccd332db804e84536ef409d749fba55f",
+    "hash": "5cbad934de728aeba79a05bab8127a62fb3ecd08c211db2cb418e7a146d23db6",
+    "parent": "a92933f50edbd7c62e5c36273d0272a0edb7fb68a072d238e07e56a102bf06a6",
     "kind": "fact",
     "at": "2025-01-25T06:00:00Z",
     "actor": "agent.engine",
@@ -158,20 +168,22 @@
       "engine@debeb44",
       "cal@cal-v1"
     ],
-    "message": "60 METAR obs EIDW 2025-01-23T18:00Z..2025-01-24T23:30Z (IEM)"
+    "message": "60 METAR obs EIDW 2025-01-23T18:00Z..2025-01-24T23:30Z (IEM)",
+    "recorded_at": "2025-01-25T06:00:00Z"
   },
   {
-    "hash": "b91554d7d174a342a575efd21b64607eccd332db804e84536ef409d749fba55f",
+    "hash": "a92933f50edbd7c62e5c36273d0272a0edb7fb68a072d238e07e56a102bf06a6",
     "parent": null,
     "kind": "rule_event",
     "at": "2025-01-20T00:00:00Z",
     "actor": "agent.engine",
-    "payload_hash": "f73a73f25299fbf5f1078a7f411d789e0f1dba74b990f98aefd3e961aa526106",
+    "payload_hash": "a237c7312fa0fef0be1f86f6eb92bd9af5009ebed28e1cb4f3a7603b26ee2b09",
     "payload_ref": "R-MINED-REDUCE@1",
     "inputs": [
       "engine@debeb44",
       "cal@cal-v1"
     ],
-    "message": "mined R-MINED-REDUCE@1 from history (41 of 42) · active"
+    "message": "mined R-MINED-REDUCE@1 from history (41 of 42) · active",
+    "recorded_at": "2025-01-20T00:00:00Z"
   }
 ]
