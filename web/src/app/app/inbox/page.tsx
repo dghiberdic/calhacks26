@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { QUESTIONS, ROLES, type Question } from "@/data/app";
+import { QUESTIONS, ROLES, payouts, type Question } from "@/data/app";
 import { useApp } from "@/lib/store";
 import { Card, Kbd } from "@/components/app/ui";
 import { RollingNumber } from "@/components/motion/RollingNumber";
@@ -33,6 +33,11 @@ function RulePreview({ q, answerId }: { q: Question; answerId: string }) {
   );
 }
 
+const SETTLED = payouts()
+  .filter((p) => p.flight === "NS31" && p.name !== "Aoife Byrne")
+  .slice(0, 6)
+  .map((p, i) => ({ name: p.name, outcome: i % 4 === 2 ? "Offset, signed" : "No offset", amount: i % 4 === 2 ? 300 : 600 }));
+
 function Resolved({ q, answerId, onNext }: { q: Question; answerId: string; onNext: () => void }) {
   const a = q.answers.find((x) => x.id === answerId)!;
   const applied = a.rule ? (q.id === "Q-12" ? 31 : q.id === "Q-13" ? 2 : 3) : 0;
@@ -51,6 +56,25 @@ function Resolved({ q, answerId, onNext }: { q: Question; answerId: string; onNe
             <RollingNumber value={applied} className="display text-[72px]" trigger={null} />
             <p className="max-w-[30ch] text-[17px] leading-snug text-graphite">open cases settled with {a.rule.id} v1. StormCheck won&rsquo;t ask this again.</p>
           </div>
+          {q.id === "Q-12" && (
+            <ul className="divide-y divide-[#f0f0eb] rounded-xl bg-chart px-4 text-[14px]">
+              {SETTLED.map((c, i) => (
+                <motion.li
+                  key={c.name}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 + i * 0.12, duration: 0.35, ease }}
+                  className="flex items-center justify-between gap-3 py-2.5"
+                >
+                  <span>{c.name}</span>
+                  <span className="text-graphite">{c.outcome}</span>
+                  <span className="tabular font-mono">€{c.amount}</span>
+                  <span className="rounded-full bg-settled-wash px-2 py-[2px] font-mono text-[12px] text-settled-ink">R-7 v1</span>
+                </motion.li>
+              ))}
+              <li className="py-2.5 text-[13px] text-graphite">and 25 more, none of them asked</li>
+            </ul>
+          )}
           <p className="text-[15px]">
             Saved as <span className="font-mono">{a.rule.id} v1</span>.{" "}
             <Link href={`/app/rules#${a.rule.id}`} className="text-front underline-offset-4 hover:underline">
