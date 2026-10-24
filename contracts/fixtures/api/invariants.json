@@ -1,0 +1,44 @@
+[
+  {
+    "id": "INV-BALANCED",
+    "description": "Every journal entry balances (Σ Dr = Σ Cr)",
+    "ok": true,
+    "detail": "10 entries"
+  },
+  {
+    "id": "INV-2140-TIES",
+    "description": "2140 rollforward ties to GL 2140",
+    "ok": true,
+    "detail": "€34,650 + €47,496 held = €82,146"
+  },
+  {
+    "id": "INV-2125-ZERO",
+    "description": "Refund clearing 2125 nets to 0 after Books (no double refund)",
+    "ok": true,
+    "detail": "Dr €16,320 (bot) / Cr €16,320 (Books)"
+  },
+  {
+    "id": "INV-LOCKED",
+    "description": "No entry is written to a locked period",
+    "ok": true,
+    "detail": "no locked periods yet"
+  },
+  {
+    "id": "INV-SOD",
+    "description": "Preparer ≠ approver on every approved entry",
+    "ok": true,
+    "detail": "0 approved entries"
+  },
+  {
+    "id": "INV-TRACE",
+    "description": "Every entitlement traces to a decision commit",
+    "ok": true,
+    "detail": "5,292 of 5,292"
+  },
+  {
+    "id": "INV-CARE",
+    "description": "Care accrued = invoiced + reversal once invoiced",
+    "ok": true,
+    "detail": "€227,000 accrued · invoices due Feb"
+  }
+]

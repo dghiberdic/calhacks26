@@ -1,0 +1,317 @@
+{
+  "flight": {
+    "id": "NS113@2025-01-24",
+    "number": "NS113",
+    "date": "2025-01-24",
+    "origin": "LIS",
+    "dest": "DUB",
+    "sched_dep": "2025-01-24T13:20:00Z",
+    "sched_arr": "2025-01-24T15:55:00Z",
+    "aircraft": "EI-NSJ",
+    "status": "cancelled",
+    "actual_dep": null,
+    "actual_arr": null,
+    "pax": 178,
+    "ops_cause_code": "71",
+    "inbound_flight_id": "NS112@2025-01-24",
+    "outbound_pair_id": "NS112@2025-01-24",
+    "notified_at": "2025-01-24T05:20:00Z",
+    "operating_carrier_eu": true
+  },
+  "decision": {
+    "flight_id": "NS113@2025-01-24",
+    "cause": "knock_on",
+    "extraordinary": "needs_legal",
+    "ops_cause_code": "71",
+    "recoded": false,
+    "recode_label": null,
+    "in_window_dep": "out",
+    "in_window_arr": "out",
+    "window_margin_min": 55,
+    "confidence": {
+      "score": 0.47,
+      "kind": "cause",
+      "label": "cause-finding confidence",
+      "features": {
+        "in_window_dep": 0.0,
+        "in_window_arr": 0.0,
+        "window_margin_h": 0.92,
+        "aog_before_window": 0.0,
+        "aog_inside_window": 0.0,
+        "root_cause_internal": 0.0,
+        "sources_disagree": 0.0,
+        "precedent_count": 0.0,
+        "knock_on": 1.0
+      },
+      "caps": [
+        "capped:no-precedent"
+      ],
+      "calibration_version": "cal-v1"
+    },
+    "reason": "Knock-on: NS112 never left Dublin, so EI-NSJ never reached LIS; calm at both ends (LIS at STD, DUB 11 kt at STA). Legal question (C-74/19).",
+    "evidence": [
+      {
+        "fact_id": "F-ROT-NS113-prev",
+        "source_id": "SRC-OCC-2025-01-24T0512Z",
+        "field": "rotation.prev_cancelled",
+        "value": true,
+        "quote": "NS112/113",
+        "role": "supports",
+        "trust_tier": 3,
+        "struck": false
+      },
+      {
+        "fact_id": "F-ROT-NS113-prevcause",
+        "source_id": "SRC-OCC-2025-01-24T0512Z",
+        "field": "rotation.prev_cause",
+        "value": "weather",
+        "quote": "RSN 71",
+        "role": "supports",
+        "trust_tier": 3,
+        "struck": false
+      },
+      {
+        "fact_id": "F-METAR-EIDW-20250124T1600Z",
+        "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+        "field": "metar.sknt",
+        "value": 11,
+        "quote": "EIDW 241600Z 24011KT 200V290 9999 -RA FEW012 SCT020 BKN050 05/M01 Q0989 NOSIG",
+        "role": "contradicts",
+        "trust_tier": 1,
+        "struck": false
+      },
+      {
+        "fact_id": "F-SPARE-NS113",
+        "source_id": "SRC-SPARES-2025-01-24",
+        "field": "spare.available_within_h",
+        "value": 5.58,
+        "quote": "No tail at LIS. Earliest ferry ex-DUB 15:30Z → LIS dep 18:55Z = STD+5h35.",
+        "role": "context",
+        "trust_tier": 2,
+        "struck": false
+      },
+      {
+        "fact_id": "F-REROUTE-NS113",
+        "source_id": "SRC-PSS-NS113-2025-01-24",
+        "field": "pax.reroute_earliest_offered",
+        "value": true,
+        "quote": "EARLIEST REROUTE OFFERED: TP via LHR",
+        "role": "context",
+        "trust_tier": 2,
+        "struck": false
+      },
+      {
+        "fact_id": "F-OCC-NS113-code",
+        "source_id": "SRC-OCC-2025-01-24T0512Z",
+        "field": "flight.ops_cause_code",
+        "value": "71",
+        "quote": "CNL LIST → NETLINE, RSN 71",
+        "role": "contradicts",
+        "trust_tier": 3,
+        "struck": false
+      }
+    ],
+    "rules_applied": [],
+    "legal_basis": [
+      "EU261 Art.5(3)",
+      "CJEU C-74/19",
+      "CJEU C-549/07"
+    ],
+    "outcome": "escalated",
+    "routed_to": "legal",
+    "question_id": "Q-2",
+    "known_at": "2025-01-25T06:00:00Z",
+    "commit": "82d798bb149e06f969aa06460ce6d2220b3774f6ba743c125ce3e874d970f113"
+  },
+  "entitlements_summary": {
+    "coupons": 178,
+    "distance_km": 1643,
+    "band_eur": 400,
+    "band_margin_km": 143,
+    "band_note": "1,643 km · intra-EU over 1,500 km",
+    "status_counts": {
+      "held": 178
+    },
+    "compensation_if_owed_cents": 7120000,
+    "accrued_cents": 1922400,
+    "accrual_basis": "IFRS 15.56 constraint · medium_1500_3500 27%",
+    "question_id": "Q-2",
+    "care_due": true,
+    "headline": "Held for Legal · €19,224 accrued at the segment rate"
+  },
+  "sample_entitlements": [
+    {
+      "coupon_id": "NS113@2025-01-24:6B",
+      "flight_id": "NS113@2025-01-24",
+      "distance_km": 1643.0,
+      "band_eur": 400,
+      "band_margin_km": 143.0,
+      "regime": "EU261_2004",
+      "compensation_cents": 40000,
+      "reduction": "none",
+      "refund_due_cents": 0,
+      "refund_already_initiated": false,
+      "care_due": true,
+      "voucher_offset_cents": 0,
+      "status": "held",
+      "article": "Art. 5(3), 7(1)",
+      "reason": "Held for Legal (Q-2): knock-on return; €400 owed unless the return is extraordinary.",
+      "rules_applied": []
+    },
+    {
+      "coupon_id": "NS113@2025-01-24:21A",
+      "flight_id": "NS113@2025-01-24",
+      "distance_km": 1643.0,
+      "band_eur": 400,
+      "band_margin_km": 143.0,
+      "regime": "EU261_2004",
+      "compensation_cents": 40000,
+      "reduction": "none",
+      "refund_due_cents": 51000,
+      "refund_already_initiated": false,
+      "care_due": true,
+      "voucher_offset_cents": 0,
+      "status": "held",
+      "article": "Art. 5(3), 7(1)",
+      "reason": "Held for Legal (Q-2). Refund due (Art. 8(1)(a)); care due.",
+      "rules_applied": []
+    }
+  ],
+  "journal_preview": [
+    {
+      "id": "JE-000111",
+      "event_date": "2025-01-24",
+      "period": "2025-01",
+      "memo": "NS113 held knock-on return: 178 × €400 × 27% medium_1500_3500 rate (IFRS 15.56 constraint)",
+      "lines": [
+        {
+          "account": "4090",
+          "account_name": "EU261 compensation (reduction of passenger revenue)",
+          "dr_cents": 1922400,
+          "cr_cents": 0,
+          "dims": {
+            "storm": "EIDW@2025-01-24",
+            "flight": "NS113@2025-01-24",
+            "segment": "medium_1500_3500",
+            "cohort": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2140",
+          "account_name": "EU261 compensation liability (estimated)",
+          "dr_cents": 0,
+          "cr_cents": 1922400,
+          "dims": {
+            "storm": "EIDW@2025-01-24",
+            "flight": "NS113@2025-01-24",
+            "segment": "medium_1500_3500",
+            "cohort": "EIDW@2025-01-24"
+          }
+        }
+      ],
+      "kind": "compensation_estimate",
+      "ias8_class": "none",
+      "reverses": null,
+      "estimate_ref": "EST-EIDW@2025-01-24-medium_1500_3500",
+      "source_decision_id": "NS113@2025-01-24",
+      "status": "draft",
+      "preparer": "agent.books",
+      "approver": null,
+      "built_from": 5,
+      "ties_to": [
+        "2140"
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "at": "2025-01-24T02:30:00Z",
+      "kind": "window_start",
+      "label": "Storm window opens",
+      "text": "EIDW 240230Z 19024G39KT 160V220 9999 FEW011 SCT016 BKN022 12/09 Q0968 TEMPO 21030G48KT",
+      "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+      "trust_tier": 1
+    },
+    {
+      "at": "2025-01-24T05:12:00Z",
+      "kind": "occ",
+      "label": "OCC cancel list → NetLine",
+      "text": "05:12Z OCC DM: STORM ÉOWYN CNL LIST → NETLINE, RSN 71. NS100/101 NS102/103 NS104/105 NS106/107 NS108/109 NS110/111 NS112/113 NS114/115 NS116/117 NS118 NS21 NS41 NS51 NS31. INBD NS20 NS30 NS40 NS50 RSN 72. ASM SENT. IROPS SMS 05:20Z.",
+      "source_id": "SRC-OCC-2025-01-24T0512Z",
+      "trust_tier": 3
+    },
+    {
+      "at": "2025-01-24T09:40:00Z",
+      "kind": "schedule",
+      "label": "NS112 STD 09:40Z DUB",
+      "text": "Cancelled",
+      "source_id": "SRC-SCHEDULE-2025-01-24",
+      "trust_tier": 2
+    },
+    {
+      "at": "2025-01-24T12:20:00Z",
+      "kind": "schedule",
+      "label": "NS112 STA 12:20Z LIS",
+      "text": "Cancelled",
+      "source_id": "SRC-SCHEDULE-2025-01-24",
+      "trust_tier": 2
+    },
+    {
+      "at": "2025-01-24T13:20:00Z",
+      "kind": "schedule",
+      "label": "NS113 STD 13:20Z LIS",
+      "text": "Cancelled",
+      "source_id": "SRC-SCHEDULE-2025-01-24",
+      "trust_tier": 2
+    },
+    {
+      "at": "2025-01-24T13:30:00Z",
+      "kind": "spares",
+      "label": "Spares log",
+      "text": "No tail at LIS. Earliest ferry ex-DUB 15:30Z → LIS dep 18:55Z = STD+5h35.",
+      "source_id": "SRC-SPARES-2025-01-24",
+      "trust_tier": 2
+    },
+    {
+      "at": "2025-01-24T13:45:00Z",
+      "kind": "pss",
+      "label": "Earliest reroute offered: TP via LHR",
+      "text": "EARLIEST REROUTE OFFERED: TP via LHR",
+      "source_id": "SRC-PSS-NS113-2025-01-24",
+      "trust_tier": 2
+    },
+    {
+      "at": "2025-01-24T15:00:00Z",
+      "kind": "window_end",
+      "label": "Storm window closes",
+      "text": "EIDW 241500Z 26021G35KT 200V290 9999 -RA FEW012 SCT020 BKN050 04/M01 Q0988 NOSIG",
+      "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+      "trust_tier": 1
+    },
+    {
+      "at": "2025-01-24T15:55:00Z",
+      "kind": "schedule",
+      "label": "NS113 STA 15:55Z DUB",
+      "text": "Cancelled",
+      "source_id": "SRC-SCHEDULE-2025-01-24",
+      "trust_tier": 2
+    },
+    {
+      "at": "2025-01-24T16:00:00Z",
+      "kind": "metar",
+      "label": "Weather at STA: 11 kt, no gust",
+      "text": "EIDW 241600Z 24011KT 200V290 9999 -RA FEW012 SCT020 BKN050 05/M01 Q0989 NOSIG",
+      "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+      "trust_tier": 1
+    }
+  ],
+  "handoff": null,
+  "explanation": {
+    "id": "DRAFT-NS113@2025-01-24-explanation",
+    "kind": "explanation",
+    "text": "Held for Legal. NS113 LIS–DUB was cancelled because NS112 never left Dublin in the storm, so EI-NSJ never reached LIS. At STD 13:20Z LIS was calm, and at STA 15:55Z Dublin was 11 kt, after the 02:30–15:00Z window. Whether a knock-on return is extraordinary is a legal question (C-74/19); one question to Legal covers NS113, NS115 and NS117.",
+    "numbers_verified": true,
+    "llm_commit": "955cba24297c665c9daa38857aa9efa2251e50bd8eaef47b2bc00b3a913dc411",
+    "template_fallback": false
+  }
+}

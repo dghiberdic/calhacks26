@@ -224,6 +224,7 @@ class Rule(BaseModel):
     supersedes: str | None = None
     times_cited: int = 0                    # view over events
     static_card: bool = False               # e.g. Reg 2026/2202 (display only, no logic)
+    title: str | None = None                # additive (D0a): plain-language card title, e.g. the ruling sentence or regulation name
 
 class ReplayFlip(BaseModel):
     entity_id: str; field: str; before: Any; after: Any; delta_cents: Cents = 0
@@ -348,6 +349,7 @@ class StormRun(BaseModel):
     questions: list[Question]; feed: list[TraceEvent]
     real_context: dict[str, Any] = {}
     message: str | None = None              # e.g. "max gust 18 kt · no storm window"
+    airports: list[Airport] = []            # additive (D0a): every airport referenced by flights (map coordinates, tz, eu)
 
 class FlightFile(BaseModel):
     flight: Flight; decision: FlightDecision
@@ -413,3 +415,51 @@ class EvalReport(BaseModel):
 
 
 World.model_rebuild()
+
+
+# ---------- API envelopes (additive, D0a: CONTRACTS §3 shapes that had no model) ----------
+class Health(BaseModel):                    # GET /health
+    ok: bool; mode: str                     # mode: STORMCHECK_MODE (live|cache|offline) or "stub"
+    impl: dict[str, str] = {}               # {"engine","world","reader","drafter","books"} -> "fake" | "real" | "stub"
+
+class StormSummary(BaseModel):              # GET /storms item
+    id: str; station: str; date: date
+    cancelled: int; questions: int; liability_drafted_cents: Cents
+
+class SessionRequest(BaseModel):            # POST /session
+    role: Role; name: str
+
+class SessionResponse(BaseModel):
+    token: str; session: Session
+
+class ConfirmResponse(BaseModel):           # POST /proposals/{rule_id}/confirm
+    rule: Rule; replay: ReplayDiff
+
+class RejectRequest(BaseModel):             # POST /rules/{rule_id}/reject
+    explanation: str
+
+class PeriodRequest(BaseModel):             # POST /books/month-end, POST /books/lock
+    period: str                             # "2025-02"
+
+class MonthEndResponse(BaseModel):
+    entries: list[JournalEntry]; rollforward: Rollforward; estimate: EstimateCard
+
+class LockResponse(BaseModel):
+    locked: str                             # the period now locked, e.g. "2025-01"
+
+class ClockRequest(BaseModel):              # POST /clock (forward-only)
+    known_at: datetime
+
+class ClockResponse(BaseModel):
+    known_at: datetime
+
+class OkResponse(BaseModel):                # POST /reset
+    ok: bool
+
+class ErrorBody(BaseModel):
+    code: Literal["sod_violation", "forbidden", "not_found", "validation", "upstream",
+                  "no_metar", "future_date", "unknown_airport"]
+    message: str                            # plain sentence, safe to show in the UI
+
+class ErrorEnvelope(BaseModel):             # every 4xx body: {"error": {"code", "message"}}
+    error: ErrorBody

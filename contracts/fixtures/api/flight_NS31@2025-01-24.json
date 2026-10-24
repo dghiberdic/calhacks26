@@ -1,0 +1,633 @@
+{
+  "flight": {
+    "id": "NS31@2025-01-24",
+    "number": "NS31",
+    "date": "2025-01-24",
+    "origin": "DUB",
+    "dest": "BOS",
+    "sched_dep": "2025-01-24T16:30:00Z",
+    "sched_arr": "2025-01-24T23:45:00Z",
+    "aircraft": "EI-NSB",
+    "status": "cancelled",
+    "actual_dep": null,
+    "actual_arr": null,
+    "pax": 172,
+    "ops_cause_code": "71",
+    "inbound_flight_id": null,
+    "outbound_pair_id": null,
+    "notified_at": "2025-01-24T05:20:00Z",
+    "operating_carrier_eu": true
+  },
+  "decision": {
+    "flight_id": "NS31@2025-01-24",
+    "cause": "technical",
+    "extraordinary": "not_extraordinary",
+    "ops_cause_code": "71",
+    "recoded": true,
+    "recode_label": "71 → 41",
+    "in_window_dep": "out",
+    "in_window_arr": "out",
+    "window_margin_min": 90,
+    "confidence": {
+      "score": 0.91,
+      "kind": "cause",
+      "label": "cause-finding confidence",
+      "features": {
+        "in_window_dep": 0.0,
+        "in_window_arr": 0.0,
+        "window_margin_h": 1.5,
+        "aog_before_window": 1.0,
+        "aog_inside_window": 0.0,
+        "root_cause_internal": 1.0,
+        "sources_disagree": 0.0,
+        "precedent_count": 3.0,
+        "knock_on": 0.0
+      },
+      "caps": [],
+      "calibration_version": "cal-v1"
+    },
+    "reason": "Not weather: EDP leak logged 23 Jan 21:40Z with no MEL relief, before the storm; DUB window closed 15:00Z, 90 min before STD.",
+    "evidence": [
+      {
+        "fact_id": "F-TL-EI-NSB-aog",
+        "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+        "field": "aog.mel_relief",
+        "value": false,
+        "quote": "NO MEL RELIEF. A/C AOG.",
+        "role": "supports",
+        "trust_tier": 1,
+        "struck": false
+      },
+      {
+        "fact_id": "F-TL-EI-NSB-ata",
+        "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+        "field": "aog.ata_chapter",
+        "value": "2913",
+        "quote": "EXT LEAK EDP CASE DRAIN PORT, EXCEEDS AMM LIMIT",
+        "role": "supports",
+        "trust_tier": 1,
+        "struck": false
+      },
+      {
+        "fact_id": "F-TL-EI-NSB-logged",
+        "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+        "field": "aog.logged_at",
+        "value": "2025-01-23T21:40:00Z",
+        "quote": "23JAN 21:40Z EI-NSB DUB",
+        "role": "supports",
+        "trust_tier": 1,
+        "struck": false
+      },
+      {
+        "fact_id": "F-MCC-EI-NSB-eta",
+        "source_id": "SRC-MCC-2025-01-23T2215Z",
+        "field": "mcc.part_eta",
+        "value": "2025-01-25T14:00:00Z",
+        "quote": "POOL UNIT EX-TLS VIA CDG 25JAN ETA 14:00Z",
+        "role": "supports",
+        "trust_tier": 1,
+        "struck": false
+      },
+      {
+        "fact_id": "F-METAR-EIDW-20250124T1630Z",
+        "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+        "field": "metar.gust_kt",
+        "value": 22,
+        "quote": "EIDW 241630Z 23011G22KT 190V270 9999 -RA FEW012 SCT020 BKN050 05/00 Q0990 NOSIG",
+        "role": "supports",
+        "trust_tier": 1,
+        "struck": false
+      },
+      {
+        "fact_id": "F-WINDOW-EIDW@2025-01-24",
+        "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+        "field": "storm.window",
+        "value": {
+          "start": "2025-01-24T02:30:00Z",
+          "end": "2025-01-24T15:00:00Z",
+          "peak_gust_kt": 56
+        },
+        "quote": null,
+        "role": "context",
+        "trust_tier": 1,
+        "struck": false
+      },
+      {
+        "fact_id": "F-OCC-NS31-code",
+        "source_id": "SRC-OCC-2025-01-24T0512Z",
+        "field": "flight.ops_cause_code",
+        "value": "71",
+        "quote": "CNL LIST → NETLINE, RSN 71",
+        "role": "contradicts",
+        "trust_tier": 3,
+        "struck": true
+      }
+    ],
+    "rules_applied": [],
+    "legal_basis": [
+      "EU261 Art.5(3)",
+      "CJEU C-549/07",
+      "CJEU C-257/14"
+    ],
+    "outcome": "auto",
+    "routed_to": null,
+    "question_id": null,
+    "known_at": "2025-01-25T06:00:00Z",
+    "commit": "5bca0b867ef16f48483a9f978e4b5acd5db47d7e77df9629a09d63e43bd70b6f"
+  },
+  "entitlements_summary": {
+    "coupons": 172,
+    "distance_km": 4804,
+    "band_eur": 600,
+    "band_margin_km": 1304,
+    "band_note": "4,804 km · 1,304 km over the €600 threshold",
+    "compensation_cents": 9900000,
+    "formula": "158 × €600 + 14 × €300 (Art. 7(2)(c))",
+    "liability_drafted_cents": 3465000,
+    "expected_ultimate_claim_rate": 0.35,
+    "status_counts": {
+      "owed": 171,
+      "needs_ruling": 1
+    },
+    "elections": {
+      "refund": 32,
+      "voucher": 14,
+      "reaccommodated_own": 112,
+      "reroute_partner": 14
+    },
+    "refunds_already_initiated": 32,
+    "claims_received": 6,
+    "care_due": true,
+    "headline": "172 payouts drafted, pending Claims Lead approval"
+  },
+  "sample_entitlements": [
+    {
+      "coupon_id": "NS31@2025-01-24:14C",
+      "flight_id": "NS31@2025-01-24",
+      "distance_km": 4804.0,
+      "band_eur": 600,
+      "band_margin_km": 1304.0,
+      "regime": "EU261_2004",
+      "compensation_cents": 60000,
+      "reduction": "none",
+      "refund_due_cents": 0,
+      "refund_already_initiated": false,
+      "care_due": true,
+      "voucher_offset_cents": 0,
+      "status": "needs_ruling",
+      "article": "Art. 7(1)(c), 7(3)",
+      "reason": "Service-desk voucher €300 'in lieu of compensation' has no signed acceptance (Art. 7(3)); offset needs the Claims Lead (Q-1).",
+      "rules_applied": []
+    },
+    {
+      "coupon_id": "NS31@2025-01-24:3A",
+      "flight_id": "NS31@2025-01-24",
+      "distance_km": 4804.0,
+      "band_eur": 600,
+      "band_margin_km": 1304.0,
+      "regime": "EU261_2004",
+      "compensation_cents": 60000,
+      "reduction": "none",
+      "refund_due_cents": 0,
+      "refund_already_initiated": true,
+      "care_due": true,
+      "voucher_offset_cents": 0,
+      "status": "owed",
+      "article": "Art. 7(1)(c), 8(1)(a)",
+      "reason": "Refund already initiated by the CRM bot 24 Jan 06:02Z; not repeated. Compensation owed.",
+      "rules_applied": []
+    },
+    {
+      "coupon_id": "NS31@2025-01-24:7C",
+      "flight_id": "NS31@2025-01-24",
+      "distance_km": 4804.0,
+      "band_eur": 600,
+      "band_margin_km": 1304.0,
+      "regime": "EU261_2004",
+      "compensation_cents": 60000,
+      "reduction": "none",
+      "refund_due_cents": 0,
+      "refund_already_initiated": false,
+      "care_due": true,
+      "voucher_offset_cents": 0,
+      "status": "owed",
+      "article": "Art. 7(1)(c)",
+      "reason": "Reaccommodated on NS31 26 Jan, arrived more than 4 h late. Compensation owed.",
+      "rules_applied": []
+    },
+    {
+      "coupon_id": "NS31@2025-01-24:11D",
+      "flight_id": "NS31@2025-01-24",
+      "distance_km": 4804.0,
+      "band_eur": 600,
+      "band_margin_km": 1304.0,
+      "regime": "EU261_2004",
+      "compensation_cents": 60000,
+      "reduction": "none",
+      "refund_due_cents": 0,
+      "refund_already_initiated": false,
+      "care_due": true,
+      "voucher_offset_cents": 0,
+      "status": "owed",
+      "article": "Art. 7(1)(c), 8(1)(a)",
+      "reason": "Chose a refund voucher (€510 incl. taxes, 2131). Compensation owed.",
+      "rules_applied": []
+    },
+    {
+      "coupon_id": "NS31@2025-01-24:22F",
+      "flight_id": "NS31@2025-01-24",
+      "distance_km": 4804.0,
+      "band_eur": 600,
+      "band_margin_km": 1304.0,
+      "regime": "EU261_2004",
+      "compensation_cents": 30000,
+      "reduction": "art7_2_50pct",
+      "refund_due_cents": 0,
+      "refund_already_initiated": false,
+      "care_due": true,
+      "voucher_offset_cents": 0,
+      "status": "owed",
+      "article": "Art. 7(1)(c), 7(2)(c)",
+      "reason": "Partner reroute via LHR arrived +3h40 (within 4 h): 50% reduction, Northstar policy 41 of 42.",
+      "rules_applied": [
+        "R-MINED-REDUCE@1"
+      ]
+    }
+  ],
+  "journal_preview": [
+    {
+      "id": "JE-000101",
+      "event_date": "2025-01-24",
+      "period": "2025-01",
+      "memo": "NS31 EU261 compensation liability: 35% expected ultimate claim rate × €99,000 full Art. 7 entitlement",
+      "lines": [
+        {
+          "account": "4090",
+          "account_name": "EU261 compensation (reduction of passenger revenue)",
+          "dr_cents": 3465000,
+          "cr_cents": 0,
+          "dims": {
+            "storm": "EIDW@2025-01-24",
+            "flight": "NS31@2025-01-24",
+            "segment": "long_haul_gt3500",
+            "cohort": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2140",
+          "account_name": "EU261 compensation liability (estimated)",
+          "dr_cents": 0,
+          "cr_cents": 3465000,
+          "dims": {
+            "storm": "EIDW@2025-01-24",
+            "flight": "NS31@2025-01-24",
+            "segment": "long_haul_gt3500",
+            "cohort": "EIDW@2025-01-24"
+          }
+        }
+      ],
+      "kind": "compensation_estimate",
+      "ias8_class": "none",
+      "reverses": null,
+      "estimate_ref": "EST-EIDW@2025-01-24-LH",
+      "source_decision_id": "NS31@2025-01-24",
+      "status": "draft",
+      "preparer": "agent.books",
+      "approver": null,
+      "built_from": 9,
+      "ties_to": [
+        "2140"
+      ]
+    },
+    {
+      "id": "JE-000102",
+      "event_date": "2025-01-24",
+      "period": "2025-01",
+      "memo": "NS31: 32 refunds initiated by the CRM bot · clears 2125 refund clearing (no double refund)",
+      "lines": [
+        {
+          "account": "2100",
+          "account_name": "ATL",
+          "dr_cents": 1440000,
+          "cr_cents": 0,
+          "dims": {
+            "storm": "EIDW@2025-01-24",
+            "flight": "NS31@2025-01-24",
+            "segment": "long_haul_gt3500",
+            "cohort": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2110",
+          "account_name": "Taxes payable",
+          "dr_cents": 192000,
+          "cr_cents": 0,
+          "dims": {
+            "storm": "EIDW@2025-01-24",
+            "flight": "NS31@2025-01-24",
+            "segment": "long_haul_gt3500",
+            "cohort": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2125",
+          "account_name": "Refund clearing",
+          "dr_cents": 0,
+          "cr_cents": 1632000,
+          "dims": {
+            "storm": "EIDW@2025-01-24",
+            "flight": "NS31@2025-01-24",
+            "segment": "long_haul_gt3500",
+            "cohort": "EIDW@2025-01-24"
+          }
+        }
+      ],
+      "kind": "refund",
+      "ias8_class": "none",
+      "reverses": null,
+      "estimate_ref": null,
+      "source_decision_id": "NS31@2025-01-24",
+      "status": "draft",
+      "preparer": "agent.books",
+      "approver": null,
+      "built_from": 4,
+      "ties_to": [
+        "2125"
+      ]
+    },
+    {
+      "id": "JE-000103",
+      "event_date": "2025-01-24",
+      "period": "2025-01",
+      "memo": "NS31: 14 refund vouchers, ticket value incl. taxes",
+      "lines": [
+        {
+          "account": "2100",
+          "account_name": "ATL",
+          "dr_cents": 630000,
+          "cr_cents": 0,
+          "dims": {
+            "storm": "EIDW@2025-01-24",
+            "flight": "NS31@2025-01-24",
+            "segment": "long_haul_gt3500",
+            "cohort": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2110",
+          "account_name": "Taxes payable",
+          "dr_cents": 84000,
+          "cr_cents": 0,
+          "dims": {
+            "storm": "EIDW@2025-01-24",
+            "flight": "NS31@2025-01-24",
+            "segment": "long_haul_gt3500",
+            "cohort": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2131",
+          "account_name": "Refund vouchers",
+          "dr_cents": 0,
+          "cr_cents": 714000,
+          "dims": {
+            "storm": "EIDW@2025-01-24",
+            "flight": "NS31@2025-01-24",
+            "segment": "long_haul_gt3500",
+            "cohort": "EIDW@2025-01-24"
+          }
+        }
+      ],
+      "kind": "voucher",
+      "ias8_class": "none",
+      "reverses": null,
+      "estimate_ref": null,
+      "source_decision_id": "NS31@2025-01-24",
+      "status": "draft",
+      "preparer": "agent.books",
+      "approver": null,
+      "built_from": 3,
+      "ties_to": []
+    },
+    {
+      "id": "JE-000104",
+      "event_date": "2025-01-24",
+      "period": "2025-01",
+      "memo": "NS31: 14 partner reroutes via LHR (FIM, net) → interline payable",
+      "lines": [
+        {
+          "account": "2100",
+          "account_name": "ATL",
+          "dr_cents": 630000,
+          "cr_cents": 0,
+          "dims": {
+            "storm": "EIDW@2025-01-24",
+            "flight": "NS31@2025-01-24",
+            "segment": "long_haul_gt3500",
+            "cohort": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2110",
+          "account_name": "Taxes payable",
+          "dr_cents": 84000,
+          "cr_cents": 0,
+          "dims": {
+            "storm": "EIDW@2025-01-24",
+            "flight": "NS31@2025-01-24",
+            "segment": "long_haul_gt3500",
+            "cohort": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2160",
+          "account_name": "Interline payable",
+          "dr_cents": 0,
+          "cr_cents": 714000,
+          "dims": {
+            "storm": "EIDW@2025-01-24",
+            "flight": "NS31@2025-01-24",
+            "segment": "long_haul_gt3500",
+            "cohort": "EIDW@2025-01-24"
+          }
+        }
+      ],
+      "kind": "reroute_fim",
+      "ias8_class": "none",
+      "reverses": null,
+      "estimate_ref": null,
+      "source_decision_id": "NS31@2025-01-24",
+      "status": "draft",
+      "preparer": "agent.books",
+      "approver": null,
+      "built_from": 3,
+      "ties_to": []
+    },
+    {
+      "id": "JE-000105",
+      "event_date": "2025-01-24",
+      "period": "2025-01",
+      "memo": "NS31/14C: €300 service-desk voucher in lieu of compensation, unsigned (goodwill)",
+      "lines": [
+        {
+          "account": "4090",
+          "account_name": "EU261 compensation (reduction of passenger revenue)",
+          "dr_cents": 30000,
+          "cr_cents": 0,
+          "dims": {
+            "storm": "EIDW@2025-01-24",
+            "flight": "NS31@2025-01-24",
+            "segment": "long_haul_gt3500",
+            "cohort": "EIDW@2025-01-24",
+            "coupon": "NS31@2025-01-24:14C"
+          }
+        },
+        {
+          "account": "2132",
+          "account_name": "Compensation vouchers",
+          "dr_cents": 0,
+          "cr_cents": 30000,
+          "dims": {
+            "storm": "EIDW@2025-01-24",
+            "flight": "NS31@2025-01-24",
+            "segment": "long_haul_gt3500",
+            "cohort": "EIDW@2025-01-24",
+            "coupon": "NS31@2025-01-24:14C"
+          }
+        }
+      ],
+      "kind": "voucher_in_lieu",
+      "ias8_class": "none",
+      "reverses": null,
+      "estimate_ref": null,
+      "source_decision_id": "NS31@2025-01-24",
+      "status": "draft",
+      "preparer": "agent.books",
+      "approver": null,
+      "built_from": 2,
+      "ties_to": []
+    }
+  ],
+  "timeline": [
+    {
+      "at": "2025-01-23T21:30:00Z",
+      "kind": "metar",
+      "label": "Weather at the fault: 14 kt, no gust",
+      "text": "EIDW 232130Z 15014KT 120V180 9999 FEW015 BKN040 05/01 Q0990 NOSIG",
+      "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+      "trust_tier": 1
+    },
+    {
+      "at": "2025-01-23T21:40:00Z",
+      "kind": "tech_log",
+      "label": "Tech log EI-NSB · AOG",
+      "text": "23JAN 21:40Z EI-NSB DUB N/S. HYD FLUID ENG 2 LWR COWL. GND RUN: ECAM HYD Y ENG 2 PUMP LO PR. EXT LEAK EDP CASE DRAIN PORT, EXCEEDS AMM LIMIT. EDP RPLCMT REQD. NO MEL RELIEF. A/C AOG.",
+      "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+      "trust_tier": 1
+    },
+    {
+      "at": "2025-01-23T22:15:00Z",
+      "kind": "mcc",
+      "label": "MCC · part ETA quoted before the storm",
+      "text": "22:15Z: NO EDP IN DUB STORES; POOL UNIT EX-TLS VIA CDG 25JAN ETA 14:00Z, RTS EST 20:00Z.",
+      "source_id": "SRC-MCC-2025-01-23T2215Z",
+      "trust_tier": 1
+    },
+    {
+      "at": "2025-01-24T02:30:00Z",
+      "kind": "window_start",
+      "label": "Storm window opens",
+      "text": "EIDW 240230Z 19024G39KT 160V220 9999 FEW011 SCT016 BKN022 12/09 Q0968 TEMPO 21030G48KT",
+      "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+      "trust_tier": 1
+    },
+    {
+      "at": "2025-01-24T05:12:00Z",
+      "kind": "occ",
+      "label": "OCC cancel list → NetLine",
+      "text": "05:12Z OCC DM: STORM ÉOWYN CNL LIST → NETLINE, RSN 71. NS100/101 NS102/103 NS104/105 NS106/107 NS108/109 NS110/111 NS112/113 NS114/115 NS116/117 NS118 NS21 NS41 NS51 NS31. INBD NS20 NS30 NS40 NS50 RSN 72. ASM SENT. IROPS SMS 05:20Z.",
+      "source_id": "SRC-OCC-2025-01-24T0512Z",
+      "trust_tier": 3
+    },
+    {
+      "at": "2025-01-24T05:40:00Z",
+      "kind": "spares",
+      "label": "Spares log (context only: not scored for a technical cause)",
+      "text": "No long-range tail at DUB. XLR EI-NSN at BOS (NS30 CNL 72); A330s at JFK/ORD/YYZ (NS20/40/50 CNL); A320/A321neo lack range.",
+      "source_id": "SRC-SPARES-2025-01-24",
+      "trust_tier": 2,
+      "scored": false
+    },
+    {
+      "at": "2025-01-24T06:02:00Z",
+      "kind": "crm",
+      "label": "CRM bot: 32 refunds initiated 06:02–09:40Z · 'weather, no compensation' emails",
+      "text": "refund_initiated × 32 (direct-sold coupons)",
+      "source_id": "SRC-CRM-BOT-NS31-2025-01-24",
+      "trust_tier": 3
+    },
+    {
+      "at": "2025-01-24T14:20:00Z",
+      "kind": "crm",
+      "label": "T2 service desk: €300 voucher in lieu of compensation to 14C · unsigned",
+      "text": "EUR300 VOUCHER IN LIEU OF COMPENSATION - PAX ACCEPTED",
+      "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
+      "trust_tier": 3
+    },
+    {
+      "at": "2025-01-24T15:00:00Z",
+      "kind": "window_end",
+      "label": "Storm window closes",
+      "text": "EIDW 241500Z 26021G35KT 200V290 9999 -RA FEW012 SCT020 BKN050 04/M01 Q0988 NOSIG",
+      "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+      "trust_tier": 1
+    },
+    {
+      "at": "2025-01-24T15:30:00Z",
+      "kind": "operated",
+      "label": "11 Northstar departures operated 15:30–17:30Z",
+      "text": "NS120 LHR, NS122 AMS, NS124 CDG, NS126 FRA, NS128 MAD, NS130 BCN, NS132 BRU, NS134 MAN, NS136 EDI, NS138 CPH, NS140 ZRH",
+      "source_id": "SRC-SCHEDULE-2025-01-24",
+      "trust_tier": 2
+    },
+    {
+      "at": "2025-01-24T16:30:00Z",
+      "kind": "metar",
+      "label": "Weather at STD: 11 kt, gust 22 kt",
+      "text": "EIDW 241630Z 23011G22KT 190V270 9999 -RA FEW012 SCT020 BKN050 05/00 Q0990 NOSIG",
+      "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+      "trust_tier": 1
+    },
+    {
+      "at": "2025-01-24T16:30:00Z",
+      "kind": "schedule",
+      "label": "NS31 STD 16:30Z DUB",
+      "text": "Cancelled",
+      "source_id": "SRC-SCHEDULE-2025-01-24",
+      "trust_tier": 2
+    },
+    {
+      "at": "2025-01-24T23:45:00Z",
+      "kind": "schedule",
+      "label": "NS31 STA 23:45Z BOS",
+      "text": "Cancelled",
+      "source_id": "SRC-SCHEDULE-2025-01-24",
+      "trust_tier": 2
+    }
+  ],
+  "handoff": {
+    "refunds_already_initiated": 32,
+    "not_repeated": true,
+    "rights_notices_drafted": 32,
+    "drafter_pii_seen": 0,
+    "refund_clearing_2125_cents": 0
+  },
+  "explanation": {
+    "id": "DRAFT-NS31@2025-01-24-explanation",
+    "kind": "explanation",
+    "text": "Not weather. Broken plane. EI-NSB was AOG from 23 Jan 21:40Z: an engine-driven pump leak beyond AMM limits with no MEL relief, logged before any storm window. Dublin's window closed at 15:00Z, 90 min before the 16:30Z STD, and 11 Northstar departures operated 15:30–17:30Z. OCC's code 71 is replaced by 41 (aircraft defect). 172 payouts drafted, pending Claims Lead approval.",
+    "numbers_verified": true,
+    "llm_commit": "d70576fb0e12ac3ee3341ead1a06596e31629e7bfb2acd2c06f4c070bdcabe9b",
+    "template_fallback": false
+  }
+}

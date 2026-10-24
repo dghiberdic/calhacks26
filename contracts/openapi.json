@@ -1,0 +1,4850 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "StormCheck API (contract stub)",
+    "description": "Contract stub for CONTRACTS.md §3. Fixtures: contracts/fixtures/api/.",
+    "version": "2.0.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/storms": {
+      "get": {
+        "summary": "List Storms",
+        "operationId": "list_storms_api_storms_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StormSummary"
+                  },
+                  "type": "array",
+                  "title": "Response List Storms Api Storms Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/storms/{storm_id}": {
+      "get": {
+        "summary": "Get Storm",
+        "operationId": "get_storm_api_storms__storm_id__get",
+        "parameters": [
+          {
+            "name": "storm_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Storm Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StormRun"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/flights/{flight_id}": {
+      "get": {
+        "summary": "Get Flight",
+        "operationId": "get_flight_api_flights__flight_id__get",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlightFile"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/questions": {
+      "get": {
+        "summary": "List Questions",
+        "operationId": "list_questions_api_questions_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "open | answered | reminded; open also returns reminded (both unanswered)",
+              "title": "Status"
+            },
+            "description": "open | answered | reminded; open also returns reminded (both unanswered)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Question"
+                  },
+                  "title": "Response List Questions Api Questions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rules": {
+      "get": {
+        "summary": "List Rules",
+        "operationId": "list_rules_api_rules_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Rule"
+                  },
+                  "type": "array",
+                  "title": "Response List Rules Api Rules Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trace": {
+      "get": {
+        "summary": "Get Trace",
+        "operationId": "get_trace_api_trace_get",
+        "parameters": [
+          {
+            "name": "since",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Since"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TraceEvent"
+                  },
+                  "title": "Response Get Trace Api Trace Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stream": {
+      "get": {
+        "summary": "Stream",
+        "description": "SSE: `event: trace`, `id: <seq>`, `data: TraceEvent` JSON. Send `Last-Event-ID` to resume. Heartbeat: an SSE comment every 15 s.",
+        "operationId": "stream_api_stream_get",
+        "responses": {
+          "200": {
+            "description": "text/event-stream; each `data:` line is one TraceEvent (JSON)",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceEvent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/commits": {
+      "get": {
+        "summary": "List Commits",
+        "operationId": "list_commits_api_commits_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Commit"
+                  },
+                  "title": "Response List Commits Api Commits Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blame": {
+      "get": {
+        "summary": "Blame",
+        "operationId": "blame_api_blame_get",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "any id: JE line, entitlement, coupon, flight, rule",
+              "title": "Target"
+            },
+            "description": "any id: JE line, entitlement, coupon, flight, rule"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Blame"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audit/{je_id}": {
+      "get": {
+        "summary": "Audit",
+        "operationId": "audit_api_audit__je_id__get",
+        "parameters": [
+          {
+            "name": "je_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Je Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Audit Api Audit  Je Id  Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/books/rollforward": {
+      "get": {
+        "summary": "Rollforward",
+        "operationId": "rollforward_api_books_rollforward_get",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$",
+              "default": "2025-02",
+              "title": "Period"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rollforward"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/books/estimate": {
+      "get": {
+        "summary": "Estimate",
+        "operationId": "estimate_api_books_estimate_get",
+        "parameters": [
+          {
+            "name": "cohort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "EIDW@2025-01-24",
+              "title": "Cohort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstimateCard"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/books/journal": {
+      "get": {
+        "summary": "Journal",
+        "operationId": "journal_api_books_journal_get",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Period"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalEntry"
+                  },
+                  "title": "Response Journal Api Books Journal Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/books/curve": {
+      "get": {
+        "summary": "Curve",
+        "operationId": "curve_api_books_curve_get",
+        "parameters": [
+          {
+            "name": "segment",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "long_haul_gt3500 | medium_1500_3500 | short_le1500",
+              "default": "long_haul_gt3500",
+              "title": "Segment"
+            },
+            "description": "long_haul_gt3500 | medium_1500_3500 | short_le1500"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimCurve"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/books/cfo": {
+      "get": {
+        "summary": "Cfo",
+        "operationId": "cfo_api_books_cfo_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CfoMetrics"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/books/invariants": {
+      "get": {
+        "summary": "Invariants",
+        "operationId": "invariants_api_books_invariants_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InvariantResult"
+                  },
+                  "type": "array",
+                  "title": "Response Invariants Api Books Invariants Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/access/matrix": {
+      "get": {
+        "summary": "Access Matrix",
+        "operationId": "access_matrix_api_access_matrix_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessMatrix"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/access/log": {
+      "get": {
+        "summary": "Access Log",
+        "operationId": "access_log_api_access_log_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccessDecision"
+                  },
+                  "type": "array",
+                  "title": "Response Access Log Api Access Log Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/controls": {
+      "get": {
+        "summary": "Controls",
+        "operationId": "controls_api_controls_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ControlMapping"
+                  },
+                  "type": "array",
+                  "title": "Response Controls Api Controls Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/injections": {
+      "get": {
+        "summary": "Injections",
+        "operationId": "injections_api_injections_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Injection"
+                  },
+                  "type": "array",
+                  "title": "Response Injections Api Injections Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/eval": {
+      "get": {
+        "summary": "Eval Report",
+        "operationId": "eval_report_api_eval_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvalReport"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/session": {
+      "post": {
+        "summary": "Create Session",
+        "operationId": "create_session_api_session_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/flights/{flight_id}/challenge": {
+      "post": {
+        "summary": "Challenge",
+        "operationId": "challenge_api_flights__flight_id__challenge_post",
+        "parameters": [
+          {
+            "name": "flight_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Flight Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChallengeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChallengeResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/questions/{question_id}/answer": {
+      "post": {
+        "summary": "Answer",
+        "operationId": "answer_api_questions__question_id__answer_post",
+        "parameters": [
+          {
+            "name": "question_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Question Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proposals/{rule_id}/confirm": {
+      "post": {
+        "summary": "Confirm",
+        "operationId": "confirm_api_proposals__rule_id__confirm_post",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rule Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rules/{rule_id}/reject": {
+      "post": {
+        "summary": "Reject",
+        "operationId": "reject_api_rules__rule_id__reject_post",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rule Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rules/{rule_id}/widen": {
+      "post": {
+        "summary": "Widen",
+        "operationId": "widen_api_rules__rule_id__widen_post",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rule Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleProposal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rules/{rule_id}/revert": {
+      "post": {
+        "summary": "Revert",
+        "operationId": "revert_api_rules__rule_id__revert_post",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rule Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplayDiff"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/books/journal/{je_id}/approve": {
+      "post": {
+        "summary": "Approve",
+        "operationId": "approve_api_books_journal__je_id__approve_post",
+        "parameters": [
+          {
+            "name": "je_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Je Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalEntry"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/books/month-end": {
+      "post": {
+        "summary": "Month End",
+        "operationId": "month_end_api_books_month_end_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PeriodRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonthEndResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/books/lock": {
+      "post": {
+        "summary": "Lock",
+        "operationId": "lock_api_books_lock_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PeriodRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LockResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/desk": {
+      "post": {
+        "summary": "Desk",
+        "operationId": "desk_api_desk_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StormRun"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/inject": {
+      "post": {
+        "summary": "Inject",
+        "operationId": "inject_api_inject_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InjectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InjectResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clock": {
+      "post": {
+        "summary": "Set Clock",
+        "operationId": "set_clock_api_clock_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClockResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reset": {
+      "post": {
+        "summary": "Reset",
+        "operationId": "reset_api_reset_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccessDecision": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "principal": {
+            "type": "string",
+            "title": "Principal"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "resource": {
+            "type": "string",
+            "title": "Resource"
+          },
+          "allowed": {
+            "type": "boolean",
+            "title": "Allowed"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "at",
+          "principal",
+          "action",
+          "resource",
+          "allowed",
+          "reason"
+        ],
+        "title": "AccessDecision"
+      },
+      "AccessMatrix": {
+        "properties": {
+          "principals": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Principals"
+          },
+          "resources": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Resources"
+          },
+          "cells": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "string",
+                "enum": [
+                  "read",
+                  "write",
+                  "approve",
+                  "none",
+                  "redacted"
+                ]
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Cells"
+          }
+        },
+        "type": "object",
+        "required": [
+          "principals",
+          "resources",
+          "cells"
+        ],
+        "title": "AccessMatrix"
+      },
+      "Airport": {
+        "properties": {
+          "icao": {
+            "type": "string",
+            "title": "Icao"
+          },
+          "iata": {
+            "type": "string",
+            "title": "Iata"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country"
+          },
+          "eu": {
+            "type": "boolean",
+            "title": "Eu"
+          },
+          "tz": {
+            "type": "string",
+            "title": "Tz"
+          }
+        },
+        "type": "object",
+        "required": [
+          "icao",
+          "iata",
+          "name",
+          "lat",
+          "lon",
+          "country",
+          "eu",
+          "tz"
+        ],
+        "title": "Airport"
+      },
+      "AnswerRequest": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision",
+          "explanation"
+        ],
+        "title": "AnswerRequest"
+      },
+      "AnswerResponse": {
+        "properties": {
+          "ruling": {
+            "$ref": "#/components/schemas/Ruling"
+          },
+          "proposal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RuleProposal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "ruling",
+          "proposal"
+        ],
+        "title": "AnswerResponse"
+      },
+      "Blame": {
+        "properties": {
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/BlameStep"
+            },
+            "type": "array",
+            "title": "Steps"
+          }
+        },
+        "type": "object",
+        "required": [
+          "target",
+          "steps"
+        ],
+        "title": "Blame"
+      },
+      "BlameStep": {
+        "properties": {
+          "commit": {
+            "$ref": "#/components/schemas/Commit"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          }
+        },
+        "type": "object",
+        "required": [
+          "commit",
+          "label"
+        ],
+        "title": "BlameStep"
+      },
+      "Cause": {
+        "type": "string",
+        "enum": [
+          "weather",
+          "technical",
+          "knock_on",
+          "crew",
+          "atc",
+          "concurrent",
+          "unknown"
+        ],
+        "title": "Cause"
+      },
+      "CfoMetrics": {
+        "properties": {
+          "as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "As Of"
+          },
+          "cash_basis_cents": {
+            "type": "integer",
+            "title": "Cash Basis Cents"
+          },
+          "full_entitlement_cents": {
+            "type": "integer",
+            "title": "Full Entitlement Cents"
+          },
+          "drafted_liability_cents": {
+            "type": "integer",
+            "title": "Drafted Liability Cents"
+          },
+          "sensitivity_5pp_cents": {
+            "type": "integer",
+            "title": "Sensitivity 5Pp Cents"
+          },
+          "method_range_cents": {
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Method Range Cents"
+          },
+          "held_for_legal_cents": {
+            "type": "integer",
+            "title": "Held For Legal Cents"
+          },
+          "liability_bridge": {
+            "items": {
+              "$ref": "#/components/schemas/RollforwardRow"
+            },
+            "type": "array",
+            "title": "Liability Bridge"
+          },
+          "recodes_count": {
+            "type": "integer",
+            "title": "Recodes Count"
+          },
+          "recodes_cents": {
+            "type": "integer",
+            "title": "Recodes Cents"
+          },
+          "refunds_within_7d_pct": {
+            "type": "number",
+            "title": "Refunds Within 7D Pct"
+          },
+          "vouchers_outstanding_cents": {
+            "type": "integer",
+            "title": "Vouchers Outstanding Cents"
+          },
+          "care_accrued_cents": {
+            "type": "integer",
+            "title": "Care Accrued Cents"
+          },
+          "care_invoiced_cents": {
+            "type": "integer",
+            "title": "Care Invoiced Cents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "as_of",
+          "cash_basis_cents",
+          "full_entitlement_cents",
+          "drafted_liability_cents",
+          "sensitivity_5pp_cents",
+          "method_range_cents",
+          "held_for_legal_cents",
+          "liability_bridge",
+          "recodes_count",
+          "recodes_cents",
+          "refunds_within_7d_pct",
+          "vouchers_outstanding_cents",
+          "care_accrued_cents",
+          "care_invoiced_cents"
+        ],
+        "title": "CfoMetrics"
+      },
+      "ChallengeRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "ChallengeRequest"
+      },
+      "ChallengeResponse": {
+        "properties": {
+          "classification": {
+            "type": "string",
+            "enum": [
+              "assertion",
+              "new_fact",
+              "new_legal_pattern"
+            ],
+            "title": "Classification"
+          },
+          "decision_stands": {
+            "type": "boolean",
+            "title": "Decision Stands"
+          },
+          "reply": {
+            "$ref": "#/components/schemas/Draft"
+          },
+          "cited": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "type": "array",
+            "title": "Cited"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Question"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "classification",
+          "decision_stands",
+          "reply",
+          "cited"
+        ],
+        "title": "ChallengeResponse"
+      },
+      "ClaimCurve": {
+        "properties": {
+          "segment": {
+            "type": "string",
+            "enum": [
+              "long_haul_gt3500",
+              "medium_1500_3500",
+              "short_le1500"
+            ],
+            "title": "Segment"
+          },
+          "basis": {
+            "type": "string",
+            "const": "eur",
+            "title": "Basis",
+            "default": "eur"
+          },
+          "points": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "n_by_point": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "N By Point"
+          },
+          "observed_through_month": {
+            "type": "integer",
+            "title": "Observed Through Month"
+          },
+          "ultimate": {
+            "type": "number",
+            "title": "Ultimate"
+          },
+          "tail_factor": {
+            "type": "number",
+            "title": "Tail Factor"
+          },
+          "tail_note": {
+            "type": "string",
+            "title": "Tail Note",
+            "default": "months 18–72 beyond history: documented judgment (Steer 2020 benchmark 18% for cancellations)"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "segment",
+          "points",
+          "n_by_point",
+          "observed_through_month",
+          "ultimate",
+          "tail_factor",
+          "version"
+        ],
+        "title": "ClaimCurve"
+      },
+      "ClockRequest": {
+        "properties": {
+          "known_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Known At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "known_at"
+        ],
+        "title": "ClockRequest"
+      },
+      "ClockResponse": {
+        "properties": {
+          "known_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Known At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "known_at"
+        ],
+        "title": "ClockResponse"
+      },
+      "Commit": {
+        "properties": {
+          "hash": {
+            "type": "string",
+            "title": "Hash"
+          },
+          "parent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "decision",
+              "entitlement",
+              "question",
+              "ruling",
+              "rule_event",
+              "journal_event",
+              "period_lock",
+              "revert",
+              "access_denied",
+              "llm_call",
+              "clock"
+            ],
+            "title": "Kind"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "payload_hash": {
+            "type": "string",
+            "title": "Payload Hash"
+          },
+          "payload_ref": {
+            "type": "string",
+            "title": "Payload Ref"
+          },
+          "inputs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Inputs",
+            "default": []
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hash",
+          "parent",
+          "kind",
+          "at",
+          "actor",
+          "payload_hash",
+          "payload_ref",
+          "message"
+        ],
+        "title": "Commit"
+      },
+      "Confidence": {
+        "properties": {
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "cause",
+              "voucher",
+              "release",
+              "claim_validity"
+            ],
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "features": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Features"
+          },
+          "caps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Caps",
+            "default": []
+          },
+          "calibration_version": {
+            "type": "string",
+            "title": "Calibration Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "score",
+          "kind",
+          "label",
+          "features",
+          "calibration_version"
+        ],
+        "title": "Confidence"
+      },
+      "ConfirmResponse": {
+        "properties": {
+          "rule": {
+            "$ref": "#/components/schemas/Rule"
+          },
+          "replay": {
+            "$ref": "#/components/schemas/ReplayDiff"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule",
+          "replay"
+        ],
+        "title": "ConfirmResponse"
+      },
+      "ControlMapping": {
+        "properties": {
+          "control": {
+            "type": "string",
+            "title": "Control"
+          },
+          "framework_ref": {
+            "type": "string",
+            "title": "Framework Ref"
+          },
+          "implemented_by": {
+            "type": "string",
+            "title": "Implemented By"
+          },
+          "evidence_endpoint": {
+            "type": "string",
+            "title": "Evidence Endpoint"
+          }
+        },
+        "type": "object",
+        "required": [
+          "control",
+          "framework_ref",
+          "implemented_by",
+          "evidence_endpoint"
+        ],
+        "title": "ControlMapping"
+      },
+      "DeskRequest": {
+        "properties": {
+          "icao": {
+            "type": "string",
+            "title": "Icao"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "icao",
+          "date"
+        ],
+        "title": "DeskRequest"
+      },
+      "Draft": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "explanation",
+              "rights_notice",
+              "je_memo",
+              "challenge_reply",
+              "rule_draft"
+            ],
+            "title": "Kind"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "numbers_verified": {
+            "type": "boolean",
+            "title": "Numbers Verified"
+          },
+          "llm_commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Commit"
+          },
+          "template_fallback": {
+            "type": "boolean",
+            "title": "Template Fallback",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "text",
+          "numbers_verified"
+        ],
+        "title": "Draft"
+      },
+      "Entitlement": {
+        "properties": {
+          "coupon_id": {
+            "type": "string",
+            "title": "Coupon Id"
+          },
+          "flight_id": {
+            "type": "string",
+            "title": "Flight Id"
+          },
+          "distance_km": {
+            "type": "number",
+            "title": "Distance Km"
+          },
+          "band_eur": {
+            "type": "integer",
+            "enum": [
+              250,
+              400,
+              600
+            ],
+            "title": "Band Eur"
+          },
+          "band_margin_km": {
+            "type": "number",
+            "title": "Band Margin Km"
+          },
+          "regime": {
+            "type": "string",
+            "const": "EU261_2004",
+            "title": "Regime",
+            "default": "EU261_2004"
+          },
+          "compensation_cents": {
+            "type": "integer",
+            "title": "Compensation Cents"
+          },
+          "reduction": {
+            "type": "string",
+            "enum": [
+              "none",
+              "art7_2_50pct"
+            ],
+            "title": "Reduction",
+            "default": "none"
+          },
+          "refund_due_cents": {
+            "type": "integer",
+            "title": "Refund Due Cents",
+            "default": 0
+          },
+          "refund_already_initiated": {
+            "type": "boolean",
+            "title": "Refund Already Initiated",
+            "default": false
+          },
+          "care_due": {
+            "type": "boolean",
+            "title": "Care Due",
+            "default": true
+          },
+          "voucher_offset_cents": {
+            "type": "integer",
+            "title": "Voucher Offset Cents",
+            "default": 0
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "owed",
+              "no_compensation",
+              "held",
+              "needs_ruling",
+              "exempt_notice",
+              "out_of_scope",
+              "staff_ticket"
+            ],
+            "title": "Status"
+          },
+          "article": {
+            "type": "string",
+            "title": "Article"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "rules_applied": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Rules Applied",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "coupon_id",
+          "flight_id",
+          "distance_km",
+          "band_eur",
+          "band_margin_km",
+          "compensation_cents",
+          "status",
+          "article",
+          "reason"
+        ],
+        "title": "Entitlement"
+      },
+      "ErrorBody": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "sod_violation",
+              "forbidden",
+              "not_found",
+              "validation",
+              "upstream",
+              "no_metar",
+              "future_date",
+              "unknown_airport"
+            ],
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorBody"
+      },
+      "ErrorEnvelope": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ErrorEnvelope"
+      },
+      "EstimateCard": {
+        "properties": {
+          "cohort": {
+            "type": "string",
+            "title": "Cohort"
+          },
+          "segment": {
+            "type": "string",
+            "title": "Segment"
+          },
+          "pax": {
+            "type": "integer",
+            "title": "Pax"
+          },
+          "entitlement_cents": {
+            "type": "integer",
+            "title": "Entitlement Cents"
+          },
+          "curve_version": {
+            "type": "string",
+            "title": "Curve Version"
+          },
+          "months_developed": {
+            "type": "integer",
+            "title": "Months Developed"
+          },
+          "expected_loss_cents": {
+            "type": "integer",
+            "title": "Expected Loss Cents"
+          },
+          "bf_cents": {
+            "type": "integer",
+            "title": "Bf Cents"
+          },
+          "chain_ladder_cents": {
+            "type": "integer",
+            "title": "Chain Ladder Cents"
+          },
+          "selected": {
+            "type": "string",
+            "enum": [
+              "bf",
+              "expected_loss",
+              "chain_ladder"
+            ],
+            "title": "Selected"
+          },
+          "actual_vs_expected": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Vs Expected"
+          },
+          "credibility_z": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credibility Z"
+          },
+          "sensitivity_5pp_cents": {
+            "type": "integer",
+            "title": "Sensitivity 5Pp Cents"
+          },
+          "constraint_note": {
+            "type": "string",
+            "title": "Constraint Note"
+          },
+          "ias8_class": {
+            "type": "string",
+            "title": "Ias8 Class"
+          },
+          "preparer": {
+            "type": "string",
+            "title": "Preparer"
+          },
+          "approver": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approver"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cohort",
+          "segment",
+          "pax",
+          "entitlement_cents",
+          "curve_version",
+          "months_developed",
+          "expected_loss_cents",
+          "bf_cents",
+          "chain_ladder_cents",
+          "selected",
+          "actual_vs_expected",
+          "credibility_z",
+          "sensitivity_5pp_cents",
+          "constraint_note",
+          "ias8_class",
+          "preparer",
+          "approver"
+        ],
+        "title": "EstimateCard"
+      },
+      "EvalReport": {
+        "properties": {
+          "split": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Split"
+          },
+          "n_storms": {
+            "type": "integer",
+            "title": "N Storms"
+          },
+          "n_passengers": {
+            "type": "integer",
+            "title": "N Passengers"
+          },
+          "straight_through_pct": {
+            "type": "number",
+            "title": "Straight Through Pct"
+          },
+          "miscodes_caught": {
+            "type": "integer",
+            "title": "Miscodes Caught"
+          },
+          "miscodes_total": {
+            "type": "integer",
+            "title": "Miscodes Total"
+          },
+          "miscodes_eur_cents": {
+            "type": "integer",
+            "title": "Miscodes Eur Cents"
+          },
+          "false_holds": {
+            "type": "integer",
+            "title": "False Holds"
+          },
+          "repeat_questions": {
+            "type": "integer",
+            "title": "Repeat Questions"
+          },
+          "out_of_scope_auto": {
+            "type": "integer",
+            "title": "Out Of Scope Auto"
+          },
+          "liability_vs_actual": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Liability Vs Actual"
+          },
+          "calibration": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Calibration"
+          },
+          "coverage_at_90": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Coverage At 90"
+          },
+          "baseline": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Baseline"
+          },
+          "stormcheck_runs": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Stormcheck Runs"
+          },
+          "injections": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Injections"
+          },
+          "real_vs_simulated": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Real Vs Simulated"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "default": "calibrated on synthetic labels; validates the pipeline, not the world"
+          }
+        },
+        "type": "object",
+        "required": [
+          "split",
+          "n_storms",
+          "n_passengers",
+          "straight_through_pct",
+          "miscodes_caught",
+          "miscodes_total",
+          "miscodes_eur_cents",
+          "false_holds",
+          "repeat_questions",
+          "out_of_scope_auto",
+          "liability_vs_actual",
+          "calibration",
+          "coverage_at_90",
+          "baseline",
+          "stormcheck_runs",
+          "injections",
+          "real_vs_simulated"
+        ],
+        "title": "EvalReport"
+      },
+      "Evidence": {
+        "properties": {
+          "fact_id": {
+            "type": "string",
+            "title": "Fact Id"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "value": {
+            "title": "Value"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "supports",
+              "contradicts",
+              "context"
+            ],
+            "title": "Role"
+          },
+          "trust_tier": {
+            "type": "integer",
+            "title": "Trust Tier"
+          },
+          "struck": {
+            "type": "boolean",
+            "title": "Struck",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "fact_id",
+          "source_id",
+          "field",
+          "value",
+          "role",
+          "trust_tier"
+        ],
+        "title": "Evidence"
+      },
+      "Extraordinary": {
+        "type": "string",
+        "enum": [
+          "extraordinary",
+          "not_extraordinary",
+          "needs_legal"
+        ],
+        "title": "Extraordinary"
+      },
+      "Fact": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "value": {
+            "title": "Value"
+          },
+          "span": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Span"
+          },
+          "extractor": {
+            "type": "string",
+            "title": "Extractor"
+          },
+          "extract_conf": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extract Conf"
+          },
+          "valid_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid At"
+          },
+          "recorded_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Recorded At"
+          },
+          "acl_tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Acl Tags",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "source_id",
+          "subject",
+          "field",
+          "value",
+          "extractor",
+          "recorded_at"
+        ],
+        "title": "Fact"
+      },
+      "Flight": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "number": {
+            "type": "string",
+            "title": "Number"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "origin": {
+            "type": "string",
+            "title": "Origin"
+          },
+          "dest": {
+            "type": "string",
+            "title": "Dest"
+          },
+          "sched_dep": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Sched Dep"
+          },
+          "sched_arr": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Sched Arr"
+          },
+          "aircraft": {
+            "type": "string",
+            "title": "Aircraft"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "operated",
+              "cancelled",
+              "delayed"
+            ],
+            "title": "Status"
+          },
+          "actual_dep": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Dep"
+          },
+          "actual_arr": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Arr"
+          },
+          "pax": {
+            "type": "integer",
+            "title": "Pax"
+          },
+          "ops_cause_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ops Cause Code"
+          },
+          "inbound_flight_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inbound Flight Id"
+          },
+          "outbound_pair_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outbound Pair Id"
+          },
+          "notified_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notified At"
+          },
+          "operating_carrier_eu": {
+            "type": "boolean",
+            "title": "Operating Carrier Eu",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "date",
+          "origin",
+          "dest",
+          "sched_dep",
+          "sched_arr",
+          "aircraft",
+          "status",
+          "pax"
+        ],
+        "title": "Flight"
+      },
+      "FlightDecision": {
+        "properties": {
+          "flight_id": {
+            "type": "string",
+            "title": "Flight Id"
+          },
+          "cause": {
+            "$ref": "#/components/schemas/Cause"
+          },
+          "extraordinary": {
+            "$ref": "#/components/schemas/Extraordinary"
+          },
+          "ops_cause_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ops Cause Code"
+          },
+          "recoded": {
+            "type": "boolean",
+            "title": "Recoded"
+          },
+          "recode_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recode Label"
+          },
+          "in_window_dep": {
+            "type": "string",
+            "enum": [
+              "in",
+              "out",
+              "unknown"
+            ],
+            "title": "In Window Dep"
+          },
+          "in_window_arr": {
+            "type": "string",
+            "enum": [
+              "in",
+              "out",
+              "unknown"
+            ],
+            "title": "In Window Arr"
+          },
+          "window_margin_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window Margin Min"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/Confidence"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "type": "array",
+            "title": "Evidence"
+          },
+          "rules_applied": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Rules Applied"
+          },
+          "legal_basis": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Legal Basis"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "escalated",
+              "human"
+            ],
+            "title": "Outcome"
+          },
+          "routed_to": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Role"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "question_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question Id"
+          },
+          "known_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Known At"
+          },
+          "commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flight_id",
+          "cause",
+          "extraordinary",
+          "ops_cause_code",
+          "recoded",
+          "in_window_dep",
+          "in_window_arr",
+          "confidence",
+          "reason",
+          "evidence",
+          "rules_applied",
+          "legal_basis",
+          "outcome",
+          "known_at"
+        ],
+        "title": "FlightDecision"
+      },
+      "FlightFile": {
+        "properties": {
+          "flight": {
+            "$ref": "#/components/schemas/Flight"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/FlightDecision"
+          },
+          "entitlements_summary": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Entitlements Summary"
+          },
+          "sample_entitlements": {
+            "items": {
+              "$ref": "#/components/schemas/Entitlement"
+            },
+            "type": "array",
+            "title": "Sample Entitlements"
+          },
+          "journal_preview": {
+            "items": {
+              "$ref": "#/components/schemas/JournalEntry"
+            },
+            "type": "array",
+            "title": "Journal Preview"
+          },
+          "timeline": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Timeline"
+          },
+          "handoff": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handoff"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Draft"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "flight",
+          "decision",
+          "entitlements_summary",
+          "sample_entitlements",
+          "journal_preview",
+          "timeline"
+        ],
+        "title": "FlightFile"
+      },
+      "FlightRow": {
+        "properties": {
+          "flight": {
+            "$ref": "#/components/schemas/Flight"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FlightDecision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "flight",
+          "decision"
+        ],
+        "title": "FlightRow"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Health": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "mode": {
+            "type": "string",
+            "title": "Mode"
+          },
+          "impl": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Impl",
+            "default": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok",
+          "mode"
+        ],
+        "title": "Health"
+      },
+      "InjectRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "tech_log",
+              "claim",
+              "crm",
+              "email",
+              "occ_log",
+              "manufacturer"
+            ],
+            "title": "Kind"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "flight_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flight Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "text"
+        ],
+        "title": "InjectRequest"
+      },
+      "InjectResponse": {
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/Fact"
+            },
+            "type": "array",
+            "title": "Facts"
+          },
+          "dropped_unverifiable": {
+            "type": "integer",
+            "title": "Dropped Unverifiable"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/TraceEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          },
+          "affected": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affected"
+          },
+          "fallback_used": {
+            "type": "boolean",
+            "title": "Fallback Used",
+            "default": false
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "facts",
+          "dropped_unverifiable",
+          "events",
+          "affected"
+        ],
+        "title": "InjectResponse"
+      },
+      "Injection": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "request": {
+            "$ref": "#/components/schemas/InjectRequest"
+          },
+          "expected": {
+            "type": "string",
+            "title": "Expected"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "request",
+          "expected"
+        ],
+        "title": "Injection"
+      },
+      "InvariantResult": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "description",
+          "ok"
+        ],
+        "title": "InvariantResult"
+      },
+      "JournalEntry": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "event_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Event Date"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "memo": {
+            "type": "string",
+            "title": "Memo"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/JournalLine"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "sale",
+              "refund",
+              "voucher",
+              "reroute_fim",
+              "compensation_estimate",
+              "claim_approved",
+              "claim_paid",
+              "change_in_estimate",
+              "derecognition",
+              "care_accrual",
+              "care_invoice",
+              "recode",
+              "out_of_period_adjustment",
+              "voucher_in_lieu",
+              "voucher_void"
+            ],
+            "title": "Kind"
+          },
+          "ias8_class": {
+            "type": "string",
+            "enum": [
+              "none",
+              "change_in_estimate",
+              "prior_period_error"
+            ],
+            "title": "Ias8 Class",
+            "default": "none"
+          },
+          "reverses": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reverses"
+          },
+          "estimate_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimate Ref"
+          },
+          "source_decision_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Decision Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "approved",
+              "posted"
+            ],
+            "title": "Status"
+          },
+          "preparer": {
+            "type": "string",
+            "title": "Preparer"
+          },
+          "approver": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approver"
+          },
+          "built_from": {
+            "type": "integer",
+            "title": "Built From",
+            "default": 0
+          },
+          "ties_to": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Ties To",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "event_date",
+          "period",
+          "memo",
+          "lines",
+          "kind",
+          "status",
+          "preparer"
+        ],
+        "title": "JournalEntry"
+      },
+      "JournalLine": {
+        "properties": {
+          "account": {
+            "type": "string",
+            "title": "Account"
+          },
+          "account_name": {
+            "type": "string",
+            "title": "Account Name"
+          },
+          "dr_cents": {
+            "type": "integer",
+            "title": "Dr Cents",
+            "default": 0
+          },
+          "cr_cents": {
+            "type": "integer",
+            "title": "Cr Cents",
+            "default": 0
+          },
+          "dims": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Dims",
+            "default": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "account",
+          "account_name"
+        ],
+        "title": "JournalLine"
+      },
+      "LearnedItem": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "support": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Support"
+          },
+          "rule_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Ref"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "LearnedItem"
+      },
+      "LockResponse": {
+        "properties": {
+          "locked": {
+            "type": "string",
+            "title": "Locked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "locked"
+        ],
+        "title": "LockResponse"
+      },
+      "MetarObs": {
+        "properties": {
+          "station": {
+            "type": "string",
+            "title": "Station"
+          },
+          "valid": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Valid"
+          },
+          "sknt": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sknt"
+          },
+          "gust": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gust"
+          },
+          "drct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drct"
+          },
+          "vsby_sm": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vsby Sm"
+          },
+          "wxcodes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wxcodes"
+          },
+          "raw": {
+            "type": "string",
+            "title": "Raw"
+          }
+        },
+        "type": "object",
+        "required": [
+          "station",
+          "valid",
+          "raw"
+        ],
+        "title": "MetarObs"
+      },
+      "MonthEndResponse": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/JournalEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          },
+          "rollforward": {
+            "$ref": "#/components/schemas/Rollforward"
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/EstimateCard"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entries",
+          "rollforward",
+          "estimate"
+        ],
+        "title": "MonthEndResponse"
+      },
+      "OkResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "title": "OkResponse"
+      },
+      "PeriodRequest": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period"
+        ],
+        "title": "PeriodRequest"
+      },
+      "Question": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "case_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Case Refs"
+          },
+          "pattern": {
+            "type": "string",
+            "title": "Pattern"
+          },
+          "routed_to": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "asked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Asked At"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "found": {
+            "type": "string",
+            "title": "Found"
+          },
+          "why_flagged": {
+            "type": "string",
+            "title": "Why Flagged"
+          },
+          "recommends": {
+            "type": "string",
+            "title": "Recommends"
+          },
+          "recommended_option": {
+            "type": "string",
+            "title": "Recommended Option"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Options"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "type": "array",
+            "title": "Evidence"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/Confidence"
+          },
+          "reason_tag": {
+            "type": "string",
+            "enum": [
+              "no-precedent",
+              "sources-disagree",
+              "out-of-scope",
+              "release-proposal",
+              "concurrent-causes",
+              "new-legal-pattern"
+            ],
+            "title": "Reason Tag"
+          },
+          "holds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Holds",
+            "default": []
+          },
+          "holds_cents": {
+            "type": "integer",
+            "title": "Holds Cents",
+            "default": 0
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "answered",
+              "reminded"
+            ],
+            "title": "Status",
+            "default": "open"
+          },
+          "remind_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remind At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "case_refs",
+          "pattern",
+          "routed_to",
+          "asked_at",
+          "title",
+          "found",
+          "why_flagged",
+          "recommends",
+          "recommended_option",
+          "options",
+          "evidence",
+          "confidence",
+          "reason_tag"
+        ],
+        "title": "Question"
+      },
+      "RejectRequest": {
+        "properties": {
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "explanation"
+        ],
+        "title": "RejectRequest"
+      },
+      "ReplayDiff": {
+        "properties": {
+          "rule_ref": {
+            "type": "string",
+            "title": "Rule Ref"
+          },
+          "known_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Known At"
+          },
+          "flips": {
+            "items": {
+              "$ref": "#/components/schemas/ReplayFlip"
+            },
+            "type": "array",
+            "title": "Flips"
+          },
+          "total_delta_cents": {
+            "type": "integer",
+            "title": "Total Delta Cents"
+          },
+          "locked_periods_untouched": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Locked Periods Untouched",
+            "default": []
+          },
+          "adjustment_je_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Adjustment Je Ids",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule_ref",
+          "known_at",
+          "flips",
+          "total_delta_cents"
+        ],
+        "title": "ReplayDiff"
+      },
+      "ReplayFlip": {
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id"
+          },
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "before": {
+            "title": "Before"
+          },
+          "after": {
+            "title": "After"
+          },
+          "delta_cents": {
+            "type": "integer",
+            "title": "Delta Cents",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_id",
+          "field",
+          "before",
+          "after"
+        ],
+        "title": "ReplayFlip"
+      },
+      "Role": {
+        "type": "string",
+        "enum": [
+          "claims_lead",
+          "legal",
+          "controller",
+          "ops",
+          "cfo",
+          "judge",
+          "agent.reader",
+          "agent.drafter",
+          "agent.engine",
+          "agent.crm_bot"
+        ],
+        "title": "Role"
+      },
+      "Rollforward": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "account": {
+            "type": "string",
+            "const": "2140",
+            "title": "Account",
+            "default": "2140"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/RollforwardRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "closing_total_cents": {
+            "type": "integer",
+            "title": "Closing Total Cents"
+          },
+          "gl_balance_cents": {
+            "type": "integer",
+            "title": "Gl Balance Cents"
+          },
+          "ties_to_gl": {
+            "type": "boolean",
+            "title": "Ties To Gl"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "rows",
+          "closing_total_cents",
+          "gl_balance_cents",
+          "ties_to_gl"
+        ],
+        "title": "Rollforward"
+      },
+      "RollforwardRow": {
+        "properties": {
+          "cohort": {
+            "type": "string",
+            "title": "Cohort"
+          },
+          "opening_cents": {
+            "type": "integer",
+            "title": "Opening Cents"
+          },
+          "new_cents": {
+            "type": "integer",
+            "title": "New Cents"
+          },
+          "claims_approved_cents": {
+            "type": "integer",
+            "title": "Claims Approved Cents"
+          },
+          "settled_in_kind_cents": {
+            "type": "integer",
+            "title": "Settled In Kind Cents",
+            "default": 0
+          },
+          "change_in_estimate_cents": {
+            "type": "integer",
+            "title": "Change In Estimate Cents"
+          },
+          "recode_cents": {
+            "type": "integer",
+            "title": "Recode Cents",
+            "default": 0
+          },
+          "out_of_period_cents": {
+            "type": "integer",
+            "title": "Out Of Period Cents",
+            "default": 0
+          },
+          "derecognised_cents": {
+            "type": "integer",
+            "title": "Derecognised Cents",
+            "default": 0
+          },
+          "closing_cents": {
+            "type": "integer",
+            "title": "Closing Cents"
+          },
+          "unclaimed_entitlement_cents": {
+            "type": "integer",
+            "title": "Unclaimed Entitlement Cents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cohort",
+          "opening_cents",
+          "new_cents",
+          "claims_approved_cents",
+          "change_in_estimate_cents",
+          "closing_cents",
+          "unclaimed_entitlement_cents"
+        ],
+        "title": "RollforwardRow"
+      },
+      "Rule": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "cause",
+              "entitlement",
+              "voucher",
+              "release",
+              "routing",
+              "regime",
+              "mined_policy"
+            ],
+            "title": "Kind"
+          },
+          "scope": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Scope"
+          },
+          "condition": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Condition"
+          },
+          "action": {
+            "$ref": "#/components/schemas/RuleAction"
+          },
+          "action_arg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Arg"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "hard_control",
+              "regulation",
+              "legal_ruling",
+              "controller_ruling",
+              "claims_lead_ruling",
+              "mined"
+            ],
+            "title": "Tier"
+          },
+          "authority_required": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "origin_ruling_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Ruling Id"
+          },
+          "origin_example": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Example"
+          },
+          "grounding": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Grounding",
+            "default": {}
+          },
+          "support": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Support"
+          },
+          "valid_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From"
+          },
+          "recorded_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Recorded At"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "proposed",
+              "shadow",
+              "active",
+              "suspect",
+              "retired"
+            ],
+            "title": "Status"
+          },
+          "supersedes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supersedes"
+          },
+          "times_cited": {
+            "type": "integer",
+            "title": "Times Cited",
+            "default": 0
+          },
+          "static_card": {
+            "type": "boolean",
+            "title": "Static Card",
+            "default": false
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "kind",
+          "scope",
+          "condition",
+          "action",
+          "tier",
+          "authority_required",
+          "valid_from",
+          "recorded_at",
+          "status"
+        ],
+        "title": "Rule"
+      },
+      "RuleAction": {
+        "type": "string",
+        "enum": [
+          "set_extraordinary",
+          "set_not_extraordinary",
+          "allow_offset",
+          "deny_offset",
+          "deny_release",
+          "keep_tail",
+          "apply_7_2_reduction",
+          "route_to"
+        ],
+        "title": "RuleAction"
+      },
+      "RuleProposal": {
+        "properties": {
+          "rule": {
+            "$ref": "#/components/schemas/Rule"
+          },
+          "checks": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Checks"
+          },
+          "would_flip": {
+            "$ref": "#/components/schemas/ReplayDiff"
+          },
+          "widen_next": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Widen Next"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule",
+          "checks",
+          "would_flip"
+        ],
+        "title": "RuleProposal"
+      },
+      "Ruling": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "question_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question Id"
+          },
+          "author_role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "author": {
+            "type": "string",
+            "title": "Author"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "answer",
+              "rejection",
+              "override",
+              "challenge_response"
+            ],
+            "title": "Kind"
+          },
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "author_role",
+          "author",
+          "kind",
+          "decision",
+          "explanation",
+          "at"
+        ],
+        "title": "Ruling"
+      },
+      "Session": {
+        "properties": {
+          "principal": {
+            "type": "string",
+            "title": "Principal"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Issued At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "principal",
+          "role",
+          "name",
+          "issued_at"
+        ],
+        "title": "Session"
+      },
+      "SessionRequest": {
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "name"
+        ],
+        "title": "SessionRequest"
+      },
+      "SessionResponse": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "session": {
+            "$ref": "#/components/schemas/Session"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "session"
+        ],
+        "title": "SessionResponse"
+      },
+      "Source": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SourceKind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Received At"
+          },
+          "trust_tier": {
+            "type": "integer",
+            "title": "Trust Tier"
+          },
+          "acl_tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Acl Tags",
+            "default": []
+          },
+          "uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uri"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "sha256",
+          "received_at",
+          "trust_tier"
+        ],
+        "title": "Source"
+      },
+      "SourceKind": {
+        "type": "string",
+        "enum": [
+          "metar",
+          "schedule",
+          "occ_log",
+          "mcc_log",
+          "tech_log",
+          "spares",
+          "manifest",
+          "pss",
+          "crm",
+          "bsp",
+          "claim",
+          "email",
+          "regulation",
+          "ruling",
+          "manufacturer",
+          "challenge"
+        ],
+        "title": "SourceKind"
+      },
+      "StormRun": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "station": {
+            "type": "string",
+            "title": "Station"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "windows": {
+            "items": {
+              "$ref": "#/components/schemas/StormWindow"
+            },
+            "type": "array",
+            "title": "Windows"
+          },
+          "metar": {
+            "items": {
+              "$ref": "#/components/schemas/MetarObs"
+            },
+            "type": "array",
+            "title": "Metar"
+          },
+          "flights": {
+            "items": {
+              "$ref": "#/components/schemas/FlightRow"
+            },
+            "type": "array",
+            "title": "Flights"
+          },
+          "counters": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Counters"
+          },
+          "entitlement_cents": {
+            "type": "integer",
+            "title": "Entitlement Cents"
+          },
+          "liability_drafted_cents": {
+            "type": "integer",
+            "title": "Liability Drafted Cents"
+          },
+          "learned": {
+            "items": {
+              "$ref": "#/components/schemas/LearnedItem"
+            },
+            "type": "array",
+            "title": "Learned"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            },
+            "type": "array",
+            "title": "Questions"
+          },
+          "feed": {
+            "items": {
+              "$ref": "#/components/schemas/TraceEvent"
+            },
+            "type": "array",
+            "title": "Feed"
+          },
+          "real_context": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Real Context",
+            "default": {}
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "airports": {
+            "items": {
+              "$ref": "#/components/schemas/Airport"
+            },
+            "type": "array",
+            "title": "Airports",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "station",
+          "date",
+          "windows",
+          "metar",
+          "flights",
+          "counters",
+          "entitlement_cents",
+          "liability_drafted_cents",
+          "learned",
+          "questions",
+          "feed"
+        ],
+        "title": "StormRun"
+      },
+      "StormSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "station": {
+            "type": "string",
+            "title": "Station"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "cancelled": {
+            "type": "integer",
+            "title": "Cancelled"
+          },
+          "questions": {
+            "type": "integer",
+            "title": "Questions"
+          },
+          "liability_drafted_cents": {
+            "type": "integer",
+            "title": "Liability Drafted Cents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "station",
+          "date",
+          "cancelled",
+          "questions",
+          "liability_drafted_cents"
+        ],
+        "title": "StormSummary"
+      },
+      "StormWindow": {
+        "properties": {
+          "station": {
+            "type": "string",
+            "title": "Station"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End"
+          },
+          "peak_gust_kt": {
+            "type": "integer",
+            "title": "Peak Gust Kt"
+          },
+          "definition": {
+            "type": "string",
+            "title": "Definition",
+            "default": "gust>=35kt or sknt>=30kt or vsby<0.5sm or wx in {SN,FZ,TS,GR}; gaps<2h merged"
+          },
+          "obs_count": {
+            "type": "integer",
+            "title": "Obs Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "station",
+          "start",
+          "end",
+          "peak_gust_kt"
+        ],
+        "title": "StormWindow"
+      },
+      "TraceEvent": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "decision",
+              "entitlement",
+              "question",
+              "ruling",
+              "rule",
+              "journal",
+              "replay",
+              "access_denied",
+              "reminder",
+              "llm_call",
+              "info"
+            ],
+            "title": "Kind"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref"
+          },
+          "chip": {
+            "type": "string",
+            "enum": [
+              "APPLIED",
+              "DRAFTED",
+              "HELD",
+              "DENIED",
+              "ASKED",
+              "RULED",
+              "LEARNED",
+              "CITED",
+              "LOCKED",
+              "INFO"
+            ],
+            "title": "Chip"
+          },
+          "amount_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Cents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "at",
+          "kind",
+          "actor",
+          "summary",
+          "chip"
+        ],
+        "title": "TraceEvent"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "id": "JE-000201",
+  "event_date": "2025-02-28",
+  "period": "2025-02",
+  "memo": "NS31 Feb true-up: BF (35% − 9%) × €99,000 = €25,740 remaining · A/E 1.45 · change in estimate (IAS 8.36)",
+  "lines": [
+    {
+      "account": "4090",
+      "account_name": "EU261 compensation (reduction of passenger revenue)",
+      "dr_cents": 399000,
+      "cr_cents": 0,
+      "dims": {
+        "storm": "EIDW@2025-01-24",
+        "flight": "NS31@2025-01-24",
+        "segment": "long_haul_gt3500",
+        "cohort": "EIDW@2025-01-24"
+      }
+    },
+    {
+      "account": "2140",
+      "account_name": "EU261 compensation liability (estimated)",
+      "dr_cents": 0,
+      "cr_cents": 399000,
+      "dims": {
+        "storm": "EIDW@2025-01-24",
+        "flight": "NS31@2025-01-24",
+        "segment": "long_haul_gt3500",
+        "cohort": "EIDW@2025-01-24"
+      }
+    }
+  ],
+  "kind": "change_in_estimate",
+  "ias8_class": "change_in_estimate",
+  "reverses": null,
+  "estimate_ref": "EST-EIDW@2025-01-24-LH",
+  "source_decision_id": null,
+  "status": "draft",
+  "preparer": "agent.books",
+  "approver": null,
+  "built_from": 22,
+  "ties_to": [
+    "2140"
+  ]
+}

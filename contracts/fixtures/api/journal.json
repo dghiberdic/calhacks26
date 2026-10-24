@@ -1,0 +1,464 @@
+[
+  {
+    "id": "JE-000100",
+    "event_date": "2025-01-24",
+    "period": "2025-01",
+    "memo": "CRM bot: 32 NS31 refunds to card acquirer (posted to 2125 refund clearing)",
+    "lines": [
+      {
+        "account": "2125",
+        "account_name": "Refund clearing",
+        "dr_cents": 1632000,
+        "cr_cents": 0,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      },
+      {
+        "account": "1110",
+        "account_name": "Card acquirer",
+        "dr_cents": 0,
+        "cr_cents": 1632000,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      }
+    ],
+    "kind": "refund",
+    "ias8_class": "none",
+    "reverses": null,
+    "estimate_ref": null,
+    "source_decision_id": null,
+    "status": "posted",
+    "preparer": "agent.books",
+    "approver": null,
+    "built_from": 32,
+    "ties_to": []
+  },
+  {
+    "id": "JE-000101",
+    "event_date": "2025-01-24",
+    "period": "2025-01",
+    "memo": "NS31 EU261 compensation liability: 35% expected ultimate claim rate × €99,000 full Art. 7 entitlement",
+    "lines": [
+      {
+        "account": "4090",
+        "account_name": "EU261 compensation (reduction of passenger revenue)",
+        "dr_cents": 3465000,
+        "cr_cents": 0,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      },
+      {
+        "account": "2140",
+        "account_name": "EU261 compensation liability (estimated)",
+        "dr_cents": 0,
+        "cr_cents": 3465000,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      }
+    ],
+    "kind": "compensation_estimate",
+    "ias8_class": "none",
+    "reverses": null,
+    "estimate_ref": "EST-EIDW@2025-01-24-LH",
+    "source_decision_id": "NS31@2025-01-24",
+    "status": "draft",
+    "preparer": "agent.books",
+    "approver": null,
+    "built_from": 9,
+    "ties_to": [
+      "2140"
+    ]
+  },
+  {
+    "id": "JE-000102",
+    "event_date": "2025-01-24",
+    "period": "2025-01",
+    "memo": "NS31: 32 refunds initiated by the CRM bot · clears 2125 refund clearing (no double refund)",
+    "lines": [
+      {
+        "account": "2100",
+        "account_name": "ATL",
+        "dr_cents": 1440000,
+        "cr_cents": 0,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      },
+      {
+        "account": "2110",
+        "account_name": "Taxes payable",
+        "dr_cents": 192000,
+        "cr_cents": 0,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      },
+      {
+        "account": "2125",
+        "account_name": "Refund clearing",
+        "dr_cents": 0,
+        "cr_cents": 1632000,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      }
+    ],
+    "kind": "refund",
+    "ias8_class": "none",
+    "reverses": null,
+    "estimate_ref": null,
+    "source_decision_id": "NS31@2025-01-24",
+    "status": "draft",
+    "preparer": "agent.books",
+    "approver": null,
+    "built_from": 4,
+    "ties_to": [
+      "2125"
+    ]
+  },
+  {
+    "id": "JE-000103",
+    "event_date": "2025-01-24",
+    "period": "2025-01",
+    "memo": "NS31: 14 refund vouchers, ticket value incl. taxes",
+    "lines": [
+      {
+        "account": "2100",
+        "account_name": "ATL",
+        "dr_cents": 630000,
+        "cr_cents": 0,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      },
+      {
+        "account": "2110",
+        "account_name": "Taxes payable",
+        "dr_cents": 84000,
+        "cr_cents": 0,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      },
+      {
+        "account": "2131",
+        "account_name": "Refund vouchers",
+        "dr_cents": 0,
+        "cr_cents": 714000,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      }
+    ],
+    "kind": "voucher",
+    "ias8_class": "none",
+    "reverses": null,
+    "estimate_ref": null,
+    "source_decision_id": "NS31@2025-01-24",
+    "status": "draft",
+    "preparer": "agent.books",
+    "approver": null,
+    "built_from": 3,
+    "ties_to": []
+  },
+  {
+    "id": "JE-000104",
+    "event_date": "2025-01-24",
+    "period": "2025-01",
+    "memo": "NS31: 14 partner reroutes via LHR (FIM, net) → interline payable",
+    "lines": [
+      {
+        "account": "2100",
+        "account_name": "ATL",
+        "dr_cents": 630000,
+        "cr_cents": 0,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      },
+      {
+        "account": "2110",
+        "account_name": "Taxes payable",
+        "dr_cents": 84000,
+        "cr_cents": 0,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      },
+      {
+        "account": "2160",
+        "account_name": "Interline payable",
+        "dr_cents": 0,
+        "cr_cents": 714000,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      }
+    ],
+    "kind": "reroute_fim",
+    "ias8_class": "none",
+    "reverses": null,
+    "estimate_ref": null,
+    "source_decision_id": "NS31@2025-01-24",
+    "status": "draft",
+    "preparer": "agent.books",
+    "approver": null,
+    "built_from": 3,
+    "ties_to": []
+  },
+  {
+    "id": "JE-000105",
+    "event_date": "2025-01-24",
+    "period": "2025-01",
+    "memo": "NS31/14C: €300 service-desk voucher in lieu of compensation, unsigned (goodwill)",
+    "lines": [
+      {
+        "account": "4090",
+        "account_name": "EU261 compensation (reduction of passenger revenue)",
+        "dr_cents": 30000,
+        "cr_cents": 0,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24",
+          "coupon": "NS31@2025-01-24:14C"
+        }
+      },
+      {
+        "account": "2132",
+        "account_name": "Compensation vouchers",
+        "dr_cents": 0,
+        "cr_cents": 30000,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24",
+          "coupon": "NS31@2025-01-24:14C"
+        }
+      }
+    ],
+    "kind": "voucher_in_lieu",
+    "ias8_class": "none",
+    "reverses": null,
+    "estimate_ref": null,
+    "source_decision_id": "NS31@2025-01-24",
+    "status": "draft",
+    "preparer": "agent.books",
+    "approver": null,
+    "built_from": 2,
+    "ties_to": []
+  },
+  {
+    "id": "JE-000111",
+    "event_date": "2025-01-24",
+    "period": "2025-01",
+    "memo": "NS113 held knock-on return: 178 × €400 × 27% medium_1500_3500 rate (IFRS 15.56 constraint)",
+    "lines": [
+      {
+        "account": "4090",
+        "account_name": "EU261 compensation (reduction of passenger revenue)",
+        "dr_cents": 1922400,
+        "cr_cents": 0,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS113@2025-01-24",
+          "segment": "medium_1500_3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      },
+      {
+        "account": "2140",
+        "account_name": "EU261 compensation liability (estimated)",
+        "dr_cents": 0,
+        "cr_cents": 1922400,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS113@2025-01-24",
+          "segment": "medium_1500_3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      }
+    ],
+    "kind": "compensation_estimate",
+    "ias8_class": "none",
+    "reverses": null,
+    "estimate_ref": "EST-EIDW@2025-01-24-medium_1500_3500",
+    "source_decision_id": "NS113@2025-01-24",
+    "status": "draft",
+    "preparer": "agent.books",
+    "approver": null,
+    "built_from": 5,
+    "ties_to": [
+      "2140"
+    ]
+  },
+  {
+    "id": "JE-000112",
+    "event_date": "2025-01-24",
+    "period": "2025-01",
+    "memo": "NS115 held knock-on return: 184 × €400 × 27% medium_1500_3500 rate (IFRS 15.56 constraint)",
+    "lines": [
+      {
+        "account": "4090",
+        "account_name": "EU261 compensation (reduction of passenger revenue)",
+        "dr_cents": 1987200,
+        "cr_cents": 0,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS115@2025-01-24",
+          "segment": "medium_1500_3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      },
+      {
+        "account": "2140",
+        "account_name": "EU261 compensation liability (estimated)",
+        "dr_cents": 0,
+        "cr_cents": 1987200,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS115@2025-01-24",
+          "segment": "medium_1500_3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      }
+    ],
+    "kind": "compensation_estimate",
+    "ias8_class": "none",
+    "reverses": null,
+    "estimate_ref": "EST-EIDW@2025-01-24-medium_1500_3500",
+    "source_decision_id": "NS115@2025-01-24",
+    "status": "draft",
+    "preparer": "agent.books",
+    "approver": null,
+    "built_from": 5,
+    "ties_to": [
+      "2140"
+    ]
+  },
+  {
+    "id": "JE-000113",
+    "event_date": "2025-01-24",
+    "period": "2025-01",
+    "memo": "NS117 held knock-on return: 168 × €250 × 20% short_le1500 rate (IFRS 15.56 constraint)",
+    "lines": [
+      {
+        "account": "4090",
+        "account_name": "EU261 compensation (reduction of passenger revenue)",
+        "dr_cents": 840000,
+        "cr_cents": 0,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS117@2025-01-24",
+          "segment": "short_le1500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      },
+      {
+        "account": "2140",
+        "account_name": "EU261 compensation liability (estimated)",
+        "dr_cents": 0,
+        "cr_cents": 840000,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS117@2025-01-24",
+          "segment": "short_le1500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      }
+    ],
+    "kind": "compensation_estimate",
+    "ias8_class": "none",
+    "reverses": null,
+    "estimate_ref": "EST-EIDW@2025-01-24-short_le1500",
+    "source_decision_id": "NS117@2025-01-24",
+    "status": "draft",
+    "preparer": "agent.books",
+    "approver": null,
+    "built_from": 5,
+    "ties_to": [
+      "2140"
+    ]
+  },
+  {
+    "id": "JE-000120",
+    "event_date": "2025-01-24",
+    "period": "2025-01",
+    "memo": "Care for the night of 24 Jan, all cancelled flights (care is owed even when extraordinary, C-12/11 McDonagh)",
+    "lines": [
+      {
+        "account": "6100",
+        "account_name": "Care",
+        "dr_cents": 22700000,
+        "cr_cents": 0,
+        "dims": {
+          "storm": "EIDW@2025-01-24"
+        }
+      },
+      {
+        "account": "2150",
+        "account_name": "Accrued care",
+        "dr_cents": 0,
+        "cr_cents": 22700000,
+        "dims": {
+          "storm": "EIDW@2025-01-24"
+        }
+      }
+    ],
+    "kind": "care_accrual",
+    "ias8_class": "none",
+    "reverses": null,
+    "estimate_ref": null,
+    "source_decision_id": null,
+    "status": "draft",
+    "preparer": "agent.books",
+    "approver": null,
+    "built_from": 27,
+    "ties_to": []
+  }
+]

@@ -1,0 +1,308 @@
+[
+  {
+    "id": "Q-1",
+    "case_refs": [
+      "NS31@2025-01-24:14C"
+    ],
+    "pattern": "voucher_in_lieu_unsigned",
+    "routed_to": "claims_lead",
+    "asked_at": "2025-01-25T06:00:00Z",
+    "title": "Does a €300 service-desk voucher 'in lieu of compensation' offset 14C's €600?",
+    "found": "On 24 Jan the T2 service desk issued passenger 14C (NS31) a €300 voucher 'in lieu of compensation'. CRM records it as accepted; her claim says she never agreed. There is no signed acceptance on file.",
+    "why_flagged": "Sources disagree (CRM vs. the passenger's claim), and Art. 7(3) needs signed acceptance for an offset. No precedent for unsigned in-lieu vouchers.",
+    "recommends": "No signed acceptance, no offset: pay €600 cash; the voucher stays as goodwill.",
+    "recommended_option": "Pay €600 cash; the voucher stays as goodwill",
+    "options": [
+      "Pay €600 cash; the voucher stays as goodwill",
+      "Offset the voucher: pay €300 cash",
+      "Ask 14C to sign the acceptance first"
+    ],
+    "evidence": [
+      {
+        "fact_id": "F-CRM-NS31-14C-voucher",
+        "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
+        "field": "voucher.in_lieu",
+        "value": true,
+        "quote": "EUR300 VOUCHER IN LIEU OF COMPENSATION",
+        "role": "context",
+        "trust_tier": 3,
+        "struck": false
+      },
+      {
+        "fact_id": "F-CRM-NS31-14C-accepted",
+        "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
+        "field": "voucher.accepted",
+        "value": true,
+        "quote": "PAX ACCEPTED",
+        "role": "contradicts",
+        "trust_tier": 3,
+        "struck": false
+      },
+      {
+        "fact_id": "F-CRM-NS31-14C-signed",
+        "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
+        "field": "voucher.signed",
+        "value": false,
+        "quote": null,
+        "role": "supports",
+        "trust_tier": 3,
+        "struck": false
+      },
+      {
+        "fact_id": "F-CLAIM-NS31-14C-dispute",
+        "source_id": "SRC-CLAIM-NS31-14C-2025-01-25T0131Z",
+        "field": "claim.voucher_disputed",
+        "value": true,
+        "quote": "I never agreed to take a voucher instead of my compensation",
+        "role": "supports",
+        "trust_tier": 4,
+        "struck": false
+      },
+      {
+        "fact_id": "F-CRM-NS31-14C-amount",
+        "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
+        "field": "voucher.amount_cents",
+        "value": 30000,
+        "quote": "EUR300",
+        "role": "context",
+        "trust_tier": 3,
+        "struck": false
+      }
+    ],
+    "confidence": {
+      "score": 0.39,
+      "kind": "voucher",
+      "label": "voucher-offset confidence",
+      "features": {
+        "in_lieu": 1.0,
+        "signed": 0.0,
+        "sources_disagree": 1.0,
+        "precedent_count": 0.0
+      },
+      "caps": [
+        "capped:sources-disagree"
+      ],
+      "calibration_version": "cal-v1"
+    },
+    "reason_tag": "sources-disagree",
+    "holds": [
+      "NS31@2025-01-24:14C"
+    ],
+    "holds_cents": 60000,
+    "status": "open",
+    "remind_at": "2025-01-25T09:00:00Z"
+  },
+  {
+    "id": "Q-2",
+    "case_refs": [
+      "NS113@2025-01-24",
+      "NS115@2025-01-24",
+      "NS117@2025-01-24"
+    ],
+    "pattern": "knock_on_return",
+    "routed_to": "legal",
+    "asked_at": "2025-01-25T06:00:00Z",
+    "title": "Is the return sector of a storm-cancelled rotation extraordinary when both ends were calm?",
+    "found": "NS113 (LIS–DUB), NS115 (FCO–DUB) and NS117 (MUC–DUB) were cancelled because their outbound legs NS112, NS114 and NS116 never left Dublin. Each return was calm at both ends: e.g. NS117, Munich calm at STD 14:05Z and Dublin 11 kt at STA 16:20Z, after the 02:30–15:00Z window.",
+    "why_flagged": "No precedent. C-74/19 (previous rotation) needs a direct causal link and reasonable measures. No spare tail within 3 h: NS117's earliest ferry ex-DUB 15:30Z → MUC dep 18:25Z = STD+4h20. Passengers were offered the earliest reroute (LH via FRA).",
+    "recommends": "Extraordinary only if no aircraft and crew could operate the return within 3 h of STD and passengers were offered the earliest reroute on any carrier (C-74/19).",
+    "recommended_option": "Extraordinary if no aircraft within 3 h of STD and the earliest reroute was offered",
+    "options": [
+      "Extraordinary if no aircraft within 3 h of STD and the earliest reroute was offered",
+      "Not extraordinary: compensation owed on all three",
+      "Decide flight by flight"
+    ],
+    "evidence": [
+      {
+        "fact_id": "F-ROT-NS113-prev",
+        "source_id": "SRC-OCC-2025-01-24T0512Z",
+        "field": "rotation.prev_cancelled",
+        "value": true,
+        "quote": "NS112/113",
+        "role": "supports",
+        "trust_tier": 3,
+        "struck": false
+      },
+      {
+        "fact_id": "F-METAR-EIDW-20250124T1600Z",
+        "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+        "field": "metar.sknt",
+        "value": 11,
+        "quote": "EIDW 241600Z 24011KT 200V290 9999 -RA FEW012 SCT020 BKN050 05/M01 Q0989 NOSIG",
+        "role": "contradicts",
+        "trust_tier": 1,
+        "struck": false
+      },
+      {
+        "fact_id": "F-SPARE-NS113",
+        "source_id": "SRC-SPARES-2025-01-24",
+        "field": "spare.available_within_h",
+        "value": 5.58,
+        "quote": "No tail at LIS. Earliest ferry ex-DUB 15:30Z → LIS dep 18:55Z = STD+5h35.",
+        "role": "context",
+        "trust_tier": 2,
+        "struck": false
+      },
+      {
+        "fact_id": "F-ROT-NS115-prev",
+        "source_id": "SRC-OCC-2025-01-24T0512Z",
+        "field": "rotation.prev_cancelled",
+        "value": true,
+        "quote": "NS114/115",
+        "role": "supports",
+        "trust_tier": 3,
+        "struck": false
+      },
+      {
+        "fact_id": "F-METAR-EIDW-20250124T1700Z",
+        "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+        "field": "metar.sknt",
+        "value": 14,
+        "quote": "EIDW 241700Z 22014G25KT 200V260 9999 -RA FEW012 SCT020 BKN050 04/M00 Q0990 NOSIG",
+        "role": "contradicts",
+        "trust_tier": 1,
+        "struck": false
+      },
+      {
+        "fact_id": "F-SPARE-NS115",
+        "source_id": "SRC-SPARES-2025-01-24",
+        "field": "spare.available_within_h",
+        "value": 5.08,
+        "quote": "No tail at FCO. Earliest ferry ex-DUB 15:30Z → FCO dep 19:15Z = STD+5h05.",
+        "role": "context",
+        "trust_tier": 2,
+        "struck": false
+      },
+      {
+        "fact_id": "F-ROT-NS117-prev",
+        "source_id": "SRC-OCC-2025-01-24T0512Z",
+        "field": "rotation.prev_cancelled",
+        "value": true,
+        "quote": "NS116/117",
+        "role": "supports",
+        "trust_tier": 3,
+        "struck": false
+      },
+      {
+        "fact_id": "F-METAR-EIDW-20250124T1630Z",
+        "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+        "field": "metar.sknt",
+        "value": 11,
+        "quote": "EIDW 241630Z 23011G22KT 190V270 9999 -RA FEW012 SCT020 BKN050 05/00 Q0990 NOSIG",
+        "role": "contradicts",
+        "trust_tier": 1,
+        "struck": false
+      },
+      {
+        "fact_id": "F-SPARE-NS117",
+        "source_id": "SRC-SPARES-2025-01-24",
+        "field": "spare.available_within_h",
+        "value": 4.33,
+        "quote": "No tail at MUC. Earliest ferry ex-DUB 15:30Z → MUC dep 18:25Z = STD+4h20.",
+        "role": "context",
+        "trust_tier": 2,
+        "struck": false
+      }
+    ],
+    "confidence": {
+      "score": 0.47,
+      "kind": "cause",
+      "label": "cause-finding confidence",
+      "features": {
+        "in_window_dep": 0.0,
+        "in_window_arr": 0.0,
+        "window_margin_h": 0.92,
+        "aog_before_window": 0.0,
+        "aog_inside_window": 0.0,
+        "root_cause_internal": 0.0,
+        "sources_disagree": 0.0,
+        "precedent_count": 0.0,
+        "knock_on": 1.0
+      },
+      "caps": [
+        "capped:no-precedent"
+      ],
+      "calibration_version": "cal-v1"
+    },
+    "reason_tag": "no-precedent",
+    "holds": [
+      "NS113@2025-01-24",
+      "NS115@2025-01-24",
+      "NS117@2025-01-24"
+    ],
+    "holds_cents": 4749600,
+    "status": "open",
+    "remind_at": "2025-01-25T09:00:00Z"
+  },
+  {
+    "id": "Q-3",
+    "case_refs": [
+      "EIDW@2024-01-21"
+    ],
+    "pattern": "cohort_release",
+    "routed_to": "controller",
+    "asked_at": "2025-01-25T06:00:00Z",
+    "title": "Reduce the Storm Isha long-haul cohort to nil at M12?",
+    "found": "Storm Isha cohort (EIDW@2024-01-21, long-haul): €60,000 full Art. 7 entitlement, 29% claimed by M12, €3,600 EU261 compensation liability remaining. No new claims in 3 months.",
+    "why_flagged": "Release proposal: a change in estimate (IAS 8.36) needs the Controller.",
+    "recommends": "Reduce the remaining €3,600 to nil as a change in estimate (no new claims in 3 months).",
+    "recommended_option": "Reduce to nil now",
+    "options": [
+      "Reduce to nil now",
+      "Keep the expected tail until the six-year limitation",
+      "Review again at M18"
+    ],
+    "evidence": [
+      {
+        "fact_id": "F-OB-EIDW@2024-01-21-balance",
+        "source_id": "SRC-GL-2140-2024-12",
+        "field": "cohort.balance_cents",
+        "value": 360000,
+        "quote": "2140 EIDW@2024-01-21 LH 3,600.00",
+        "role": "supports",
+        "trust_tier": 2,
+        "struck": false
+      },
+      {
+        "fact_id": "F-OB-EIDW@2024-01-21-claimed",
+        "source_id": "SRC-CLAIMS-EIDW@2024-01-21",
+        "field": "cohort.claimed_pct",
+        "value": 0.29,
+        "quote": "claimed 29% of entitlement by M12",
+        "role": "context",
+        "trust_tier": 2,
+        "struck": false
+      },
+      {
+        "fact_id": "F-OB-EIDW@2024-01-21-lastclaim",
+        "source_id": "SRC-CLAIMS-EIDW@2024-01-21",
+        "field": "cohort.months_since_last_claim",
+        "value": 3,
+        "quote": "last claim 2024-10-19",
+        "role": "supports",
+        "trust_tier": 2,
+        "struck": false
+      }
+    ],
+    "confidence": {
+      "score": 0.72,
+      "kind": "release",
+      "label": "release confidence",
+      "features": {
+        "cohort_age_months": 12.0,
+        "months_since_last_claim": 3.0,
+        "claimed_pct": 0.29,
+        "limitation_expired": 0.0
+      },
+      "caps": [],
+      "calibration_version": "cal-v1"
+    },
+    "reason_tag": "release-proposal",
+    "holds": [
+      "EIDW@2024-01-21"
+    ],
+    "holds_cents": 360000,
+    "status": "open",
+    "remind_at": "2025-01-25T09:00:00Z"
+  }
+]
