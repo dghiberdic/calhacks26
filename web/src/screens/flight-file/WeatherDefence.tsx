@@ -38,7 +38,7 @@ export function WeatherDefenceRows({ defence: d }: { defence: WeatherDefence }) 
 
   if (d.minutesToClose !== null && d.window)
     rows.push({
-      term: "Why not wait?",
+      term: "The alternative",
       body: (
         <>
           The window closed {duration(d.minutesToClose)} after {scheduled}. Delaying past {zulu(d.window.end)} was the alternative to cancelling; that is the question to answer.

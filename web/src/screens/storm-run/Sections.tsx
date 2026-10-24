@@ -53,7 +53,8 @@ export function LiabilityTiles({ run, cfo, recodedFlight }: { run: StormRun; cfo
   );
 }
 
-const LEARN_LABEL = ["self-learning", "ai-automated", "needs-review", "new-policy"] as const;
+/** Plain tags for the four steps (FINAL_IDEA's workshop words, said the way an airline would). */
+const LEARN_LABEL = ["from its own history", "overnight", "asks a person", "becomes policy"] as const;
 
 /** Learns → Runs → Escalates → Improves ↻, four small cards in a row (THREAD_JUSTIN J1, plan §6). */
 export function LearnsStrip({ run }: { run: StormRun }) {
@@ -63,7 +64,7 @@ export function LearnsStrip({ run }: { run: StormRun }) {
   const [first, ...more] = run.learned;
   const cards: { label: (typeof LEARN_LABEL)[number]; title: string; body: React.ReactNode; highlight?: boolean }[] = [
     {
-      label: "self-learning",
+      label: "from its own history",
       title: "Learns",
       body: first ? (
         <>
@@ -80,7 +81,7 @@ export function LearnsStrip({ run }: { run: StormRun }) {
       ),
     },
     {
-      label: "ai-automated",
+      label: "overnight",
       title: "Runs",
       body: (
         <>
@@ -89,7 +90,7 @@ export function LearnsStrip({ run }: { run: StormRun }) {
       ),
     },
     {
-      label: "needs-review",
+      label: "asks a person",
       title: "Escalates",
       highlight: true,
       body: (
@@ -104,7 +105,7 @@ export function LearnsStrip({ run }: { run: StormRun }) {
       ),
     },
     {
-      label: "new-policy",
+      label: "becomes policy",
       title: "Improves",
       body: (
         <>

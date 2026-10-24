@@ -10,6 +10,7 @@ import { longDate } from "@/lib/format";
 import { HERO_STORM, stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { pageTitle } from "./pageTitle";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { TimeScrubber, useClock } from "./TimeScrubber";
 import { useSession } from "./session";
@@ -160,6 +161,9 @@ export function AppShell() {
     void restore();
   }, [restore]);
   useEffect(() => setMenu(false), [pathname]);
+  useEffect(() => {
+    document.title = pageTitle(pathname);
+  }, [pathname]);
 
   return (
     <div className="min-h-svh bg-background lg:grid lg:grid-cols-[236px_minmax(0,1fr)]">

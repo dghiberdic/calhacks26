@@ -96,7 +96,7 @@ function Report({ report: r }: { report: EvalReport }) {
 
       {/* reliability */}
       <section aria-labelledby="reliability" className="mt-6">
-        <SectionTitle id="reliability" eyebrow="Reliability" title="Does 90% confident mean right 90% of the time?">
+        <SectionTitle id="reliability" eyebrow="Reliability" title="How often each confidence level was right">
           Per decision kind: stated confidence against how often it was right, a dot per bin with its Wilson 95% interval and n. The diagonal is perfect calibration; coverage@0.9 is the share decided at 90% or more.
         </SectionTitle>
         <div className="mt-3 flex items-start gap-3 rounded-xl bg-white px-4 py-3.5 shadow-[inset_0_0_0_1.5px_var(--color-navy-900)]" data-testid="honest-label">

@@ -7,6 +7,12 @@ import { defineConfig, loadEnv, type Plugin } from "vite";
 
 const RECORDED = fileURLToPath(new URL("../demo/recorded", import.meta.url));
 
+/** Absolute URLs for link previews (og:image needs one): SITE_URL, else Vercel's production host, else localhost. */
+function siteUrl(): Plugin {
+  const url = (process.env.SITE_URL ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:5173")).replace(/\/$/, "");
+  return { name: "site-url", transformIndexHtml: (html) => html.replaceAll("%SITE_URL%", url) };
+}
+
 /** demo/recorded/ is served at /recorded/ in dev and copied into dist/ for the recorded build (J9). */
 function recordedDemo(mode: string): Plugin {
   return {
@@ -31,7 +37,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const target = env.API_TARGET || "http://localhost:8001";
   return {
-    plugins: [react(), tailwindcss(), recordedDemo(mode)],
+    plugins: [react(), tailwindcss(), recordedDemo(mode), siteUrl()],
     resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
     server: { port: Number(env.PORT) || 5173, proxy: { "/api": { target, changeOrigin: true } } },
     preview: { port: 4173 },
