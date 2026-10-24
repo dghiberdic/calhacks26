@@ -1,5 +1,24 @@
 # world/ decisions (Filip lane A)
 
+## F3c integration with the shared world
+
+The team's new world/plant.py implementation owns controlled error and ambiguity coverage. The local experimental hidden-crew draw was removed when integrating upstream, so this branch preserves the shared generator, compact answer keys and all of its acceptance tests. The supplemental error_cases.py corpus remains a separate schema-valid regression input set. Evaluation expands the shared answer key in memory; it does not replace its labels or committed compact format.
+
+## F3d · Judge-day WorldAPI
+
+- `world.api.WorldImpl` supplies the public load/weather/airport/day interfaces. `world.generate.generate_day`
+  is also a module-level entry point discovered by the existing server.
+- Requested weather remains real and unchanged. A missing station/day raises the existing plain `WorldError`.
+  Future days and unknown airports are rejected before simulation; offline runs never need an LLM or network.
+- The selected Dublin route is simulated with the existing deterministic network and passenger generators.
+  Intra-EU requests include a labelled Heathrow control rotation so there is a non-EU-origin voucher counterexample.
+- Explicit simulated no-go faults supply inspectable judge cases even on calm days. Later sectors of the grounded
+  aircraft are cancelled too. These are simulated operational records, not assertions about a real airline.
+- Three EU-origin and one non-EU-origin revenue coupons receive unsigned in-lieu vouchers. Existing signed vouchers
+  are preserved; the fixtures select other coupons rather than deleting evidence of consent.
+- Pins, schema round-trip, source hashes, determinism, scope controls, invalid inputs and the under-two-second pinned
+  Heathrow path are checked through WorldAPI. Live weather retrieval retains the weather client's existing timeout.
+
 Judgment calls made while implementing, newest last. Each one says what we chose and why.
 
 ## F1 · METAR fetch + pins
@@ -176,6 +195,11 @@ Judgment calls made while implementing, newest last. Each one says what we chose
    notice). They don't count toward the curve.
 9. **Care:** per cancelled flight, an accrual row per kind (hotel for 35–55 % of passengers, meals for all, transport
    for hotel guests) at 22:00Z on the day, plus a vendor invoice 18–30 days later at 94–102 % of the accrual.
+# F3c answer keys and error inputs — 24 October 2026
+
+`answer_key.py` exports independent train/test labels from latent truth and immutable golden inputs, including NS31's 172 coupons and €99,000 face entitlement. Claim labels reject missing agency authority, expired claims, settled vouchers and duplicate coupon claims; they do not copy amounts claimed into amounts owed.
+
+`error_cases.py` provides a separate 140-case controlled regression corpus (five variants of 14 errors in each split). Weather is real pinned METAR, while flights, people, errors and expected actions are simulated. Ordinary technical scenarios require positive calm observations at both ends; concurrent examples retain actual windy observations. These input variants do not count as independent storms or inflate natural-world accuracy. Assignment/payment events are source documents plus metadata pending a typed settlement-event interface.
 
 ## F3c · Planted errors, answer key, history
 
@@ -224,3 +248,12 @@ Judgment calls made while implementing, newest last. Each one says what we chose
 6. **History:** the embedded world keeps golden's 48 history cases ("41 of 42"). A golden-free world gets
    `generated_history`: 42 reroute-reduction cases from learn-split coupons (41 applied, 1 goodwill exception) and
    6 cause rulings.
+
+## PR #6 merge into main (integration agent)
+
+1. **Filip's own resolution was merged as is.** He integrated F3c himself (a56be38) before we merged. `world/answer_key.py`, its tests and the compact `train/test/curves_train.json` are F3c's, byte for byte. His F3d (`generate.py`, `api.py`, `desk_cases.py`) and the `error_cases.py` stress corpus with `stress.json` come in unchanged. A full eval re-run on the merged tree rebuilt all four key files byte-identical.
+2. **His first key format (unplanted, `build_answer_key`) was not revived.** He dropped it himself. It also had no planted cases, so F3c's ≥5-per-type acceptance tests would fail on it.
+3. **His rule-based claim-validity recomputation was cross-checked against the F3c key and not restored.** Over the full seed-0 world, 6,214 of 6,261 claims agree. Two kinds of disagreement, 47 claims in all:
+   - **22 claims, F3c key right.** These are lead-booker PNR-scope claims. The rule ignores `pnr_scope`, so it pays the lead booker for one coupon only (e.g. CLM-NS167-23B-2023-09-07T0746Z: rule €400, key €1,200 covering 23B/23C/23D). It then wrongly accepts the members' later claims (e.g. CLM-NS167-23C-2023-09-27T1734Z: rule €400, key duplicate €0).
+   - **25 claims, no money disagreement.** These are claims on coupons settled in kind by a signed voucher. The key labels them valid with €0 due; the rule labels them invalid with €0. Only the label differs.
+   The cross-check found no case where the key is wrong, so it stays out.

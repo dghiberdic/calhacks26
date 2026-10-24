@@ -253,7 +253,10 @@ def main(argv: list[str]) -> int:
         p.write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         paths.append(p)
     (OUT / "SHA256SUMS").write_text(sums(paths), encoding="utf-8")
+    digest = hashlib.sha256((OUT / "SHA256SUMS").read_bytes()).hexdigest()
     print(f"wrote {len(paths)} files + SHA256SUMS to {OUT.relative_to(ROOT)}")
+    print(f"sha256(SHA256SUMS) = {digest}: if it changed, update the pin in contracts/tests/test_expected.py "
+          "(SHA256SUMS_DIGEST) and CONTRACTS.md §5, and add a CHANGELOG entry")
     return 0
 
 

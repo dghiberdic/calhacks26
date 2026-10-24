@@ -666,6 +666,11 @@ class Books(OpsMixin, ReportingMixin):
                 self._claim_event(claim, ent, cohort, seg, "rejected", 0, reason, today, known_at)
                 return []
 
+            event = (date.fromisoformat(reg["event_date"]) if reg and reg.get("event_date")
+                     else date_in_id(ent.flight_id))
+            # Receipt fixes timeliness: a timely claim may be processed after the limitation date.
+            if event is not None and utc_date(claim.received_at) > limitation_expiry(event):
+                return reject("after_limitation")
             if ent.status in HELD:
                 self._claim_event(claim, ent, cohort, seg, "held", 0, f"pending_ruling:{ent.status}", today, known_at)
                 return []
