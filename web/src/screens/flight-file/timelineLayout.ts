@@ -47,7 +47,9 @@ let canvas: CanvasRenderingContext2D | null | undefined;
 export function textWidth(text: string, font: string) {
   if (canvas === undefined) {
     try {
-      canvas = typeof document === "undefined" ? null : document.createElement("canvas").getContext("2d");
+      // jsdom (unit tests) has no canvas: estimate there instead of asking.
+      const noCanvas = typeof document === "undefined" || (typeof navigator !== "undefined" && /jsdom/i.test(navigator.userAgent));
+      canvas = noCanvas ? null : document.createElement("canvas").getContext("2d");
     } catch {
       canvas = null;
     }
