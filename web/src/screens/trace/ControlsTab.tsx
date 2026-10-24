@@ -49,7 +49,7 @@ export function ControlsTab() {
                     <span className="micro block text-slate-400">evidence</span>
                     <Mono className="mt-0.5 block break-all text-[11.5px] text-slate-600">{c.evidence_endpoint}</Mono>
                     {target ? (
-                      <Link to={target.to} className="mt-1 inline-flex items-center gap-1 text-[13px] font-medium text-metar-ink hover:underline">
+                      <Link to={target.to} aria-label={`Evidence for ${c.framework_ref}: ${target.label}`} className="mt-1 inline-flex items-center gap-1 text-[13px] font-medium text-metar-ink hover:underline">
                         {target.label}
                         <ArrowRight className="size-3.5" aria-hidden="true" />
                       </Link>

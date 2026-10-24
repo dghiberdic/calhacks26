@@ -129,6 +129,6 @@ describe("Trace screen", () => {
     expect(screen.getByText("mapping · not a certification")).toBeInTheDocument();
     const items = within(await screen.findByRole("list", { name: "Control mapping" })).getAllByRole("listitem");
     expect(items[0]).toHaveTextContent("CC6.1");
-    expect(within(items[1]).getByRole("link", { name: /Denied log/ })).toHaveAttribute("href", "/trace?tab=access#denied");
+    expect(within(items[1]).getByRole("link", { name: "Evidence for CC7.2: Denied log" })).toHaveAttribute("href", "/trace?tab=access#denied");
   });
 });
