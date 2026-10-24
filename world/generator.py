@@ -149,6 +149,21 @@ class Aog:
 
 
 @dataclass
+class DayPlan:
+    """Forced latent events used to plant the answer key's error cases (F3c). Empty = the natural day."""
+    aog: dict[str, tuple[datetime, bool]] = field(default_factory=dict)   # tail -> (logged at DUB, recorded?)
+    crew: set[str] = field(default_factory=set)            # flight ids cancelled for crew shortage
+    wx: set[str] = field(default_factory=set)              # flight ids cancelled for weather (needs storm obs)
+    batch: set[str] = field(default_factory=set)           # flight ids the storm-day OCC batch always lists (RSN 71)
+    code: dict[str, str] = field(default_factory=dict)     # flight id -> OCC code typed
+    notice: dict[str, int] = field(default_factory=dict)   # flight id -> days of advance notice (planned CNL)
+    pax_mismatch: dict[str, int] = field(default_factory=dict)   # flight id -> pax typed by OCC (manifest wins)
+
+    def __bool__(self) -> bool:
+        return any((self.aog, self.crew, self.wx, self.batch, self.code, self.notice, self.pax_mismatch))
+
+
+@dataclass
 class DayOutput:
     flights: list[Flight] = field(default_factory=list)
     tech_log: list[TechLogEntry] = field(default_factory=list)
@@ -160,13 +175,16 @@ class DayOutput:
     cancels: dict[str, Cancel] = field(default_factory=dict)
     meta: dict[str, Any] = field(default_factory=dict)
     pax: Any = None                      # world.pax.PaxOutput once populate_pax ran
+    idx: dict[str, Any] = field(default_factory=dict)      # station -> causes.ObsIndex (not serialized)
+    w_day: date | None = None
 
 
 class DaySim:
     """Simulate one world day's ops: latent causes → flights, OCC/MCC/spares/tech logs, METAR, flight truth."""
 
     def __init__(self, wday: WorldDay, seed: int, *, pairs: list[N.Pair] | None = None,
-                 loader: MetarLoader = pinned_loader, storm_name: str = "") -> None:
+                 loader: MetarLoader = pinned_loader, storm_name: str = "", plan: DayPlan | None = None) -> None:
+        self.plan = plan or DayPlan()
         self.w = wday
         self.day = wday.day
         self.seed = seed
@@ -174,7 +192,7 @@ class DaySim:
         self.loader = loader
         self.storm = wday.kind == "storm"
         self.storm_name = storm_name
-        self.out = DayOutput()
+        self.out = DayOutput(w_day=wday.day)
         self.drng = rng_for(seed, "day", self.day.isoformat())
 
     # ---- METAR
@@ -208,6 +226,7 @@ class DaySim:
         sectors = N.day_sectors(d, self.pairs)
         self.out.sectors = {s.id: s for s in sectors}
         idx = self.load_metar(sectors)
+        self.out.idx = idx
         rot = N.tail_rotation(sectors)
 
         # day-level draws
@@ -235,6 +254,17 @@ class DaySim:
                 s0 = secs[0]
                 logged = s0.std - timedelta(minutes=r.randint(50, 110))
                 self._log_mel(tail, s0.origin, logged, r.choice(T.MEL_DEFECTS), r)
+        for tail, (logged, recorded) in sorted(self.plan.aog.items()):
+            if tail not in rot or aog.get(tail) is not None:
+                continue
+            r = rng_for(self.seed, "planted-aog", tail, d.isoformat())
+            defect = r.choice(T.AOG_DEFECTS)
+            aog_after.pop(tail, None)
+            if recorded:
+                aog[tail] = self._log_aog(tail, N.HUB, logged, defect, r, "internal_aog")
+            else:   # the defect was never written up: invisible to every feature
+                aog[tail] = Aog(until=logged + timedelta(hours=30), entry_id="", station=N.HUB, logged_at=logged,
+                                latent="internal_aog", defect=defect)
 
         loc = {tail: secs[0].origin for tail, secs in rot.items()}
         avail = {tail: secs[0].std - timedelta(hours=2) for tail, secs in rot.items()}
@@ -252,18 +282,21 @@ class DaySim:
             sev_dep = C.severity(idx.get(s.origin), s.std)
             sev_arr = C.severity(idx.get(s.dest), s.sta)
             p_wx = 1 - (1 - sev_dep) * (1 - sev_arr)
-            wx = u_wx < p_wx
+            wx = u_wx < p_wx or (s.id in self.plan.wx and max(sev_dep, sev_arr) > 0)
             wx_latent = "weather_dep" if sev_dep >= sev_arr else "weather_arr"
             hub_sev = sev_dep if s.origin == N.HUB else sev_arr
             ready = avail.get(tail, s.std) + timedelta(minutes=25)
             reactionary = max(0, int((ready - s.std).total_seconds() // 60))
             positioned = loc.get(tail) == s.origin and reactionary <= 180
-            grounded = aog.get(tail) is not None and aog[tail].until > s.std  # type: ignore[union-attr]
+            grounded = (aog.get(tail) is not None and aog[tail].until > s.std  # type: ignore[union-attr]
+                        and aog[tail].logged_at <= s.std)  # type: ignore[union-attr]
             cancel: Cancel | None = None
             delay_min = 0
             used_spare: str | None = None
 
-            if not positioned:
+            if s.id in self.plan.notice:
+                cancel = Cancel("notice", s.std - timedelta(days=self.plan.notice[s.id]))
+            elif not positioned:
                 if max(sev_dep, sev_arr) > 0:
                     # the storm is still on at this sector's own ends: it would not have flown anyway
                     cancel = Cancel(wx_latent, self._wx_known(s))
@@ -283,7 +316,7 @@ class DaySim:
             elif grounded:
                 a = aog[tail]
                 assert a is not None
-                if wx and hub_sev >= 0.25:
+                if wx and hub_sev > 0:
                     cancel = Cancel("concurrent", a.logged_at, defect_entry=a.entry_id)
                 elif s.origin == N.HUB and (sp := self._spare(s, spare_free, at=s.std - timedelta(minutes=30))):
                     used_spare = sp
@@ -292,7 +325,8 @@ class DaySim:
                                     spare={"spare": None, "station": s.origin} if s.origin == N.HUB else None)
             elif wx:
                 cancel = Cancel(wx_latent, self._wx_known(s))
-            elif u_crew < (C.P_CREW_STORM_LATE if self.storm and s.std.hour >= 13 else C.P_CREW):
+            elif s.id in self.plan.crew or u_crew < (C.P_CREW_STORM_LATE if self.storm and s.std.hour >= 13
+                                                       else C.P_CREW):
                 cancel = Cancel("crew", s.std - timedelta(minutes=60 + int(u_delay * 90)))
             elif atc_strike and self._atc_affected(s) and u_atc < C.P_ATC_CANCEL:
                 cancel = Cancel("atc", midnight(d) + timedelta(hours=4, minutes=30))
@@ -514,16 +548,18 @@ class DaySim:
             t_batch = t_batch.replace(second=0, microsecond=0)
             for fid, c in sorted(cancels.items()):
                 rr = rng_for(self.seed, "occ", fid)
-                in_batch = (c.latent in WX_LATENT or c.latent == "concurrent"
-                            or (c.latent == "rotation" and c.root in wx_ids)
-                            or (c.known_at <= t_batch and rr.random() < C.P_OCC_MISBATCH))
+                in_batch = c.latent != "notice" and (
+                    c.latent in WX_LATENT or c.latent == "concurrent" or fid in self.plan.batch
+                    or (c.latent == "rotation" and (c.root in wx_ids or c.root in self.plan.batch))
+                    or (c.known_at <= t_batch and rr.random() < C.P_OCC_MISBATCH))
                 if in_batch:
                     batch.append(fid)
             sms = t_batch + timedelta(minutes=8)
             inbound = [f for f in batch if by_id[f].pair.long_haul and by_id[f].is_return]
             main = [f for f in batch if f not in inbound]
             groups = self._groups(main, by_id)
-            text = T.occ_batch_line(t_batch, self.storm_name, groups, [by_id[f].number for f in inbound], sms)
+            text = T.occ_batch_line(t_batch, self.storm_name, groups, [by_id[f].number for f in inbound], sms,
+                                    pax_note=self._pax_note(batch, by_id))
             oid = f"OCC-{stamp(t_batch)}"
             self.out.ops_log.append(OpsLogEntry(id=oid, at=t_batch, kind="occ", flight_ids=sorted(batch), code="71",
                                                 text=text, author="OCC DM"))
@@ -544,10 +580,12 @@ class DaySim:
                 if other != fid and other not in handled and cancels[other].latent == "rotation" \
                         and cancels[other].root == fid:
                     group_ids.append(other)
-            code = self._occ_code(fid, c, idx)
+            code = self.plan.code.get(fid) or self._occ_code(fid, c, idx)
             at = max(c.known_at + timedelta(minutes=rng_for(self.seed, "occt", fid).randint(10, 35)),
                      midnight(d) - timedelta(hours=6))
-            if at > s.std + timedelta(minutes=30):
+            if c.latent == "notice":
+                at = c.known_at + timedelta(minutes=rng_for(self.seed, "occt", fid).randint(10, 35))
+            elif at > s.std + timedelta(minutes=30):
                 at = s.std - timedelta(minutes=5) if c.known_at < s.std else c.known_at + timedelta(minutes=10)
             at = at.replace(second=0, microsecond=0)
             sms = at + timedelta(minutes=6)
@@ -555,7 +593,8 @@ class DaySim:
             reason = T.OCC_REASON_TEXT.get(code, "OPS").format(tail=tail, station=s.origin,
                                                               fir="FRANCE" if code == "82" else "")
             text = T.occ_single_line(at, self._groups(group_ids, by_id)[0] if len(group_ids) <= 2
-                                     else " ".join(self._groups(group_ids, by_id)), code, reason, sms)
+                                     else " ".join(self._groups(group_ids, by_id)), code, reason, sms,
+                                     pax_note=self._pax_note(group_ids, by_id))
             oid = f"OCC-{stamp(at)}-{s.number}"
             self.out.ops_log.append(OpsLogEntry(id=oid, at=at, kind="occ", flight_ids=sorted(group_ids), code=code,
                                                 text=text, author="OCC duty manager"))
@@ -571,14 +610,41 @@ class DaySim:
                 f = f.model_copy(update={"ops_cause_code": codes[f.id], "notified_at": notified[f.id]})
                 self.out.truth[f.id].ops_code = codes[f.id]
                 t = self.out.truth[f.id]
+                s = by_id[f.id]
+                storm_at_ends = max(C.severity(idx.get(s.origin), s.std), C.severity(idx.get(s.dest), s.sta))
                 # invisible to the features: a crew cancellation batch-coded 71 inside the storm
-                if t.latent == "crew" and codes[f.id] in ("71", "72"):
-                    s = by_id[f.id]
-                    if max(C.severity(idx.get(s.origin), s.std), C.severity(idx.get(s.dest), s.sta)) >= 0.08:
-                        t.ambiguous = True
-                        t.note = "crew shortage batch-coded as weather inside the storm; no record shows it"
+                if t.latent == "crew" and codes[f.id] in ("71", "72") and storm_at_ends >= 0.08:
+                    t.ambiguous = True
+                    t.note = "crew shortage batch-coded as weather inside the storm; no record shows it"
+                cancel = cancels[f.id]
+                root_t = self.out.truth.get(t.root_flight_id or "")
+                if t.latent == "rotation" and root_t is not None and root_t.ambiguous:
+                    t.ambiguous = True
+                    t.note = "knock-on of a cancellation whose real cause no record shows"
+                if t.latent in ("internal_aog", "concurrent") and cancel.defect_entry == "":
+                    t.ambiguous = True
+                    t.note = "aircraft defect never written up in the tech log; OCC typed the storm code"
+                tags = t.planted
+                if t.latent == "internal_aog" and codes[f.id] in ("71", "72"):
+                    tags.append("miscoded_technical")
+                if t.latent == "concurrent":
+                    tags.append("concurrent")
+                if t.latent == "rotation" and t.expected_route == "legal":
+                    tags.append("knock_on_return")
+                if t.latent == "notice":
+                    tags.append("notice_ge_14d")
+                    f = f.model_copy(update={"notified_at": f.sched_dep - timedelta(days=self.plan.notice[f.id])})
+                if f.id in self.plan.pax_mismatch:
+                    tags.append("manifest_ops_pax_mismatch")
+                if t.ambiguous:
+                    tags.append("ambiguous")
             flights.append(f)
         self.out.flights = flights
+
+    def _pax_note(self, ids: Iterable[str], by_id: dict[str, N.Sector]) -> str:
+        notes = [f"{by_id[i].number} PAX {self.plan.pax_mismatch[i]}" for i in sorted(ids, key=lambda x: by_id[x].std)
+                 if i in self.plan.pax_mismatch]
+        return ("OPS PAX: " + ", ".join(notes) + ".") if notes else ""
 
     def _occ_code(self, fid: str, c: Cancel, idx: dict[str, C.ObsIndex]) -> str:
         r = rng_for(self.seed, "code", fid)
@@ -724,14 +790,14 @@ def assemble(outputs: Sequence[DayOutput], seed: int, *, extra_meta: dict[str, A
     sources: list[Source] = []
     metar_: dict[str, list[MetarObs]] = {}
     coupons, elections, crm, claims, care = [], [], [], [], []
-    days_meta = []
+    days_meta, legacy_meta = [], []
     for o in outputs:
         flights += o.flights
         tech += o.tech_log
         ops += o.ops_log
         sources += o.sources
         metar_.update(o.metar)
-        days_meta.append(o.meta)
+        (legacy_meta if o.meta.get("kind") == "legacy" else days_meta).append(o.meta)
         if o.pax is not None:
             coupons += o.pax.coupons
             elections += o.pax.elections
@@ -742,7 +808,7 @@ def assemble(outputs: Sequence[DayOutput], seed: int, *, extra_meta: dict[str, A
     codes = sorted({f.origin for f in flights} | {f.dest for f in flights})
     meta = {"carrier": CARRIER, "generator": GENERATOR_VERSION, "seed": seed, "hub": N.HUB,
             "split": {"train": "2023-07-01..2024-12-31", "test": "2025-01-01..2025-06-30"},
-            "days": days_meta, "distances_km": distances_meta(codes),
+            "days": days_meta, "legacy": legacy_meta, "distances_km": distances_meta(codes),
             "fleet": {t: N.FLEET[t].name for t in sorted(N.FLEET)}}
     meta.update(extra_meta or {})
     return World(meta=meta, airports=sorted((airport(c) for c in codes), key=lambda a: a.iata), flights=flights,
@@ -753,30 +819,54 @@ def assemble(outputs: Sequence[DayOutput], seed: int, *, extra_meta: dict[str, A
                  sources=sorted(sources, key=lambda s: (s.received_at, s.id)))
 
 
-def simulate_days(seed: int = 0, wdays: Sequence[WorldDay] | None = None) -> list[DayOutput]:
+def simulate_days(seed: int = 0, wdays: Sequence[WorldDay] | None = None, *, plant: bool = False
+                  ) -> tuple[list[DayOutput], dict[str, Any]]:
+    """Simulate the days (flights → passengers). With `plant`, top up every planted-error type per split first
+    (world/plant.py) and plant the claim-level cases afterwards. Returns (outputs incl. legacy, planted counts)."""
+    from world import plant as PL
     from world.days import world_days
 
-    outs = []
-    for w in (wdays if wdays is not None else world_days()):
-        o = DaySim(w, seed, storm_name=STORM_NAMES.get(w.day.isoformat(), "")).run()
+    days = list(wdays if wdays is not None else world_days())
+
+    def run_day(w: WorldDay, plan: DayPlan | None) -> DayOutput:
+        return DaySim(w, seed, storm_name=STORM_NAMES.get(w.day.isoformat(), ""), plan=plan).run()
+
+    outs = {w.day: run_day(w, None) for w in days}
+    plans: dict[date, DayPlan] = {}
+    if plant:
+        PL.Planner(seed, run_day).plan(days, plans, outs)
+    ordered = [outs[w.day] for w in days]
+    for o in ordered:
         populate_pax(o, seed)
-        outs.append(o)
-    return outs
+    counts: dict[str, Any] = {}
+    if plant:
+        for split in ("train", "test"):
+            split_outs = [outs[w.day] for w in days if w.split == split]
+            counts[split] = dict(PL.PaxPlanter(seed, split, split_outs).run())
+            ordered.append(PL.legacy_output(seed, split))
+        counts["plans"] = {d.isoformat(): {"aog": sorted(p.aog), "crew": sorted(p.crew), "wx": sorted(p.wx),
+                                           "notice": sorted(p.notice), "pax_mismatch": sorted(p.pax_mismatch)}
+                           for d, p in sorted(plans.items()) if p}
+    return ordered, counts
 
 
 def generate_world(seed: int = 0, wdays: Sequence[WorldDay] | None = None, *,
-                   embed_golden: bool | None = None) -> Generated:
-    """The Northstar world. `embed_golden` (default: only for the full world, when golden exists) splices the
-    golden Éowyn/Herminia world in verbatim instead of simulating those days (F0)."""
+                   embed_golden: bool | None = None, plant: bool | None = None) -> Generated:
+    """The Northstar world. Defaults apply to the full world only (`wdays=None`): `embed_golden` splices the golden
+    Éowyn/Herminia world in verbatim instead of simulating those days (F0); `plant` plants ≥5 of every error type
+    per split (F3c). An explicit day list gets the natural days unless asked otherwise."""
     from world import golden
     from world.days import split_of, world_days
 
     if embed_golden is None:
         embed_golden = wdays is None and golden.available()
+    if plant is None:
+        plant = wdays is None
     all_days = list(wdays if wdays is not None else world_days())
     gdays = golden.golden_days() if embed_golden else frozenset()
-    outs = simulate_days(seed, [w for w in all_days if w.day not in gdays])
+    outs, planted = simulate_days(seed, [w for w in all_days if w.day not in gdays], plant=plant)
     truth = Truth()
+    truth.planted = planted
     for o in outs:
         truth.flights.update(o.truth)
         if o.pax is not None:
@@ -802,4 +892,95 @@ def generate_world(seed: int = 0, wdays: Sequence[WorldDay] | None = None, *,
                                              reroute_earliest_offered=t["reroute_earliest_offered"],
                                              ops_code=next((f.ops_cause_code for f in g.flights if f.id == fid), None),
                                              golden=True)
+        _golden_pax_truth(g, truth)
+    elif plant:
+        world = world.model_copy(update={"history_cases": generated_history(world, truth, seed)})
     return Generated(world, truth)
+
+
+def _golden_pax_truth(g: World, truth: Truth) -> None:
+    """Coupon and claim truth for golden's passengers, from golden's flight truth and its own records."""
+    from world import pax as P
+
+    flights = {f.id: f for f in g.flights}
+    elections = {e.coupon_id: e for e in g.elections}
+    in_lieu = {}
+    for e in sorted(g.crm, key=lambda e: e.at):
+        if e.kind == "voucher_in_lieu_of_compensation":
+            in_lieu[e.coupon_id] = e
+    dist = g.meta.get("distances_km", {})
+    special = {g.meta.get("ns31", {}).get("bsp_duplicate_coupon"): "crm_bot_plus_bsp_refund",
+               g.meta.get("ns31", {}).get("chargeback_coupon"): "duplicate_claim_chargeback"}
+    for c in g.coupons:
+        t = P.coupon_truth(flights[c.flight_id], truth.flights[c.flight_id].__dict__, c, elections.get(c.id),
+                           in_lieu.get(c.id), distances=dist)
+        tags = []
+        if c.id in in_lieu and not in_lieu[c.id].signed_acceptance_sha256:
+            tags.append("voucher_in_lieu_unsigned")
+        if c.id in special:
+            tags.append(special[c.id])
+        if c.fare_type == "staff_id90":
+            tags.append("staff_id90")
+        if tags:
+            t["planted"] = tags
+        truth.coupons[c.id] = t
+    seen: set[str] = set()
+    for cl in sorted(g.claims, key=lambda c: (c.received_at, c.id)):
+        t = truth.coupons[cl.coupon_id]
+        valid = t["status"] == "owed" and cl.coupon_id not in seen
+        seen.add(cl.coupon_id)
+        truth.claims[cl.id] = {"coupon_id": cl.coupon_id, "valid": valid,
+                               "pay_cents": t.get("pay_cents", 0) if valid else 0,
+                               "covers": [cl.coupon_id] if valid else [],
+                               "reason": "valid" if valid else ("duplicate_already_claimed" if t["status"] == "owed"
+                                                               else t["status"]),
+                               "planted": [], "golden": True,
+                               "dev_month": P.dev_month(flights[cl.coupon_id.rsplit(":", 1)[0]].date, cl.received_at)}
+
+
+def _region(o_code: str, d_code: str) -> str:
+    o, d = airport(o_code), airport(d_code)
+    if o.eu and d.eu:
+        return "EU"
+    pair = {o.country, d.country}
+    return "EU_US" if "US" in pair else ("EU_UK" if "GB" in pair else "OTHER")
+
+
+def generated_history(world: World, truth: Truth, seed: int) -> list:
+    """Northstar's hidden policy as past human decisions with case features (for the miner), used only when golden's
+    own history is not embedded: the Art. 7(2) cut applied in 41 of 42 reroute cases, plus 6 cause rulings."""
+    from contracts.models import HistoryCase
+
+    r = rng_for(seed, "history")
+    flights = {f.id: f for f in world.flights}
+    elections = {e.coupon_id: e for e in world.elections}
+    cands = sorted(cid for cid, t in truth.coupons.items() if t.get("reduction") == "art7_2_50pct"
+                   and truth.flights[t["flight_id"]].split == "train")
+    r.shuffle(cands)
+    pick = sorted(cands[:42])
+    exception = pick[r.randrange(len(pick))] if pick else None
+    out = []
+    for i, cid in enumerate(pick, 1):
+        t, e = truth.coupons[cid], elections[cid]
+        f = flights[t["flight_id"]]
+        feats = {"pax.election": e.kind, "pax.arrival_delay_min": e.arrival_delay_min, "flight.band_eur": t["band_eur"],
+                 "flight.distance_km": distance_km(f.origin, f.dest), "flight.departs_eu": airport(f.origin).eu,
+                 "flight.route_region": _region(f.origin, f.dest)}
+        decision = "no_reduction" if cid == exception else "apply_7_2_reduction"
+        out.append(HistoryCase(ruling_id=f"GH-RR-{i:03d}", case_ref=cid, kind="reroute_reduction", features=feats,
+                               decision=decision, at=midnight(f.date) + timedelta(days=30 + r.randint(0, 60), hours=10)))
+    wx = sorted(fid for fid, t in truth.flights.items() if t.split == "train" and t.latent == "weather_dep"
+                and not t.ambiguous)
+    tech = sorted(fid for fid, t in truth.flights.items() if t.split == "train" and t.latent == "internal_aog"
+                  and not t.ambiguous)
+    r.shuffle(wx)
+    r.shuffle(tech)
+    for i, fid in enumerate(sorted(wx[:3] + tech[:3]), 1):
+        t, f = truth.flights[fid], flights[fid]
+        is_wx = t.latent == "weather_dep"
+        feats = {"flight.in_window_dep": "in" if is_wx else "out", "flight.in_window_arr": "out",
+                 "aog.before_window": not is_wx, "aog.root_cause_internal": not is_wx,
+                 "aog.mel_relief": None if is_wx else False, "rotation.prev_cancelled": False}
+        out.append(HistoryCase(ruling_id=f"GH-CA-{i:03d}", case_ref=fid, kind="cause", features=feats,
+                               decision=t.extraordinary or "", at=midnight(f.date) + timedelta(days=40, hours=11)))
+    return sorted(out, key=lambda h: (h.at, h.ruling_id))

@@ -398,8 +398,8 @@ def claim_record(out: PaxOutput, spec: ClaimSpec, ids: set[str], r: random.Rando
     out.claims.append(claim)
     _src(out, f"SRC-{cid}", SourceKind.CLAIM, f"EU261 claim · {f.number} {seat}", text + "\n", at, 4, ["pii"])
     out.claim_truth[cid] = {"coupon_id": c.id, "valid": spec.valid, "pay_cents": spec.pay_cents if spec.valid else 0,
-                            "reason": spec.reason, "planted": list(spec.planted),
-                            "dev_month": dev_month(f.date, at)}
+                            "covers": [c.id] if spec.valid else [], "reason": spec.reason,
+                            "planted": list(spec.planted), "dev_month": dev_month(f.date, at)}
     return claim
 
 
