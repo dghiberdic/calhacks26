@@ -22,7 +22,7 @@ const fmt = (t: number) => {
 };
 
 const CAPTIONS: { from: number; to: number; text: string; tone?: "owed" }[] = [
-  { from: 7, to: 7.9, text: "07:00Z. Light rain at Dublin, 8 knots. A normal Tuesday." },
+  { from: 7, to: 7.9, text: "07:00Z. Dublin, 10 knots and cloud. A normal Tuesday morning." },
   { from: 7.9, to: 9.5, text: "07:55Z. EI-NSA is grounded at Dublin: a hydraulic leak on engine 1.", tone: "owed" },
   { from: 9.5, to: 11, text: "Storm Bram is coming north from the Azores on a jet streak." },
   { from: 11, to: 13.5, text: "11:00Z. Orange wind warning for Dublin." },

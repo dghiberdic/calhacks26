@@ -42,7 +42,7 @@ export function Closing() {
         <div className="space-y-1">
           <p className="text-ink">Real data</p>
           <p>Pressure and wind: ERA5 reanalysis (Copernicus/ECMWF) via Open-Meteo.</p>
-          <p>Imagery: NASA GIBS, MODIS Terra corrected reflectance.</p>
+          <p>Imagery: EUMETSAT MTG GeoColour and true colour (contains modified EUMETSAT data, 2025).</p>
           <p>Airport weather: METAR archive, Iowa Environmental Mesonet.</p>
           <p>Law: Regulation (EC) 261/2004; CJEU C-549/07.</p>
         </div>

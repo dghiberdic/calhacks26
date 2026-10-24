@@ -45,9 +45,9 @@ export function DepartureBoard() {
   return (
     <div ref={root} className="relative">
       <div className="mb-6 flex items-end justify-between gap-6 text-mist">
-        <div className="label">Dublin · departures · {phase === "checked" ? "re-checked 09:00" : "storm night"}</div>
+        <div className="text-[15px] text-haze">Dublin departures, 9 December{phase === "checked" ? ", re-checked at 09:00Z" : ""}</div>
         <div className="flex items-baseline gap-3">
-          <span className="label">Owed</span>
+          <span className="text-[15px] text-haze">Owed</span>
           <FlapText text={eur(owedTotal)} width={8} stagger={40} className="text-[22px] md:text-[28px]" cellClassName={owedTotal ? "!text-[#ff7a5c]" : undefined} />
         </div>
       </div>
