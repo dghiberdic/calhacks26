@@ -292,3 +292,7 @@ JE through its period, and `blame_target` (the 2140 line when there is one).
    use the same one.
 6. The `curves.json` format isn't defined yet, hence the tolerant loader.
 7. `ReplayDiff.flips` entity granularity is unspecified. Books reports per flight; the engine reports decisions.
+# Claim receipt cut-off — 24 October 2026
+
+The F3c late-claim fixture exposed that `post_claim` could create payout drafts after the simulated six-year limitation. It now rejects claims received after the event's limitation date, recording `after_limitation` with no journal entries. It uses receipt date, so a timely claim processed later remains valid. The register event date is preferred; a standard flight-id date is the fallback for an unregistered entitlement. Existing approved-claim idempotency remains unchanged.
+
