@@ -47,6 +47,7 @@ export function StormDay() {
   const [storm, setStorm] = useState<StormJSON | null>(null);
   const [frames, setFrames] = useState<FramesJSON | null>(null);
   const [hours, setHours] = useState<Hour[]>([]);
+  const [noGL, setNoGL] = useState(false);
   const view = useRef<View>({ ...VIEW_START });
   const state = useRef({ t: T0, reveal: 0, particles: 0 });
 
@@ -105,12 +106,20 @@ export function StormDay() {
   useEffect(() => {
     if (!storm || !frames || !glRef.current || !pRef.current || !root.current || hours.length === 0) return;
     const fb = frames.bbox;
-    const sat = new SatelliteLayer({
-      canvas: glRef.current,
-      image: `${BASE}/${frames.frames[0].file}`,
-      satBox: [fb.lonMin * K, -fb.latMax, fb.lonMax * K, -fb.latMin],
-      origin: DUB,
-    });
+    let sat: SatelliteLayer;
+    try {
+      sat = new SatelliteLayer({
+        canvas: glRef.current,
+        image: `${BASE}/${frames.frames[0].file}`,
+        satBox: [fb.lonMin * K, -fb.latMax, fb.lonMax * K, -fb.latMin],
+        origin: DUB,
+      });
+    } catch {
+      // No WebGL (old projector, locked-down browser): show the real 12:00Z frame instead.
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-off fallback when the GPU context fails
+      setNoGL(true);
+      return;
+    }
     const grid: WindGrid = { nx: storm.nx, ny: storm.ny, lonMin: storm.bbox.lonMin, latMax: storm.bbox.latMax, step: storm.step, u: hours[0].u.slice(), v: hours[0].v.slice() };
     const wind = new WindParticles(pRef.current, grid, window.innerWidth < 768 ? 1100 : 2400);
     const frameTimes = frames.frames.map((f) => toHours(f.t));
@@ -270,6 +279,10 @@ export function StormDay() {
   return (
     <div ref={root} className="relative h-svh w-full overflow-hidden bg-night">
       <canvas ref={glRef} className="absolute inset-0 h-full w-full" aria-hidden="true" />
+      {noGL && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={`${BASE}/true-1200.webp`} alt="EUMETSAT image of Storm Bram over Ireland at 12:00 UTC on 9 December 2025" className="absolute inset-0 h-full w-full object-cover opacity-80" />
+      )}
       <svg ref={svgRef} className="absolute inset-0 h-full w-full" viewBox="-20 -60 30 18" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style={{ ["--u" as string]: 0.02 }}>
         <g className="sd-lines" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path className="sd-grat" d={GRATICULE} stroke="#8e9aa8" strokeOpacity="0.18" style={{ strokeWidth: "calc(var(--u) * 1)" }} />

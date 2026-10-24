@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react-hooks/immutability -- three.js objects (uniforms, camera, fans) are mutated per frame by design */
 
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
@@ -177,6 +178,10 @@ export function AircraftScene({ progress, className }: { progress: React.RefObje
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance", toneMapping: THREE.ACESFilmicToneMapping, outputColorSpace: THREE.SRGBColorSpace }}
       camera={{ fov: 4, position: [23.5, 5.6, 700], near: 0.5, far: 1000 }}
       shadows={false}
+      fallback={
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src="/renders/ns31-hero-render.webp" alt="Rendering of EI-NSA" className="h-full w-full object-contain" />
+      }
     >
       <hemisphereLight args={["#dfe8f2", "#1a1f27", 0.6]} />
       <directionalLight position={[30, 40, 60]} intensity={1.6} color="#fff4e8" />
