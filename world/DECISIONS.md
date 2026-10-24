@@ -150,7 +150,11 @@ Judgment calls made while implementing, newest last. Each one says what we chose
    country). The plan's subset is about the demo network; the desk should not reject a real airport.
 4. **EU261 territory (`Airport.eu`)** = EU27 + EEA (IS, LI, NO) + CH, plus the French outermost regions that carry
    their own ISO codes (GP, MQ, GF, RE, YT, MF). Canaries/Madeira/Azores are ES/PT already. The UK, Faroe and
-   Greenland are not EU261 territory.
+   Greenland are not EU261 territory. **Per-airport exclusions** (24 Oct, to agree with `engine/geo.py`): northern
+   Cyprus (Ercan ECN/LCEN, Geçitkale GEC/LCGK; Protocol 10), RAF Akrotiri (AKT/LCRA; Protocol 3) and Svalbard
+   (LYR/ENSB; EEA Protocol 40) are outside, although their country codes (CY, NO) are in. A test checks that
+   `world.airports` and `engine.geo` agree on these and on ordinary airports. None of them is in the network, so the
+   full world and the answer key are unchanged.
 5. **`iata`** falls back to the ICAO code when an airport has no IATA code (the `Airport` model requires a string).
    IATA collisions resolve to the large airport.
 6. **`distance_km`** is the great circle with R = 6371 km on OurAirports coordinates, rounded to 0.1 km so hashes
