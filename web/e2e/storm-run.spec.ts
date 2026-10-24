@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 // THREAD_JUSTIN J1: the NS31 red tick, "€34,650", "71 → 41" and "5,292" are all visible.
 test("Storm Run tells the overnight story", async ({ page }) => {

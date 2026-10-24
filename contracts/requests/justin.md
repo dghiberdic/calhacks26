@@ -24,6 +24,8 @@ fallback is either a static table or a number the UI can't get from the API, whi
 | 17 | `POST /books/month-end` is idempotent per period (a second call returns the first draft) | A presenter can click month-end twice on stage | the mock already behaves this way |
 | 18 | `je_ids` on rollforward rows | The "J" (agrees with its journals) check is exact | matched by journal kind |
 | 19 | `CfoMetrics.cohort: str` | The CFO bridge says which cohort it describes | treated as the hero storm's NS31 cohort |
+| 20 | A journal draft prepared by a person seat in the demo world, e.g. `POST /books/month-end` records the calling Controller as `preparer` (today every entry is `agent.books`) | THREAD_JUSTIN J6: "approving as the preparer shows DENIED · SoD" needs a seat that prepared something | the e2e skips with this reason; the denied log on Trace still shows `agent.drafter approve_payout → DENIED · SoD` |
+| 21 | Passenger names in Q1 (and its evidence) for the Claims Lead, masked (e.g. `[redacted]`) for every other seat | Plan §4 1:00: "PII visible to this role"; Trace → Access: the "view as Ops" mask | the stub sends no names, so the mask beat can't be shown; the e2e skips with this reason |
 
 ## Open questions (the demo script hedges on these until answered)
 

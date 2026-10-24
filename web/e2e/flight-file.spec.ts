@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 const NS31 = "/flights/NS31%402025-01-24";
 /** First paint of a lazily loaded screen on a cold dev server can take a while; the checks after it use the default. */

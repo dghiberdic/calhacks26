@@ -5,7 +5,7 @@ import { feature } from "topojson-client";
 import type { GeometryCollection, Topology } from "topojson-specification";
 import landTopo from "world-atlas/land-110m.json";
 import type { StormRun } from "@/api/types";
-import { airport, iataOf } from "@/lib/airports";
+import { airport as referenceAirport, iataOf } from "@/lib/airports";
 import { cn } from "@/lib/utils";
 import type { VerdictKind } from "../verdict";
 import { stormFacts } from "./model";
@@ -68,6 +68,9 @@ export function RouteMap({ run, compact, tone = "dark", className, animate = tru
   const play = animate && !reduce;
   const [hover, setHover] = useState<string | null>(null);
   const facts = useMemo(() => stormFacts(run), [run]);
+  // Coordinates from the API (StormRun.airports, D0a) first; the bundled reference table covers older servers.
+  const served = useMemo(() => new Map((run.airports ?? []).map((a) => [a.iata, a])), [run.airports]);
+  const airport = (code: string) => served.get(code) ?? referenceAirport(code);
   const hub = airport(facts.hub) ?? airport(iataOf(run.station));
 
   // One arc per destination; its colour is the most serious verdict among the flights on that route.

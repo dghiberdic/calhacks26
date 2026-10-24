@@ -88,6 +88,8 @@ describe("question helpers", () => {
   it("knows an option that rejects a release proposal from one that only defers it", () => {
     expect(REJECT_RE.test("Reject: never release the tail. At M12 keep (ultimate − M12 rate) × entitlement until the six-year limitation.")).toBe(true);
     expect(REJECT_RE.test("Keep the €3,600 and re-test next quarter.")).toBe(false);
+    // The contract stub's wording for the same rejection.
+    expect(REJECT_RE.test("Keep the expected tail until the six-year limitation")).toBe(true);
     expect(REJECT_RE.test("Derecognise the remaining €3,600 now: no new claims in 3 months.")).toBe(false);
   });
 

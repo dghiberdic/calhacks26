@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "./fixtures";
 
 // J4 · Policies. Rules come only from history, rulings, rejections and regulation: there is no rule editor.
 

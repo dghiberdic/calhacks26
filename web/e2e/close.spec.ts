@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures";
 
 const SEATS: [RegExp, string][] = [
   [/claims[\s_-]?lead/i, "claims_lead"],
@@ -63,7 +63,8 @@ test("the preparer approving their own entry is DENIED · SoD, in place", async 
       break;
     }
   }
-  expect(target, "a draft prepared by a person").not.toBeNull();
+  // A server whose drafts are all agent-prepared can't show this from a seat (contracts/requests/justin.md #20).
+  test.skip(target === null, "no draft is prepared by a person seat on this server (request #20)");
   await viewAs(page, target!.role);
   const card = page.getByTestId(target!.id);
   await card.getByRole("button", { name: "Approve" }).click();
@@ -90,11 +91,20 @@ test("other seats read the close; they don't act on it", async ({ page }) => {
   await expect(page.getByTestId("month-end")).toHaveCount(0);
 });
 
-test("a journal link (#JE-…) opens the entry's period and tab and scrolls to it", async ({ page }) => {
-  // JE-000110: January's six approved NS31 claims, so this crosses both the period and the status tab.
-  await page.goto("/close#JE-000110");
-  const card = page.locator("#JE-000110");
-  await expect(card).toBeInViewport();
-  await expect(page).toHaveURL(/period=2025-01/);
-  await expect(page.getByRole("radio", { name: /Approved/ })).toHaveAttribute("aria-checked", "true");
+test("a journal link (#JE-…) opens the entry's period and tab and scrolls to it", async ({ page, request }) => {
+  // An entry that isn't a draft (approved or posted), so the link crosses the status tab, and in the mock
+  // world (JE-000110, January's six approved NS31 claims) the period too. Picked from the API, not typed in.
+  let id = "JE-000110";
+  let period = "2025-01";
+  if ((process.env.E2E_API_MODE ?? "mock") !== "mock") {
+    const entries = (await (await request.get("/api/books/journal")).json()) as { id: string; period: string; status: string }[];
+    const settled = entries.find((e) => e.status !== "draft");
+    test.skip(!settled, "this server has no approved or posted entry to link to");
+    ({ id, period } = settled!);
+  }
+  await page.goto(`/close#${id}`);
+  // Cards render only for the selected period and tab, so the card in view proves both were opened. The
+  // URL names the period only when it had to switch away from the one the close opens on.
+  await expect(page.locator(`#${id}`)).toBeInViewport();
+  if ((process.env.E2E_API_MODE ?? "mock") === "mock") await expect(page).toHaveURL(new RegExp(`period=${period}`));
 });

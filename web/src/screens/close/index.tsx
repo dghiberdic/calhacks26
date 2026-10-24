@@ -25,6 +25,15 @@ import { SectionHead, Segmented } from "./ui";
 const CLOSE_PERIODS = ["2025-01", "2025-02"] as const;
 const DEFAULT_PERIOD = "2025-02";
 
+/** Where the work is: the latest close period with drafts still pending (January on the stub, February after it closes). */
+function workingPeriod(entries: { period: string; status: string }[] | undefined): string | undefined {
+  return (entries ?? [])
+    .filter((e) => e.status === "draft" && (CLOSE_PERIODS as readonly string[]).includes(e.period))
+    .map((e) => e.period)
+    .sort()
+    .at(-1);
+}
+
 const PANEL = "rounded-xl bg-card shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04)]";
 
 /** J6 · Liability & Close: the EU261 compensation liability for the Controller and the CFO. */
@@ -33,7 +42,8 @@ export default function CloseScreen() {
   const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
   const asked = params.get("period") ?? "";
-  const period: string = (CLOSE_PERIODS as readonly string[]).includes(asked) ? asked : DEFAULT_PERIOD;
+  const everyEntry = useQuery({ queryKey: qk.journal(undefined, undefined), queryFn: () => api.journal() });
+  const period: string = (CLOSE_PERIODS as readonly string[]).includes(asked) ? asked : (workingPeriod(everyEntry.data) ?? DEFAULT_PERIOD);
   const role = useSession((s) => s.role);
   const canAct = role === "controller" || role === "cfo";
 
@@ -82,7 +92,6 @@ export default function CloseScreen() {
 
   // /close#JE-000123: open the entry's period, then the journal scrolls to it.
   const focusId = /^#JE-[A-Za-z0-9:_-]+$/.test(location.hash) ? decodeURIComponent(location.hash.slice(1)) : null;
-  const everyEntry = useQuery({ queryKey: qk.journal(undefined, undefined), queryFn: () => api.journal(), enabled: !!focusId });
   const focusPeriod = focusId ? everyEntry.data?.find((e) => e.id === focusId)?.period : undefined;
   const jumped = useRef<string | null>(null);
   useEffect(() => {

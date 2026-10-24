@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures";
 
 /**
  * The 3:00 demo (pitch/DEMO_SCRIPT.md), clicked end to end as a presenter would. Navigation stays inside the
@@ -68,11 +68,12 @@ test("the demo, clicked through", async ({ page }) => {
 
   // 1:20 · Legal: one ruling for the three knock-on returns.
   await viewAs(page, "legal");
-  await rule(page, "knock-on", TEXT.q2);
+  await rule(page, /knock-on|return sector/i, TEXT.q2);
 
   // 1:40 · The Controller rejects releasing Storm Isha's tail; the rejection is a rule too.
   await viewAs(page, "controller");
-  await rule(page, "Isha", TEXT.q3, /^Reject/);
+  // The rejection: the server's own "Reject: …"/"Keep the … tail" option, or the one the UI adds.
+  await rule(page, "Isha", TEXT.q3, /^Reject|^Keep the expected tail/);
 
   // 1:50 · Liability & Close, still as the Controller: the CFO bridge, and 2140 ties to the GL.
   await go(page, "Liability & Close");

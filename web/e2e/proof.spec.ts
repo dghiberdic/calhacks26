@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 // In order, after one warm-up: a cold Vite server pre-bundles dependencies on the first load.
 test.describe.configure({ mode: "default" });

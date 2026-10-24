@@ -101,6 +101,7 @@ export function HardControls({ families }: { families: RuleFamily[] }) {
 
 /** A hard control's own sentence when it carries one, else its condition as a sentence. */
 function HardControlText({ rule }: { rule: Rule }) {
+  if (rule.title) return <p className="text-[14px] leading-snug text-navy-900">{rule.title}</p>;
   if (rule.origin_example) return <p className="text-[14px] leading-snug text-navy-900">{rule.origin_example}</p>;
   const hasCondition = Object.keys(rule.condition ?? {}).length > 0 || Object.keys(rule.scope ?? {}).length > 0;
   if (!hasCondition) return <p className="text-[14px] leading-snug text-navy-900">Always: {actionText(rule)}.</p>;

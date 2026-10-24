@@ -38,7 +38,9 @@ export type SourceKind =
   | "regulation"
   | "ruling"
   | "manufacturer"
-  | "challenge";
+  | "challenge"
+  /** Additive (D0b): GL extracts, care accrual sheets, vendor invoices. */
+  | "finance";
 
 export type Source = {
   id: string;
@@ -277,6 +279,8 @@ export type Rule = {
   supersedes?: string | null;
   times_cited?: number;
   static_card?: boolean;
+  /** Additive (D0a): plain-language card title (the ruling sentence, a regulation's name, a hard control). */
+  title?: string | null;
 };
 
 export type ReplayFlip = { entity_id: string; field: string; before: unknown; after: unknown; delta_cents?: Cents };
@@ -499,6 +503,8 @@ export type StormRun = {
   feed: TraceEvent[];
   real_context?: Record<string, unknown>;
   message?: string | null;
+  /** Additive (D0a): every airport the flights reference (map coordinates, tz, eu). */
+  airports?: Airport[];
 };
 
 export type StormSummary = { id: string; station: string; date: ISODate; cancelled: number; questions: number; liability_drafted_cents: Cents };

@@ -14,7 +14,9 @@ export function useStoryQueries() {
   const curve = useCurve("long_haul_gt3500");
   const questions = useQuestions("all");
   const rules = useRules();
-  const nextId = storms.data?.find((s) => s.id === NEXT_STORM)?.id ?? NEXT_STORM;
+  // The next storm the server lists (Herminia in the demo world); a server that lists none isn't asked for one.
+  const later = (storms.data ?? []).filter((s) => s.id !== stormId && s.id.split("@")[0] === stormId?.split("@")[0] && s.id > (stormId ?? ""));
+  const nextId = later.find((s) => s.id === NEXT_STORM)?.id ?? later.sort((a, b) => a.id.localeCompare(b.id))[0]?.id;
   const next = useStormRun(nextId);
   const je = file.data?.journal_preview.find((j) => j.kind === "compensation_estimate") ?? file.data?.journal_preview[0];
   const blame = useBlame(je?.id ?? (file.data ? file.data.flight.id : undefined));

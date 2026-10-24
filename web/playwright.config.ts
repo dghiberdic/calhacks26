@@ -10,7 +10,10 @@ export default defineConfig({
   // A cold dev server compiles each screen on its first visit, and on a busy laptop that alone can take 20 s.
   timeout: 90_000,
   expect: { timeout: 15_000 },
-  fullyParallel: true,
+  // The mock world lives in each page, so tests run in parallel; the stub and the server hold one shared
+  // world, so there they run one at a time, each from a reset (e2e/fixtures.ts).
+  fullyParallel: mode === "mock",
+  workers: mode === "mock" ? undefined : 1,
   reporter: [["list"]],
   use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure" },
   // The Chrome already on the machine: no Playwright browser download.

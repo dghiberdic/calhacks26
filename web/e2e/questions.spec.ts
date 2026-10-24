@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, serverMasksPii, test, type Page } from "./fixtures";
 
 const LABEL: Record<string, string> = { claims_lead: "Claims Lead", ops: "Ops", legal: "Legal", controller: "Controller" };
 
@@ -39,7 +39,8 @@ test("the Claims Lead rules on Q1 with the recommended option, and it is never a
   await expect(card.getByText("Never asked again")).toBeVisible();
 });
 
-test("passenger data shows only to the Claims Lead; other seats get it masked", async ({ page }) => {
+test("passenger data shows only to the Claims Lead; other seats get it masked", async ({ page, request }) => {
+  test.skip(!(await serverMasksPii(request)), "this server sends no passenger names to mask (contracts/requests/justin.md #21)");
   await page.goto("/questions");
   // The judge sees every question read-only, with the passenger's name masked by the server.
   await expect(q1(page).first().getByTitle(/visible to the Claims Lead only/)).toBeVisible(LOADED);

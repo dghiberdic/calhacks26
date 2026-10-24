@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 // THREAD_JUSTIN J11: the /pitch deck. Arrow keys move through every slide, the seats line and
 // "2 Claude roles + 1 deterministic engine" are on their slides, and the URL keeps the slide.

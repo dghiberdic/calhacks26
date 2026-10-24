@@ -152,7 +152,8 @@ export const api = {
   storms: () => get<StormSummary[]>("/storms"),
   storm: (id: string) => get<StormRun>(`/storms/${seg(id)}`),
   flight: (id: string) => get<FlightFile>(`/flights/${seg(id)}`),
-  questions: (status: "open" | "answered" | "all" = "open") => get<Question[]>("/questions", { status }),
+  /** "all" is the route without a status (CONTRACTS §3 names only ?status=open; the stub filters on any value). */
+  questions: (status: "open" | "answered" | "all" = "open") => get<Question[]>("/questions", status === "all" ? {} : { status }),
   rules: () => get<Rule[]>("/rules"),
   trace: (since = 0) => get<TraceEvent[]>("/trace", { since }),
   commits: (limit = 100) => get<Commit[]>("/commits", { limit }),

@@ -99,12 +99,13 @@ const routes: Route[] = [
     method: "GET",
     path: "/questions",
     run: (req) => {
-      const status = req.query.get("status") ?? "open";
-      if (!["open", "answered", "all"].includes(status)) return fail(422, "validation", "status must be open, answered or all.");
+      // As the contract stub: no status means every question; "open" also returns reminded (both unanswered).
+      const status = req.query.get("status") ?? "all";
+      if (!["open", "answered", "reminded", "all"].includes(status)) return fail(422, "validation", "status must be open, answered or reminded.");
       const s = S();
       const role = req.role;
       const visible = s.questions.filter((q) => (role === "cfo" || role === "judge" ? true : q.routed_to === role));
-      const byStatus = visible.filter((q) => status === "all" || (status === "answered" ? q.status === "answered" : q.status !== "answered"));
+      const byStatus = visible.filter((q) => status === "all" || (status === "answered" ? q.status === "answered" : status === "reminded" ? q.status === "reminded" : q.status !== "answered"));
       return ok(byStatus.map((q) => publicQuestion(s, q, role)));
     },
   },

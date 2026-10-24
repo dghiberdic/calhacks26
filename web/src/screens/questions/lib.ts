@@ -114,7 +114,7 @@ export function findProposalRule(rules: Rule[] | undefined, q: Question): Rule |
 }
 
 /** Option text that already means "reject the proposal" ("Reject: never release the tail…"). */
-export const REJECT_RE = /^\s*reject\b|\bnever release\b|\bdo not release\b|\bdon'?t release\b/i;
+export const REJECT_RE = /^\s*reject\b|\bnever release\b|\bdo not release\b|\bdon'?t release\b|^\s*keep the (expected )?tail\b/i;
 
 /**
  * "↻ Next storm, Storm Herminia: 31 cases settled, ruling cited · 1 asks again": read off the confirm

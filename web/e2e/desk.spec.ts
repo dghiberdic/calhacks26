@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures";
 
 // J7 · Judge's Desk. Runs against the mock world by default (E2E_API_MODE=http for the stub or server).
 
