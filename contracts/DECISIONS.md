@@ -160,3 +160,20 @@ Every AOG is logged before the window with no MEL relief, and both ends are calm
 - **calibration.validate** rejects NaN and ±inf (`json.loads` reads those literals). The engine also fails closed: a non-finite logistic gives `score=None` (uncalibrated → a person), and routing treats a non-finite score like `None`. Before, a NaN score compared False to every threshold and went `auto`.
 - **SHA256SUMS is pinned outside `expected/`**: `SHA256SUMS_DIGEST` in `contracts/tests/test_expected.py` and the same digest in CONTRACTS.md §5. Changing a golden file now needs a deliberate edit in three places. `build_expected.py --force` prints the new digest.
 - **`concurrent_causes`** is a cause-model feature (schema, contracts default −4.0, FakeEngine, the fixture display calibration): 1 when the finding is concurrent causes. `aog_inside_window` keeps its literal meaning (AOG logged inside a window); FakeEngine now computes it literally.
+
+## Justin's fields: engine and fakes fill (D0b-8)
+- **One summary builder,** `contracts/summary.py::entitlements_summary`, emits every `EntitlementsSummary` key from the entitlements alone (plus election counts when given). `engine.eu261.summarize(ents, world=None)` is a thin wrapper, and the fakes and the fixture script call it too, so the wording can't drift.
+  - `compensation_cents` keeps the engine's meaning: Σ over all coupons, held included.
+  - `drafted_liability_cents` = accruing entitlement × the segment's expected ultimate rate, rounded once per band (as Books).
+  - `band_label` copies `engine.eu261.Band.note`.
+- **`others_settled`:** cases of the same run settled automatically while the question waits, never counting the question's own holds. A coupon-level question counts coupons on automatic flights that aren't held or waiting on a ruling; any other question counts automatic flights. Golden: Q-1 4,761, Q-2 24, Q-3 24.
+- **`Confidence.contributions`** = coef × encoded input, in log-odds, with `intercept` beside it. `features` stays the raw encoded inputs. A test checks that logistic(intercept + Σ contributions) equals the score.
+- **`Rule.origin_quote`** is set when the rule is proposed: the ruling's explanation, else the chosen option.
+- **`engine.storm.cases_settled_by_rule`** is a helper for the server: rule id → cases cited in a run. Flight-level rules count once per decision, coupon-level ones once per coupon. The run doesn't carry it, because counters are for the headline.
+- **171, not 172, payouts drafted on day 1.** 14C waits on Q1. The fixtures, the stub trace and the summary headline now say "171 payouts drafted, pending Claims Lead approval · 14C waits on her ruling", matching the real engine; see `contracts/requests/answers-david.md` Q-e.
+- **Fixtures:**
+  - weather flights' timelines carry the forwarded red-warning email as `kind: "warning"`;
+  - the static Reg 2026/2202 card has its text in `origin_quote`;
+  - injection 06 no longer asserts the limitation period;
+  - stub commits carry `recorded_at = at`;
+  - the CFO fixture has `cohort: EIDW@2025-01-24`.

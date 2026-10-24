@@ -1,18 +1,21 @@
-"""The server's runtime: boot pipeline (world → engine → books), clock, documents, reset.
+"""The server's runtime: boot pipeline (world → engine → books), clock, trace, documents, reset.
 
 Boot (fresh every process start; see server/DECISIONS.md):
 1. Load the golden world if `STORMCHECK_WORLD` (default contracts/fixtures/golden/world.json) exists; otherwise
    serve the stub fixtures through the same document store ("stub" pipeline).
 2. Rules: the engine miner when it exists, else the stub's rule cards (incl. active R-MINED-REDUCE).
-3. Every storm day in the world whose morning-after is ≤ the boot clock is run: the engine's `run_storm` when one
-   is importable (real Engine, else FakeEngine), else `compose` from the engine modules that exist.
-4. Decisions, entitlements, journals and questions are committed (hash chain) and posted to Books.
-5. The whole DB (server + books tables) is snapshotted to baseline.db; `/api/reset` copies it back.
+3. Every storm day whose `meta.storms[].known_at` (else the morning after) is ≤ the boot clock is run by the
+   engine's `run_storm` (real `engine.Engine`, else FakeEngine, else composed from the engine modules that exist).
+4. Sources, METAR, facts, rules, decisions, entitlements, journals and questions are committed to
+   `engine.trace.TraceStore` (the hash chain blame and replay walk); Books drafts the journals.
+5. The whole DB (server + trace + books tables, one SQLite file) is snapshotted to baseline.db; `/api/reset`
+   copies it back.
 """
 from __future__ import annotations
 
 import concurrent.futures as cf
 import logging
+import os
 import subprocess
 import threading
 from dataclasses import dataclass, field
@@ -20,22 +23,21 @@ from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from pydantic import TypeAdapter
-
 from contracts.models import (
-    Draft, Entitlement, FlightDecision, FlightFile, JournalEntry, LearnedItem, Question, Role, Rule, Source,
+    AccessDecision, Draft, Entitlement, Fact, FlightDecision, FlightFile, JournalEntry, Question, Role, Rule, Session,
     StormRun, StormSummary, TraceEvent, World,
 )
 
 from . import compose
 from .config import ROOT, Settings
-from .impls import Impls, _module, call, select
+from .impls import Impls, _module, call, instantiate, select
 from .store import Store, iso
 
 log = logging.getLogger("stormcheck.server")
 DEMO_START = datetime(2025, 1, 25, 6, 0, tzinfo=UTC)     # "the morning after" Éowyn
 MORNING_AFTER = timedelta(days=1, hours=6)
-ENTS = TypeAdapter(list[Entitlement])
+RESET_OFFSET = timedelta(hours=3)                         # POST /reset lands at boot + 3 h (09:00Z)
+RULING_TIERS = ("legal_ruling", "controller_ruling", "claims_lead_ruling")
 
 
 def _git_sha() -> str:
@@ -48,7 +50,7 @@ def _git_sha() -> str:
 
 
 class ServerClock:
-    """Forward-only clock (CONTRACTS §2 Clock) persisted in sc_clock; Books and the engine get this object."""
+    """Forward-only clock (CONTRACTS §2 Clock) persisted in sc_clock; Books, the trace and the broker get it."""
 
     def __init__(self, store: Store, start: datetime):
         self._store = store
@@ -91,13 +93,28 @@ class Runtime:
         self._fresh_db()
         self.store = Store(settings.db_path)
         self.world: World | None = self._load_world()
-        start = self._boot_known_at()
-        self.clock = ServerClock(self.store, start)
+        self.clock = ServerClock(self.store, self._boot_known_at())
+        # STORMCHECK_MODE=live|cache|offline sets the LLM client's mode unless LLM_MODE is given explicitly
+        os.environ.setdefault("LLM_MODE", settings.mode)
         self.impls: Impls = select(settings.impl, clock=self.clock)
-        self.books = self._make_books()
         self.engine_sha = _git_sha()
+        self.bind_engine()
+        self.books = self._make_books()
         self.pipeline = "golden" if self.world is not None else "stub"
         self.boot_error: str | None = None
+        self.trace = self._open_trace()
+        acl = _module("engine.acl")
+        self.broker = acl.Broker(clock=self.clock, trace=self.trace) if acl is not None else None
+        if self.broker is not None and self.world is not None:
+            self.broker.register_sources(self.world.sources)
+        from .auth import Signer
+        from .blame import Blamer
+        from .lifecycle import Lifecycle
+        from .live import Live
+        self.signer = Signer(settings.secret)
+        self.lifecycle = Lifecycle(self)
+        self.blamer = Blamer(self)
+        self.live = Live(self)
 
     # ------------------------------------------------------------------ setup
     def _fresh_db(self) -> None:
@@ -139,20 +156,79 @@ class Runtime:
         cls = self.impls.books_cls
         if cls is None:
             return None
-        from .impls import instantiate
         return instantiate(cls, db_path=str(self.settings.db_path), clock=self.clock)
+
+    def bind_engine(self) -> None:
+        eng = self.impls.engine
+        if eng is not None and self.world is not None and getattr(eng, "world", False) is None:
+            eng.world = self.world
+        if eng is not None and hasattr(eng, "engine_version"):
+            eng.engine_version = f"engine@{self.engine_sha}"
+
+    @property
+    def cal_version(self) -> str:
+        v = getattr(self.impls.engine, "calibration_version", None)
+        return str(v) if v else compose.CAL_VERSION
+
+    def _open_trace(self) -> Any:
+        tr = _module("engine.trace")
+        if tr is None:
+            from .store import LocalTrace
+            return LocalTrace(self.store)
+        return tr.TraceStore(str(self.settings.db_path), engine_sha=self.engine_sha, cal_version=self.cal_version)
 
     @property
     def now(self) -> datetime:
         return self.clock.now()
 
-    def inputs(self, *extra: str) -> list[str]:
-        return [*extra, f"engine@{self.engine_sha}", f"cal@{compose.CAL_VERSION}"]
-
     def emit(self, kind: str, actor: str, summary: str, chip: str, ref: str | None = None,
              amount: int | None = None, at: datetime | None = None) -> TraceEvent:
         return self.store.emit(at=at or self.now, kind=kind, actor=actor, summary=summary, chip=chip, ref=ref,
                                amount_cents=amount)
+
+    def record(self, method: str, *args: Any, **kwargs: Any) -> Any:
+        """A trace commit that never takes the pipeline down (returns None on failure, logged)."""
+        try:
+            return getattr(self.trace, method)(*args, **kwargs)
+        except Exception as exc:
+            log.warning("trace.%s failed: %s", method, exc)
+            return None
+
+    # ------------------------------------------------------------------ access
+    def deny(self, principal: str, action: str, resource: str, reason: str, *, committed: bool = False) -> None:
+        """A denial is an access-log row, an `access_denied` commit and a DENIED trace event."""
+        d = AccessDecision(at=self.now, principal=principal, action=action, resource=resource, allowed=False,
+                           reason=reason)
+        self.store.access(d)
+        if not committed:
+            self.record("record_access_denied", d)
+        tag = reason.split(":", 1)[0].strip() if ":" in reason else reason
+        self.emit("access_denied", principal, f"{principal} {action} → DENIED · {tag}", "DENIED", resource)
+
+    def allow(self, principal: str, action: str, resource: str, reason: str) -> None:
+        self.store.access(AccessDecision(at=self.now, principal=principal, action=action, resource=resource,
+                                         allowed=True, reason=reason))
+
+    def seed_denial(self) -> None:
+        """Plan §3 Access tab: the Drafter tries to approve NS31's payout → DENIED · SoD (the real ACL check)."""
+        if self.books is None:
+            return
+        try:
+            jes = list(self.books.journal())
+        except Exception:
+            return
+        recoded = {k for k in self.store.keys("decision") if (self.store.get("decision", k) or {}).get("recoded")}
+        je = next((j for j in jes if any(line.dims.get("flight") in recoded for line in j.lines)),
+                  jes[0] if jes else None)
+        if je is None:
+            return
+        drafter = Session(principal=Role.DRAFTER.value, role=Role.DRAFTER, name="Drafter", issued_at=self.now)
+        if self.broker is not None:
+            d = self.broker.check(drafter, "approve_payout", je.id, preparer=je.preparer)
+            if not d.allowed:
+                self.deny(d.principal, d.action, d.resource, d.reason, committed=True)
+            return
+        self.deny(drafter.principal, "approve_payout", je.id, "SoD: agents never approve payouts")
 
     # ------------------------------------------------------------------ boot
     def boot(self) -> None:
@@ -174,14 +250,24 @@ class Runtime:
 
     def reset(self) -> None:
         with self.lock:
+            close = getattr(self.trace, "close", None)
+            if close is not None:
+                close()
             self.store.restore(self.settings.baseline)
             self.clock.invalidate()
+            self.trace = self._open_trace()
+            if self.broker is not None:
+                self.broker.trace = self.trace
+                self.broker.log.clear()
+            if self.world is not None:
+                # Justin Q-b: the demo starts 3 h after the morning run, so Q1 already reads "Waiting on Claims
+                # Lead 3h · reminder sent" with no scrub (claims wait for the 18:00Z batch; day-1 numbers hold)
+                self.advance(self._boot_known_at() + RESET_OFFSET, "reset")
 
     def _boot_stub(self) -> None:
         from contracts import stub_app as stub
         now = self.now
-        for r in stub.RULES:
-            self.store.put("rule", r.id, r, now)
+        self.commit_rules(list(stub.RULES))
         for run in stub.STORM_RUNS.values():
             self.store.put("storm_run", run.id, run.model_copy(update={"feed": []}), now)
         for fid, ff in stub.FLIGHT_FILES.items():
@@ -194,28 +280,116 @@ class Runtime:
                             amount_cents=ev.amount_cents)
 
     # rules ------------------------------------------------------------
-    def boot_rules(self, world: World) -> list[Rule]:
-        from contracts import stub_app as stub
-        rules: dict[str, Rule] = {}
-        for r in stub.RULES:          # rule cards: regulation, hard controls, the static Reg 2026/2202 card
-            rules[r.id] = r
+    def commit_rules(self, rules: list[Rule]) -> None:
+        for r in rules:
+            self.store.put("rule", r.id, r, self.now)
+            self.record("record_rule", r, "agent.engine", self.now, event=r.status,
+                        reason=r.support or r.tier.replace("_", " "))
+
+    def mined(self, world: World) -> Any:
+        """`engine.miner.mine(world)` once per world (None when the miner is missing or there is no history)."""
+        cache = getattr(self, "_mined_cache", None)
+        if cache is not None and cache[0] is world:
+            return cache[1]
         miner = _module("engine.miner")
-        mine = getattr(miner, "mine_rules", None) if miner else None
-        if mine is None and self.impls.engine is not None:
-            mine = getattr(self.impls.engine, "mine_rules", None)
-        if mine is not None:
+        out = None
+        if miner is not None and hasattr(miner, "mine") and world.history_cases:
             try:
-                for p in call(mine, world):
-                    rule = getattr(p, "rule", p)
-                    # mined at onboarding: active from the boot clock (plan §3 Learns strip)
-                    rules[rule.id] = rule.model_copy(update={"status": "active"}) if rule.status == "shadow" \
-                        else rule
+                out = miner.mine(world)
             except Exception as exc:
-                log.warning("miner failed (%s); using the stub's mined rule", exc)
+                log.warning("miner failed: %s", exc)
+        self._mined_cache = (world, out)
+        return out
+
+    def boot_rules(self, world: World) -> list[Rule]:
+        """Rule cards from the stub (display) + the mined policy from `engine.miner` (D7). A mined rule in `shadow`
+        is activated at onboarding (it drives day 1's 50% reroute cut); one a written policy contradicts stays
+        `proposed` (no_conflict=False) and its Controller question is asked instead. With no history to mine, the
+        stub's R-MINED-REDUCE card stands in."""
+        from contracts import stub_app as stub
+        rules: dict[str, Rule] = {r.id: r for r in stub.RULES}
+        m = self.mined(world)
+        if m is not None:
+            rules = {k: r for k, r in rules.items() if r.tier != "mined"}
+            for p in m.proposals:
+                rules[p.rule.id] = p.rule             # shadow (or proposed when a written policy disagrees)
         return list(rules.values())
+
+    ONBOARDING = Session(principal="claims_lead:onboarding", role=Role.CLAIMS_LEAD, name="Claims Lead (onboarding)",
+                         issued_at=DEMO_START)
+
+    def activate_rule(self, rule: Rule, session: Session, reason: str) -> Rule:
+        """A rule becomes active only on the say-so of a principal who holds the authority it automates (hard
+        control); anyone else is DENIED (access log, `access_denied` commit, DENIED event)."""
+        need = rule.authority_required
+        ref = f"{rule.id}@{rule.version}"
+        if session.role != need or session.role in (Role.JUDGE,) or session.principal.startswith(("agent.",
+                                                                                                  "persona:")):
+            self.deny(session.principal, "activate_rule", ref, f"Least privilege: {ref} automates the "
+                      f"{compose.label(need)}'s authority; {session.principal} cannot activate it")
+            raise PermissionError(f"{session.principal} may not activate {ref}")
+        active = rule.model_copy(update={"status": "active"})
+        self.store.put("rule", rule.id, active, self.now)
+        self.record("record_rule", active, session.principal, self.now, event="active", reason=reason)
+        self.allow(session.principal, "activate_rule", ref, reason)
+        return active
+
+    def onboard_mined(self, rules: list[Rule]) -> None:
+        """Mined at onboarding: the seeded Claims Lead seat approves each clean shadow rule (support + exceptions on
+        the record), so blame shows who switched on the 50% reroute cut."""
+        for r in rules:
+            if r.tier != "mined" or r.status != "shadow":
+                continue
+            exc = ""
+            if r.origin_example and "exception" in r.origin_example:
+                exc = " · " + r.origin_example.split(";", 1)[-1].strip(" )")
+            seat = self.ONBOARDING.model_copy(update={"issued_at": self.now})
+            self.activate_rule(r, seat, f"onboarding approval by the Claims Lead · support {r.support}{exc}")
+
+    def mined_questions(self, world: World) -> list[Question]:
+        miner = _module("engine.miner")
+        m = self.mined(world)
+        if miner is None or m is None or not hasattr(miner, "contradictions"):
+            return []
+        try:
+            return list(miner.contradictions(world, asked_at=self.now, mined=m))
+        except Exception as exc:
+            log.warning("miner contradictions failed: %s", exc)
+            return []
+
+    def learned(self, world: World, rules: list[Rule], run_id: str) -> list[Any]:
+        """The Learns strip: `engine.miner.learned_items` (curves from Books when it has them)."""
+        miner = _module("engine.miner")
+        m = self.mined(world)
+        if miner is not None and m is not None and hasattr(miner, "learned_items"):
+            lookup = getattr(self.books, "curve", None)
+            try:
+                return list(miner.learned_items(world, curve_lookup=lookup, mined=m))
+            except Exception as exc:
+                log.warning("learned_items failed: %s", exc)
+        from contracts import stub_app as stub
+        stub_run = stub.STORM_RUNS.get(run_id)
+        return list(stub_run.learned) if stub_run is not None else compose.default_learned(rules)
 
     def rules(self) -> list[Rule]:
         return [Rule.model_validate(x) for x in self.store.all("rule")]
+
+    @staticmethod
+    def engine_rules(rules: list[Rule]) -> list[Rule]:
+        """What the engine evaluates: every rule doc except static cards (display only; the hard-control cards are
+        static and the engine implements those controls in code). Same set `scripts/verify.py` replays with."""
+        return [r for r in rules if not r.static_card]
+
+    # facts ------------------------------------------------------------
+    def commit_world(self, world: World) -> None:
+        """Sources and METAR obs go on the chain at boot. The structured feeds are the engine's base world, so their
+        normalize facts are not re-committed (73k facts; replay would only overlay them back onto themselves). The
+        facts a decision cites are committed with it (`commit_evidence`), injected facts when they arrive."""
+        now = self.now
+        for s in world.sources:
+            self.record("record_source", s, "agent.reader", now)
+        for key, obs in world.metar.items():
+            self.record("record_metar", obs, "agent.reader", now, source_id=f"SRC-METAR-{key}")
 
     # storm run --------------------------------------------------------
     def storm_days(self, world: World) -> list[tuple[str, date]]:
@@ -225,17 +399,27 @@ class Runtime:
             hub = a.icao if a else "EIDW"
         return compose.storm_days(world, hub)
 
+    @staticmethod
+    def storm_run_at(world: World, station: str, day: date) -> datetime:
+        """When a storm day is run: `meta.storms[id].known_at`, else the morning after (day + 1 d 06:00Z)."""
+        info = compose.storm_meta(world, f"{station}@{day.isoformat()}")
+        k = info.get("known_at")
+        if isinstance(k, str):
+            try:
+                return datetime.fromisoformat(k.replace("Z", "+00:00")).astimezone(UTC)
+            except ValueError:
+                pass
+        return datetime(day.year, day.month, day.day, tzinfo=UTC) + MORNING_AFTER
+
     def _boot_world(self, world: World) -> None:
         now = self.now
-        for r in self.boot_rules(world):
-            self.store.put("rule", r.id, r, now)
-        for s in world.sources:
-            self.store.commit(kind="fact", actor="agent.reader", at=now, payload=s, payload_ref=s.id,
-                              message=f"source · {s.kind.value} · {s.title} (tier {s.trust_tier})",
-                              inputs=self.inputs(s.sha256))
+        rules = self.boot_rules(world)
+        self.commit_rules(rules)
+        self.onboard_mined(rules)
+        self.commit_world(world)
         ran = 0
         for station, day in self.storm_days(world):
-            run_at = datetime(day.year, day.month, day.day, tzinfo=UTC) + MORNING_AFTER
+            run_at = self.storm_run_at(world, station, day)
             if run_at > now:
                 self.store.put("pending_storm", f"{station}@{day.isoformat()}",
                                {"station": station, "date": day.isoformat(), "run_at": iso(run_at)}, now)
@@ -249,13 +433,83 @@ class Runtime:
                 log.warning("opening balances not posted: %s", exc)
         if not ran:
             log.warning("golden world has no storm day before %s", iso(now))
+        for q in self.mined_questions(world):       # written policy vs established practice → the Controller
+            self.live.ask(q, [])
+        self.seed_denial()
+        self.persona_round()
+
+    # ------------------------------------------------------------------ personas (unattended runs only)
+    def persona_round(self) -> int:
+        """STORMCHECK_PERSONAS=1: simulated people (`persona:<role>`) answer the open questions routed to them and
+        confirm the rule their ruling drafts. Their principal is passed through unchanged; they never approve or
+        pay (the ACL refuses persona principals on every approval)."""
+        personas = _module("llm.personas")
+        if personas is None or not personas.enabled() or self.world is None:
+            return 0
+        n = 0
+        bench = personas.PersonaBench()
+        for q in self.questions():
+            if q.status not in ("open", "reminded"):
+                continue
+            try:
+                pr = bench.answer(q)
+            except Exception as exc:
+                log.info("persona skipped %s: %s", q.id, exc)
+                continue
+            if getattr(pr, "record", None) is not None:
+                self.commit_llm(pr.record)
+            req = pr.request if hasattr(pr, "request") else pr[0]
+            try:
+                _, proposal = self.lifecycle.answer(q, pr.role, pr.principal, pr.principal, req.decision,
+                                                    req.explanation)
+                if proposal is not None and proposal.rule.authority_required == pr.role:
+                    self.lifecycle.confirm(proposal.rule.id, pr.principal)
+                n += 1
+            except Exception as exc:
+                log.warning("persona ruling on %s failed: %s", q.id, exc)
+        return n
+
+    @staticmethod
+    def last_record(agent: Any, draft_id: str | None = None) -> Any:
+        """The LlmCallRecord behind an agent's output: `record_for(draft_id)` (Drafter), `.last.record` (Reader),
+        `.last_record`, or the newest of `.records`."""
+        if draft_id is not None and hasattr(agent, "record_for"):
+            rec = agent.record_for(draft_id)
+            if rec is not None:
+                return rec
+        last = getattr(agent, "last", None)
+        rec = getattr(last, "record", None) if last is not None else None
+        if rec is None:
+            rec = getattr(agent, "last_record", None)
+        return rec
+
+    def commit_draft(self, draft: Draft, agent: Any) -> Draft:
+        """A Drafter output: its llm_call commit (when it called the LLM), then the Draft itself citing it."""
+        h = self.commit_llm(self.last_record(agent, draft.id))
+        if h is not None and draft.llm_commit is None:
+            draft = draft.model_copy(update={"llm_commit": h})
+        self.record("commit", "fact", draft, "agent.drafter", [h] if h else [], self.now, ref=draft.id,
+                    message=f"draft {draft.kind} {draft.id}" + (" · template" if draft.template_fallback else ""))
+        return draft
+
+    def commit_llm(self, record: Any, *, outputs: list[str] | None = None) -> str | None:
+        """Plan §2 rule 2: every LLM call is an `llm_call` commit (prompt hash, response.model, request id,
+        principal, input facts). Its outputs are committed separately, citing this hash."""
+        if record is None:
+            return None
+        payload = record.model_dump(mode="json") if hasattr(record, "model_dump") else dict(record)
+        c = self.record("record_llm_call", payload, str(payload.get("principal") or "agent.reader"), self.now,
+                        ref=str(payload.get("id") or "llm"),
+                        message=f"{payload.get('role', 'llm')} · {payload.get('model') or payload.get('model_requested')}"
+                                f" · {payload.get('mode', '')}{' · cache hit' if payload.get('cache_hit') else ''}")
+        return c.hash if c is not None else None
 
     def engine_run(self, world: World, station: str, day: date, rules: list[Rule], known_at: datetime) -> StormRun | None:
         eng = self.impls.engine
         if eng is None or not hasattr(eng, "run_storm"):
             return None
         try:
-            return call(eng.run_storm, world, station, day, rules, known_at)
+            return call(eng.run_storm, world, station, day, self.engine_rules(rules), known_at)
         except Exception as exc:
             log.warning("engine run_storm(%s@%s) failed (%s); composing", station, day, exc)
             return None
@@ -267,30 +521,95 @@ class Runtime:
             if f.status != "cancelled":
                 continue
             ff = stub.FLIGHT_FILES.get(f.id) if curated else None
+            entry = compose.expected_entries().get(f.id) if curated else None
             if ff is not None:
                 out.append(compose.rebase_decision(ff.decision, known_at))
+            elif entry is not None:
+                out.append(compose.expected_decision(f, world, entry, known_at))
             else:
                 out.append(compose.provisional_decision(f, world, known_at))
         return out
 
-    def explain(self, d: FlightDecision) -> Draft:
+    def entitlements(self, d: FlightDecision, world: World, rules: list[Rule], known_at: datetime) -> list[Entitlement]:
+        return compose.entitlements_for(d, world, self.engine_rules(rules), known_at, self.impls.engine)
+
+    def explain(self, d: FlightDecision, *, now: bool = False) -> Draft:
+        """The "Why?" text. At boot a template (never wait on an LLM at boot); the Drafter's version is drafted on
+        the flight file's first view (`now=True`, 8 s timeout, template on any failure) and stored."""
         drafter = self.impls.drafter
         fn = getattr(drafter, "explain", None) if drafter is not None else None
-        if fn is None or self.settings.mode == "offline":
+        if fn is None or not now:
             return compose.template_explanation(d)
-        with cf.ThreadPoolExecutor(max_workers=1) as ex:
-            fut = ex.submit(fn, d)
+        from .live import timed
+        try:
+            out = timed(fn, self.settings.reader_timeout_s, d)
+        except Exception:
+            return compose.template_explanation(d)
+        return self.commit_draft(out, drafter) if isinstance(out, Draft) else compose.template_explanation(d)
+
+    def normalize_fact(self, fact_id: str) -> Fact | None:
+        """The real `contracts.normalize` fact when an evidence id is a normalize id (`F:…`); built lazily, once."""
+        if not fact_id.startswith("F:") or self.world is None:
+            return None
+        index = getattr(self, "_norm_index", None)
+        if index is None:
+            norm = _module("contracts.normalize")
             try:
-                out = fut.result(timeout=self.settings.reader_timeout_s)
-                return out if isinstance(out, Draft) else compose.template_explanation(d)
+                index = {f.id: f for f in norm.world_to_facts(self.world)} if norm is not None else {}
             except Exception:
-                return compose.template_explanation(d)
+                index = {}
+            self._norm_index = index
+        return index.get(fact_id)
+
+    def commit_evidence(self, d: FlightDecision, at: datetime) -> None:
+        """Record each cited evidence item as a Fact (span = its verbatim quote) so the decision links to it, and
+        through it to its source and, for a raw METAR line, to the observation. The engine's evidence ids are not
+        `normalize` ids, so without this blame would stop at the decision."""
+        new = []
+        for e in d.evidence:
+            if self.store.get("ev_fact", e.fact_id) is not None:
+                continue
+            self.store.put("ev_fact", e.fact_id, {"flight": d.flight_id}, at)
+            real = self.normalize_fact(e.fact_id)
+            new.append(real or Fact(id=e.fact_id, source_id=e.source_id, subject=f"flight:{d.flight_id}",
+                                    field=e.field, value=e.value, span=e.quote, extractor="engine:evidence@1",
+                                    recorded_at=at))
+        if new:
+            self.record("record_facts", new, "agent.engine", at)
+
+    def commit_decision(self, d: FlightDecision, actor: str, at: datetime, inputs: list[str] | None = None
+                        ) -> FlightDecision:
+        self.commit_evidence(d, at)
+        c = self.record("record_decision", d, actor, at, inputs=list(inputs or []))
+        return d.model_copy(update={"commit": c.hash}) if c is not None else d
+
+    def commit_journal(self, jes: list[JournalEntry], actor: str, at: datetime, *, event: str = "drafted",
+                       inputs: list[str] | None = None) -> list[JournalEntry]:
+        """Record JE events once per (JE, event); returns the ones that were new."""
+        new = []
+        for je in jes:
+            key = f"{je.id}|{event}"
+            if self.store.get("je_event", key) is not None:
+                continue
+            self.store.put("je_event", key, {"at": iso(at)}, at)
+            self.record("record_journal", je, actor, at, event=event, inputs=list(inputs or []))
+            new.append(je)
+        return new
+
+    def scratch_books(self) -> Any:
+        """An in-memory Books for desk days: the judge's scenario is priced, the demo ledger is never written."""
+        cls = self.impls.books_cls
+        return instantiate(cls, db_path=":memory:", clock=self.clock) if cls is not None else None
 
     def run_and_store(self, world: World, station: str, day: date, known_at: datetime, *, source: str,
-                      rules: list[Rule] | None = None, curated: bool = True) -> RunResult:
-        """Run one storm day end to end and store run, flight files, decisions, entitlements, questions, trace."""
+                      rules: list[Rule] | None = None, curated: bool = True, desk: bool = False) -> RunResult:
+        """Run one storm day end to end and store run, flight files, decisions, entitlements, questions, trace.
+
+        `desk=True`: priced in a scratch Books, decisions kept apart from the demo's (docs `desk_*`), journals not
+        put on the chain (their ids belong to the scratch ledger), questions kept in the run only."""
         from contracts import stub_app as stub
         rules = rules if rules is not None else self.rules()
+        books = self.scratch_books() if desk else self.books
         run_id = f"{station}@{day.isoformat()}"
         iata = compose.iata_of(world, station)
         obs = compose.station_obs(world, station, day)
@@ -302,97 +621,92 @@ class Runtime:
             windows = engine_run.windows or windows
             obs = engine_run.metar or obs
         else:
-            flights = compose.run_flights(world, iata, day)
+            flights = compose.run_flights(world, iata, day, station)
             decisions = self.decide_all(world, flights, known_at, curated)
-        ents: dict[str, list[Entitlement]] = {}
-        for d in decisions:
-            ents[d.flight_id] = compose.entitlements_for(d, world, rules, known_at, self.impls.engine)
+        ents: dict[str, list[Entitlement]] = {d.flight_id: self.entitlements(d, world, rules, known_at)
+                                              for d in decisions}
 
-        # commits: decision → entitlements (the hash chain the trace and blame walk)
+        # trace: decision → entitlements (what blame and replay walk)
         committed = []
         for d in decisions:
-            c = self.store.commit(kind="decision", actor="agent.engine", at=known_at, payload=d,
-                                  payload_ref=d.flight_id, inputs=self.inputs(),
-                                  message=f"{d.flight_id.split('@')[0]} · {d.cause.value} · "
-                                          f"{d.extraordinary.value}" + (f" · recoded {d.recode_label}"
-                                                                        if d.recoded else ""))
-            committed.append(d.model_copy(update={"commit": c.hash}))
-            fe = ents[d.flight_id]
-            if fe:
-                self.store.commit(kind="entitlement", actor="agent.engine", at=known_at, payload=fe,
-                                  payload_ref=d.flight_id, inputs=self.inputs(c.hash),
-                                  message=f"{d.flight_id.split('@')[0]} · {len(fe)} entitlements · "
-                                          f"{compose.eur(sum(e.compensation_cents for e in fe))} full Art. 7 "
-                                          "entitlement")
+            d = self.commit_decision(d, "agent.engine", known_at)
+            committed.append(d)
+            if ents[d.flight_id]:
+                self.record("record_entitlements", ents[d.flight_id], "agent.engine", known_at)
         decisions = committed
 
         journal: list[JournalEntry] = []
-        if self.books is not None:
+        if books is not None:
             all_ents = [e for d in decisions for e in ents[d.flight_id]]
             try:
-                journal = list(self.books.post_storm(run_id, world, decisions, all_ents, known_at))
+                journal = list(books.post_storm(run_id, world, decisions, all_ents, known_at))
             except Exception as exc:
                 log.warning("books.post_storm(%s) failed: %s", run_id, exc)
-        for je in journal:
-            self.store.commit(kind="journal_event", actor="agent.books", at=known_at, payload=je, payload_ref=je.id,
-                              inputs=self.inputs(*(x for x in [je.source_decision_id] if x)),
-                              message=f"{je.id} drafted · {je.kind} · "
-                                      f"{compose.eur(sum(line.cr_cents for line in je.lines if line.account == '2140'))}")
+        if not desk:
+            self.commit_journal(journal, "agent.books", known_at)
         liability = sum(line.cr_cents - line.dr_cents for je in journal for line in je.lines
                         if line.account == "2140" and je.kind == "compensation_estimate")
 
-        if engine_run is not None and engine_run.questions:
+        if engine_run is not None:
             questions = list(engine_run.questions)
         else:
             extra = [ob.cohort for ob in world.opening_balances] if source == "boot" else []
             questions = compose.group_questions(run_id, decisions, ents, known_at,
                                                 curated=stub.QUESTIONS if curated else (), extra_case_refs=extra)
+        # a cohort question the boot run already asked is not asked again by a later storm
+        questions = [q for q in questions if not (q.pattern == "cohort_release"
+                                                  and self.store.get("question", q.id) is not None)]
         if engine_run is not None and engine_run.learned:
             learned = list(engine_run.learned)
         else:
-            stub_run = stub.STORM_RUNS.get(run_id)
-            learned = list(stub_run.learned) if stub_run is not None else compose.default_learned(rules)
+            learned = self.learned(self.world if (self.world is not None and not desk) else world, rules, run_id)
 
         if engine_run is not None:
             dec_by = {d.flight_id: d for d in decisions}
             run = engine_run.model_copy(update={
                 "flights": [r.model_copy(update={"decision": dec_by.get(r.flight.id, r.decision)})
                             for r in engine_run.flights],
-                "liability_drafted_cents": liability or engine_run.liability_drafted_cents,
+                "liability_drafted_cents": liability if books is not None else engine_run.liability_drafted_cents,
                 "questions": questions, "learned": learned, "feed": []})
         else:
             run = compose.compose_run(world=world, station=station, day=day, flights=flights, decisions=decisions,
                                       ents=ents, questions=questions, learned=learned,
                                       liability_drafted_cents=liability, obs=obs, windows=windows)
-        self._store_run(world, run, decisions, ents, journal, obs, windows, questions, known_at)
-        self._emit_run(run, decisions, ents, journal, questions, known_at, source)
+        if desk:
+            run = run.model_copy(update={"real_context": {**run.real_context, "desk": True}})
+        self._store_run(world, run, decisions, ents, journal, obs, windows, questions, known_at, desk=desk,
+                        books=books)
+        self._emit_run(run, decisions, ents, journal, questions, self.now if desk else known_at, source)
         return RunResult(run=run, decisions=decisions, ents=ents, journal=journal)
 
     def _store_run(self, world: World, run: StormRun, decisions: list[FlightDecision],
                    ents: dict[str, list[Entitlement]], journal: list[JournalEntry], obs: list, windows: list,
-                   questions: list[Question], known_at: datetime) -> None:
+                   questions: list[Question], known_at: datetime, *, desk: bool = False, books: Any = None) -> None:
         flights = {r.flight.id: r.flight for r in run.flights}
         books_journal = journal
-        if self.books is not None:
+        books = books if books is not None else self.books
+        if books is not None:
             try:
-                books_journal = list(self.books.journal())
+                books_journal = list(books.journal())
             except Exception:
                 pass
+        at = self.now if desk else known_at
+        prefix = "desk_" if desk else ""
         for d in decisions:
             f = flights.get(d.flight_id)
             if f is None:
                 continue
             fe = ents.get(d.flight_id, [])
             ff = compose.flight_file(world, f, d, fe, books_journal, obs, windows, self.explain(d))
-            self.store.put("decision", d.flight_id, d, known_at)
-            self.store.put("entitlements", d.flight_id, fe, known_at)
-            self.store.put("flight_file", d.flight_id, ff, known_at)
-        for q in questions:
-            self.store.put("question", q.id, q, known_at)
-            self.store.commit(kind="question", actor="agent.engine", at=known_at, payload=q, payload_ref=q.id,
-                              inputs=self.inputs(), message=f"{q.id} → {q.routed_to.value} · {q.pattern} · "
-                              f"{q.confidence.score if q.confidence.score is not None else 'uncalibrated'}")
-        self.store.put("storm_run", run.id, run, known_at)
+            self.store.put(prefix + "decision", d.flight_id, d, at)
+            self.store.put(prefix + "entitlements", d.flight_id, fe, at)
+            self.store.put("flight_file", d.flight_id, ff, at)
+            self.store.put("flight_run", d.flight_id, {"run": run.id}, at)
+        if not desk:
+            for q in questions:
+                self.store.put("question", q.id, q, known_at)
+                self.record("record_question", q, "agent.engine", known_at, event="asked")
+        self.store.put("storm_run", run.id, run, at)
 
     def _emit_run(self, run: StormRun, decisions: list[FlightDecision], ents: dict[str, list[Entitlement]],
                   journal: list[JournalEntry], questions: list[Question], known_at: datetime, source: str) -> None:
@@ -406,7 +720,7 @@ class Runtime:
             coded = sum(1 for f in occ if f.ops_cause_code in ("71", "72"))
             self.emit("fact", "agent.reader", f"Read the OCC cancel list · {len(occ)} cancellations · {coded} coded "
                       "weather (RSN 71/72)", "INFO", run.id, at=known_at)
-        weather = [d for d in decisions if d.cause.value == "weather"]
+        weather = [d for d in decisions if d.cause.value == "weather" and d.outcome == "auto"]
         if weather:
             self.emit("decision", "agent.engine", f"{len(weather)} flights confirmed weather · no compensation; "
                       "refunds and care still due", "APPLIED", run.id, at=known_at)
@@ -430,7 +744,19 @@ class Runtime:
             if refunds and owed:
                 self.emit("info", "agent.engine", f"CRM bot already initiated {refunds} {num} refunds · not repeated",
                           "INFO", d.flight_id, at=known_at)
-        held_ids = {d.flight_id for d in decisions if d.outcome == "escalated"}
+        ruled = {f"{r.id}@{r.version}": r for r in self.rules() if r.tier in RULING_TIERS and r.status == "active"}
+        for rref, rule in ruled.items():
+            n_flights = sum(1 for d in decisions if rref in d.rules_applied)
+            n_coupons = sum(1 for d in decisions for e in ents.get(d.flight_id, [])
+                            if rref in e.rules_applied and rref not in d.rules_applied)
+            if n_flights or n_coupons:
+                asks = sum(len(q.case_refs) for q in questions if q.pattern == "voucher_in_lieu_unsigned"
+                           and rule.kind == "voucher")
+                what = f"{n_coupons} cases" if n_coupons else f"{n_flights} flights"
+                self.emit("rule", "agent.engine", f"↻ {what} settled under {rref}, ruling cited"
+                          + (f" · {asks} asks again (outside the rule's scope)" if asks else ""), "CITED", rref,
+                          at=known_at)
+        held_ids = {d.flight_id for d in decisions if d.outcome != "auto"}
         held_total = 0
         for je in journal:
             amt = sum(line.cr_cents for line in je.lines if line.account == "2140")
@@ -449,26 +775,113 @@ class Runtime:
             self.emit("question", "agent.engine", f"Asked {compose.label(q.routed_to)}: {q.title} · {conf} · "
                       f"{q.reason_tag.replace('-', ' ')}", "ASKED", q.id, q.holds_cents or None, at=known_at)
 
+    # ------------------------------------------------------------------ time
+    def advance(self, t: datetime, actor: str) -> datetime:
+        """Move the forward-only clock and process what became due (storms, claims, reminders)."""
+        with self.lock:
+            if t.tzinfo is None:
+                t = t.replace(tzinfo=UTC)
+            t = t.astimezone(UTC)
+            prev = self.now
+            self.clock.set(t, actor)
+            if t > prev:
+                self.record("commit", "clock", {"from": iso(prev), "to": iso(t)}, actor, [], t, ref="clock",
+                            message=f"clock {iso(prev)} → {iso(t)}")
+                self.process_due()
+            return t
+
+    def process_due(self) -> None:
+        with self.lock:
+            self._run_pending_storms()
+            self._process_claims()
+            self._remind()
+
+    def _run_pending_storms(self) -> None:
+        if self.world is None:
+            return
+        for key in self.store.keys("pending_storm"):
+            info = self.store.get("pending_storm", key)
+            if info.get("done") or datetime.fromisoformat(info["run_at"].replace("Z", "+00:00")) > self.now:
+                continue
+            self.run_and_store(self.world, info["station"], date.fromisoformat(info["date"]), self.now,
+                               source="clock")
+            self.store.put("pending_storm", key, {**info, "done": True}, self.now)
+
+    CLAIMS_BATCH_HOUR = 18          # claims are assessed in a daily 18:00Z batch, not the moment they arrive
+
+    def claims_batch_at(self) -> datetime:
+        """The latest daily claims batch at or before now."""
+        now = self.now
+        b = now.replace(hour=self.CLAIMS_BATCH_HOUR, minute=0, second=0, microsecond=0)
+        return b if b <= now else b - timedelta(days=1)
+
+    def _process_claims(self) -> None:
+        """Claims received before the latest daily batch are assessed at face value (Books drafts; the Claims Lead
+        approves). On day 1 (25 Jan 06:00Z-18:00Z) the 6 overnight claims are still unassessed (plan §1.3)."""
+        if self.world is None or self.books is None:
+            return
+        batch = self.claims_batch_at()
+        for claim in sorted(self.world.claims, key=lambda c: (c.received_at, c.id)):
+            if claim.received_at > batch:
+                continue
+            state = self.store.get("claim_state", claim.id)
+            if state is not None and state.get("state") != "held":
+                continue
+            fid = claim.coupon_id.rsplit(":", 1)[0]
+            ent = next((Entitlement.model_validate(e) for e in (self.store.get("entitlements", fid) or [])
+                        if e["coupon_id"] == claim.coupon_id), None)
+            if ent is None:
+                continue
+            if ent.status in ("held", "needs_ruling"):
+                if state is None:
+                    self.store.put("claim_state", claim.id, {"state": "held", "status": ent.status}, self.now)
+                continue
+            try:
+                jes = list(self.books.post_claim(claim, ent, claim.received_at))
+            except Exception as exc:
+                log.warning("post_claim %s failed: %s", claim.id, exc)
+                continue
+            self.store.put("claim_state", claim.id, {"state": "approved" if jes else "rejected",
+                                                     "je_ids": [j.id for j in jes]}, self.now)
+            self.commit_journal(jes, "agent.books", self.now)
+            if jes:
+                amt = sum(line.dr_cents for je in jes if je.kind == "claim_approved" for line in je.lines
+                          if line.account == "2140")
+                self.emit("journal", "agent.books", f"Claim {claim.id} on {fid.split('@')[0]} assessed at face value "
+                          f"{compose.eur(amt)} · drafted, pending Claims Lead approval", "DRAFTED", claim.id, amt)
+
+    def _remind(self) -> None:
+        for q in self.questions():
+            if q.status != "reminded" or self.store.get("reminded", q.id) is not None:
+                continue
+            hours = int((self.now - q.asked_at).total_seconds() // 3600)
+            others = sum(1 for k in self.store.keys("decision")
+                         if (self.store.get("decision", k) or {}).get("outcome") == "auto")
+            self.store.put("reminded", q.id, {"at": iso(self.now)}, self.now)
+            self.record("record_question", q, "agent.engine", self.now, event="reminded")
+            self.emit("reminder", "agent.engine", f"Waiting on {compose.label(q.routed_to)} {hours}h · reminder sent · "
+                      f"{others} others settled", "INFO", q.id)
+
     # ------------------------------------------------------------------ views
     def storm_run(self, run_id: str) -> StormRun | None:
         data = self.store.get("storm_run", run_id)
         if data is None:
             return None
         run = StormRun.model_validate(data)
-        qs = [q for q in self.questions() if set(q.case_refs) & self._run_refs(run) or q.id in {x.id for x in
-                                                                                                run.questions}]
+        ids = {x.id for x in run.questions}
+        refs = {r.flight.id for r in run.flights}
+        live = {q.id: q for q in self.questions()}
+        qs = [live.get(x.id, x) for x in run.questions]          # desk questions live in their run only
+        qs += [q for q in live.values() if q.id not in ids and set(q.case_refs) & refs]
         return run.model_copy(update={"questions": qs, "feed": self.store.trace()})
-
-    @staticmethod
-    def _run_refs(run: StormRun) -> set[str]:
-        return {r.flight.id for r in run.flights}
 
     def storm_summaries(self) -> list[StormSummary]:
         out = []
+        qs = self.questions()
         for key in self.store.keys("storm_run"):
             run = StormRun.model_validate(self.store.get("storm_run", key))
-            open_q = sum(1 for q in self.questions() if q.id in {x.id for x in run.questions}
-                         and q.status != "answered")
+            live = {q.id: q for q in qs}
+            open_q = sum(1 for x in run.questions if live.get(x.id, x).status != "answered")
             out.append(StormSummary(id=run.id, station=run.station, date=run.date,
                                     cancelled=run.counters.get("cancelled", 0), questions=open_q,
                                     liability_drafted_cents=run.liability_drafted_cents))
@@ -476,7 +889,20 @@ class Runtime:
 
     def flight_file(self, flight_id: str) -> FlightFile | None:
         data = self.store.get("flight_file", flight_id)
-        return FlightFile.model_validate(data) if data is not None else None
+        if data is None:
+            return None
+        ff = FlightFile.model_validate(data)
+        if ff.explanation is not None and ff.explanation.id.startswith("DRAFT-EXPL-") and \
+                self.impls.drafter is not None:
+            with self.lock:                          # first view: the Drafter writes the "Why?" (stored once)
+                draft = self.explain(ff.decision, now=True)
+                if not draft.id.startswith("DRAFT-EXPL-"):
+                    ff = ff.model_copy(update={"explanation": draft})
+                    self.store.put("flight_file", flight_id, ff, self.now)
+                else:
+                    ff = ff.model_copy(update={"explanation": draft.model_copy(update={"id": f"DRAFT-T-{flight_id}"})})
+                    self.store.put("flight_file", flight_id, ff, self.now)
+        return ff
 
     def known_flight(self, flight_id: str) -> bool:
         for key in self.store.keys("storm_run"):
@@ -502,6 +928,8 @@ class Runtime:
     def health_impl(self) -> dict[str, str]:
         d = self.impls.describe()
         d["pipeline"] = self.pipeline
+        d["trace"] = type(self.trace).__module__.split(".")[0] + "." + type(self.trace).__name__
+        d["sessions"] = self.signer.kind
         if self.pipeline == "stub":
             d["engine"] = "stub"
         if self.world is None:
@@ -511,11 +939,3 @@ class Runtime:
         if self.boot_error:
             d["boot_error"] = self.boot_error[:200]
         return d
-
-
-def source_tier(kind: str) -> int:
-    return {"tech_log": 1, "mcc_log": 1, "metar": 1, "manufacturer": 2, "schedule": 2, "occ_log": 3, "crm": 3}.get(
-        kind, 4)
-
-
-__all__ = ["Runtime", "ServerClock", "RunResult", "Source", "LearnedItem", "Role", "source_tier"]

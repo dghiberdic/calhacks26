@@ -46,8 +46,19 @@
       },
       "caps": [],
       "calibration_version": "cal-plan-fixture",
-      "contributions": {},
-      "intercept": null
+      "contributions": {
+        "in_window_dep": 0.0,
+        "in_window_arr": 2.9,
+        "window_margin_h": 1.2,
+        "aog_before_window": 0.0,
+        "aog_inside_window": 0.0,
+        "root_cause_internal": 0.0,
+        "sources_disagree": 0.0,
+        "precedent_count": 0.3,
+        "knock_on": 0.0,
+        "concurrent_causes": 0.0
+      },
+      "intercept": -0.8
     },
     "reason": "Weather: Dublin inside the storm window at STA 05:30Z.",
     "evidence": [
@@ -84,13 +95,13 @@
     "routed_to": null,
     "question_id": null,
     "known_at": "2025-01-25T06:00:00Z",
-    "commit": "b5fcfce155e4f0d517959580e0a34e4b74d1a66e7314ebb5dc1aacb2373012ce"
+    "commit": "a734eb1556191bbf5e1d3c2208e22df431083fa1779211a1f915a14dee2a4394"
   },
   "entitlements_summary": {
     "coupons": 168,
-    "distance_km": 4804,
+    "distance_km": 4804.0,
     "band_eur": 600,
-    "band_margin_km": 1304,
+    "band_margin_km": 1304.0,
     "band_note": "4,804 km · 1,304 km over the €600 threshold",
     "status_counts": {
       "no_compensation": 168
@@ -98,14 +109,36 @@
     "compensation_cents": 0,
     "care_due": true,
     "headline": "No compensation; refunds and care still due",
+    "reduced": 0,
+    "refunds_already_initiated": 0,
+    "refund_due_cents": 1342000,
+    "voucher_offset_cents": 0,
+    "owed": 0,
+    "needs_ruling": 0,
+    "held": 0,
+    "band_label": "4,804 km · 1,304 km over the €600 threshold",
+    "full_entitlement_cents": 0,
+    "drafted_liability_cents": 0,
+    "liability_drafted_cents": 0,
+    "full_entitlement_label": "€0 full Art. 7 entitlement if every passenger claims",
+    "claim_rate": 0.35,
+    "expected_ultimate_claim_rate": 0.35,
+    "claim_rate_label": "35% expected ultimate claim rate (history to M18 + tail judgment)",
+    "statuses": [
+      {
+        "status": "no_compensation",
+        "count": 168,
+        "label": "no compensation; refunds and care still due"
+      }
+    ],
+    "compensation_breakdown": [],
+    "status_line": "No compensation; refunds and care still due",
     "elections": {
       "reaccommodated_own": 114,
       "refund": 25,
       "reroute_partner": 14,
       "voucher": 15
     },
-    "refunds_already_initiated": 0,
-    "refund_due_cents": 1342000,
     "claims_received": 0
   },
   "sample_entitlements": [

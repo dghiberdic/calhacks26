@@ -31,3 +31,48 @@ The exact cause-and-extraordinary accuracy compares the initial output to final 
   - The only change is the three-run canonical replay hash, from `df4e925b…` to `4006d5c9…`. It is still identical across all three runs and still €34,650 × 3.
   - On Filip's own tree, `replay_three` still gives `df4e925b…`. So the change comes from the new decision content on main, not from nondeterminism.
 - Nothing was hand-edited. The regenerated `results.json`, `manifest.json`, `proof.json` and `NUMBERS.md` are committed.
+
+## F9 finish (filip-agent/f9-finish), 24 October 2026
+
+1. **Calibration label = "settled alone and right".** y = 1 iff the engine's finding is settled (not `needs_legal`; `needs_ruling` for vouchers) and it matches the key. An abstention is 0.
+   - Routing reads the score as exactly this probability: ≥ 0.90 may run with no person.
+   - The golden contract requires it: knock-on returns sent to Legal must score < 0.60 (`expected/decisions.json`), and Q-1 and Q-2 < 0.60.
+   - The alternative, "a correct escalation = 1", would put Q-2 near 100% while it asks Legal. That contradicts the fixture and the product.
+2. **Cause match carries the root.** A knock-on of an internal root (AOG, crew, notice, concurrent) and that root's own cause name the same obligation (C-74/19). `technical` therefore matches a key `knock_on` whose root is internal, and vice versa. Extraordinary status must still match exactly.
+3. **Four outcome classes** (coordinator, 24 Oct): `auto_correct`, `auto_wrong` (the dangerous one), `escalated_correct` (held for the key's `expected_route`) and `held_other` (costs straight-through, not an error).
+   - The headline is auto-precision, with straight-through reported separately.
+   - "Ambiguous by design" is its own line.
+   - `false_holds` = `held_other`.
+   - Batch review (`outcome="human"`) counts as held.
+4. **Deliberate conservatism** is labelled, never called an error:
+   - `held_window_edge`: a weather code 28–45 min outside the strict window → Ops;
+   - `held_external_event_no_precedent`: only Legal settles a new legal pattern;
+   - a refund drafted for an unsigned, non-web voucher election. It gets its own coupon count and € amount.
+5. **Regularisation is chosen on train only.** The grid is C ∈ {0.01, 0.1, 1, 10, 100, 1000}, scored by 5-fold `GroupKFold` log-loss with world days as groups.
+   - The grid was fixed before looking at any golden result.
+   - The golden promotion gate is pass/fail only and never feeds back into C or the features.
+6. **Kinds without usable train rows keep the shipped prior** (`trained_on: "prior"`, `n: 0`, with the train row counts in `metrics`).
+   - Release has no train-split proposals: Isha reaches M12 in January 2025.
+   - In train, every in-lieu voucher is unsigned and asked, or signed and offset, so vouchers can be one-class until rulings exist. The prior then stays.
+   - Claim validity is fitted on the CONTRACTS x-encoding against the key's `valid`. It has no engine consumer.
+7. **Promotion gate.** `eval.calibration.acceptance` replays the golden expected decisions and question bands with the candidate file, for the real engine (every golden storm) and for FakeEngine (the contracts tests). The candidate goes to `data/calibration.json` only when the problem list is empty.
+   - The full test suite and `make smoke-1` are then run by hand before committing.
+   - When the candidate is not promoted, the held-out routing numbers use the runtime prior, because that is what ships.
+8. **Held-out replay with rulings.** Held-out days run in date order. When the plan §1.4 patterns (voucher, knock-on, cohort release) are first asked, the plan's words become a rule, drafted by the engine's own deterministic `template_rule` and active from the same morning (known_at + 2 h).
+   - Repeat question = a later question with a ruled pattern that has a case inside the ruling's ground-truth scope (from the key and the World, never the engine).
+   - Out-of-scope auto = a settlement citing the ruling on a case outside that scope.
+   - Train days never see a ruling.
+9. **Reliability bins** are cut at the routing thresholds: 0.60 / 0.75 / 0.90 / 0.97. All five bins are kept, and an empty bin reports n = 0 with the whole [0, 1] Wilson interval. Each bin carries `mean_score`.
+10. **StormCheck ×3** runs on Éowyn, Herminia and 2025-02-26 (the held-out storms with the most interest; 2025-02-23 is scored too). Each run is a fresh interpreter with PYTHONHASHSEED 1..3 that regenerates the world from the seed. The hash is the canonical sha256 of the whole StormRun. It is the initial estimate before any ruling, the same phase as the baseline. The €34,650 ×3 golden replay is kept, labelled as after the rulings.
+11. **Baseline inputs carry no PII.** Operational sources only (schedule, OCC, MCC, tech log, spares, regulation, manufacturer), plus PII-free PSS coupon lines: seat, fare type, channel, election, delay, in-lieu voucher amount and signed flag, bot refund.
+    - Excluded: PSS/manifest extracts (they carry PNRs and `pax_ref`) and claim/email/CRM free text.
+    - The three replicates are byte-identical requests with distinct cache keys (`prompt_version` run-k).
+    - "Pending" is the status until genuine `live-batch` results exist. Hand-written, scripted or offline responses never count.
+12. **Injections** run end to end: the real `llm.reader` (offline; the rehearsed docs replay hand-written recordings, and fuzz inputs take the regex fallback) feeds `Engine.decide` on golden.
+    - `inj01` must escalate to Legal; the other seven must leave the decision unchanged.
+    - An automatic flip is the failure mode.
+13. **The stress corpus** (140 cases) runs Engine → entitlements → Books post_storm/post_claim. Each case is checked against the generator's own expectation, and the score is reported apart from the natural-world numbers.
+    - `duplicate_refund` is judged on INV-4/INV-4b and GL 2125 only. INV-7b fails on every mini-world, because there is no lifecycle commit to link.
+    - Known case-design issue: the `knock_on_return` cases put the return's STA inside the DUB window, so the engine calls it weather. The case is not "calm at both ends" as its docstring claims. It is reported, not fixed (world/ is not this lane).
+14. **`--check`** = manifest freshness (now also llm/ and the demo recordings) plus a byte-compare of `proof.json`/`NUMBERS.md` against a rebuild from the cache. It is fast, and smoke-3 can call it. `--check --full` also reruns everything and byte-compares. pytest does not fail on an engine change, so David's agents are not blocked.
+15. **Legacy shim.** `report_from_cache` reproduces an `eval-v1` cache with Filip's original equal-width bins, so the committed v1 proof stays reproducible until the single final regeneration (eval-v2).

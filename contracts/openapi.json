@@ -3235,6 +3235,39 @@
                 ],
                 "title": "Compensation Cents"
               },
+              "owed": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Owed"
+              },
+              "needs_ruling": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Needs Ruling"
+              },
+              "held": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Held"
+              },
               "full_entitlement_cents": {
                 "anyOf": [
                   {
