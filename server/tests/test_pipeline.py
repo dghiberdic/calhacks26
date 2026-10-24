@@ -67,16 +67,19 @@ def test_event_store_is_wal_and_append_only(mini_app):
     rt = mini_app.state.runtime
     assert rt.store.journal_mode() == "wal"
     rt.store.access(AccessDecision(at=rt.now, principal="t", action="t", resource="t", allowed=True, reason="t"))
-    for table in ("sc_trace", "sc_commits", "sc_docs", "sc_clock", "sc_access"):
-        with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+    for table in ("sc_trace", "sc_docs", "sc_clock", "sc_access", "commits", "books_je"):   # one file, all append-only
+        with pytest.raises(sqlite3.IntegrityError, match="append-only|abort|UPDATE|DELETE|not allowed"):
             rt.store._x(f"UPDATE {table} SET seq = seq")
-        with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+        with pytest.raises(sqlite3.IntegrityError, match="append-only|abort|UPDATE|DELETE|not allowed"):
             rt.store._x(f"DELETE FROM {table}")
 
 
-def test_commit_chain_verifies(mini_app):
-    n, bad = mini_app.state.runtime.store.verify_chain()
-    assert n > 5 and bad == []
+def test_commit_chain_verifies_through_engine_trace(mini_app):
+    rt = mini_app.state.runtime
+    v = rt.trace.verify()
+    assert v.ok and len(rt.trace) > 50
+    kinds = {c.kind for c in rt.trace.log(None)}
+    assert {"fact", "decision", "entitlement", "journal_event", "question", "rule_event"} <= kinds
 
 
 def test_baseline_snapshot_and_reset(mini, mini_app):

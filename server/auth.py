@@ -1,8 +1,8 @@
 """Sessions: `POST /api/session` → an HMAC-signed principal; every request sends `Authorization: Bearer <token>`.
 
-Fail closed: a missing, malformed, forged or unknown-role token is the read-only `judge`. Uses `engine.acl`'s signer
-when it exposes one (`sign_session` / `verify_session`), else this local signer (same token shape as the stub:
-`<urlsafe b64 Session JSON>.<hex hmac-sha256>`).
+Uses `engine.acl.issue` / `session_or_judge` (the binding signer: `<b64url canonical Session>.<64-hex HMAC>`,
+fail closed). A local signer of the same shape stands in when `engine.acl` is not importable. Missing, malformed,
+forged or unknown-role tokens are the read-only `judge`.
 """
 from __future__ import annotations
 
@@ -17,11 +17,6 @@ from contracts.models import Role, Session
 from .impls import _module
 
 AGENT_ROLES = {Role.READER, Role.DRAFTER, Role.ENGINE, Role.CRM_BOT}
-HUMAN_APPROVERS = {Role.CONTROLLER, Role.CFO, Role.CLAIMS_LEAD}
-
-
-def _b64(b: bytes) -> str:
-    return base64.urlsafe_b64encode(b).decode().rstrip("=")
 
 
 def principal_for(role: Role, name: str) -> str:
@@ -31,43 +26,36 @@ def principal_for(role: Role, name: str) -> str:
 
 class Signer:
     def __init__(self, secret: str):
-        self._key = secret.encode()
-        acl = _module("engine.acl")
-        self._ext_sign = getattr(acl, "sign_session", None) if acl else None
-        self._ext_verify = getattr(acl, "verify_session", None) if acl else None
-        self.kind = "engine.acl" if self._ext_sign and self._ext_verify else "local-hmac"
+        self._secret = secret
+        self._acl = _module("engine.acl")
+        self.kind = "engine.acl" if self._acl is not None and hasattr(self._acl, "issue") else "local-hmac"
 
+    # ---- local fallback (same shape) ----
     def _mac(self, payload: str) -> str:
-        return hmac.new(self._key, payload.encode(), hashlib.sha256).hexdigest()
+        return hmac.new(self._secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
 
     def issue(self, role: Role, name: str, at: datetime) -> tuple[str, Session]:
-        s = Session(principal=principal_for(role, name), role=role, name=name.strip()[:80] or "anon", issued_at=at)
+        name = name.strip()[:80] or "anon"
         if self.kind == "engine.acl":
-            try:
-                return str(self._ext_sign(s, self._key)), s
-            except Exception:
-                pass
-        payload = _b64(s.model_dump_json().encode())
+            token = self._acl.issue(role, name, self._secret, at=at)
+            return token, self._acl.verify(token, self._secret)
+        s = Session(principal=principal_for(role, name), role=role, name=name, issued_at=at)
+        payload = base64.urlsafe_b64encode(s.model_dump_json().encode()).decode().rstrip("=")
         return f"{payload}.{self._mac(payload)}", s
 
-    def verify(self, token: str) -> Session | None:
+    def session_of(self, authorization: str | None, now: datetime) -> Session:
+        token = None
+        if authorization and authorization.lower().startswith("bearer "):
+            token = authorization.split(" ", 1)[1].strip()
         if self.kind == "engine.acl":
-            try:
-                out = self._ext_verify(token, self._key)
-                if isinstance(out, Session):
-                    return out
-            except Exception:
-                pass
+            return self._acl.session_or_judge(token, self._secret, at=now)
+        judge = Session(principal="judge", role=Role.JUDGE, name="Judge", issued_at=now)
+        if not token:
+            return judge
         try:
             payload, sig = token.rsplit(".", 1)
             if not hmac.compare_digest(sig, self._mac(payload)):
-                return None
+                return judge
             return Session.model_validate_json(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
         except Exception:
-            return None
-
-    def session_of(self, authorization: str | None, now: datetime) -> Session:
-        judge = Session(principal="judge", role=Role.JUDGE, name="Judge", issued_at=now)
-        if not authorization or not authorization.lower().startswith("bearer "):
             return judge
-        return self.verify(authorization.split(" ", 1)[1].strip()) or judge

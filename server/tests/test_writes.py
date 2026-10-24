@@ -49,15 +49,18 @@ def test_questions_are_role_scoped(golden):
 
 
 def test_redaction_only_claims_lead_sees_pii(golden_app):
-    from contracts.models import Role
+    from contracts.models import Role, Session
     from server.routes import redact
     rt = golden_app.state.runtime
     q = Question.model_validate(rt.store.get("question", "Q-1"))
     q = q.model_copy(update={"evidence": [Evidence(fact_id="F", source_id="SRC-CLM-NS31-14C-2025-01-25T0131Z",
                                                    field="claim.text", value="x", quote="Mary Byrne, 14C",
                                                    role="supports", trust_tier=4)]})
-    assert redact(rt, q, Role.CLAIMS_LEAD).evidence[0].quote == "Mary Byrne, 14C"
-    assert redact(rt, q, Role.LEGAL).evidence[0].quote == "[redacted · PII]"
+
+    def s(role: Role) -> Session:
+        return Session(principal=f"{role.value}:t", role=role, name="t", issued_at=rt.now)
+    assert redact(rt, q, s(Role.CLAIMS_LEAD)).evidence[0].quote == "Mary Byrne, 14C"
+    assert redact(rt, q, s(Role.LEGAL)).evidence[0].quote == "[redacted:pii]"
 
 
 # ---------------------------------------------------------------- Q2: one ruling settles three flights
@@ -83,7 +86,9 @@ def test_q2_ruling_rule_replay_confirm_revert(golden):
     assert ans.ruling.author_role == "legal" and p and p.rule.id == "R-LEG-1"
     assert all(p.checks.values()), p.checks
     assert p.would_flip.total_delta_cents == -4_749_600                         # Books.preview, not a literal
-    assert {f.entity_id for f in p.would_flip.flips} == KNOCK
+    assert {f.entity_id for f in p.would_flip.flips if f.field == "extraordinary"} == KNOCK
+    assert all(f.before == "needs_legal" and f.after == "extraordinary"
+               for f in p.would_flip.flips if f.field == "extraordinary")
     assert liability(golden) == 8_214_600                                      # a proposal writes nothing
     assert [q["id"] for q in golden.get("/api/questions?status=open").json()] == ["Q-1", "Q-3"]
 
@@ -240,21 +245,27 @@ def test_blame_walks_to_the_metar(golden):
     b = Blame.model_validate(golden.get(f"/api/blame?target={je.id}:2").json())
     labels = [s.label for s in b.steps]
     assert labels[0].startswith(f"{je.id}:2 · Cr 2140")
-    assert any(lbl.startswith("NS31 entitlement") for lbl in labels)
+    assert any(lbl.startswith("Entitlements NS31@2025-01-24") for lbl in labels)
     assert any("R-MINED-REDUCE@1" in lbl for lbl in labels)
-    assert any(lbl.startswith("Decision · technical") for lbl in labels)
-    assert labels[-1].startswith("METAR obs")
+    assert any(lbl.startswith("Decision NS31@2025-01-24 · technical") for lbl in labels)
+    quotes = [s.quote or "" for s in b.steps]
+    assert any("NO MEL RELIEF" in q for q in quotes)                              # the tech-log span
+    assert any(q.startswith(("EIDW ", "KBOS ")) for q in quotes)                  # a raw METAR observation
     b = Blame.model_validate(golden.get("/api/blame?target=NS31@2025-01-24:14C").json())
-    assert b.steps and b.steps[0].label.startswith("Entitlement NS31@2025-01-24:14C · needs_ruling")
+    assert b.steps and "NS31@2025-01-24" in b.steps[0].label
     assert Blame.model_validate(golden.get("/api/blame?target=nonsense").json()).steps == []
 
 
 def test_blame_reaches_the_ruling_quote(golden):
     legal = token(golden, "legal", "Aoife Byrne")
-    golden.post("/api/questions/Q-2/answer", headers=legal, json={"decision": "within 3 h of STD", "explanation": ""})
+    golden.post("/api/questions/Q-2/answer", headers=legal, json={"decision": "Extraordinary (C-74/19)",
+                                                                  "explanation": "within 3 h of STD"})
     golden.post("/api/proposals/R-LEG-1/confirm", headers=legal)
     b = Blame.model_validate(golden.get("/api/blame?target=NS117@2025-01-24").json())
-    assert any(s.label.startswith("Ruling RUL-") and s.quote == "within 3 h of STD" for s in b.steps)
+    labels = [s.label for s in b.steps]
+    assert any(lbl.startswith("R-LEG-1@1") for lbl in labels)
+    assert any(lbl.startswith("Ruling RUL-") and s.quote == "within 3 h of STD"     # the ruler's own words
+               for lbl, s in zip(labels, b.steps))
 
 
 def test_audit_and_commits(golden):

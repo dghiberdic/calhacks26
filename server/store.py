@@ -2,14 +2,14 @@
 
 Tables
 - `sc_trace`   TraceEvents (the activity feed and SSE stream; `seq` is the SSE id)
-- `sc_commits` hash-chained commits (CONTRACTS Commit); the payload JSON is kept beside the hash
 - `sc_docs`    versioned documents (storm runs, flight files, rules, questions, proposals, rulings, injected sources);
                the current version of (kind, key) is its latest row, so "status" fields are views over events
 - `sc_clock`   forward-only clock moves (latest row wins)
 - `sc_access`  access decisions (the denied log)
 
-Books shares the same database file through its own connection (its `books_*` tables), so `snapshot`/`restore`
-of `baseline.db` cover the whole demo state. Restore uses SQLite's backup API, which is safe with other open
+Commits (the hash chain blame, replay and `make verify` walk) live in `engine.trace.TraceStore`'s tables. Books
+(`books_*`) and the trace share this database file through their own connections, so `snapshot`/`restore` of
+`baseline.db` cover the whole demo state. Restore uses SQLite's backup API, which is safe with other open
 connections; afterwards every cache here is dropped.
 """
 from __future__ import annotations
@@ -24,14 +24,11 @@ from typing import Any, Iterable
 import orjson
 from pydantic import BaseModel
 
-from contracts.models import AccessDecision, Commit, TraceEvent
+from contracts.models import AccessDecision, Blame, TraceEvent
 
 TABLES: dict[str, str] = {
     "sc_trace": """seq INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, kind TEXT NOT NULL, actor TEXT NOT NULL,
                    summary TEXT NOT NULL, ref TEXT, chip TEXT NOT NULL, amount_cents INTEGER""",
-    "sc_commits": """seq INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT NOT NULL UNIQUE, parent TEXT, kind TEXT NOT NULL,
-                     at TEXT NOT NULL, actor TEXT NOT NULL, payload_hash TEXT NOT NULL, payload_ref TEXT NOT NULL,
-                     inputs TEXT NOT NULL, message TEXT NOT NULL, payload TEXT""",
     "sc_docs": """seq INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, key TEXT NOT NULL, at TEXT NOT NULL,
                   body TEXT NOT NULL""",
     "sc_clock": """seq INTEGER PRIMARY KEY AUTOINCREMENT, known_at TEXT NOT NULL, actor TEXT NOT NULL""",
@@ -40,7 +37,6 @@ TABLES: dict[str, str] = {
 }
 INDEXES = (
     "CREATE INDEX IF NOT EXISTS sc_docs_kk ON sc_docs(kind, key, seq)",
-    "CREATE INDEX IF NOT EXISTS sc_commits_ref ON sc_commits(payload_ref, seq)",
 )
 
 
@@ -72,10 +68,6 @@ def content_hash(obj: Any) -> str:
     """CONTRACTS §0: sha256 of orjson.dumps(model_dump(mode="json"), OPT_SORT_KEYS)."""
     return hashlib.sha256(canonical(obj)).hexdigest()
 
-
-def commit_hash(kind: str, parent: str | None, payload_hash: str, inputs: list[str], at: str, actor: str) -> str:
-    return content_hash({"kind": kind, "parent": parent, "payload_hash": payload_hash, "inputs": inputs, "at": at,
-                         "actor": actor})
 
 
 class Store:
@@ -172,67 +164,6 @@ class Store:
     def last_seq(self) -> int:
         return int(self._q("SELECT COALESCE(MAX(seq), 0) FROM sc_trace")[0][0])
 
-    # ------------------------------------------------------------------ commits
-    def head(self) -> str | None:
-        rows = self._q("SELECT hash FROM sc_commits ORDER BY seq DESC LIMIT 1")
-        return rows[0][0] if rows else None
-
-    def commit(self, *, kind: str, actor: str, at: datetime, payload: Any, payload_ref: str, message: str,
-               inputs: list[str] | None = None, keep_payload: bool = True) -> Commit:
-        with self._lock:
-            parent = self.head()
-            p_hash = content_hash(payload)
-            at_s = iso(at)
-            ins = list(inputs or [])
-            h = commit_hash(kind, parent, p_hash, ins, at_s, actor)
-            c = Commit(hash=h, parent=parent, kind=kind, at=at, actor=actor, payload_hash=p_hash,
-                       payload_ref=payload_ref, inputs=ins, message=message)
-            self._x("INSERT INTO sc_commits(hash, parent, kind, at, actor, payload_hash, payload_ref, inputs, message, "
-                    "payload) VALUES (?,?,?,?,?,?,?,?,?,?)",
-                    (h, parent, c.kind, at_s, actor, p_hash, payload_ref, orjson.dumps(ins).decode(), message,
-                     canonical(payload).decode() if keep_payload else None))
-            return c
-
-    @staticmethod
-    def _commit(r: sqlite3.Row) -> Commit:
-        return Commit(hash=r["hash"], parent=r["parent"], kind=r["kind"], at=parse_iso(r["at"]), actor=r["actor"],
-                      payload_hash=r["payload_hash"], payload_ref=r["payload_ref"],
-                      inputs=orjson.loads(r["inputs"]), message=r["message"])
-
-    def commits(self, limit: int = 100) -> list[Commit]:
-        """Newest first (like `git log`)."""
-        return [self._commit(r) for r in self._q("SELECT * FROM sc_commits ORDER BY seq DESC LIMIT ?", [limit])]
-
-    def commits_for(self, ref: str, kinds: Iterable[str] | None = None) -> list[Commit]:
-        rows = self._q("SELECT * FROM sc_commits WHERE payload_ref = ? ORDER BY seq", [ref])
-        out = [self._commit(r) for r in rows]
-        if kinds is not None:
-            ks = set(kinds)
-            out = [c for c in out if c.kind in ks]
-        return out
-
-    def commit_by_hash(self, h: str) -> Commit | None:
-        rows = self._q("SELECT * FROM sc_commits WHERE hash = ?", [h])
-        return self._commit(rows[0]) if rows else None
-
-    def commit_payload(self, h: str) -> Any:
-        rows = self._q("SELECT payload FROM sc_commits WHERE hash = ?", [h])
-        return orjson.loads(rows[0][0]) if rows and rows[0][0] else None
-
-    def verify_chain(self) -> tuple[int, list[str]]:
-        """Recompute every commit hash and parent link; returns (n, bad hashes)."""
-        bad: list[str] = []
-        parent = None
-        rows = self._q("SELECT * FROM sc_commits ORDER BY seq")
-        for r in rows:
-            ins = orjson.loads(r["inputs"])
-            want = commit_hash(r["kind"], r["parent"], r["payload_hash"], ins, r["at"], r["actor"])
-            p_ok = r["payload"] is None or content_hash(orjson.loads(r["payload"])) == r["payload_hash"]
-            if want != r["hash"] or r["parent"] != parent or not p_ok:
-                bad.append(r["hash"])
-            parent = r["hash"]
-        return len(rows), bad
-
     # ------------------------------------------------------------------ versioned documents
     def put(self, kind: str, key: str, body: Any, at: datetime) -> None:
         data = jsonable(body)
@@ -279,3 +210,24 @@ class Store:
         return [AccessDecision(at=parse_iso(r["at"]), principal=r["principal"], action=r["action"],
                                resource=r["resource"], allowed=bool(r["allowed"]), reason=r["reason"])
                 for r in self._q("SELECT * FROM sc_access ORDER BY seq")]
+
+
+class LocalTrace:
+    """Stand-in when `engine.trace` is not importable: records nothing, blames nothing, verifies an empty chain."""
+
+    def __init__(self, store: Store):
+        self.store = store
+
+    def __getattr__(self, name: str) -> Any:
+        if name.startswith("record_") or name in ("commit", "cite_rule"):
+            return lambda *a, **k: None
+        raise AttributeError(name)
+
+    def log(self, limit: int | None = 100, **_: Any) -> list:
+        return []
+
+    def blame(self, target: str, **_: Any) -> Blame:
+        return Blame(target=target, steps=[])
+
+    def close(self) -> None:
+        pass
