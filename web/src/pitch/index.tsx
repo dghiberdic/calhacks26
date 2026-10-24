@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "motion/react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
@@ -7,7 +7,7 @@ import { usePitchData } from "./data";
 import { clampSlide, clickTarget, keyToAction, parseSlide } from "./nav";
 import { SLIDES } from "./slides";
 import { COVER_IMAGE } from "./slides/Cover";
-import { EASE_OUT, STAGE_H, STAGE_W, useFitScale } from "./ui";
+import { EASE_OUT, STAGE_H, STAGE_W, useDirection, useFitScale } from "./stage";
 
 const TOTAL = SLIDES.length;
 
@@ -37,11 +37,7 @@ export default function PitchScreen() {
   const idle = useIdle(2600);
 
   // Direction of travel, for the transition (forward slides in from the right).
-  const prev = useRef(index);
-  const dir = index === prev.current ? 1 : index > prev.current ? 1 : -1;
-  useEffect(() => {
-    prev.current = index;
-  }, [index]);
+  const dir = useDirection(index);
 
   // Keep the index in the URL so a reload stays put ("/pitch" → "/pitch/0", "/pitch/99" → the last slide).
   useEffect(() => {

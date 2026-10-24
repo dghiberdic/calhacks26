@@ -89,7 +89,10 @@ export function Architecture() {
           <Arrow dir="down" />
         </Reveal>
         <Reveal className="col-span-5 col-start-1 flex items-center pr-10">
-          <p className="display-tight text-[40px] leading-[1.15] text-cloud-50">Claude reads the mess. It never decides who is owed.</p>
+          <p className="display-tight text-[40px] leading-[1.15] text-cloud-50">
+            <span className="block">Claude reads the mess. </span>
+            <span className="block text-cloud-300">It never decides who is owed.</span>
+          </p>
         </Reveal>
         <Reveal className="col-span-3 col-start-7">
           <div className={cn("grid h-full grid-cols-[auto_minmax(0,1fr)] items-start gap-x-7 rounded-[24px] px-[26px] pb-[24px] pt-[22px]", CARD.claude)}>

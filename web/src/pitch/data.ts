@@ -1,5 +1,5 @@
-import { useCfo, useEvalReport, useStormRun, useStorms } from "@/api/queries";
-import type { CfoMetrics, EvalReport, FlightRow, Question, StormRun, StormSummary } from "@/api/types";
+import { useCfo, useEvalReport, useStormRun } from "@/api/queries";
+import type { CfoMetrics, EvalReport, FlightRow, LearnedItem, Question, StormRun } from "@/api/types";
 import { HERO_STORM } from "@/lib/storms";
 
 /**
@@ -8,28 +8,17 @@ import { HERO_STORM } from "@/lib/storms";
  */
 export type PitchData = {
   run?: StormRun;
-  /** The next storm at the same station (Herminia), where the Claims Lead's ruling is reused. */
-  next?: StormRun;
   cfo?: CfoMetrics;
   evalReport?: EvalReport;
+  /** GET /eval failed (e.g. not served yet): the proof slide then shows its method without numbers. */
+  evalFailed?: boolean;
 };
 
-/** The first storm after the hero one at the same station. */
-export function nextStormId(storms: StormSummary[] | undefined, heroId = HERO_STORM): string | undefined {
-  const hero = storms?.find((s) => s.id === heroId);
-  if (!storms || !hero) return undefined;
-  return storms
-    .filter((s) => s.station === hero.station && s.date > hero.date)
-    .sort((a, b) => a.date.localeCompare(b.date))[0]?.id;
-}
-
 export function usePitchData(): PitchData {
-  const storms = useStorms();
   const run = useStormRun(HERO_STORM);
-  const next = useStormRun(nextStormId(storms.data));
   const cfo = useCfo();
   const evalReport = useEvalReport();
-  return { run: run.data, next: next.data, cfo: cfo.data, evalReport: evalReport.data };
+  return { run: run.data, cfo: cfo.data, evalReport: evalReport.data, evalFailed: evalReport.isError };
 }
 
 // ---------- selectors (pure, tested) ----------
@@ -48,11 +37,23 @@ export function voucherQuestion(run?: StormRun): Question | undefined {
   return qs.find((q) => q.pattern === "voucher_in_lieu_unsigned") ?? qs.find((q) => q.routed_to === "claims_lead");
 }
 
-/** Cases the next storm settled by citing a ruling ("31 voucher cases settled, ruling cited"); none before the ruling. */
-export const citedNextStorm = (next?: StormRun) => {
-  const n = next?.counters?.rules_cited;
-  return n && n > 0 ? n : undefined;
-};
+/**
+ * The Learns card's evidence: what the API says it learned at onboarding, as short facts. An item may pack
+ * several facts joined by " · " ("Read 18 months of claims · 35% of owed long-haul passengers claim · takes
+ * the 50% reroute cut"); its support ("41 of 42") belongs to the last of them.
+ */
+export function learnedFacts(items: LearnedItem[] | undefined, max = 3): { text: string; support?: string }[] {
+  const facts: { text: string; support?: string }[] = [];
+  for (const item of items ?? []) {
+    const parts = item.text
+      .split(" · ")
+      .map((p) => p.trim())
+      .filter(Boolean);
+    parts.forEach((p, i) => facts.push({ text: p.charAt(0).toUpperCase() + p.slice(1), support: i === parts.length - 1 ? (item.support ?? undefined) : undefined }));
+    if (facts.length >= max) break;
+  }
+  return facts.slice(0, max);
+}
 
 /** Drafted liability as a share of the full entitlement: the expected ultimate claim rate it applied. */
 export const claimRate = (cfo?: CfoMetrics) => (cfo && cfo.full_entitlement_cents > 0 ? cfo.drafted_liability_cents / cfo.full_entitlement_cents : undefined);

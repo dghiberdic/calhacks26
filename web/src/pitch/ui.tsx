@@ -1,26 +1,8 @@
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { motion, useReducedMotion, type Variants } from "motion/react";
 import { Logo } from "@/components/brand/Logo";
 import { cn } from "@/lib/utils";
-
-/** Every slide is laid out on one fixed 1920×1080 canvas; the deck scales it to the screen. */
-export const STAGE_W = 1920;
-export const STAGE_H = 1080;
-
-export const EASE_OUT: [number, number, number, number] = [0.16, 1, 0.3, 1];
-
-/** The largest scale at which the stage fits the window; the rest is letterbox. */
-export function useFitScale() {
-  const fit = () => (typeof window === "undefined" ? 1 : Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H));
-  const [scale, setScale] = useState(fit);
-  useEffect(() => {
-    const onResize = () => setScale(fit());
-    onResize();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-  return scale;
-}
+import { EASE_OUT } from "./stage";
 
 // ---------- motion ----------
 const ITEM: Variants = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: EASE_OUT } } };

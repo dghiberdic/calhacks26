@@ -65,6 +65,19 @@ test("a click on the right half moves on, the left half goes back", async ({ pag
   await expect(page).toHaveURL(/\/pitch\/2$/);
 });
 
+test("the figures on the slides come from the API (golden numbers)", async ({ page }) => {
+  await page.goto("/pitch/1");
+  await expect(page.getByText(/5,292\s+passengers, one storm/)).toBeVisible();
+  await page.goto("/pitch/2");
+  await expect(page.getByText(/172\s+payouts drafted, pending Claims Lead approval/)).toBeVisible();
+  await page.goto("/pitch/5");
+  const bridge = page.getByTestId("cfo-bridge");
+  await expect(bridge).toContainText("€34,650");
+  await expect(bridge).toContainText("€99,000");
+  await expect(bridge).toContainText("€0");
+  await expect(page.getByRole("heading", { name: "Not €0. Not €99,000." })).toBeVisible();
+});
+
 test("out-of-range slides land on the deck, and Esc goes back to the app", async ({ page }) => {
   await page.goto("/pitch/99");
   await expect(page).toHaveURL(/\/pitch\/5$/);

@@ -1,13 +1,12 @@
 import type { LearnedItem, Question } from "@/api/types";
 import { count, eur, pct, ROLE_INITIALS, routedTo } from "@/lib/format";
-import { citedNextStorm, passengers, voucherQuestion, type PitchData } from "../data";
+import { learnedFacts, passengers, voucherQuestion, type PitchData } from "../data";
 import { Bullets, Chip, Fig, GrammarCards, Initials, LoopLine, Num, Reveal, SlideFrame, type GrammarCard } from "../ui";
 
 /** THREAD_JUSTIN J11 slide 1, Hyphenate's `example · the-business` in our colours. Escalates is the highlight. */
 export function Business({ data }: { data: PitchData }) {
-  const { run, next } = data;
+  const { run } = data;
   const q = voucherQuestion(run);
-  const cited = citedNextStorm(next);
   const pax = run ? count(passengers(run)) : null;
 
   const cards: GrammarCard[] = [
@@ -50,18 +49,8 @@ export function Business({ data }: { data: PitchData }) {
   return (
     <SlideFrame
       eyebrow="example · the-business"
-      footer={
-        <LoopLine>
-          Next storm:{" "}
-          {cited ? (
-            <>
-              <Fig value={count(cited)} className="text-cloud-50" /> voucher cases settled, ruling cited.
-            </>
-          ) : (
-            <>cases like hers settle on their own, ruling cited.</>
-          )}
-        </LoopLine>
-      }
+      // No API count says "voucher cases settled by this ruling" (rules_cited mixes every rule), so no number here.
+      footer={<LoopLine>Next storm: cases like hers settle on their own, ruling cited.</LoopLine>}
     >
       <Reveal className="mt-10">
         <h2 className="display text-[108px] text-cloud-50">An airline.</h2>
@@ -95,7 +84,7 @@ function Learned({ items }: { items: LearnedItem[] | undefined }) {
   }
   return (
     <Bullets
-      items={items.slice(0, 3).map((l) => (
+      items={learnedFacts(items).map((l) => (
         <>
           {l.text}
           {/* short supports ("41 of 42") stay on one line; long ones wrap like prose */}

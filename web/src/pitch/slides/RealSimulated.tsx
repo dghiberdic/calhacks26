@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { count, eur, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { HONEST_FRAMING } from "../copy";
-import { monthRange, proofOf, type PitchData } from "../data";
+import { monthRange, proofOf, type PitchData, type Proof } from "../data";
 import { Fig, Num, Reveal, RevealGroup, SlideFrame } from "../ui";
 
 const WORDS = ["no", "one", "two", "three", "four", "five", "six"];
@@ -76,39 +76,32 @@ function Item({ title, children }: { title: string; children: ReactNode }) {
 /** "Plain Claude, 3 runs: €a / €b / €c. StormCheck: €34,650 ×3, same hash." All from GET /eval. */
 function Proof({ data }: { data: PitchData }) {
   const p = proofOf(data.evalReport);
-  const distinct = p ? new Set(p.baselineEur).size : 0;
   const learn = monthRange(p?.learn);
   const score = monthRange(p?.score);
-  const runs = (values: number[] | undefined) => (values?.length ? values.map((v, i) => <Fig key={i} value={eur(v * 100)} />) : [0, 1, 2].map((i) => <Fig key={i} value={null} width="4.5ch" />));
+  // No eval served (yet): say how it is measured, and claim no result.
+  const noNumbers = !p && !!data.evalFailed;
+
+  if (noNumbers) {
+    // The method, from the plan (§5); results appear once GET /eval answers.
+    return (
+      <Reveal className="rounded-[26px] bg-white/[0.07] px-[34px] pb-[28px] pt-[26px] shadow-[inset_0_0_0_2px_rgba(244,246,249,0.92)]">
+        <p className="font-mono text-[17px] uppercase tracking-[0.16em] text-cloud-300">How we know</p>
+        <ul className="mt-6 flex flex-col gap-[20px]">
+          <Item title="Storms it never saw">Learns on Jul 2023 – Dec 2024, scored on Jan – Jun 2025, &Eacute;owyn included</Item>
+          <Item title="An answer key">Written from the generator&rsquo;s ground truth, never from the engine</Item>
+          <Item title="Against plain Claude">Same raw documents, three runs each, compared to the euro and the hash</Item>
+          <Item title="Replay">
+            Every decision is a hashed commit; <span className="font-mono text-[17px] text-cloud-300">make verify</span> recomputes it offline
+          </Item>
+        </ul>
+      </Reveal>
+    );
+  }
 
   return (
     <Reveal className="flex flex-col rounded-[26px] bg-white/[0.07] px-[34px] pb-[26px] pt-[26px] shadow-[inset_0_0_0_2px_rgba(244,246,249,0.92)]">
       <p className="font-mono text-[17px] uppercase tracking-[0.16em] text-cloud-300">How we know</p>
-      <p className="mt-4 text-[21px] text-cloud-300">Same raw documents, three runs each.</p>
-
-      <div className="mb-7 mt-5 grid grid-cols-[auto_repeat(3,minmax(0,1fr))] items-baseline gap-x-6">
-        <p className="font-mono text-[17px] text-cloud-400">Plain Claude</p>
-        {runs(p?.baselineEur).map((n, i) => (
-          <p key={i} className="text-[32px] text-cloud-400">
-            {n}
-          </p>
-        ))}
-        <p className="col-span-3 col-start-2 mt-1 min-h-[24px] text-[18px] text-cloud-500">{p && distinct > 1 ? `${spell(distinct)} different numbers` : null}</p>
-        <p className="mt-4 font-mono text-[17px] text-cloud-50">StormCheck</p>
-        {runs(p?.stormcheckEur).map((n, i) => (
-          <p key={i} className="mt-4 text-[32px] text-cloud-50">
-            {n}
-          </p>
-        ))}
-        <p className="col-span-3 col-start-2 mt-1 min-h-[24px] text-[18px] text-cloud-100">
-          {p?.stormcheckSameHash ? (
-            <span className="inline-flex items-center gap-2.5">
-              <span aria-hidden="true" className="size-[7px] rounded-full bg-cloud-50" />
-              same number, same hash, every run
-            </span>
-          ) : null}
-        </p>
-      </div>
+      <Runs proof={p} />
 
       <div className="mt-auto border-t border-white/15 pt-5">
         <p className="text-[21px] leading-[1.4] text-cloud-200">
@@ -121,36 +114,71 @@ function Proof({ data }: { data: PitchData }) {
           )}{" "}
           Answer key from ground truth, never from the engine.
         </p>
-        {p ? (
-          <p className="mt-2.5 text-[19px] text-cloud-400">
-            {[
-              p.straightThrough !== undefined ? (
-                <>
-                  <Num className="text-cloud-100">{pct(p.straightThrough, p.straightThrough < 0.995 ? 1 : 0)}</Num> straight-through
-                </>
-              ) : null,
-              p.miscodes ? (
-                <>
-                  <Num className="text-cloud-100">{count(p.miscodes.caught)}</Num> of <Num>{count(p.miscodes.total)}</Num> miscodes caught
-                </>
-              ) : null,
-              p.repeatQuestions !== undefined ? (
-                <>
-                  <Num className="text-cloud-100">{count(p.repeatQuestions)}</Num> repeat questions
-                </>
-              ) : null,
-            ]
-              .filter(Boolean)
-              .map((part, i) => (
-                <span key={i}>
-                  {i > 0 ? " · " : ""}
-                  {part}
-                </span>
-              ))}
-          </p>
-        ) : null}
+        {p ? <Scorecard proof={p} /> : null}
         {p?.label ? <p className="mt-1.5 text-[16px] text-cloud-500">{p.label}</p> : null}
       </div>
     </Reveal>
+  );
+}
+
+/** Three runs each on the same documents: plain Claude's numbers differ, StormCheck's match to the hash. */
+function Runs({ proof }: { proof: Proof | undefined }) {
+  const distinct = proof ? new Set(proof.baselineEur).size : 0;
+  const cells = (values: number[] | undefined, className: string) =>
+    (values?.length ? values.map((v) => eur(v * 100)) : [null, null, null]).map((v, i) => (
+      <p key={i} className={className}>
+        <Fig value={v} width="4.5ch" />
+      </p>
+    ));
+  return (
+    <>
+      <p className="mt-4 text-[21px] text-cloud-300">Same raw documents, three runs each.</p>
+      <div className="mb-7 mt-5 grid grid-cols-[auto_repeat(3,minmax(0,1fr))] items-baseline gap-x-6">
+        <p className="font-mono text-[17px] text-cloud-400">Plain Claude</p>
+        {cells(proof?.baselineEur, "text-[32px] text-cloud-400")}
+        <p className="col-span-3 col-start-2 mt-1 min-h-[24px] text-[18px] text-cloud-500">{distinct > 1 ? `${spell(distinct)} different numbers` : null}</p>
+        <p className="mt-4 font-mono text-[17px] text-cloud-50">StormCheck</p>
+        {cells(proof?.stormcheckEur, "mt-4 text-[32px] text-cloud-50")}
+        <p className="col-span-3 col-start-2 mt-1 min-h-[24px] text-[18px] text-cloud-100">
+          {proof?.stormcheckSameHash ? (
+            <span className="inline-flex items-center gap-2.5">
+              <span aria-hidden="true" className="size-[7px] rounded-full bg-cloud-50" />
+              same number, same hash, every run
+            </span>
+          ) : null}
+        </p>
+      </div>
+    </>
+  );
+}
+
+/** "98.7% straight-through · 11 of 12 miscodes caught · 0 repeat questions", whichever the eval reports. */
+function Scorecard({ proof: p }: { proof: Proof }) {
+  const parts = [
+    p.straightThrough !== undefined ? (
+      <>
+        <Num className="text-cloud-100">{pct(p.straightThrough, p.straightThrough < 0.995 ? 1 : 0)}</Num> straight-through
+      </>
+    ) : null,
+    p.miscodes ? (
+      <>
+        <Num className="text-cloud-100">{count(p.miscodes.caught)}</Num> of <Num>{count(p.miscodes.total)}</Num> miscodes caught
+      </>
+    ) : null,
+    p.repeatQuestions !== undefined ? (
+      <>
+        <Num className="text-cloud-100">{count(p.repeatQuestions)}</Num> repeat questions
+      </>
+    ) : null,
+  ].filter(Boolean);
+  return (
+    <p className="mt-2.5 text-[19px] text-cloud-400">
+      {parts.map((part, i) => (
+        <span key={i}>
+          {i > 0 ? " · " : ""}
+          {part}
+        </span>
+      ))}
+    </p>
   );
 }
