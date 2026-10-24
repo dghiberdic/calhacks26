@@ -21,7 +21,8 @@ export function RollingNumber({
   prefix?: string;
   className?: string;
   delay?: number;
-  trigger?: string;
+  /** ScrollTrigger start; null rolls on mount (above-the-fold numbers). */
+  trigger?: string | null;
 }) {
   const root = useRef<HTMLSpanElement>(null);
   const text = prefix + format(value);
@@ -35,8 +36,8 @@ export function RollingNumber({
         duration: 1.4,
         ease: "power3.inOut",
         stagger: { each: 0.06, from: "end" },
-        delay,
-        scrollTrigger: { trigger: root.current, start: trigger, toggleActions: "play none none reverse" },
+        delay: trigger === null ? delay + 0.15 : delay,
+        ...(trigger === null ? {} : { scrollTrigger: { trigger: root.current, start: trigger, toggleActions: "play none none reverse" } }),
       });
     },
     { scope: root, dependencies: [text] },

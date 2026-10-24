@@ -9,7 +9,7 @@ type Node = { value: string; mono?: boolean; title: string; detail: React.ReactN
 const NODES: Node[] = [
   { value: "€44,520", title: "EU261 claims provision, NS31", detail: "Drafted 09:00Z. Waiting for the Claims Lead.", tone: "owed" },
   { value: "€127,200 × 35%", title: "Exposure at the learned claim rate", detail: "Rate learned from 18 storms and 2 years of Northstar claims." },
-  { value: "212 × €600", title: "Passengers × Article 7 tier", detail: "Dublin to Boston is 4,808 km, over the 3,500 km tier." },
+  { value: "212 × €600", title: "Passengers × Article 7 tier", detail: "Dublin to Boston is 4,802 km, over the 3,500 km tier." },
   { value: "Technical fault", title: "Cause, set by rule R-3 v2", detail: "Technical problems are not extraordinary circumstances. CJEU C-549/07, Wallentin-Hermann." },
   {
     value: "07:55Z",

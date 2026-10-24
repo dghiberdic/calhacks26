@@ -1,20 +1,26 @@
 // Fetch real reanalysis (ERA5 via Open-Meteo archive) MSLP + 10 m wind on a lat/lon grid,
 // plus a NASA GIBS MODIS true-colour frame, for the hero's synoptic map.
 //
-//   node scripts/fetch-storm.mjs --date 2025-01-24 [--hours 0,3,6,9,12,15,18,21] [--step 1.5]
+//   node scripts/fetch-storm.mjs --date 2025-01-24 [--hours 0,3,6,9,12,15,18,21 | all] [--step 1.5]
+//        [--out public/data/bram] [--models era5] [--no-sat] [--sat-only]
 //
-// Writes public/data/storm-<date>.json and public/data/sat-<date>.jpg
+//   e.g. Storm Bram:  node scripts/fetch-storm.mjs --date 2025-12-09 --hours all --models era5 --out public/data/bram --no-sat
+//
+// Writes <out>/storm-<date>.json and <out>/sat-<date>.jpg (<out> defaults to public/data).
+// --models pins an Open-Meteo archive model (e.g. "era5"); without it Open-Meteo's best_match blend is used.
 import { writeFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 const args = Object.fromEntries(
   process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith("--") ? [...acc, [a.slice(2), all[i + 1] && !all[i + 1].startsWith("--") ? all[i + 1] : "1"]] : acc), []),
 );
 const date = args.date ?? "2025-01-24";
 const step = +(args.step ?? 1.5);
-const hours = (args.hours ?? "0,3,6,9,12,15,18,21").split(",").map(Number);
+const hoursArg = args.hours ?? "0,3,6,9,12,15,18,21";
+const hours = hoursArg === "all" ? Array.from({ length: 24 }, (_, h) => h) : hoursArg.split(",").map(Number);
+const models = args.models; // undefined → Open-Meteo best_match
 const bbox = { lonMin: -60, lonMax: 18, latMin: 34, latMax: 70 }; // North Atlantic → Europe
-const outDir = join(process.cwd(), "public", "data");
+const outDir = args.out ? resolve(process.cwd(), args.out) : join(process.cwd(), "public", "data");
 mkdirSync(outDir, { recursive: true });
 
 const lons = [];
@@ -42,19 +48,27 @@ for (let i = 0; !satOnly && i < pts.length; i += BATCH) {
       wind_speed_unit: "kn",
       timezone: "GMT",
       cell_selection: "nearest",
+      ...(models ? { models } : {}),
     });
   for (let attempt = 0; ; attempt++) {
-    const res = await fetch(url);
-    if (res.ok) {
+    let res = null;
+    let body = "";
+    try {
+      res = await fetch(url);
+    } catch (e) {
+      body = String(e); // network hiccup → retry like a 5xx
+    }
+    if (res?.ok) {
       const j = await res.json();
       const arr = Array.isArray(j) ? j : [j];
       arr.forEach((loc, k) => (results[i + k] = loc.hourly));
       break;
     }
-    const body = await res.text();
-    if (attempt > 4) throw new Error(`open-meteo ${res.status}: ${body.slice(0, 200)}`);
-    console.log(`  retry after ${res.status} ${body.slice(0, 120)}`);
-    await sleep(20000 * (attempt + 1));
+    if (res) body = await res.text();
+    if (attempt > 4) throw new Error(`open-meteo ${res?.status ?? "network"}: ${body.slice(0, 200)}`);
+    console.log(`  retry after ${res?.status ?? "network error"} ${body.slice(0, 120)}`);
+    // 429 = minutely/hourly quota; the minutely window needs a full minute to reset
+    await sleep(res?.status === 429 ? Math.max(61000, 20000 * (attempt + 1)) : 20000 * (attempt + 1));
   }
   console.log(`  ${Math.min(i + BATCH, pts.length)}/${pts.length}`);
   if (i + BATCH < pts.length) await sleep(21000);
@@ -78,7 +92,7 @@ const frames = satOnly ? [] : hours.map((h) => {
 });
 
 const out = {
-  source: "ERA5 reanalysis via Open-Meteo archive API (open-meteo.com, CC BY 4.0)",
+  source: `ERA5 reanalysis via Open-Meteo archive API${models ? ` (models=${models})` : ""} (open-meteo.com, CC BY 4.0)`,
   date,
   step,
   bbox,
@@ -89,8 +103,11 @@ const out = {
   units: { mslp: "hPa", wind: "kt (u east, v north)" },
   frames,
 };
-if (!satOnly) writeFileSync(join(outDir, `storm-${date}.json`), JSON.stringify(out));
-console.log("wrote", join(outDir, `storm-${date}.json`));
+if (!satOnly) {
+  writeFileSync(join(outDir, `storm-${date}.json`), JSON.stringify(out));
+  console.log("wrote", join(outDir, `storm-${date}.json`));
+}
+if ("no-sat" in args) process.exit(0);
 
 // NASA GIBS MODIS Terra true colour (public domain), plate carrée, 60 px/degree
 const [sLonMin, sLonMax, sLatMin, sLatMax] = (args.satbox ?? "-84,22,22,71").split(",").map(Number);

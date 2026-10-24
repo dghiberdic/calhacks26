@@ -36,7 +36,7 @@ export const tier = (km: number) => (km <= 1500 ? 250 : km <= 3500 ? 400 : 600);
 export const FLIGHTS: Flight[] = [
   { id: "NS102", dest: "LHR", city: "London", sched: "11:10", reg: "EI-NSE", type: "A320", pax: 168, km: 449, coded: "WX", verdict: "weather", confidence: 97, note: "Departure inside storm window" },
   { id: "NS21", dest: "JFK", city: "New York", sched: "11:25", reg: "EI-NSK", type: "A330", pax: 262, km: 5103, coded: "WX", verdict: "weather", confidence: 96, note: "Gusts 58 kt at departure" },
-  { id: "NS27", dest: "BOS", city: "Boston", sched: "11:50", reg: "EI-NSB", type: "A321", pax: 196, km: 4808, coded: "WX", verdict: "weather", confidence: 96, note: "Gusts 61 kt at departure" },
+  { id: "NS27", dest: "BOS", city: "Boston", sched: "11:50", reg: "EI-NSB", type: "A321", pax: 196, km: 4802, coded: "WX", verdict: "weather", confidence: 96, note: "Gusts 61 kt at departure" },
   { id: "NS214", dest: "CDG", city: "Paris", sched: "12:20", reg: "EI-NSF", type: "A320", pax: 171, km: 784, coded: "WX", verdict: "weather", confidence: 97, note: "Departure inside storm window" },
   { id: "NS25", dest: "EWR", city: "Newark", sched: "12:45", reg: "EI-NSC", type: "A321", pax: 188, km: 5078, coded: "WX", verdict: "weather", confidence: 95, note: "Gusts 64 kt at departure" },
   { id: "NS41", dest: "ORD", city: "Chicago", sched: "13:15", reg: "EI-NSL", type: "A330", pax: 250, km: 5939, coded: "WX", verdict: "weather", confidence: 96, note: "Gusts 68 kt at departure" },
@@ -47,7 +47,7 @@ export const FLIGHTS: Flight[] = [
   { id: "NS61", dest: "YYZ", city: "Toronto", sched: "16:35", reg: "EI-NSJ", type: "A321", pax: 179, km: 5257, coded: "WX", verdict: "weather", confidence: 93, note: "Gusts 55 kt at departure" },
   { id: "NS71", dest: "MCO", city: "Orlando", sched: "17:20", reg: "EI-NSN", type: "A330", pax: 246, km: 6576, coded: "WX", verdict: "weather", confidence: 92, note: "Gusts 52 kt at departure" },
   { id: "NS81", dest: "SEA", city: "Seattle", sched: "18:10", reg: "EI-NSP", type: "A330", pax: 236, km: 7302, coded: "WX", verdict: "weather", confidence: 90, note: "Gusts 49 kt at departure" },
-  { id: "NS31", dest: "BOS", city: "Boston", sched: "21:30", reg: "EI-NSA", type: "A321", pax: 212, km: 4808, coded: "WX", verdict: "technical", confidence: 91, note: "Grounded 07:55, hydraulic leak, before the storm" },
+  { id: "NS31", dest: "BOS", city: "Boston", sched: "21:30", reg: "EI-NSA", type: "A321", pax: 212, km: 4802, coded: "WX", verdict: "technical", confidence: 91, note: "Grounded 07:55, hydraulic leak, before the storm" },
 ];
 
 export const OPERATED: Pick<Flight, "id" | "dest" | "city" | "sched" | "reg">[] = [
