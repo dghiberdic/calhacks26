@@ -277,16 +277,19 @@ function Record({ family }: { family: RuleFamily }) {
       <Item label="Versions">
         <VersionTrail versions={family.versions} current={rule} />
       </Item>
-      {isId(rule.origin_example) && rule.origin_example ? (
+      {(isId(rule.origin_example) && rule.origin_example) || rule.origin_ruling_id ? (
         <Item label="Origin">
-          {flight ? (
-            <Link to={`/flights/${encodeURIComponent(flight)}`} className="inline-flex items-center gap-0.5 font-mono text-[12px] text-navy-900 hover:underline">
-              {shortId(rule.origin_example)}
-              <ArrowUpRight className="size-3 text-slate-400" aria-hidden="true" />
-            </Link>
-          ) : (
-            <span className={cn("break-words text-slate-600", stormName(rule.origin_example) ? "text-[13px]" : "font-mono text-[11.5px]")}>{stormName(rule.origin_example) ?? rule.origin_example}</span>
-          )}
+          {rule.origin_example && isId(rule.origin_example) ? (
+            flight ? (
+              <Link to={`/flights/${encodeURIComponent(flight)}`} className="inline-flex items-center gap-0.5 font-mono text-[12px] text-navy-900 hover:underline">
+                {shortId(rule.origin_example)}
+                <ArrowUpRight className="size-3 text-slate-400" aria-hidden="true" />
+              </Link>
+            ) : (
+              <span className={cn("block break-words text-slate-600", stormName(rule.origin_example) ? "text-[13px]" : "font-mono text-[11.5px]")}>{stormName(rule.origin_example) ?? rule.origin_example}</span>
+            )
+          ) : null}
+          {rule.origin_ruling_id ? <span className="mt-0.5 block font-mono text-[11px] text-slate-400">ruling {rule.origin_ruling_id}</span> : null}
         </Item>
       ) : null}
     </dl>

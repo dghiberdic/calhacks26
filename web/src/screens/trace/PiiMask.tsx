@@ -90,7 +90,9 @@ export function PiiMask({ matrix }: { matrix: AccessMatrix | undefined }) {
 
 /** One seat's view of the record. Clear text appears only when this browser was actually given it. */
 function Seat({ seat, cell, record, viewer }: { seat: Role; cell: AccessCell | null; record: PiiRecord; viewer: Role }) {
-  const clearSeat = cell === "read" || cell === "write" || cell === "approve";
+  // The matrix decides; without a PII column, the Claims Lead is the seat that reads PII (plan §2) and the
+  // record's values still come only from the server.
+  const clearSeat = cell ? cell === "read" || cell === "write" || cell === "approve" : seat === CLEAR;
   const noAccess = cell === "none";
   const haveClear = record.values.length > 0;
   const showClear = clearSeat && haveClear;
