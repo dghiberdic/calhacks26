@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { gsap, useGSAP } from "@/components/motion/gsap";
+import { gsap, prefersReducedMotion, useGSAP } from "@/components/motion/gsap";
 import { RollingNumber } from "@/components/motion/RollingNumber";
 
 const CASES = ["NS102", "NS214", "NS306", "NS27", "NS21", "NS25", "NS51"];
@@ -12,6 +12,8 @@ export function AskOnce() {
 
   useGSAP(
     () => {
+      // With reduced motion: no entrances, but the chosen answer is still marked.
+      if (prefersReducedMotion()) return void gsap.set(".ao-pick", { backgroundColor: "#121417", color: "#f4f4f1" });
       const tl = gsap.timeline({ scrollTrigger: { trigger: root.current, start: "top 55%", toggleActions: "play none none reverse" } });
       tl.from(".ao-card", { opacity: 0, y: 40, duration: 0.8, stagger: 0.35, ease: "power3.out" })
         .to(".ao-pick", { backgroundColor: "#121417", color: "#f4f4f1", duration: 0.3 }, 0.7)

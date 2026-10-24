@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { gsap, useGSAP } from "@/components/motion/gsap";
+import { gsap, prefersReducedMotion, useGSAP } from "@/components/motion/gsap";
 import { cn } from "@/lib/cn";
 import { STORM } from "@/data/scenario";
 
@@ -33,6 +33,7 @@ export function Trace() {
 
   useGSAP(
     () => {
+      if (prefersReducedMotion()) return; // reveals only
       gsap.from(".tr-line", {
         scaleY: 0,
         transformOrigin: "top center",

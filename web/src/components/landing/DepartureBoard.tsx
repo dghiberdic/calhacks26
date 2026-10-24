@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { FLIGHTS } from "@/data/scenario";
 import { FlapText } from "./SplitFlap";
-import { gsap, ScrollTrigger, useGSAP } from "@/components/motion/gsap";
+import { gsap, prefersReducedMotion, ScrollTrigger, useGSAP } from "@/components/motion/gsap";
 import { cn, eur } from "@/lib/cn";
 
 type Phase = "blank" | "coded" | "checked";
@@ -29,6 +29,7 @@ export function DepartureBoard() {
         onEnter: () => setPhase("checked"),
         onLeaveBack: () => setPhase("coded"),
       });
+      if (prefersReducedMotion()) return; // the rows' entrance is decoration; the phases above are not
       gsap.from(".board-row", {
         opacity: 0,
         y: 12,

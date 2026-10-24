@@ -60,11 +60,15 @@ export function StormDay() {
   useEffect(() => {
     let alive = true;
     loadSat().catch(() => {});
-    Promise.all([fetch(`${BASE}/storm-2025-12-09.json`).then((r) => r.json()), fetch(`${BASE}/frames.json`).then((r) => r.json())]).then(([s, f]) => {
-      if (!alive) return;
-      setStorm(s);
-      setFrames(f);
-    });
+    const json = (url: string) => fetch(url).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`${r.status} ${url}`))));
+    Promise.all([json(`${BASE}/storm-2025-12-09.json`), json(`${BASE}/frames.json`)])
+      .then(([s, f]) => {
+        if (!alive) return;
+        setStorm(s);
+        setFrames(f);
+      })
+      // Without the storm data the map can't animate; the real 12:00Z frame stands in, as it does without WebGL.
+      .catch(() => alive && setNoGL(true));
     return () => {
       alive = false;
     };

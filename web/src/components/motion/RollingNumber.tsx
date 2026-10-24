@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { gsap, useGSAP } from "./gsap";
+import { gsap, prefersReducedMotion, useGSAP } from "./gsap";
 import { cn } from "@/lib/cn";
 
 /**
@@ -30,9 +30,11 @@ export function RollingNumber({
   useGSAP(
     () => {
       const drums = gsap.utils.toArray<HTMLElement>(".rn-drum", root.current);
+      const final = (i: number, el: HTMLElement) => -Number(el.dataset.d) * 10;
+      if (prefersReducedMotion()) return void gsap.set(drums, { yPercent: final }); // the number, without the roll
       gsap.set(drums, { yPercent: 0 });
       gsap.to(drums, {
-        yPercent: (i: number, el: HTMLElement) => -Number(el.dataset.d) * 10,
+        yPercent: final,
         duration: 1.4,
         ease: "power3.inOut",
         stagger: { each: 0.06, from: "end" },

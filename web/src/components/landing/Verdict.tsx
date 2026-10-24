@@ -3,7 +3,7 @@
 import { useMemo, useRef } from "react";
 import { line, curveMonotoneX } from "d3-shape";
 import { RollingNumber } from "@/components/motion/RollingNumber";
-import { gsap, useGSAP } from "@/components/motion/gsap";
+import { gsap, prefersReducedMotion, useGSAP } from "@/components/motion/gsap";
 import { NS31, fmtDuration } from "@/data/scenario";
 
 /** The euros, in the order a controller would check them. */
@@ -20,6 +20,8 @@ export function Verdict() {
 
   useGSAP(
     () => {
+      // Reveals only. With reduced motion the content simply sits in its final state.
+      if (prefersReducedMotion()) return;
       gsap.from(".vd-line", {
         drawSVG: 0,
         duration: 1.8,

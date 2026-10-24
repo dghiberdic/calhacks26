@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { gsap, useGSAP } from "@/components/motion/gsap";
+import { gsap, prefersReducedMotion, useGSAP } from "@/components/motion/gsap";
 
 /** Night turns to chart paper; the line's ink follows so it never loses contrast. */
 export function MorningAfter() {
@@ -13,7 +13,7 @@ export function MorningAfter() {
         { color: "#f4f6f8" },
         { color: "#121417", ease: "none", scrollTrigger: { trigger: root.current, start: "35% top", end: "62% top", scrub: true } },
       );
-      gsap.from(".ma-text", { opacity: 0, y: 30, duration: 1.2, ease: "power3.out", scrollTrigger: { trigger: root.current, start: "top 40%" } });
+      if (!prefersReducedMotion()) gsap.from(".ma-text", { opacity: 0, y: 30, duration: 1.2, ease: "power3.out", scrollTrigger: { trigger: root.current, start: "top 40%" } });
     },
     { scope: root },
   );
