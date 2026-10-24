@@ -163,7 +163,18 @@ def select(impl: dict[str, str], *, clock: Any = None) -> Impls:
         fw = _fake("FakeWorld")
         return getattr(fw, "generate_day", None) if fw is not None else None
 
-    out.generate_day, out.world_kind = _pick(impl.get("world", "real"), real_gen, fake_gen)
+    if impl.get("world", "real") == "fake":
+        out.generate_day, out.world_kind = _pick("fake", real_gen, fake_gen)
+    else:
+        # real: WorldAPI.generate_day when it lands, else the server's adapter over world.generator (desk.py),
+        # else FakeWorld (golden storm days only)
+        out.generate_day = real_gen()
+        if out.generate_day is not None:
+            out.world_kind = "real"
+        elif _module("world.generator") is not None:
+            out.world_kind = "real:generator"
+        else:
+            out.generate_day, out.world_kind = _pick("fake", real_gen, fake_gen)
     out.world_error = find([("world.errors", "WorldError")])
     return out
 

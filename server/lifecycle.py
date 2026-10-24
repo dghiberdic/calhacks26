@@ -289,8 +289,8 @@ class Lifecycle:
         for key in rt.store.keys("storm_run"):
             run = StormRun.model_validate(rt.store.get("storm_run", key))
             ids = {r.flight.id for r in run.flights}
-            if fids is not None and not ids & fids:
-                continue
+            if run.real_context.get("desk") or (fids is not None and not ids & fids):
+                continue                            # desk days are priced in their own scratch ledger
             rows = [r.model_copy(update={"decision": decs.get(r.flight.id, r.decision)}) for r in run.flights]
             ds = [r.decision for r in rows if r.decision is not None]
             ents = {d.flight_id: self.ents(d.flight_id) for d in ds}

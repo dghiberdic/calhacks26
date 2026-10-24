@@ -297,29 +297,8 @@ def install(app: FastAPI, rt: Any) -> None:
     def approve(je_id: str, request: Request) -> JournalEntry:
         if stubbed():
             return stub.approve(je_id, request)
-        books = need_books()
-        s = sess(request)
-        try:
-            head = books.journal_entry(je_id)
-        except Exception as exc:
-            raise books_error(exc) from exc
-        action = "approve_payout" if head.kind in ("claim_approved", "claim_paid") else "approve_je"
-        with rt.lock:
-            access_check(s, action, je_id, preparer=head.preparer)
-            try:
-                je = books.approve(je_id, s)          # Books enforces the same controls again (defence in depth)
-            except Exception as exc:
-                err = books_error(exc)
-                if err.status == 403:
-                    rt.deny(s.principal, action, je_id, err.message)
-                raise err from exc
-            rt.allow(s.principal, action, je_id, "approved · parked, not posted")
-            rt.commit_journal([je], s.principal, rt.now, event="approved")
-            rt.emit("journal", s.principal, f"{je.id} approved by {compose.label(s.role)} · parked, not posted",
-                    "APPLIED", je.id, sum(line.dr_cents for line in je.lines))
-            for fid in {line.dims.get("flight") for line in je.lines} - {None}:
-                lc.refresh_flight(fid)
-        return je
+        need_books()
+        return approve_je(rt, sess(request), je_id)
 
     @app.post("/api/books/month-end", response_model=MonthEndResponse, responses=ERRORS_AUTH)
     def month_end(req: PeriodRequest) -> MonthEndResponse:
@@ -370,20 +349,63 @@ def install(app: FastAPI, rt: Any) -> None:
         return LockResponse(locked=req.period)
 
     def access_check(s: Session, action: str, resource: str, *, preparer: str | None = None) -> None:
-        """`engine.acl.Broker.check`: agents never approve, only signed internal sessions approve, preparer ≠
-        approver, payouts need the Claims Lead, JEs and locks the Controller. The broker commits each denial."""
-        broker = rt.broker
-        if broker is None:
-            if s.role == Role.JUDGE or s.role in AGENT_ROLES:
-                code = "sod_violation" if s.role in AGENT_ROLES else "forbidden"
-                raise deny(s, action, resource, code, "SoD: agents never approve" if s.role in AGENT_ROLES
-                           else "Judge sessions are read-only (plus desk and inject)")
-            return
-        d = broker.check(s, action, resource, preparer=preparer)
-        if not d.allowed:
-            rt.deny(d.principal, d.action, d.resource, d.reason, committed=True)
-            code = "forbidden" if s.role == Role.JUDGE or action == "lock_period" else "sod_violation"
-            raise ApiError(403, code, d.reason)
+        check_approval(rt, s, action, resource, preparer=preparer)
+
+
+def is_persona(principal: str | None) -> bool:
+    personas = _module("llm.personas")
+    fn = getattr(personas, "is_persona", None) if personas is not None else None
+    if fn is not None:
+        return bool(fn(principal))
+    return bool(principal) and str(principal).startswith("persona:")
+
+
+def check_approval(rt: Any, s: Session, action: str, resource: str, *, preparer: str | None = None) -> None:
+    """`engine.acl.Broker.check`: agents never approve, only signed internal sessions approve, preparer ≠ approver,
+    payouts need the Claims Lead, JEs and locks the Controller; a simulated person (`persona:<role>`) never
+    satisfies an approval. The broker commits each denial; the server logs and streams it."""
+    if is_persona(s.principal):
+        rt.deny(s.principal, action, resource, "External: a simulated persona never satisfies an internal approval")
+        raise ApiError(403, "sod_violation", "A simulated persona never approves or pays.")
+    broker = rt.broker
+    if broker is None:
+        if s.role == Role.JUDGE or s.role in AGENT_ROLES:
+            code = "sod_violation" if s.role in AGENT_ROLES else "forbidden"
+            reason = "SoD: agents never approve" if s.role in AGENT_ROLES else "Judge sessions are read-only"
+            rt.deny(s.principal, action, resource, reason)
+            raise ApiError(403, code, reason)
+        return
+    d = broker.check(s, action, resource, preparer=preparer)
+    if not d.allowed:
+        rt.deny(d.principal, d.action, d.resource, d.reason, committed=True)
+        code = "forbidden" if s.role == Role.JUDGE or action == "lock_period" else "sod_violation"
+        raise ApiError(403, code, d.reason)
+
+
+def approve_je(rt: Any, s: Session, je_id: str) -> JournalEntry:
+    """Approve a parked journal (JEs: Controller; claim approvals and payouts: Claims Lead). Never posts."""
+    books = rt.books
+    try:
+        head = books.journal_entry(je_id)
+    except Exception as exc:
+        raise books_error(exc) from exc
+    action = "approve_payout" if head.kind in ("claim_approved", "claim_paid") else "approve_je"
+    with rt.lock:
+        check_approval(rt, s, action, je_id, preparer=head.preparer)
+        try:
+            je = books.approve(je_id, s)          # Books enforces the same controls again (defence in depth)
+        except Exception as exc:
+            err = books_error(exc)
+            if err.status == 403:
+                rt.deny(s.principal, action, je_id, err.message)
+            raise err from exc
+        rt.allow(s.principal, action, je_id, "approved · parked, not posted")
+        rt.commit_journal([je], s.principal, rt.now, event="approved")
+        rt.emit("journal", s.principal, f"{je.id} approved by {compose.label(s.role)} · parked, not posted",
+                "APPLIED", je.id, sum(line.dr_cents for line in je.lines))
+        for fid in {line.dims.get("flight") for line in je.lines} - {None}:
+            rt.lifecycle.refresh_flight(fid)
+    return je
 
 
 def primary_cohort(rt: Any) -> str:

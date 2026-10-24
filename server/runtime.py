@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import concurrent.futures as cf
 import logging
+import os
 import subprocess
 import threading
 from dataclasses import dataclass, field
@@ -92,6 +93,8 @@ class Runtime:
         self.store = Store(settings.db_path)
         self.world: World | None = self._load_world()
         self.clock = ServerClock(self.store, self._boot_known_at())
+        # STORMCHECK_MODE=live|cache|offline sets the LLM client's mode unless LLM_MODE is given explicitly
+        os.environ.setdefault("LLM_MODE", settings.mode)
         self.impls: Impls = select(settings.impl, clock=self.clock)
         self.engine_sha = _git_sha()
         self.bind_engine()
@@ -106,9 +109,11 @@ class Runtime:
         from .auth import Signer
         from .blame import Blamer
         from .lifecycle import Lifecycle
+        from .live import Live
         self.signer = Signer(settings.secret)
         self.lifecycle = Lifecycle(self)
         self.blamer = Blamer(self)
+        self.live = Live(self)
 
     # ------------------------------------------------------------------ setup
     def _fresh_db(self) -> None:
@@ -276,21 +281,60 @@ class Runtime:
             self.record("record_rule", r, "agent.engine", self.now, event=r.status,
                         reason=r.support or r.tier.replace("_", " "))
 
-    def boot_rules(self, world: World) -> list[Rule]:
-        from contracts import stub_app as stub
-        rules: dict[str, Rule] = {r.id: r for r in stub.RULES}   # cards + the mined 50% reroute cut
+    def mined(self, world: World) -> Any:
+        """`engine.miner.mine(world)` once per world (None when the miner is missing or there is no history)."""
+        cache = getattr(self, "_mined_cache", None)
+        if cache is not None and cache[0] is world:
+            return cache[1]
         miner = _module("engine.miner")
-        mine = getattr(miner, "mine_rules", None) if miner else None
-        if mine is not None:
+        out = None
+        if miner is not None and hasattr(miner, "mine") and world.history_cases:
             try:
-                for p in call(mine, world):
-                    rule = getattr(p, "rule", p)
-                    # mined at onboarding: active from the boot clock (plan §3 Learns strip)
-                    rules[rule.id] = rule.model_copy(update={"status": "active"}) if rule.status == "shadow" \
-                        else rule
+                out = miner.mine(world)
             except Exception as exc:
-                log.warning("miner failed (%s); using the stub's mined rule", exc)
+                log.warning("miner failed: %s", exc)
+        self._mined_cache = (world, out)
+        return out
+
+    def boot_rules(self, world: World) -> list[Rule]:
+        """Rule cards from the stub (display) + the mined policy from `engine.miner` (D7). A mined rule in `shadow`
+        is activated at onboarding (it drives day 1's 50% reroute cut); one a written policy contradicts stays
+        `proposed` (no_conflict=False) and its Controller question is asked instead. With no history to mine, the
+        stub's R-MINED-REDUCE card stands in."""
+        from contracts import stub_app as stub
+        rules: dict[str, Rule] = {r.id: r for r in stub.RULES}
+        m = self.mined(world)
+        if m is not None:
+            rules = {k: r for k, r in rules.items() if r.tier != "mined"}
+            for p in m.proposals:
+                rule = p.rule
+                rules[rule.id] = rule.model_copy(update={"status": "active"}) if rule.status == "shadow" else rule
         return list(rules.values())
+
+    def mined_questions(self, world: World) -> list[Question]:
+        miner = _module("engine.miner")
+        m = self.mined(world)
+        if miner is None or m is None or not hasattr(miner, "contradictions"):
+            return []
+        try:
+            return list(miner.contradictions(world, asked_at=self.now, mined=m))
+        except Exception as exc:
+            log.warning("miner contradictions failed: %s", exc)
+            return []
+
+    def learned(self, world: World, rules: list[Rule], run_id: str) -> list[Any]:
+        """The Learns strip: `engine.miner.learned_items` (curves from Books when it has them)."""
+        miner = _module("engine.miner")
+        m = self.mined(world)
+        if miner is not None and m is not None and hasattr(miner, "learned_items"):
+            lookup = getattr(self.books, "curve", None)
+            try:
+                return list(miner.learned_items(world, curve_lookup=lookup, mined=m))
+            except Exception as exc:
+                log.warning("learned_items failed: %s", exc)
+        from contracts import stub_app as stub
+        stub_run = stub.STORM_RUNS.get(run_id)
+        return list(stub_run.learned) if stub_run is not None else compose.default_learned(rules)
 
     def rules(self) -> list[Rule]:
         return [Rule.model_validate(x) for x in self.store.all("rule")]
@@ -352,7 +396,69 @@ class Runtime:
                 log.warning("opening balances not posted: %s", exc)
         if not ran:
             log.warning("golden world has no storm day before %s", iso(now))
+        for q in self.mined_questions(world):       # written policy vs established practice → the Controller
+            self.live.ask(q, [])
         self.seed_denial()
+        self.persona_round()
+
+    # ------------------------------------------------------------------ personas (unattended runs only)
+    def persona_round(self) -> int:
+        """STORMCHECK_PERSONAS=1: simulated people (`persona:<role>`) answer the open questions routed to them and
+        confirm the rule their ruling drafts. Their principal is passed through unchanged; they never approve or
+        pay (the ACL refuses persona principals on every approval)."""
+        personas = _module("llm.personas")
+        if personas is None or not personas.enabled() or self.world is None:
+            return 0
+        n = 0
+        bench = personas.PersonaBench()
+        for q in self.questions():
+            if q.status not in ("open", "reminded"):
+                continue
+            try:
+                pr = bench.answer(q)
+            except Exception as exc:
+                log.info("persona skipped %s: %s", q.id, exc)
+                continue
+            if getattr(pr, "record", None) is not None:
+                self.commit_llm(pr.record)
+            req = pr.request if hasattr(pr, "request") else pr[0]
+            try:
+                _, proposal = self.lifecycle.answer(q, pr.role, pr.principal, pr.principal, req.decision,
+                                                    req.explanation)
+                if proposal is not None and proposal.rule.authority_required == pr.role:
+                    self.lifecycle.confirm(proposal.rule.id, pr.principal)
+                n += 1
+            except Exception as exc:
+                log.warning("persona ruling on %s failed: %s", q.id, exc)
+        return n
+
+    @staticmethod
+    def last_record(agent: Any) -> Any:
+        """The LlmCallRecord of an agent's latest call (`.last.record`, `.last_record`), if it exposes one."""
+        last = getattr(agent, "last", None)
+        rec = getattr(last, "record", None) if last is not None else None
+        return rec if rec is not None else getattr(agent, "last_record", None)
+
+    def commit_draft(self, draft: Draft, agent: Any) -> Draft:
+        """A Drafter output: its llm_call commit (when it called the LLM), then the Draft itself citing it."""
+        h = self.commit_llm(self.last_record(agent))
+        if h is not None and draft.llm_commit is None:
+            draft = draft.model_copy(update={"llm_commit": h})
+        self.record("commit", "fact", draft, "agent.drafter", [h] if h else [], self.now, ref=draft.id,
+                    message=f"draft {draft.kind} {draft.id}" + (" · template" if draft.template_fallback else ""))
+        return draft
+
+    def commit_llm(self, record: Any, *, outputs: list[str] | None = None) -> str | None:
+        """Plan §2 rule 2: every LLM call is an `llm_call` commit (prompt hash, response.model, request id,
+        principal, input facts). Its outputs are committed separately, citing this hash."""
+        if record is None:
+            return None
+        payload = record.model_dump(mode="json") if hasattr(record, "model_dump") else dict(record)
+        c = self.record("record_llm_call", payload, str(payload.get("principal") or "agent.reader"), self.now,
+                        ref=str(payload.get("id") or "llm"),
+                        message=f"{payload.get('role', 'llm')} · {payload.get('model') or payload.get('model_requested')}"
+                                f" · {payload.get('mode', '')}{' · cache hit' if payload.get('cache_hit') else ''}")
+        return c.hash if c is not None else None
 
     def engine_run(self, world: World, station: str, day: date, rules: list[Rule], known_at: datetime) -> StormRun | None:
         eng = self.impls.engine
@@ -388,13 +494,12 @@ class Runtime:
         fn = getattr(drafter, "explain", None) if drafter is not None else None
         if fn is None or self.settings.mode == "offline":
             return compose.template_explanation(d)
-        with cf.ThreadPoolExecutor(max_workers=1) as ex:
-            fut = ex.submit(fn, d)
-            try:
-                out = fut.result(timeout=self.settings.reader_timeout_s)
-                return out if isinstance(out, Draft) else compose.template_explanation(d)
-            except Exception:
-                return compose.template_explanation(d)
+        from .live import timed
+        try:
+            out = timed(fn, self.settings.reader_timeout_s, d)
+        except Exception:
+            return compose.template_explanation(d)
+        return self.commit_draft(out, drafter) if isinstance(out, Draft) else compose.template_explanation(d)
 
     def normalize_fact(self, fact_id: str) -> Fact | None:
         """The real `contracts.normalize` fact when an evidence id is a normalize id (`F:…`); built lazily, once."""
@@ -445,11 +550,20 @@ class Runtime:
             new.append(je)
         return new
 
+    def scratch_books(self) -> Any:
+        """An in-memory Books for desk days: the judge's scenario is priced, the demo ledger is never written."""
+        cls = self.impls.books_cls
+        return instantiate(cls, db_path=":memory:", clock=self.clock) if cls is not None else None
+
     def run_and_store(self, world: World, station: str, day: date, known_at: datetime, *, source: str,
-                      rules: list[Rule] | None = None, curated: bool = True) -> RunResult:
-        """Run one storm day end to end and store run, flight files, decisions, entitlements, questions, trace."""
+                      rules: list[Rule] | None = None, curated: bool = True, desk: bool = False) -> RunResult:
+        """Run one storm day end to end and store run, flight files, decisions, entitlements, questions, trace.
+
+        `desk=True`: priced in a scratch Books, decisions kept apart from the demo's (docs `desk_*`), journals not
+        put on the chain (their ids belong to the scratch ledger), questions kept in the run only."""
         from contracts import stub_app as stub
         rules = rules if rules is not None else self.rules()
+        books = self.scratch_books() if desk else self.books
         run_id = f"{station}@{day.isoformat()}"
         iata = compose.iata_of(world, station)
         obs = compose.station_obs(world, station, day)
@@ -476,13 +590,14 @@ class Runtime:
         decisions = committed
 
         journal: list[JournalEntry] = []
-        if self.books is not None:
+        if books is not None:
             all_ents = [e for d in decisions for e in ents[d.flight_id]]
             try:
-                journal = list(self.books.post_storm(run_id, world, decisions, all_ents, known_at))
+                journal = list(books.post_storm(run_id, world, decisions, all_ents, known_at))
             except Exception as exc:
                 log.warning("books.post_storm(%s) failed: %s", run_id, exc)
-        self.commit_journal(journal, "agent.books", known_at)
+        if not desk:
+            self.commit_journal(journal, "agent.books", known_at)
         liability = sum(line.cr_cents - line.dr_cents for je in journal for line in je.lines
                         if line.account == "2140" and je.kind == "compensation_estimate")
 
@@ -498,48 +613,54 @@ class Runtime:
         if engine_run is not None and engine_run.learned:
             learned = list(engine_run.learned)
         else:
-            stub_run = stub.STORM_RUNS.get(run_id)
-            learned = list(stub_run.learned) if stub_run is not None else compose.default_learned(rules)
+            learned = self.learned(self.world if (self.world is not None and not desk) else world, rules, run_id)
 
         if engine_run is not None:
             dec_by = {d.flight_id: d for d in decisions}
             run = engine_run.model_copy(update={
                 "flights": [r.model_copy(update={"decision": dec_by.get(r.flight.id, r.decision)})
                             for r in engine_run.flights],
-                "liability_drafted_cents": liability if self.books is not None else engine_run.liability_drafted_cents,
+                "liability_drafted_cents": liability if books is not None else engine_run.liability_drafted_cents,
                 "questions": questions, "learned": learned, "feed": []})
         else:
             run = compose.compose_run(world=world, station=station, day=day, flights=flights, decisions=decisions,
                                       ents=ents, questions=questions, learned=learned,
                                       liability_drafted_cents=liability, obs=obs, windows=windows)
-        self._store_run(world, run, decisions, ents, journal, obs, windows, questions, known_at)
-        self._emit_run(run, decisions, ents, journal, questions, known_at, source)
+        if desk:
+            run = run.model_copy(update={"real_context": {**run.real_context, "desk": True}})
+        self._store_run(world, run, decisions, ents, journal, obs, windows, questions, known_at, desk=desk,
+                        books=books)
+        self._emit_run(run, decisions, ents, journal, questions, self.now if desk else known_at, source)
         return RunResult(run=run, decisions=decisions, ents=ents, journal=journal)
 
     def _store_run(self, world: World, run: StormRun, decisions: list[FlightDecision],
                    ents: dict[str, list[Entitlement]], journal: list[JournalEntry], obs: list, windows: list,
-                   questions: list[Question], known_at: datetime) -> None:
+                   questions: list[Question], known_at: datetime, *, desk: bool = False, books: Any = None) -> None:
         flights = {r.flight.id: r.flight for r in run.flights}
         books_journal = journal
-        if self.books is not None:
+        books = books if books is not None else self.books
+        if books is not None:
             try:
-                books_journal = list(self.books.journal())
+                books_journal = list(books.journal())
             except Exception:
                 pass
+        at = self.now if desk else known_at
+        prefix = "desk_" if desk else ""
         for d in decisions:
             f = flights.get(d.flight_id)
             if f is None:
                 continue
             fe = ents.get(d.flight_id, [])
             ff = compose.flight_file(world, f, d, fe, books_journal, obs, windows, self.explain(d))
-            self.store.put("decision", d.flight_id, d, known_at)
-            self.store.put("entitlements", d.flight_id, fe, known_at)
-            self.store.put("flight_file", d.flight_id, ff, known_at)
-            self.store.put("flight_run", d.flight_id, {"run": run.id}, known_at)
-        for q in questions:
-            self.store.put("question", q.id, q, known_at)
-            self.record("record_question", q, "agent.engine", known_at, event="asked")
-        self.store.put("storm_run", run.id, run, known_at)
+            self.store.put(prefix + "decision", d.flight_id, d, at)
+            self.store.put(prefix + "entitlements", d.flight_id, fe, at)
+            self.store.put("flight_file", d.flight_id, ff, at)
+            self.store.put("flight_run", d.flight_id, {"run": run.id}, at)
+        if not desk:
+            for q in questions:
+                self.store.put("question", q.id, q, known_at)
+                self.record("record_question", q, "agent.engine", known_at, event="asked")
+        self.store.put("storm_run", run.id, run, at)
 
     def _emit_run(self, run: StormRun, decisions: list[FlightDecision], ents: dict[str, list[Entitlement]],
                   journal: list[JournalEntry], questions: list[Question], known_at: datetime, source: str) -> None:
@@ -693,7 +814,9 @@ class Runtime:
         run = StormRun.model_validate(data)
         ids = {x.id for x in run.questions}
         refs = {r.flight.id for r in run.flights}
-        qs = [q for q in self.questions() if q.id in ids or set(q.case_refs) & refs]
+        live = {q.id: q for q in self.questions()}
+        qs = [live.get(x.id, x) for x in run.questions]          # desk questions live in their run only
+        qs += [q for q in live.values() if q.id not in ids and set(q.case_refs) & refs]
         return run.model_copy(update={"questions": qs, "feed": self.store.trace()})
 
     def storm_summaries(self) -> list[StormSummary]:
@@ -701,10 +824,10 @@ class Runtime:
         qs = self.questions()
         for key in self.store.keys("storm_run"):
             run = StormRun.model_validate(self.store.get("storm_run", key))
-            ids = {x.id for x in run.questions}
+            live = {q.id: q for q in qs}
+            open_q = sum(1 for x in run.questions if live.get(x.id, x).status != "answered")
             out.append(StormSummary(id=run.id, station=run.station, date=run.date,
-                                    cancelled=run.counters.get("cancelled", 0),
-                                    questions=sum(1 for q in qs if q.id in ids and q.status != "answered"),
+                                    cancelled=run.counters.get("cancelled", 0), questions=open_q,
                                     liability_drafted_cents=run.liability_drafted_cents))
         return out
 
