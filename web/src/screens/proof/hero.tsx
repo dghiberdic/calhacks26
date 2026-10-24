@@ -89,7 +89,7 @@ function RunsPlot({ base, sc, anchors }: { base: Runs; sc: Runs; anchors: { cash
   return (
     <div className="relative mt-6 px-5 md:px-9">
       <div ref={ref}>
-      <svg width={iw + ML + MR} height={H} className="block overflow-visible" role="img" aria-label={`Plain Claude's ${base.runs} runs: ${base.values.map(euros).join(", ")}. StormCheck's ${sc.runs} runs: ${sc.values.map(euros).join(", ")}.`}>
+        <svg width={iw + ML + MR} height={H} className="block overflow-visible" role="img" aria-label={`Plain Claude's ${base.runs} runs: ${labels.join(", ")}. StormCheck's ${sc.runs} runs: ${sc.values.map(euros).join(", ")}.`}>
         <g transform={`translate(${ML},0)`}>
           {/* lanes */}
           {[laneA, laneB].map((y) => (
@@ -134,7 +134,7 @@ function RunsPlot({ base, sc, anchors }: { base: Runs; sc: Runs; anchors: { cash
                 </motion.text>
                 <circle cx={cx} cy={laneA} r={14} fill="transparent" />
                 {hover === key ? (
-                  <text x={cx} y={below.has(i) ? laneA - 16 : laneA + 26} textAnchor="middle" className="fill-cloud-500 text-[11px]">
+                  <text x={cx < 24 ? cx - 7 : cx > iw - 24 ? cx + 7 : cx} y={below.has(i) ? laneA - 16 : laneA + 26} textAnchor={cx < 24 ? "start" : cx > iw - 24 ? "end" : "middle"} className="fill-cloud-500 text-[11px]">
                     run {i + 1}
                     {base.accuracy[i] !== undefined ? ` · cause accuracy ${pct(base.accuracy[i])}` : ""}
                   </text>
