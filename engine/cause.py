@@ -394,7 +394,9 @@ def find_cause(case: FlightCase, prev_finding: Finding | None = None) -> Finding
         return Finding(Cause.ATC, Extraordinary.YES, "atc", f"ATC restriction per OCC code {code}; {calm}.",
                        route=Role.OPS, reason_tag="out-of-scope", evidence=metar + occ_sup, legal_basis=LB["atc"])
     if code in AIRPORT_CODES:
-        return Finding(Cause.UNKNOWN, Extraordinary.NEEDS_LEGAL, "airport_restriction",
+        # like ATC: an extraordinary event the OCC claims and the logs can't confirm, so Ops confirms it and the
+        # entitlements stay held meanwhile (eu261) — but it is not an ATC restriction
+        return Finding(Cause.UNKNOWN, Extraordinary.YES, "airport_restriction",
                        f"Security, customs or airport restriction per OCC code {code} (not ATC); {calm}. "
                        "Ops to confirm.",
                        route=Role.OPS, reason_tag="out-of-scope", evidence=metar + occ_sup,

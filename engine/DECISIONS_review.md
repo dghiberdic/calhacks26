@@ -45,7 +45,9 @@ Judgment calls made while fixing the confirmed findings, one line of reasoning e
 - **An in-window flight with an OCC technical, crew, ATC or airport code and no tech-log line** becomes `occ_code_in_window`: unknown / needs_legal, Ops, sources disagree. It was auto weather. Concurrent causes need tier-1 AOG evidence, so this is Ops' question, not Legal's.
 - **`capped:sources-disagree` is a hard gate in `routing.route`:** never automatic (batch review at ≥ 0.60).
 - **Recode when the cause departs from the code.** An in-window weather finding on a rotation (9x) or other non-weather code is recoded to 71 (`93 → 71`).
-- **Code groups:** 85/86/87/89 (security, immigration/customs, airport facilities, departure-airport restrictions) are `airport_restriction` (unknown / needs_legal, Ops), no longer "ATC". 81–84 and 88 stay ATC.
+- **Code groups:** 85/86/87/89 (security, immigration/customs, airport facilities, departure-airport restrictions) are `airport_restriction`, no longer "ATC". 81–84 and 88 stay ATC.
+  - Like its ATC sibling, it stays an OCC-claimed extraordinary event (`extraordinary`) that Ops confirms, with entitlements held meanwhile (eu261, `test_eu261_golden::test_p8_*`).
+  - The cause is `unknown`, because the `Cause` enum has no security/airport member.
 
 ## Routing (domain 7)
 

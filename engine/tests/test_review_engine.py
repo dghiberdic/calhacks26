@@ -182,7 +182,8 @@ def test_security_customs_airport_codes_are_not_atc(w, code):
     f.ops_cause_code = code
     w.tech_log = [t for t in w.tech_log if t.aircraft != "EI-NSB"]
     d = decide(w, "NS31@2025-01-24")
-    assert d.cause != Cause.ATC and d.extraordinary == Extraordinary.NEEDS_LEGAL and d.routed_to == Role.OPS
+    assert d.cause != Cause.ATC and "not ATC" in d.reason and d.routed_to == Role.OPS and d.outcome != "auto"
+    assert {e.status for e in ents(w, d)} == {"held"}                     # nothing final while Ops confirms
 
 
 def test_atc_codes_still_read_as_atc(w):
