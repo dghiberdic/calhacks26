@@ -164,7 +164,7 @@ export function InjectResult({
             <p className={cn("mt-2.5 flex items-start gap-2 text-[13px]", dropped ? "text-navy-900" : "text-slate-500")} data-testid="inject-dropped">
               {dropped ? <CircleSlash className="mt-0.5 size-4 shrink-0 text-slate-500" aria-hidden="true" /> : <Check className="mt-0.5 size-4 shrink-0 text-slate-400" aria-hidden="true" />}
               {dropped
-                ? `${count(dropped)} ${plural(dropped, "claim", "claims")} in the text couldn't be verified against a span and ${plural(dropped, "was", "were")} dropped.`
+                ? `${count(dropped)} ${plural(dropped, "fact", "facts")} didn't quote the text verbatim and ${plural(dropped, "was", "were")} dropped.`
                 : "Every fact kept quotes the text word for word."}
             </p>
           </div>
