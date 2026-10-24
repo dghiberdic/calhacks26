@@ -82,7 +82,7 @@ type DayState = {
   pending: { icao: string; date: string } | null;
   run: StormRun | null;
   /** The inputs that produced `run` (the run itself says station + date, this keeps the label). */
-  ranFor: { icao: string; date: string; airport?: AirportChoice["airport"] } | null;
+  ranFor: { icao: string; date: string; airport?: AirportChoice["airport"]; at: number } | null;
   problem: DeskProblem | null;
   token: number;
 };
@@ -100,6 +100,8 @@ type InjectState = {
     scenarioId: string | null;
     before: Record<string, FlightSnapshot | null>;
     after: Record<string, FlightSnapshot | null> | null;
+    /** When the answer landed (to tell whether the day on screen predates it). */
+    at: number;
   } | null;
   problem: DeskProblem | null;
 };
@@ -144,7 +146,7 @@ export const useDesk = create<DeskStore>((set, get) => ({
     try {
       const run = normaliseRun(await api.desk(icao, date));
       if (get().token !== token) return; // a newer run started
-      set({ run, ranFor: { icao, date, airport }, pending: null });
+      set({ run, ranFor: { icao, date, airport, at: Date.now() }, pending: null });
       void invalidateAfterWrite();
     } catch (e) {
       if (get().token !== token) return;
@@ -180,7 +182,7 @@ export const useDesk = create<DeskStore>((set, get) => ({
       const startSeq = useLiveFeed.getState().lastSeq;
       const response = normaliseInject(await api.inject(request), request);
       if (get().inject.pending !== request) return;
-      set((s) => ({ inject: { ...s.inject, pending: null, result: { request, response, startSeq, scenarioId, before, after: null } } }));
+      set((s) => ({ inject: { ...s.inject, pending: null, result: { request, response, startSeq, scenarioId, before, after: null, at: Date.now() } } }));
       void invalidateAfterWrite();
       const ids = [...new Set(response.affected.map(flightOf).filter((x): x is string => !!x))].slice(0, 6);
       if (ids.length) {

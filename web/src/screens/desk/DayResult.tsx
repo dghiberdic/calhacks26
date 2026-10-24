@@ -16,6 +16,7 @@ import { stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
 import { airportByIcao } from "./airports";
 import { dayLabel } from "./dates";
+import { flightOf, useDesk } from "./state";
 import { useBringIntoView } from "./useBringIntoView";
 
 /** Counter keys the StormRun carries (CONTRACTS §1), in reading order, with their words. */
@@ -146,6 +147,8 @@ export function DayResult({ run }: { run: StormRun }) {
             <RealContext rc={rc} />
           </div>
 
+          <ChangedSince run={run} />
+
           {recoded.length ? <NotWeather rows={recoded} onOpen={select} /> : null}
 
           {/* On a phone the day keeps a readable width and scrolls sideways inside the readout. */}
@@ -200,6 +203,30 @@ export function DayResult({ run }: { run: StormRun }) {
         </Panel>
         <RunFeed events={run.feed} />
       </div>
+    </div>
+  );
+}
+
+/** An injection after this run touched one of its flights: say so, and offer to run the day again. */
+function ChangedSince({ run }: { run: StormRun }) {
+  const ranFor = useDesk((s) => s.ranFor);
+  const injected = useDesk((s) => s.inject.result);
+  const runDay = useDesk((s) => s.runDay);
+  if (!ranFor || !injected || injected.at < ranFor.at) return null;
+  const ids = new Set(run.flights.map((r) => r.flight.id));
+  const touched = [...new Set(injected.response.affected.map(flightOf).filter((id): id is string => !!id && ids.has(id)))];
+  if (!touched.length) return null;
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl bg-white/[0.04] px-4 py-2.5 text-[13px] text-cloud-300 ring-1 ring-white/10" data-testid="desk-changed-since">
+      <span className="font-mono text-cloud-500" aria-hidden="true">
+        ↻
+      </span>
+      <span>
+        Your injection changed <span className="font-mono text-cloud-50">{touched.map((id) => id.split("@")[0]).join(", ")}</span> on this day since it ran.
+      </span>
+      <button type="button" onClick={() => void runDay(ranFor.icao, ranFor.date, ranFor.airport)} className="ml-auto text-[13px] font-medium text-[#9ccbf2] hover:underline">
+        Run it again
+      </button>
     </div>
   );
 }
