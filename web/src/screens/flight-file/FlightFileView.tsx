@@ -5,16 +5,15 @@ import { ApiError } from "@/api/client";
 import { useFlightFile, useStormRun, useStorms } from "@/api/queries";
 import type { FlightFile, MetarObs, StormSummary, StormWindow } from "@/api/types";
 import { EvidenceList, TIER_NAME } from "@/components/evidence";
-import { JournalCard } from "@/components/journal";
 import { Empty, ErrorNote, Shimmer } from "@/components/kit";
 import { verdictOf } from "@/components/verdict";
 import { longDate, shortId, zuluDay } from "@/lib/format";
 import { iataOf } from "@/lib/airports";
 import { stormName } from "@/lib/storms";
-import { cn } from "@/lib/utils";
 import { ChallengePanel } from "./ChallengePanel";
 import { ConfidenceCard } from "./ConfidenceCard";
 import { FlightTimeline } from "./FlightTimeline";
+import { JournalDrafts } from "./JournalDrafts";
 import { MoneyCard } from "./MoneyCard";
 import { PassengersPanel } from "./PassengersPanel";
 import { RulesPanel } from "./RulesPanel";
@@ -70,14 +69,17 @@ function BackLink() {
   );
 }
 
-/** Sticky only when the whole rail fits under the app header; a taller rail just scrolls with the page. */
-function useFitsViewport(offset: number) {
+/**
+ * The rail sticks under the app header when it fits; a taller rail scrolls with the page until its bottom
+ * is in view and sticks there, so the confidence and the money stay next to whatever is being read.
+ */
+function useRailTop(header: number) {
   const ref = useRef<HTMLElement>(null);
-  const [fits, setFits] = useState(false);
+  const [top, setTop] = useState(header);
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const check = () => setFits(el.offsetHeight + offset + 24 <= window.innerHeight);
+    const check = () => setTop(Math.min(header, window.innerHeight - el.offsetHeight - 24));
     const ro = new ResizeObserver(check);
     ro.observe(el);
     window.addEventListener("resize", check);
@@ -86,13 +88,13 @@ function useFitsViewport(offset: number) {
       ro.disconnect();
       window.removeEventListener("resize", check);
     };
-  }, [offset]);
-  return [ref, fits] as const;
+  }, [header]);
+  return [ref, top] as const;
 }
 
 function FileBody({ file, stormLabel, hub, windows, metar }: { file: FlightFile; stormLabel: string | null; hub: string; windows?: StormWindow[]; metar?: MetarObs[] }) {
   const kind = useMemo(() => verdictOf({ flight: file.flight, decision: file.decision }), [file]);
-  const [railRef, sticky] = useFitsViewport(80);
+  const [railRef, railTop] = useRailTop(80);
   const d = file.decision;
   const tiers = [...new Set(d.evidence.map((e) => e.trust_tier))].sort();
 
@@ -101,7 +103,7 @@ function FileBody({ file, stormLabel, hub, windows, metar }: { file: FlightFile;
       <VerdictCover file={file} kind={kind} stormLabel={stormLabel} />
 
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_372px]">
-        <aside ref={railRef} className={cn("flex flex-col gap-6 lg:col-start-2 lg:row-start-1", sticky && "lg:sticky lg:top-[80px]")} aria-label="Confidence and money">
+        <aside ref={railRef} className="flex flex-col gap-6 lg:sticky lg:col-start-2 lg:row-start-1" style={{ top: railTop }} aria-label="Confidence and money">
           <ConfidenceCard confidence={d.confidence} reason={d.reason} />
           <MoneyCard file={file} kind={kind} />
         </aside>
@@ -147,21 +149,7 @@ function FileBody({ file, stormLabel, hub, windows, metar }: { file: FlightFile;
 
           <PassengersPanel file={file} />
 
-          {file.journal_preview?.length ? (
-            <section aria-labelledby="journals-title">
-              <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-x-4 px-1">
-                <h2 id="journals-title" className="text-[14.5px] font-semibold text-navy-900">
-                  Journal drafts
-                </h2>
-                <p className="text-[12.5px] text-slate-500">Parked for approval. StormCheck never posts.</p>
-              </div>
-              <div className="flex flex-col gap-4">
-                {file.journal_preview.map((je) => (
-                  <JournalCard key={je.id} entry={je} />
-                ))}
-              </div>
-            </section>
-          ) : null}
+          {file.journal_preview?.length ? <JournalDrafts entries={file.journal_preview} /> : null}
 
           <RulesPanel decision={d} />
           <ChallengePanel flightId={file.flight.id} kind={kind} />

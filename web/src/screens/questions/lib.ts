@@ -27,14 +27,19 @@ function hoursText(fromIso: string, toIso: string): string | null {
   return min < 60 ? `${min} min` : `${Math.round(min / 60)}h`;
 }
 
-/** "Waiting on Claims Lead 3h · reminder sent" (Q5): from asked_at, remind_at and status, never typed in. */
+/**
+ * "Waiting on Claims Lead 3h · reminder sent · 4,761 others settled" (Q5): from asked_at, remind_at, status
+ * and the additive `others_settled` (contracts/requests/justin.md #4) when the server sends it.
+ */
 export function reminderText(q: Question): string | null {
   const who = ROLE_LABEL[q.routed_to];
+  const others = (q as Question & { others_settled?: unknown }).others_settled;
+  const settled = typeof others === "number" && others > 0 ? ` · ${count(others)} others settled` : "";
   if (q.status === "reminded") {
     const waited = q.remind_at ? hoursText(q.asked_at, q.remind_at) : null;
-    return `Waiting on ${who}${waited ? ` ${waited}` : ""} · reminder sent`;
+    return `Waiting on ${who}${waited ? ` ${waited}` : ""} · reminder sent${settled}`;
   }
-  if (q.remind_at) return `Waiting on ${who} · reminder due ${q.remind_at.slice(11, 16)}Z`;
+  if (q.remind_at) return `Waiting on ${who} · reminder due ${q.remind_at.slice(11, 16)}Z${settled}`;
   return null;
 }
 

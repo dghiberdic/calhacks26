@@ -25,6 +25,8 @@ describe("question helpers", () => {
     expect(reminderText(q({ status: "reminded", remind_at: "2025-01-25T09:00:00Z" }))).toBe("Waiting on Claims Lead 3h · reminder sent");
     expect(reminderText(q({ status: "open", remind_at: "2025-01-25T09:00:00Z" }))).toBe("Waiting on Claims Lead · reminder due 09:00Z");
     expect(reminderText(q({ status: "open", remind_at: null }))).toBeNull();
+    const withOthers = { ...q({ status: "reminded", remind_at: "2025-01-25T09:00:00Z" }), others_settled: 4761 };
+    expect(reminderText(withOthers)).toBe("Waiting on Claims Lead 3h · reminder sent · 4,761 others settled");
   });
 
   it("counts and labels the cases one question covers", () => {

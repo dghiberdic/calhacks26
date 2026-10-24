@@ -16,7 +16,7 @@ export function MaskedText({ text, className }: { text: string; className?: stri
           <span
             key={i}
             title="Passenger data: visible to the Claims Lead only"
-            className={cn("mx-0.5 inline-flex h-[1.35em] translate-y-[0.1em] items-center rounded bg-cloud-100 px-1.5 align-baseline font-mono text-[0.72em] uppercase tracking-[0.08em] text-slate-500")}
+            className={cn("inline-flex h-[1.35em] translate-y-[0.1em] items-center rounded bg-cloud-100 px-1.5 align-baseline font-mono text-[0.72em] uppercase tracking-[0.08em] text-slate-500")}
           >
             hidden
           </span>
