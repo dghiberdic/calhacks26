@@ -42,7 +42,7 @@ def _check(books: Books, period: str) -> None:
         assert seg_balance >= 0
 
 
-@settings(max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=60, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 @given(
     spec=st.lists(st.tuples(st.integers(0, 3), st.integers(0, 4)), min_size=1, max_size=30),
     claims=st.lists(st.tuples(st.integers(0, 29), st.integers(0, 13)), max_size=45),
