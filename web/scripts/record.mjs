@@ -142,8 +142,8 @@ async function main() {
   const hero = runs[0];
   const recoded = hero?.flights?.find((f) => f.decision?.recoded)?.flight?.id;
   if (recoded) {
-    await post("judge", `/flights/${encodeURIComponent(recoded)}/challenge`, { text: "The storm would have grounded it anyway." }, { key: "assertion" });
-    await post("judge", `/flights/${encodeURIComponent(recoded)}/challenge`, { text: "Airbus operator notice: hidden defect in this EDP batch." }, { key: "new_legal_pattern" });
+    await post("judge", `/flights/${encodeURIComponent(recoded)}/challenge`, { text: "The storm would have grounded it anyway" }, { key: "assertion" });
+    await post("judge", `/flights/${encodeURIComponent(recoded)}/challenge`, { text: "Airbus operator notice: hidden defect in this EDP batch" }, { key: "new_legal_pattern" });
   }
   for (const [icao, date] of [["EIDW", "2025-01-24"], ["EIDW", "2025-01-26"], ["EGLL", "2025-01-24"], ["EIDW", "2030-01-01"], ["XXXX", "2025-01-24"]]) {
     await post("judge", "/desk", { icao, date }, { key: `${icao}_${date}` });
@@ -154,8 +154,9 @@ async function main() {
   // The story's state changes, one step per ruling, as in plan §4.
   const questions = runs.flatMap((r) => r?.questions ?? []);
   const byRole = (role) => questions.find((q) => q.routed_to === role && q.status !== "answered");
+  // Character for character the plan's scripted texts (§1.4, §2): LLM calls are cached by exact input.
   const scripted = {
-    claims_lead: "No signed acceptance, no offset: pay €600 cash; the voucher stays as goodwill. Applies to every flight leaving the EU.",
+    claims_lead: "No signed acceptance, no offset: pay €600 cash; the voucher stays as goodwill.",
     legal: "A return sector of a storm-cancelled rotation is extraordinary only if no aircraft and crew could operate it within 3 h of STD, and passengers were offered the earliest reroute on any carrier (C-74/19).",
     controller: "Never release the tail. At M12 keep (ultimate − M12 rate) × entitlement until the six-year limitation.",
   };
