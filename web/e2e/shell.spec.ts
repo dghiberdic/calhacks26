@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("the shell shows every section and switches role", async ({ page }) => {
   await page.goto("/");
   const nav = page.getByRole("navigation", { name: "Main" });
-  for (const label of ["Storm Run", "Flight File", "Questions", "Policies", "Trace", "Liability & Close", "Judge's Desk", "Proof", "Pitch"]) {
+  for (const label of ["Storm Run", "Flight File", "Questions", "Policies", "Trace", "Liability & Close", "Judge's Desk", "Proof", "Pitch", "The story"]) {
     await expect(nav.getByRole("link", { name: new RegExp(label) })).toBeVisible();
   }
   await page.getByTestId("role-switcher").click();

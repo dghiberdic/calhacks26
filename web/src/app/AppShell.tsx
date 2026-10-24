@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
-import { BadgeCheck, CloudLightning, Gavel, GitCommitVertical, Landmark, Menu, MessagesSquare, Plane, Presentation, RotateCcw, ScrollText, X } from "lucide-react";
+import { BadgeCheck, Clapperboard, CloudLightning, Gavel, GitCommitVertical, Landmark, Menu, MessagesSquare, Plane, Presentation, RotateCcw, ScrollText, X } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiMode } from "@/api/client";
 import { invalidateAfterWrite, useHealth, useQuestions, useStorms } from "@/api/queries";
@@ -60,6 +60,10 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
       <NavLink to="/pitch" onClick={onNavigate} className="flex h-9 items-center gap-3 rounded-lg px-3 text-[13.5px] text-cloud-400 transition-colors hover:bg-navy-850 hover:text-cloud-100">
         <Presentation className="size-4 shrink-0" aria-hidden="true" />
         Pitch
+      </NavLink>
+      <NavLink to="/story" onClick={onNavigate} className="flex h-9 items-center gap-3 rounded-lg px-3 text-[13.5px] text-cloud-400 transition-colors hover:bg-navy-850 hover:text-cloud-100">
+        <Clapperboard className="size-4 shrink-0" aria-hidden="true" />
+        The story
       </NavLink>
     </nav>
   );
