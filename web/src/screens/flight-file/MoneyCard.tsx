@@ -46,7 +46,7 @@ export function MoneyCard({ file, kind, className }: { file: FlightFile; kind: V
       ? { label: "No compensation", note: "No compensation; refunds and care still due" }
       : kind === "held"
         ? { label: "Accrued, held for a ruling", note: "under the IFRS 15.56 constraint, at the segment's claim rate" }
-        : { label: "EU261 compensation liability", note: "drafted, pending approval" };
+        : { label: "2140 · EU261 compensation liability", note: "drafted, pending approval · Dr 4090 reduction of passenger revenue / Cr 2140" };
   const rateLine = summaryText(summary, "claim_rate_label") ?? (rate !== null ? `${pct(rate)} expected ultimate claim rate (history to M18 + tail judgment)` : null);
 
   return (
@@ -62,6 +62,11 @@ export function MoneyCard({ file, kind, className }: { file: FlightFile; kind: V
         ) : null}
         <p className={cn(showLiability ? "mt-2 text-[13px] text-slate-500" : "mt-2 text-[14px] text-navy-900")}>{headline.note}</p>
         {rateLine && kind !== "weather" && kind !== "operated" ? <p className="mt-1 text-[13px] leading-snug text-slate-500">{capitalize(rateLine)}</p> : null}
+        {showLiability ? (
+          <Link to={`/trace?target=${encodeURIComponent(file.flight.id)}`} className="mt-2 inline-block text-[12.5px] font-medium text-metar-ink hover:underline">
+            Why this amount? € → entitlement → rule → evidence
+          </Link>
+        ) : null}
       </div>
 
       <dl className="flex flex-col gap-2.5 border-t border-cloud-100 px-5 py-3.5 text-[13px]">
@@ -100,9 +105,11 @@ export function MoneyCard({ file, kind, className }: { file: FlightFile; kind: V
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-cloud-100 px-5 py-3 font-mono text-[11.5px] text-slate-500">
           {estimate.lines.map((l) => `${l.dr_cents ? "Dr" : "Cr"} ${l.account}`).join(" / ")}
           <span className="text-cloud-400">·</span>
-          <span className="text-navy-900">{estimate.id}</span>
+          <Link to={`/close#${estimate.id}`} className="text-navy-900 hover:underline" title="Open the draft in Liability & Close">
+            {estimate.id}
+          </Link>
           <span className="text-cloud-400">·</span>
-          <span className="micro text-[10px]">{estimate.status === "draft" ? "not yet posted" : estimate.status}</span>
+          <span className="micro text-[10px]">{estimate.status === "draft" ? "not yet posted · pending approval" : estimate.status === "approved" ? "approved · parked" : estimate.status}</span>
         </p>
       ) : null}
     </section>

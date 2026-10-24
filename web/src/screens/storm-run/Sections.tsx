@@ -9,24 +9,33 @@ import { cn } from "@/lib/utils";
 /** "€34,650 drafted: not €0, not €99,000". The three numbers a CFO argues about, from the API. */
 export function LiabilityTiles({ run, cfo, recodedFlight }: { run: StormRun; cfo: CfoMetrics | undefined; recodedFlight: string | null }) {
   const c = run.counters ?? {};
+  // The recoded flight's full id, for blame (€ → entitlement → rule → facts).
+  const recodedFlightId = recodedFlight ? (run.flights.find((r) => r.decision?.recoded && r.flight.number === recodedFlight)?.flight.id ?? null) : null;
   return (
     <div className="grid gap-3 md:grid-cols-3">
       <Panel className="relative overflow-hidden">
-        <MicroLabel>{recodedFlight ? `${recodedFlight} · ` : ""}EU261 compensation liability</MicroLabel>
+        <MicroLabel>{recodedFlight ? `${recodedFlight} · ` : ""}2140 EU261 compensation liability</MicroLabel>
         <p className="display mt-2 text-[36px] text-navy-900" data-testid="ns31-liability">
           {cfo ? <Money cents={cfo.drafted_liability_cents} /> : "—"} <span className="text-[15px] font-medium text-slate-500 [font-stretch:100%]">drafted</span>
         </p>
         {cfo ? (
           <p className="mt-2 text-[13px] leading-relaxed text-slate-500">
-            Not <Money cents={cfo.cash_basis_cents} className="text-navy-900" /> (cash basis), not <Money cents={cfo.full_entitlement_cents} className="text-navy-900" /> (full Art. 7 entitlement if every passenger claims). ±5 pp is <Money cents={cfo.sensitivity_5pp_cents} />.
+            Dr 4090 reduction of passenger revenue / Cr 2140, drafted, pending approval. Not <Money cents={cfo.cash_basis_cents} className="text-navy-900" /> (cash basis), not <Money cents={cfo.full_entitlement_cents} className="text-navy-900" /> (full Art. 7 entitlement if every passenger claims). ±<Money cents={cfo.sensitivity_5pp_cents} /> at ±5 pp.
           </p>
         ) : null}
-        <Link to="/close" className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-metar-ink hover:underline">
-          Liability & close <ArrowRight className="size-3.5" aria-hidden="true" />
-        </Link>
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+          <Link to="/close" className="inline-flex items-center gap-1 text-[13px] font-medium text-metar-ink hover:underline">
+            Liability & close <ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
+          {recodedFlightId ? (
+            <Link to={`/trace?target=${encodeURIComponent(recodedFlightId)}`} className="inline-flex items-center gap-1 text-[13px] font-medium text-metar-ink hover:underline">
+              Why this amount? <ArrowRight className="size-3.5" aria-hidden="true" />
+            </Link>
+          ) : null}
+        </div>
       </Panel>
       <Panel>
-        <MicroLabel>Storm total · day 1</MicroLabel>
+        <MicroLabel>Storm total · day 1 · 2140</MicroLabel>
         <p className="display mt-2 text-[36px] text-navy-900">
           <Money cents={run.liability_drafted_cents} />
         </p>
@@ -35,11 +44,14 @@ export function LiabilityTiles({ run, cfo, recodedFlight }: { run: StormRun; cfo
           {cfo?.held_for_legal_cents ? (
             <>
               {" "}
-              Includes <Money cents={cfo.held_for_legal_cents} className="text-held-ink" /> held for Legal.
+              <Money cents={cfo.drafted_liability_cents} className="text-navy-900" /> owed + <Money cents={cfo.held_for_legal_cents} className="text-held-ink" /> held for Legal, accrued under the IFRS 15.56 constraint.
             </>
           ) : null}{" "}
           Weather flights: no compensation; refunds and care still due.
         </p>
+        <Link to="/close" className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-metar-ink hover:underline">
+          2140 rollforward <ArrowRight className="size-3.5" aria-hidden="true" />
+        </Link>
       </Panel>
       <Panel>
         <MicroLabel>Payouts</MicroLabel>

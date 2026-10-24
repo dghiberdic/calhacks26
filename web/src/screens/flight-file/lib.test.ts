@@ -68,6 +68,17 @@ describe("flight file helpers", () => {
     expect(reductionOf(summary)).toEqual({ coupons: 14, ruleRef: "R-MIN-1@1", support: "41 of 42", label: "Art. 7(2)(c) 50% cut" });
   });
 
+  it("prices each breakdown line at what it pays, not its band (the real server's shape)", () => {
+    const lines = [
+      { band_eur: 600, reduction: "none", count: 158, each_cents: 60000 },
+      { band_eur: 600, reduction: "art7_2_50pct", count: 14, each_cents: 30000 },
+    ];
+    expect(breakdownText({ compensation_breakdown: lines })).toBe("158 × €600 + 14 × €300");
+    expect(breakdownText({ compensation_breakdown: lines, formula: "158 × €600 + 14 × €300 (Art. 7(2)(c))" })).toBe("158 × €600 + 14 × €300 (Art. 7(2)(c))");
+    expect(reductionOf({ reduction_7_2: { count: 14, saved_cents: 420000, rules: ["R-MINED-REDUCE@1"] } })?.coupons).toBe(14);
+    expect(reductionOf({ reduction_7_2: { count: 14, rules: ["R-MINED-REDUCE@1"] } })?.ruleRef).toBe("R-MINED-REDUCE@1");
+  });
+
   it("names features, citations and timeline marks in plain words", () => {
     expect(featureLabel("aog_before_window")).toBe("Grounded before the storm");
     expect(featureLabel("brand_new_feature")).toBe("Brand new feature");

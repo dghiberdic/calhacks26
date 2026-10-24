@@ -4,7 +4,10 @@ import type { CfoMetrics, ClaimCurve } from "@/api/types";
 import { MicroLabel } from "@/components/chips";
 import { count, eur, longDate, pct, zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { asFraction, bridgeScale } from "./model";
+import { Check } from "lucide-react";
+import { Link } from "react-router";
+import { stormName } from "@/lib/storms";
+import { asFraction, bridgeScale, bridgeToGl } from "./model";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -12,8 +15,9 @@ const EASE = [0.16, 1, 0.3, 1] as const;
  * The CFO bridge: "Cash basis €0 · full entitlement €99,000 · drafted €34,650 (±5pp ±€4,950)", and one
  * axis that shows why the drafted liability is neither end.
  */
-export function CfoBridge({ metrics, curve }: { metrics: CfoMetrics; curve?: ClaimCurve }) {
+export function CfoBridge({ metrics, curve, tiesToGl }: { metrics: CfoMetrics; curve?: ClaimCurve; tiesToGl?: boolean | null }) {
   const m = metrics;
+  const gl = bridgeToGl(m);
   const s = bridgeScale({ cash: m.cash_basis_cents, drafted: m.drafted_liability_cents, full: m.full_entitlement_cents, sensitivity: m.sensitivity_5pp_cents, range: m.method_range_cents });
   const reduce = useReducedMotion();
   const x = (v: number) => `${(s.at(v) * 100).toFixed(3)}%`;
@@ -38,8 +42,40 @@ export function CfoBridge({ metrics, curve }: { metrics: CfoMetrics; curve?: Cla
             Cash basis {eur(m.cash_basis_cents)} · full entitlement {eur(m.full_entitlement_cents)} ·{" "}
           </span>
           <span className="whitespace-nowrap text-navy-900">drafted {eur(m.drafted_liability_cents)}</span>{" "}
-          <span className="whitespace-nowrap text-slate-500">(±5pp ±{eur(m.sensitivity_5pp_cents)})</span>
+          <span className="whitespace-nowrap text-slate-500">(±{eur(m.sensitivity_5pp_cents)} at ±5pp)</span>
+          {m.held_for_legal_cents > 0 ? (
+            <>
+              <span className="text-slate-400"> · </span>
+              <span className="whitespace-nowrap text-held-ink">{eur(m.held_for_legal_cents)} held for Legal</span>
+            </>
+          ) : null}
         </h2>
+        {gl ? (
+          <p className="figure mt-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[13px] text-slate-600" data-testid="bridge-to-gl">
+            <span className="font-mono text-[11.5px] text-slate-400">2140</span>
+            <span>EU261 compensation liability</span>
+            <a href="#rollforward-title" className="font-semibold text-navy-900 hover:underline" title="The 2140 rollforward, by cohort">
+              {eur(gl.total)}
+            </a>
+            <span className="text-slate-400">=</span>
+            <span>{eur(gl.drafted)} drafted</span>
+            <span className="text-slate-400">+</span>
+            <span className="text-held-ink">{eur(gl.held)} held for Legal (IFRS 15.56)</span>
+            {gl.other ? (
+              <>
+                <span className="text-slate-400">+</span>
+                <span>
+                  {eur(gl.other)} {gl.earlier.length ? gl.earlier.map((c) => stormName(c) ?? c).join(", ") : "other cohorts"}
+                </span>
+              </>
+            ) : null}
+            {tiesToGl ? (
+              <span className="ml-1 inline-flex items-center gap-1 text-tie">
+                <Check className="size-3.5" aria-hidden="true" /> ties to GL 2140
+              </span>
+            ) : null}
+          </p>
+        ) : null}
         <p className="mt-2 max-w-[78ch] text-[13.5px] leading-relaxed text-slate-500">
           {curve ? (
             <>
@@ -85,7 +121,7 @@ export function CfoBridge({ metrics, curve }: { metrics: CfoMetrics; curve?: Cla
 
           {/* sensitivity and method range, as whiskers under the drafted end */}
           <motion.div initial={reduce ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.75 }}>
-            <Whisker from={x(s.band[0])} to={x(s.band[1])} top={62} tone="ink" label={`±5pp ±${eur(m.sensitivity_5pp_cents)}`} flip={s.at(s.band[1]) > 0.72} />
+            <Whisker from={x(s.band[0])} to={x(s.band[1])} top={62} tone="ink" label={`±${eur(m.sensitivity_5pp_cents)} at ±5pp`} flip={s.at(s.band[1]) > 0.72} />
             {s.range ? <Whisker from={x(s.range[0])} to={x(s.range[1])} top={80} tone="quiet" label={`method range ${eur(s.range[0])}–${eur(s.range[1])}`} flip={s.at(s.range[1]) > 0.62} /> : null}
           </motion.div>
 
@@ -106,19 +142,19 @@ export function CfoBridge({ metrics, curve }: { metrics: CfoMetrics; curve?: Cla
       </figure>
 
       <dl className="mt-5 grid grid-cols-2 gap-px border-t border-cloud-100 bg-cloud-100 sm:grid-cols-3 lg:grid-cols-5">
-        <Fact label="Held for Legal" tone={m.held_for_legal_cents > 0 ? "held" : undefined} sub={m.held_for_legal_cents > 0 ? "accrued under the IFRS 15.56 constraint" : "nothing held"}>
+        <Fact label="Held for Legal · in 2140" tone={m.held_for_legal_cents > 0 ? "held" : undefined} sub={m.held_for_legal_cents > 0 ? "accrued under the IFRS 15.56 constraint, at segment rates" : "nothing held"} to={m.held_for_legal_cents > 0 ? "/questions" : undefined}>
           {eur(m.held_for_legal_cents)}
         </Fact>
-        <Fact label="Recoded" sub="cause corrected">
+        <Fact label="Recoded" sub="cause corrected · amount included in 2140">
           {count(m.recodes_count)} · {eur(m.recodes_cents)}
         </Fact>
-        <Fact label="Refunds within 7 days" sub="Art. 8">
+        <Fact label="Refunds within 7 days" sub="Art. 8 · 2120 refunds payable">
           {refunds === null ? "—" : pct(refunds)}
         </Fact>
-        <Fact label="Vouchers outstanding" sub="unredeemed">
+        <Fact label="Vouchers outstanding" sub="2131 refund + 2132 compensation vouchers, unredeemed">
           {eur(m.vouchers_outstanding_cents)}
         </Fact>
-        <Fact label="Care" sub={`${eur(m.care_invoiced_cents)} invoiced`} className="col-span-2 lg:col-span-1">
+        <Fact label="Care · 2150 accrued" sub={`Dr 6100 / Cr 2150 · ${eur(m.care_invoiced_cents)} invoiced`} className="col-span-2 lg:col-span-1">
           {eur(m.care_accrued_cents)} <span className="text-[12px] font-normal text-slate-500">accrued</span>
         </Fact>
       </dl>
@@ -146,12 +182,17 @@ function Whisker({ from, to, top, tone, label, flip }: { from: string; to: strin
   );
 }
 
-function Fact({ label, sub, children, tone, className }: { label: string; sub?: string; children: ReactNode; tone?: "held"; className?: string }) {
+function Fact({ label, sub, children, tone, className, to }: { label: string; sub?: string; children: ReactNode; tone?: "held"; className?: string; to?: string }) {
   return (
     <div className={cn("bg-card px-5 py-3.5 md:px-7", className)}>
       <dt className="flex items-center gap-1.5 text-[12px] text-slate-500">
         {tone === "held" ? <span className="size-1.5 rounded-full bg-held" aria-hidden="true" /> : null}
         {label}
+        {to ? (
+          <Link to={to} className="ml-auto text-[11.5px] font-medium text-metar-ink hover:underline">
+            why?
+          </Link>
+        ) : null}
       </dt>
       <dd className={cn("mt-1 text-[15px] font-semibold leading-tight [font-stretch:108%]", tone === "held" ? "text-held-ink" : "text-navy-900")}>{children}</dd>
       {sub ? <dd className="mt-0.5 text-[11.5px] leading-snug text-slate-400">{sub}</dd> : null}

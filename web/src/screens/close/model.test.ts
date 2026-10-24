@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Commit, JournalEntry, MonthEndResponse, Rollforward, RollforwardRow, TraceEvent } from "@/api/types";
-import { bridgeScale, cohortParts, footRow, journalTies, liabilityChange, lockedPeriods, monthBounds, movementCents, preparerRole, rollforwardCsv, rollforwardTotals } from "./model";
+import { bridgeScale, bridgeToGl, cohortParts, footRow, journalTies, liabilityChange, lockedPeriods, monthBounds, movementCents, preparerRole, rollforwardCsv, rollforwardTotals } from "./model";
 
 const row = (over: Partial<RollforwardRow> = {}): RollforwardRow => ({
   cohort: "EIDW@2025-01-24",
@@ -178,5 +178,18 @@ describe("the CFO bridge scale", () => {
     expect(s.range).toBe(null);
     expect(s.at(-5)).toBe(0);
     expect(s.at(5_000_000)).toBe(1);
+  });
+});
+
+describe("bridgeToGl", () => {
+  const row = (cohort: string, new_cents: number, closing_cents: number) =>
+    ({ cohort, opening_cents: closing_cents - new_cents, new_cents, claims_approved_cents: 0, settled_in_kind_cents: 0, change_in_estimate_cents: 0, recode_cents: 0, out_of_period_cents: 0, derecognised_cents: 0, closing_cents, unclaimed_entitlement_cents: 0, je_ids: [] }) as RollforwardRow;
+  it("ties drafted + held for Legal + earlier cohorts to the 2140 balance", () => {
+    const r = bridgeToGl({ drafted_liability_cents: 3_465_000, held_for_legal_cents: 4_749_600, liability_bridge: [row("EIDW@2025-01-24", 8_214_600, 8_214_600), row("EIDW@2024-01-21", 0, 360_000)] });
+    expect(r).toEqual({ total: 8_574_600, drafted: 3_465_000, held: 4_749_600, other: 360_000, earlier: ["EIDW@2024-01-21"] });
+  });
+  it("says nothing when the parts don't add up", () => {
+    expect(bridgeToGl({ drafted_liability_cents: 3_465_000, held_for_legal_cents: 4_749_600, liability_bridge: [row("A", 100, 100)] })).toBe(null);
+    expect(bridgeToGl({ drafted_liability_cents: 0, held_for_legal_cents: 0, liability_bridge: [] })).toBe(null);
   });
 });

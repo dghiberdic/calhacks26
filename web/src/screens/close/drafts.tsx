@@ -33,7 +33,9 @@ export function JournalDrafts({
   role,
   canAct,
   focusId,
+  locked,
 }: {
+  locked?: boolean;
   period: string;
   entries: JournalEntry[] | undefined;
   loading: boolean;
@@ -80,7 +82,9 @@ export function JournalDrafts({
           <h2 id="journal-title" className="mt-1 text-[17px] font-semibold text-navy-900">
             Journal · {periodLabel(period)}
           </h2>
-          <p className="mt-0.5 text-[13px] text-slate-500">Drafted, pending approval. The preparer can never approve their own entry.</p>
+          <p className="mt-0.5 text-[13px] text-slate-500">
+            Drafted, pending approval. Control: preparer ≠ approver, so the preparer can never approve their own entry. {periodLabel(period)} is {locked ? "locked: never written again" : "open"}.
+          </p>
         </div>
         <Segmented
           label="Journal status"
@@ -121,7 +125,7 @@ export function JournalDrafts({
                   data-testid={`je-${je.id}`}
                   className={cn("scroll-mt-24 rounded-xl transition-shadow duration-500 [&_tbody_td:nth-child(2)]:pr-5", ringed === je.id && "shadow-[0_0_0_2px_var(--color-navy-900)]")}
                 >
-                  <JournalCard entry={je} actions={<EntryActions key={`${je.id}:${role}`} entry={je} role={role} canAct={canAct} onEdit={() => setEditing(je)} />} />
+                  <JournalCard entry={je} periodLocked={locked ?? null} actions={<EntryActions key={`${je.id}:${role}`} entry={je} role={role} canAct={canAct} onEdit={() => setEditing(je)} />} />
                 </motion.li>
               ))}
             </AnimatePresence>

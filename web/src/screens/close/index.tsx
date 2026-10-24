@@ -16,7 +16,7 @@ import { CfoBridge } from "./bridge";
 import { ClaimCurveChart, type CohortActual } from "./curve";
 import { JournalDrafts } from "./drafts";
 import { EstimateCardView } from "./estimate";
-import { isSegment, journalTies, lockedPeriods, rollforwardCsv, rollforwardTotals, SEGMENTS } from "./model";
+import { bridgeToGl, isSegment, journalTies, lockedPeriods, rollforwardCsv, rollforwardTotals, SEGMENTS } from "./model";
 import { CloseRail, InvariantsPanel } from "./rail";
 import { FootingNotes, RollforwardTable } from "./rollforward";
 import { SectionHead, Segmented } from "./ui";
@@ -133,7 +133,7 @@ export default function CloseScreen() {
       ) : !cfo.data.full_entitlement_cents && !cfo.data.drafted_liability_cents ? (
         <Empty title="No EU261 compensation liability drafted yet">When a storm run finds passengers owed, the bridge from cash basis to the full entitlement shows here.</Empty>
       ) : (
-        <CfoBridge metrics={cfo.data} curve={cohortCurve} />
+        <CfoBridge metrics={cfo.data} curve={cohortCurve} tiesToGl={rf.data ? rf.data.ties_to_gl && rf.data.gl_balance_cents === bridgeToGl(cfo.data)?.total : null} />
       )}
 
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-3 min-[87.5rem]:grid-cols-[minmax(0,1fr)_304px]">
@@ -233,6 +233,7 @@ export default function CloseScreen() {
         role={role}
         canAct={canAct}
         focusId={focusId}
+        locked={isLocked}
       />
     </div>
   );

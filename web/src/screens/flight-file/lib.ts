@@ -140,6 +140,7 @@ const SUMMARY_LABEL: Record<string, string> = {
   liability_drafted_cents: "EU261 compensation liability",
   drafted_liability_cents: "EU261 compensation liability",
   refund_due_cents: "Refunds due",
+  voucher_offset_cents: "Signed voucher offset (2132)",
   care_cents: "Care accrued",
   claim_rate: "Expected ultimate claim rate",
   expected_claim_rate: "Expected ultimate claim rate",
@@ -191,7 +192,13 @@ export function statusesOf(summary: Record<string, unknown> | null | undefined):
 export function breakdownText(summary: Record<string, unknown> | null | undefined): string | null {
   const b = summary?.compensation_breakdown;
   if (!Array.isArray(b) || !b.length) return null;
-  const parts = b.filter((r): r is { count: number; band_eur: number } => !!r && typeof r.count === "number" && typeof r.band_eur === "number").map((r) => `${count(r.count)} × €${count(r.band_eur)}`);
+  // The server's own formula first ("158 × €600 + 14 × €300 (Art. 7(2)(c))"); else each line at what it pays
+  // (each_cents), not its band: a 50% reroute in the €600 band pays €300.
+  const formula = summaryText(summary, "formula");
+  if (formula) return formula;
+  const parts = b
+    .filter((r): r is { count: number; band_eur: number; each_cents?: number } => !!r && typeof r.count === "number" && typeof r.band_eur === "number")
+    .map((r) => `${count(r.count)} × ${typeof r.each_cents === "number" ? eur(r.each_cents) : `€${count(r.band_eur)}`}`);
   return parts.length ? parts.join(" + ") : null;
 }
 
@@ -203,8 +210,8 @@ export function reductionOf(summary: Record<string, unknown> | null | undefined)
   if (!r || typeof r !== "object" || Array.isArray(r)) return null;
   const o = r as Record<string, unknown>;
   return {
-    coupons: typeof o.coupons === "number" ? o.coupons : null,
-    ruleRef: typeof o.rule_ref === "string" ? o.rule_ref : null,
+    coupons: typeof o.coupons === "number" ? o.coupons : typeof o.count === "number" ? o.count : null,
+    ruleRef: typeof o.rule_ref === "string" ? o.rule_ref : Array.isArray(o.rules) && typeof o.rules[0] === "string" ? o.rules[0] : null,
     support: typeof o.support === "string" ? o.support : null,
     label: typeof o.label === "string" ? o.label : "Art. 7(2) 50% reduction",
   };

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router";
 import { motion, useReducedMotion } from "motion/react";
 import { Check } from "lucide-react";
 import type { Cents, Rollforward } from "@/api/types";
@@ -22,11 +23,15 @@ type Ties = ReturnType<typeof journalTies>;
 /** Tick mark for "agrees to its journals", in a fixed slot so the total column stays aligned. */
 function Tick({ tie }: { tie?: { ids: string[]; agrees: boolean } }) {
   const on = tie?.agrees;
-  return (
-    <span className="inline-block w-4 pl-1 text-left font-mono text-[9.5px] leading-none text-slate-400" title={on ? `Agrees to ${tie!.ids.join(", ")}` : undefined} aria-label={on ? `agrees to ${tie!.ids.join(", ")}` : undefined}>
-      {on ? "J" : ""}
-    </span>
-  );
+  const cls = "inline-block w-4 pl-1 text-left font-mono text-[9.5px] leading-none text-slate-400";
+  // One click to why: the J opens the first journal it agrees to (the page scrolls to #JE-…).
+  if (on && tie!.ids.length)
+    return (
+      <Link to={{ hash: tie!.ids[0] }} className={cn(cls, "text-metar-ink hover:underline")} title={`Agrees to ${tie!.ids.join(", ")}: open the journal`} aria-label={`agrees to ${tie!.ids.join(", ")}`}>
+        J
+      </Link>
+    );
+  return <span className={cls} aria-hidden="true" />;
 }
 
 /** A total ruled off the way accounts are: a single rule above the figure, a double rule below. */
@@ -106,7 +111,7 @@ export function RollforwardTable({ rf, highlight, ties = {}, segments = {} }: { 
               >
                 <th scope="row" className={cn(label, "max-w-[212px]", nil ? "text-slate-400" : "text-navy-900")}>
                   <span className="block leading-snug">{m.label}</span>
-                  {m.note && !nil ? <span className="block text-[11.5px] leading-snug text-slate-400">{m.note}</span> : null}
+                  {m.note ? <span className={cn("block text-[11.5px] leading-snug", nil ? "text-slate-300" : "text-slate-400")}>{m.note}</span> : null}
                 </th>
                 {rf.rows.map((r) => (
                   <td key={r.cohort} className={cell}>
@@ -142,7 +147,8 @@ export function RollforwardTable({ rf, highlight, ties = {}, segments = {} }: { 
           </tr>
           <tr>
             <th scope="row" className={cn(label, "pt-3 text-slate-600")}>
-              GL 2140 balance
+              GL 2140 balance{" "}
+              {rf.ties_to_gl ? <span className="ml-1 text-[11.5px] font-medium text-tie">ties to GL ✓</span> : <span className="ml-1 text-[11.5px] font-medium text-held-ink">doesn't tie</span>}
             </th>
             <td colSpan={cols - 2} className={cn(cell, "pt-3")} />
             <td className={cn(cell, "pt-3")}>

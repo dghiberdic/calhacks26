@@ -16,13 +16,13 @@ export type MovementKey =
  * shown negative whatever sign the API stores them with; `signed` lines keep the API's sign.
  */
 export const MOVEMENTS: { key: MovementKey; label: string; note?: string; direction: "in" | "out" | "signed" }[] = [
-  { key: "new_cents", label: "New cohorts", note: "day-1 estimate", direction: "in" },
-  { key: "claims_approved_cents", label: "Claims approved", note: "to 2141, at face value", direction: "out" },
-  { key: "settled_in_kind_cents", label: "Settled in kind", note: "signed vouchers, to 2132", direction: "out" },
-  { key: "change_in_estimate_cents", label: "Change in estimate (IAS 8.36)", direction: "signed" },
-  { key: "recode_cents", label: "Recodes", note: "cause corrected", direction: "signed" },
-  { key: "out_of_period_cents", label: "Prior-period error, corrected in current period (immaterial)", direction: "signed" },
-  { key: "derecognised_cents", label: "Derecognised at limitation", direction: "out" },
+  { key: "new_cents", label: "New cohorts", note: "day-1 estimate · Dr 4090 / Cr 2140", direction: "in" },
+  { key: "claims_approved_cents", label: "Claims approved", note: "Dr 2140 / Cr 2141, at face value", direction: "out" },
+  { key: "settled_in_kind_cents", label: "Settled in kind", note: "signed vouchers · Dr 2140 / Cr 2132", direction: "out" },
+  { key: "change_in_estimate_cents", label: "Change in estimate (IAS 8.36)", note: "BF true-up, prospective · 4090 ↔ 2140", direction: "signed" },
+  { key: "recode_cents", label: "Recodes", note: "cause corrected · change in estimate (IAS 8.36)", direction: "signed" },
+  { key: "out_of_period_cents", label: "Prior-period error, corrected in current period (immaterial)", note: "IAS 8.42 · locked period untouched", direction: "signed" },
+  { key: "derecognised_cents", label: "Derecognised at limitation", note: "6-year limitation · Dr 2140 / Cr 4090", direction: "out" },
 ];
 
 const DIRECTION = Object.fromEntries(MOVEMENTS.map((m) => [m.key, m.direction])) as Record<MovementKey, "in" | "out" | "signed">;
@@ -221,4 +221,19 @@ export function bridgeScale({ cash, drafted, full, sensitivity, range }: { cash:
   const max = Math.max(full, cash, band[1], r?.[1] ?? 0, 1);
   const at = (v: Cents) => Math.max(0, Math.min(1, v / max));
   return { max, at, band, range: r };
+}
+
+/**
+ * The CFO bridge's tie-out to GL 2140 at its as-of: drafted (owed) + held for Legal (IFRS 15.56) + every other
+ * cohort's balance = Σ cohort closing. Null when the bridge has no cohorts or the parts don't add up.
+ */
+export function bridgeToGl(m: { drafted_liability_cents: Cents; held_for_legal_cents: Cents; liability_bridge?: RollforwardRow[] | null }) {
+  const rows = m.liability_bridge ?? [];
+  if (!rows.length) return null;
+  const total = rows.reduce((s, r) => s + r.closing_cents, 0);
+  const other = total - m.drafted_liability_cents - m.held_for_legal_cents;
+  if (other < 0) return null;
+  // Cohorts carried in from before (opening balances, no new estimate) explain the rest.
+  const earlier = rows.filter((r) => !r.new_cents && r.closing_cents).map((r) => r.cohort);
+  return { total, drafted: m.drafted_liability_cents, held: m.held_for_legal_cents, other, earlier };
 }

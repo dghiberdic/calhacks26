@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
-import type { JournalEntry, ReplayDiff } from "@/api/types";
-import { eur, longDate, periodLabel, shortId } from "@/lib/format";
+import { Link } from "react-router";
+import { Check, Lock } from "lucide-react";
+import type { JournalEntry, ReplayDiff, Role } from "@/api/types";
+import { eur, longDate, periodLabel, ROLE_LABEL, shortId } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { MicroLabel, StatusChip, TiesChip } from "./chips";
 import { Money } from "./kit";
@@ -31,10 +33,29 @@ export function statusLabel(je: Pick<JournalEntry, "status" | "built_from">) {
   return `posted${built}`;
 }
 
-/** A journal draft with Dr/Cr lines, the IAS 8 class, ties and an actions slot ([Edit][Approve]). */
-export function JournalCard({ entry, actions, className, dense }: { entry: JournalEntry; actions?: ReactNode; className?: string; dense?: boolean }) {
+/** Status as a controller reads it: drafts and approvals are parked (SAP-style), only source-system entries are posted. */
+export const STATUS_WORD: Record<string, string> = { draft: "draft · parked", approved: "approved · parked", posted: "posted", rejected: "rejected" };
+
+/** Who must approve: payouts and claim approvals need the Claims Lead; every other kind the Controller (books SoD). */
+export function approverSeat(kind: JournalEntry["kind"]): Role {
+  return kind === "claim_approved" || kind === "claim_paid" ? "claims_lead" : "controller";
+}
+
+/** "agent.engine" → "Engine"; seats by their name; anything else as given. */
+export const principalName = (p: string | null | undefined) => (p ? ((ROLE_LABEL as Record<string, string>)[p] ?? (p === "system.pss" ? "PSS / revenue accounting" : p)) : "—");
+
+/** "2140" → GL 2140; "register:NS113@2025-01-24" → the obligation register for NS113. */
+function tieLabel(t: string) {
+  const [kind, ref] = t.includes(":") ? [t.slice(0, t.indexOf(":")), t.slice(t.indexOf(":") + 1)] : ["gl", t];
+  return kind === "gl" ? { account: t, text: null } : { account: null, text: `ties to ${kind} ${shortId(ref)}` };
+}
+
+/** A journal draft with Dr/Cr lines, the IAS 8 class, ties, the SoD and period-lock controls and an actions slot ([Edit][Approve]). */
+export function JournalCard({ entry, actions, className, dense, periodLocked }: { entry: JournalEntry; actions?: ReactNode; className?: string; dense?: boolean; periodLocked?: boolean | null }) {
   const dr = entry.lines.reduce((s, l) => s + (l.dr_cents ?? 0), 0);
   const cr = entry.lines.reduce((s, l) => s + (l.cr_cents ?? 0), 0);
+  const seat = approverSeat(entry.kind);
+  const sod = entry.approver ? entry.approver !== entry.preparer : null;
   return (
     <article className={cn("rounded-xl bg-card shadow-[0_0_0_1px_var(--color-cloud-200)]", className)}>
       <header className="flex flex-wrap items-start justify-between gap-3 px-5 pt-4">
@@ -51,9 +72,16 @@ export function JournalCard({ entry, actions, className, dense }: { entry: Journ
               {entry.ias8_class === "change_in_estimate" ? "change in estimate · IAS 8.36" : "prior-period error · corrected in current period"}
             </StatusChip>
           ) : null}
-          {(entry.ties_to ?? []).map((t) => (
-            <TiesChip key={t} account={t.replace(/\D/g, "") || t} />
-          ))}
+          {(entry.ties_to ?? []).map((t) => {
+            const tie = tieLabel(t);
+            return tie.account ? (
+              <TiesChip key={t} account={tie.account} />
+            ) : (
+              <StatusChip key={t} tone="outline" dot={false} className="font-mono text-[10.5px]">
+                {tie.text}
+              </StatusChip>
+            );
+          })}
         </div>
       </header>
       <table className="mt-3 w-full text-[13px]">
@@ -89,15 +117,53 @@ export function JournalCard({ entry, actions, className, dense }: { entry: Journ
           </tr>
         </tbody>
       </table>
+      {dense ? null : <dl className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-cloud-100 px-5 py-3 text-[12.5px] sm:grid-cols-4" data-testid="je-controls">
+        <div>
+          <dt className="micro text-slate-400">Status</dt>
+          <dd className="mt-0.5 text-navy-900">{STATUS_WORD[entry.status] ?? entry.status}</dd>
+        </div>
+        <div>
+          <dt className="micro text-slate-400">Preparer</dt>
+          <dd className="mt-0.5 text-navy-900" title={entry.preparer}>
+            {principalName(entry.preparer)}
+          </dd>
+        </div>
+        <div>
+          <dt className="micro text-slate-400">Approver</dt>
+          <dd className="mt-0.5 text-navy-900" title={entry.approver ?? undefined}>
+            {entry.approver ? principalName(entry.approver) : <span className="text-slate-500">pending · {ROLE_LABEL[seat]}</span>}
+          </dd>
+        </div>
+        <div>
+          <dt className="micro text-slate-400">Period {periodLabel(entry.period)}</dt>
+          <dd className="mt-0.5 inline-flex items-center gap-1 text-navy-900">
+            {periodLocked ? <Lock className="size-3 text-slate-500" aria-hidden="true" /> : null}
+            {periodLocked === undefined || periodLocked === null ? <span className="text-slate-500">lock state on Close</span> : periodLocked ? "locked · never written again" : "open"}
+          </dd>
+        </div>
+        <div className="col-span-2 flex items-center gap-1.5 text-slate-500 sm:col-span-4">
+          {sod ? <Check className="size-3.5 text-tie" aria-hidden="true" /> : null}
+          {entry.status === "posted" && !entry.approver ? (
+            `Posted in the source system (${principalName(entry.preparer)}); recorded by StormCheck, never posted by it.`
+          ) : sod === false ? (
+            "Control breach: the preparer approved their own entry"
+          ) : (
+            <span>
+              Control: preparer <span className="font-mono">≠</span> approver
+              {sod ? ` ✓ (${principalName(entry.preparer)} → ${principalName(entry.approver)})` : `. ${principalName(entry.preparer)} can't approve its own entry; the ${ROLE_LABEL[seat]} approves.`}
+            </span>
+          )}
+        </div>
+      </dl>}
       <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-cloud-100 px-5 py-3 text-[12.5px] text-slate-500">
-        <span>
-          Event {longDate(entry.event_date)} · period {periodLabel(entry.period)} · prepared by <span className="font-mono">{entry.preparer}</span>
-          {entry.approver ? (
-            <>
-              {" "}
-              · approved by <span className="font-mono">{entry.approver}</span>
-            </>
-          ) : null}
+        <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span>
+            Event {longDate(entry.event_date)}
+            {dense ? ` · period ${periodLabel(entry.period)}` : ""} · prepared by <span className="font-mono">{entry.preparer}</span>
+          </span>
+          <Link to={`/trace?target=${encodeURIComponent(entry.id)}`} className="font-medium text-metar-ink hover:underline">
+            Why? Blame {entry.id}
+          </Link>
         </span>
         {actions}
       </footer>
