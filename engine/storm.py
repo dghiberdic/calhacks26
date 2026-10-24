@@ -58,6 +58,45 @@ def _chip_summary(d: FlightDecision, ents: Sequence[Entitlement], number: str) -
     return "APPLIED", f"{number} {d.cause.value} · no compensation; refunds and care still due"
 
 
+def storm_name(world: World, storm_id: str) -> str | None:
+    """'Storm Éowyn' from real_context.storm_name, else meta.storms[<id>].name; None if the world names none."""
+    ctx = (world.real_context or {}).get(storm_id) or {}
+    name = ctx.get("storm_name") or ctx.get("name")
+    if not name:
+        meta = ((world.meta or {}).get("storms") or {}).get(storm_id) or {}
+        name = str(meta.get("name") or "").split(" (")[0] or None
+    if not name:
+        return None
+    return name if str(name).lower().startswith("storm ") else f"Storm {name}"
+
+
+def others_settled(q: Question, decisions: Sequence[FlightDecision], ents: Sequence[Entitlement]) -> int:
+    """Cases of the same run settled automatically while `q` waits (Justin #4): coupons for a coupon-level
+    question, else flights. A case held by the question itself never counts."""
+    held = set(q.holds) | set(q.case_refs)
+    auto = {d.flight_id for d in decisions if d.outcome == "auto"}
+    if q.case_refs and all(":" in r.split("@", 1)[-1] for r in q.case_refs):
+        return sum(1 for e in ents if e.flight_id in auto and e.coupon_id not in held
+                   and e.status not in ("held", "needs_ruling"))
+    return sum(1 for f in auto if f not in held)
+
+
+def cases_settled_by_rule(decisions: Sequence[FlightDecision], ents: Sequence[Entitlement]) -> dict[str, int]:
+    """Rule id (no version) → cases this run settled citing it: once per decision for flight-level rules, once per
+    coupon for coupon-level ones. Feeds `Rule.cases_settled_by_storm[<storm id>]` (Justin #6)."""
+    out: dict[str, int] = {}
+    flight_rules = {d.flight_id: set(d.rules_applied) for d in decisions}
+    for d in decisions:
+        for r in set(d.rules_applied):
+            rid = r.split("@")[0]
+            out[rid] = out.get(rid, 0) + 1
+    for e in ents:
+        for r in set(e.rules_applied) - flight_rules.get(e.flight_id, set()):
+            rid = r.split("@")[0]
+            out[rid] = out.get(rid, 0) + 1
+    return dict(sorted(out.items()))
+
+
 def run_storm(engine: Engine, world: World, station: str, local_day: date, rules: Sequence[Rule],
               known_at: datetime) -> StormRun:
     ap = station_airport(world, station)
@@ -97,6 +136,7 @@ def run_storm(engine: Engine, world: World, station: str, local_day: date, rules
     questions += qs.release_questions(world, rules, known_at, engine.calibration,
                                       qid=lambda cohort: cohort_question_id(world, cohort))
     questions.sort(key=lambda q: q.id)
+    questions = [q.model_copy(update={"others_settled": others_settled(q, decisions, ents_all)}) for q in questions]
     for q in questions:
         feed.append(TraceEvent(
             seq=len(feed) + 1, at=known_at, kind="question", actor="agent.engine",
@@ -139,4 +179,4 @@ def run_storm(engine: Engine, world: World, station: str, local_day: date, rules
         id=storm_id, station=icao, date=local_day, windows=windows, metar=obs, flights=rows, counters=counters,
         entitlement_cents=entitlement, liability_drafted_cents=sum(liability.values()),
         learned=[], questions=questions, feed=feed, real_context=world.real_context.get(storm_id, {}),
-        message=message, airports=airports)
+        message=message, airports=airports, name=storm_name(world, storm_id))

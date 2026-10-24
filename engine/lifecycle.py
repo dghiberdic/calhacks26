@@ -293,7 +293,9 @@ class Lifecycle:
             "authority_required": rb.required_role(draft), "origin_ruling_id": ruling.id,
             "origin_example": question.case_refs[0] if question.case_refs else None, "recorded_at": at,
             "valid_from": at if draft.kind == "release" else None, "status": "proposed", "times_cited": 0,
-            "supersedes": None, "static_card": False})
+            "supersedes": None, "static_card": False,
+            # the ruler's own words (Justin #13): what they typed, else the option they chose
+            "origin_quote": (ruling.explanation or "").strip() or (ruling.decision or "").strip() or None})
         return self._propose(rule, ruling, case, at)
 
     def _propose(self, rule: Rule, ruling: Ruling, case: Mapping[str, Any], at: datetime) -> RuleProposal:
