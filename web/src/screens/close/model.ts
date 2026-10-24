@@ -1,4 +1,4 @@
-import type { Cents, Commit, CurveSegment, JournalEntry, MonthEndResponse, Role, Rollforward, RollforwardRow, TraceEvent } from "@/api/types";
+import type { Cents, Commit, CurveSegment, InvariantResult, JournalEntry, MonthEndResponse, Role, Rollforward, RollforwardRow, TraceEvent } from "@/api/types";
 
 // ---------- the 2140 rollforward, read the way an IFRS liability note reads ----------
 
@@ -150,12 +150,19 @@ export function monthBounds(period: string) {
 
 const PERIOD = /\b(20\d{2}-(?:0[1-9]|1[0-2]))\b/;
 
+const PERIODS_G = /\b(20\d{2}-(?:0[1-9]|1[0-2]))\b/g;
+
 /**
  * Locked periods. The contract has no "locked" field on a period (requested), so this reads the record:
- * LOCKED trace events, `period_lock` commits, and locks made in this session.
+ * LOCKED trace events, `period_lock` commits, the locked-period invariant's detail ("2025-01 locked,
+ * untouched"), and locks made in this session.
  */
-export function lockedPeriods(events: TraceEvent[] | undefined, commits: Commit[] | undefined, local: string[]): Set<string> {
+export function lockedPeriods(events: TraceEvent[] | undefined, commits: Commit[] | undefined, local: string[], invariants?: InvariantResult[]): Set<string> {
   const out = new Set(local);
+  for (const inv of invariants ?? []) {
+    if (!/locked period/i.test(inv.description) || !/\blocked\b/i.test(inv.detail ?? "")) continue;
+    for (const m of (inv.detail ?? "").matchAll(PERIODS_G)) out.add(m[1]);
+  }
   for (const e of events ?? []) {
     if (e.chip !== "LOCKED") continue;
     const hit = (e.ref ?? "").match(PERIOD) ?? e.summary.match(PERIOD);

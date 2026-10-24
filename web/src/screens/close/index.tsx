@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import { Check, Download, Lock } from "lucide-react";
 import { toast } from "sonner";
-import { invalidateAfterWrite, useCfo, useCommits, useCurve, useEstimate, useJournal, useRollforward, useTrace } from "@/api/queries";
+import { invalidateAfterWrite, useCfo, useCommits, useCurve, useEstimate, useInvariants, useJournal, useRollforward, useTrace } from "@/api/queries";
 import { useLiveFeed } from "@/api/stream";
 import type { CurveSegment, EstimateCard, MonthEndResponse, Role, Rollforward } from "@/api/types";
 import { useSession } from "@/app/session";
@@ -48,7 +48,8 @@ export default function CloseScreen() {
   const [monthEnd, setMonthEnd] = useState<MonthEndResponse | null>(null);
   const [segmentChoice, setSegmentChoice] = useState<CurveSegment | null>(null);
 
-  const locked = useMemo(() => lockedPeriods([...(trace.data ?? []), ...live], commits.data, localLocks), [trace.data, live, commits.data, localLocks]);
+  const invariants = useInvariants();
+  const locked = useMemo(() => lockedPeriods([...(trace.data ?? []), ...live], commits.data, localLocks, invariants.data), [trace.data, live, commits.data, localLocks, invariants.data]);
   const isLocked = locked.has(period);
 
   const curves = useMemo(() => ({ long_haul_gt3500: long.data, medium_1500_3500: medium.data, short_le1500: short.data }), [long.data, medium.data, short.data]);

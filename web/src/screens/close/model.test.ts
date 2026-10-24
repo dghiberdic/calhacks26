@@ -104,6 +104,14 @@ describe("periods", () => {
     expect([...lockedPeriods(events, commits, ["2025-02"])].sort()).toEqual(["2024-12", "2025-01", "2025-02"]);
     expect(lockedPeriods(undefined, undefined, []).size).toBe(0);
   });
+  it("reads a lock off the locked-period invariant's detail, and nothing else", () => {
+    const inv = [
+      { id: "INV-11", description: "Nothing written to a locked period", ok: true, detail: "2025-01 locked, untouched" },
+      { id: "INV-01", description: "2140 rollforward foots and ties to GL 2140", ok: true, detail: "2025-02: closing €29,340 = GL €29,340" },
+    ];
+    expect([...lockedPeriods(undefined, undefined, [], inv)]).toEqual(["2025-01"]);
+    expect(lockedPeriods(undefined, undefined, [], [{ id: "X", description: "Nothing written to a locked period", ok: true, detail: "no period locked yet" }]).size).toBe(0);
+  });
 });
 
 describe("cohort ids", () => {
