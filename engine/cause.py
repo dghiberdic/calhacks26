@@ -1,15 +1,21 @@
 """D2 · What really caused a cancellation, decided deterministically from ranked evidence.
 
 Priority (THREAD_DAVID D2):
-1. AOG with no MEL relief, logged outside any storm window, internal root cause, flight not in a window at either
-   end -> ``technical / not_extraordinary``. A recode needs this positive tier-1 evidence (the tech log).
-2. AOG inside the window (or a no-go AOG while the flight sits in a window) -> ``concurrent / needs_legal``.
-3. In a window at either end, no AOG -> ``weather / extraordinary``.
-4. Return sector whose outbound (previous rotation) was cancelled for weather, out at both ends ->
+1. A no-go AOG (no MEL relief, tier-1 tech log, logged before the cancellation, not back in service by STD) on the
+   flight's own station, flight out of window at both ends -> internal root ``technical / not_extraordinary``;
+   external/weather root (lightning, hail, bird...) -> ``external_event`` Legal. A recode needs this positive tier-1
+   evidence. An AOG logged during an earlier storm window does not make an out-of-window flight concurrent.
+2. The same AOG while the flight itself sits in a window at either end -> ``concurrent / needs_legal`` (Legal).
+   An AOG at another station (the tail never got here) on a return whose outbound was cancelled is a knock-on.
+3. An AOG claimed only below tier 1 (an e-mail, a claim, an OCC note) -> ``aog_unverified``: Ops verifies it.
+4. In a window at either end, no AOG -> ``weather / extraordinary`` (a rotation code is recoded to 71). An OCC
+   technical, crew, ATC or airport code there with no tech-log line -> ``occ_code_in_window``: sources disagree, Ops.
+5. Return sector whose outbound (previous rotation) was cancelled for weather, out at both ends ->
    ``knock_on / needs_legal`` unless an active legal rule settles it (applied by the engine, not here).
-5. ``unknown`` window -> ``unknown / needs_legal`` routed to Ops.
+6. ``unknown`` window -> ``unknown / needs_legal`` routed to Ops.
 Then, out of window at both ends with no tier-1 cause: the OCC code is never trusted alone. A weather code
-contradicted by METAR goes to Ops (sources disagree); other codes map to their IATA group.
+contradicted by METAR goes to Ops (sources disagree); other codes map to their IATA group. Security, customs and
+airport-facility codes (85/86/87/89) are not ATC: Ops confirms them.
 
 Spares are never a feature or evidence for a technical cause (no Art. 5(3) reasonable-measures test applies).
 Pure: no wall clock, no randomness, no LLM.
@@ -22,16 +28,19 @@ from datetime import datetime
 
 from contracts.models import Cause, Evidence, Extraordinary, MetarObs, Role, SourceKind, StormWindow
 from contracts import normalize as nz
-from engine.case import FlightCase, find_source
+from engine.case import FlightCase, find_source, provenance
 from engine.timeline import EndPosition
 
 # IATA delay-code groups (AHM 730)
 WEATHER_CODES = {"71", "72", "73", "75", "76", "77"}
 TECH_CODES = {"41", "42", "43", "44", "45", "46", "47", "48"}
 CREW_CODES = {"61", "62", "63", "64", "65", "66", "67", "68", "69", "94", "95"}
-ATC_CODES = {"81", "82", "83", "84", "85", "86", "87", "88", "89"}
+ATC_CODES = {"81", "82", "83", "84", "88"}          # ATFM en route / at destination, airport restrictions (ATC)
+AIRPORT_CODES = {"85", "86", "87", "89"}            # security, immigration/customs, airport facilities, departure
 ROTATION_CODES = {"91", "92", "93", "96"}
-NEW_CODE = {Cause.TECHNICAL: "41", Cause.CREW: "64", Cause.ATC: "81", Cause.KNOCK_ON: "93"}
+NEW_CODE = {Cause.TECHNICAL: "41", Cause.CREW: "64", Cause.ATC: "81", Cause.KNOCK_ON: "93", Cause.WEATHER: "71"}
+CODE_GROUP = {**{c: "technical" for c in TECH_CODES}, **{c: "crew" for c in CREW_CODES},
+              **{c: "ATC" for c in ATC_CODES}, **{c: "security/airport" for c in AIRPORT_CODES}}
 
 LB_ART53 = "EU261 Art.5(3)"
 LB = {
@@ -46,6 +55,9 @@ LB = {
     "technical_unverified": [LB_ART53, "CJEU C-549/07"],
     "crew": [LB_ART53, "CJEU C-549/07"],
     "atc": [LB_ART53, "EU261 Recital 15"],
+    "airport_restriction": [LB_ART53, "EU261 Recital 14"],
+    "occ_code_in_window": [LB_ART53, "EU261 Recital 14", "CJEU C-549/07"],
+    "aog_unverified": [LB_ART53, "CJEU C-549/07"],
     "cause_unknown": [LB_ART53],
 }
 
@@ -135,20 +147,19 @@ def _aog_ev(case: FlightCase) -> list[Evidence]:
     if a is None:
         return []
     t = a.entry
-    sid, tier = find_source(case, SourceKind.TECH_LOG, t.text[:60] or None, f"SRC-TECHLOG-{t.id}")
+    src = find_source(case, SourceKind.TECH_LOG, t.text[:60] or None, f"SRC-TECHLOG-{t.id}")
     mel_q = _clause(t.text, "MEL") or _clause(t.text, "AOG")
     kw = [k for k in ("LEAK", "FAIL", "FAULT", "INOP", "BIRD", "LIGHTNING", "HAIL", "FOD", "CRACK") if k in t.text]
     ata_q = next((c for k in kw if (c := _clause(t.text, k))), None)
     head = re.match(r"^\s*(\d{2}[A-Z]{3}\s+\d{2}:\d{2}Z\s+\S+(?:\s+[A-Z]{3})?)", t.text)
-    ev = [
-        Evidence(fact_id=nz.techlog_fact_id(t.id, "aog.mel_relief"), source_id=sid, field="aog.mel_relief",
-                 value=t.mel_relief, quote=mel_q, role="supports", trust_tier=tier),
-        Evidence(fact_id=nz.techlog_fact_id(t.id, "aog.ata_chapter"), source_id=sid, field="aog.ata_chapter",
-                 value=t.ata, quote=ata_q, role="supports", trust_tier=tier),
-        Evidence(fact_id=nz.techlog_fact_id(t.id, "aog.logged_at"), source_id=sid, field="aog.logged_at",
-                 value=t.logged_at.isoformat().replace("+00:00", "Z"), quote=head.group(1) if head else None,
-                 role="supports", trust_tier=tier),
-    ]
+
+    def ev_(fld: str, value, quote) -> Evidence:
+        # an overlaid line cites the fact and source it came from, at their tier (blame reaches the injection)
+        fid, sid, tier = provenance(case, t.id, fld, nz.techlog_fact_id(t.id, fld), src)
+        return Evidence(fact_id=fid, source_id=sid, field=fld, value=value, quote=quote, role="supports",
+                        trust_tier=tier)
+    ev = [ev_("aog.mel_relief", t.mel_relief, mel_q), ev_("aog.ata_chapter", t.ata, ata_q),
+          ev_("aog.logged_at", t.logged_at.isoformat().replace("+00:00", "Z"), head.group(1) if head else None)]
     for m in case.mcc:
         eta = re.search(r"ETA\s+(\d{2}:\d{2}Z)", m.text)
         msid, mtier = find_source(case, SourceKind.MCC_LOG, m.text[:40], f"SRC-MCC-{m.id}")
@@ -163,10 +174,21 @@ def _aog_ev(case: FlightCase) -> list[Evidence]:
 def _spares_ev(case: FlightCase) -> list[Evidence]:
     out = []
     for e in case.spares:
-        sid, tier = find_source(case, SourceKind.SPARES, e.text[:40], f"SRC-SPARES-{e.id}")
-        out.append(Evidence(fact_id=nz.ops_fact_id(e.id, case.flight.id, "spare.available_within_h"),
-                            source_id=sid, field="spare.available_within_h",
+        src = find_source(case, SourceKind.SPARES, e.text[:40], f"SRC-SPARES-{e.id}")
+        fid, sid, tier = provenance(case, e.id, "spare.available_within_h",
+                                    nz.ops_fact_id(e.id, case.flight.id, "spare.available_within_h"), src)
+        out.append(Evidence(fact_id=fid, source_id=sid, field="spare.available_within_h",
                             value=case.spare_within_h, quote=e.text, role="supports", trust_tier=tier))
+    return out
+
+
+def _claim_ev(case: FlightCase) -> list[Evidence]:
+    out = []
+    for c in case.aog_claims:
+        for fld in sorted(c.facts):
+            out.append(Evidence(fact_id=c.facts[fld], source_id=c.source_id, field=fld,
+                                value=c.logged_at.isoformat().replace("+00:00", "Z") if fld == "aog.logged_at"
+                                else None, quote=c.text or None, role="context", trust_tier=c.tier))
     return out
 
 
@@ -203,16 +225,20 @@ def find_cause(case: FlightCase, prev_finding: Finding | None = None) -> Finding
     code = case.ops_code
     aog = case.aog
     w = main_window(case)
+    prev = case.prev
+    # an AOG logged at another station (the tail never got here) on a return whose outbound was cancelled: the
+    # outbound's cause travels with the rotation (knock-on below), not this AOG
+    elsewhere = (aog is not None and aog.station is not None and aog.station != case.origin.icao
+                 and prev is not None and prev.status == "cancelled" and prev_finding is not None)
 
-    # 1-2: a no-go AOG is positive tier-1 evidence
-    if aog is not None and aog.decisive:
-        if aog.inside_window or in_any:
+    # 1-2: a no-go AOG is positive tier-1 evidence; concurrent only when the flight itself sits in a window
+    if aog is not None and aog.decisive and not elsewhere:
+        if in_any:
             when = "inside" if aog.inside_window else "before"
             return Finding(
                 Cause.CONCURRENT, Extraordinary.NEEDS_LEGAL, "concurrent_causes",
                 f"Concurrent causes: AOG logged {dmy(aog.entry.logged_at)} {when} the storm window, and the flight "
-                f"sits in the window at {'departure' if dep == 'in' else 'arrival' if arr == 'in' else 'neither end'}. "
-                "Legal question.",
+                f"sits in the window at {'departure' if dep == 'in' else 'arrival'}. Legal question.",
                 route=Role.LEGAL, reason_tag="concurrent-causes",
                 evidence=_aog_ev(case) + _end_ev(case, case.dep, "supports", "context")
                 + _end_ev(case, case.arr, "supports", "context") + ([_window_ev(case, w)] if w else [])
@@ -222,26 +248,40 @@ def find_cause(case: FlightCase, prev_finding: Finding | None = None) -> Finding
         if aog.cls.internal:
             win_txt = (f"{case.origin.iata} window closed {hhmm(w.end)}, {deciding_margin(case)} min before STD"
                        if w and w.end <= f.sched_dep else "no storm window reaches the flight")
+            when = ("before the storm" if aog.before_window else "during an earlier storm window"
+                    if aog.inside_window else "outside any storm window")
             return Finding(
                 Cause.TECHNICAL, Extraordinary.NO, "technical_internal",
                 f"Not weather: {aog.cls.defect} (ATA {aog.cls.chapter}) logged "
-                f"{dmy(aog.entry.logged_at)} with no MEL relief, "
-                f"{'before the storm' if aog.before_window else 'outside any storm window'}; {win_txt}.",
+                f"{dmy(aog.entry.logged_at)} with no MEL relief, {when}; {win_txt}.",
                 recoded=recoded, new_code="41" if recoded else None,
                 evidence=_aog_ev(case) + _end_ev(case, case.dep, "contradicts", "supports")
                 + _end_ev(case, case.arr, "contradicts", "supports") + ([_window_ev(case, w)] if w else [])
                 + [e for e in [_occ_ev(case, "contradicts", struck=recoded)] if e],
                 legal_basis=LB["technical_internal"])
+        when = "before the storm" if aog.before_window else "during an earlier storm window"
         return Finding(
             Cause.TECHNICAL, Extraordinary.NEEDS_LEGAL, "external_event",
-            f"Not weather: AOG logged {dmy(aog.entry.logged_at)} before the storm, root cause "
+            f"Not weather: AOG logged {dmy(aog.entry.logged_at)} {when}, root cause "
             f"{aog.cls.category} ({', '.join(aog.cls.matched) or 'no ATA match'}). Legal question.",
             recoded=recoded, new_code="41" if recoded else None, route=Role.LEGAL, reason_tag="no-precedent",
             evidence=_aog_ev(case) + [e for e in [_occ_ev(case, "contradicts", struck=recoded)] if e]
             + ([_window_ev(case, w)] if w else []),
             legal_basis=LB["external_event"])
 
-    # 3: weather at either end
+    # 3: an AOG asserted only below tier 1 is a claim to verify, never a cause
+    if case.aog_claims and not (aog is not None and aog.decisive):
+        c = case.aog_claims[-1]
+        return Finding(
+            Cause.UNKNOWN, Extraordinary.NEEDS_LEGAL, "aog_unverified",
+            f"An AOG on {f.aircraft} ({dmy(c.logged_at)}) is claimed by {c.source_id} (tier {c.tier}) but no tech-log "
+            "or MCC entry confirms it. Ops to verify before the cause is decided.",
+            route=Role.OPS, reason_tag="sources-disagree", sources_disagree=True,
+            evidence=_claim_ev(case) + _end_ev(case, case.dep, "context", "context")
+            + _end_ev(case, case.arr, "context", "context") + [e for e in [_occ_ev(case, "context")] if e],
+            legal_basis=LB["aog_unverified"], caps=["capped:no-tier1-evidence"])
+
+    # 4: weather at either end
     if in_any:
         end = case.dep if dep == "in" else case.arr
         st = case.dep_station if end.end == "dep" else case.arr_station
@@ -249,18 +289,28 @@ def find_cause(case: FlightCase, prev_finding: Finding | None = None) -> Finding
         where = case.origin.iata if end.end == "dep" else case.dest.iata
         gust = f"gusts {o.gust} kt" if o is not None and o.gust is not None else "storm conditions"
         wtxt = f", inside the {hhmm(w.start)}–{hhmm(w.end)} storm window" if w else ""
-        disagree = code is not None and code not in WEATHER_CODES and code not in ROTATION_CODES
+        metar_ev = (_end_ev(case, case.dep, "supports", "context") + _end_ev(case, case.arr, "supports", "context")
+                    + ([_window_ev(case, w)] if w else []))
+        if code in CODE_GROUP:
+            # OCC names a non-weather cause the logs don't confirm, inside a storm window: sources disagree
+            return Finding(
+                Cause.UNKNOWN, Extraordinary.NEEDS_LEGAL, "occ_code_in_window",
+                f"OCC coded {CODE_GROUP[code]} ({code}), but {where} had {gust} near "
+                f"{'STD' if end.end == 'dep' else 'STA'} {hhmm(end.at)}{wtxt}, and no tech-log entry confirms a "
+                "defect. Ops to confirm the cause.",
+                route=Role.OPS, reason_tag="sources-disagree", sources_disagree=True,
+                evidence=metar_ev + [e for e in [_occ_ev(case, "contradicts")] if e],
+                legal_basis=LB["occ_code_in_window"], caps=["capped:sources-disagree"])
+        recoded = code is not None and code not in WEATHER_CODES
         return Finding(
             Cause.WEATHER, Extraordinary.YES, "weather",
             f"Weather: {where} {gust} near {'STD' if end.end == 'dep' else 'STA'} {hhmm(end.at)}{wtxt}.",
-            evidence=_end_ev(case, case.dep, "supports", "context") + _end_ev(case, case.arr, "supports", "context")
-            + ([_window_ev(case, w)] if w else []) + [e for e in [_occ_ev(case, "contradicts" if disagree else
-                                                                         "supports")] if e],
-            legal_basis=LB["weather"], sources_disagree=disagree,
-            caps=["capped:sources-disagree"] if disagree else [])
+            recoded=recoded, new_code=NEW_CODE[Cause.WEATHER] if recoded else None,
+            evidence=metar_ev + [e for e in [_occ_ev(case, "contradicts" if recoded else "supports",
+                                                     struck=recoded)] if e],
+            legal_basis=LB["weather"])
 
-    # 4: knock-on (previous rotation of the tail cancelled)
-    prev = case.prev
+    # 5: knock-on (previous rotation of the tail cancelled)
     if prev is not None and prev.status == "cancelled" and prev_finding is not None:
         rot = [Evidence(fact_id=f"F-ROT-{f.number}-prev", source_id="SRC-SCHEDULE", field="rotation.prev_cancelled",
                         value=True, quote=f"{prev.number} {prev.origin}-{prev.dest} {hhmm(prev.sched_dep)} CNL",
@@ -299,7 +349,7 @@ def find_cause(case: FlightCase, prev_finding: Finding | None = None) -> Finding
     # non-weather code is taken at its word below (weather at the unseen end is not what OCC claimed).
     if unknown_any:
         coded_end = arr if code == "72" else dep
-        known_group = code in TECH_CODES | CREW_CODES | ATC_CODES | ROTATION_CODES
+        known_group = code in TECH_CODES | CREW_CODES | ATC_CODES | AIRPORT_CODES | ROTATION_CODES
         if "out" not in (dep, arr):
             gap = True
         elif code in WEATHER_CODES:
@@ -343,6 +393,14 @@ def find_cause(case: FlightCase, prev_finding: Finding | None = None) -> Finding
     if code in ATC_CODES:
         return Finding(Cause.ATC, Extraordinary.YES, "atc", f"ATC restriction per OCC code {code}; {calm}.",
                        route=Role.OPS, reason_tag="out-of-scope", evidence=metar + occ_sup, legal_basis=LB["atc"])
+    if code in AIRPORT_CODES:
+        # like ATC: an extraordinary event the OCC claims and the logs can't confirm, so Ops confirms it and the
+        # entitlements stay held meanwhile (eu261) — but it is not an ATC restriction
+        return Finding(Cause.UNKNOWN, Extraordinary.YES, "airport_restriction",
+                       f"Security, customs or airport restriction per OCC code {code} (not ATC); {calm}. "
+                       "Ops to confirm.",
+                       route=Role.OPS, reason_tag="out-of-scope", evidence=metar + occ_sup,
+                       legal_basis=LB["airport_restriction"], caps=["capped:no-tier1-evidence"])
     return Finding(Cause.UNKNOWN, Extraordinary.NEEDS_LEGAL, "cause_unknown",
                    f"No cause evidence: OCC code {code or 'none'}; {calm}. Ops to confirm.",
                    route=Role.OPS, reason_tag="out-of-scope", evidence=metar + occ_contra,
