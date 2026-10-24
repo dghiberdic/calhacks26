@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm build:recorded",
+  "buildCommand": "pnpm build:vercel",
   "outputDirectory": "dist",
   "rewrites": [{ "source": "/((?!recorded/|assets/).*)", "destination": "/index.html" }],
   "headers": [{ "source": "/recorded/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=300" }] }]
