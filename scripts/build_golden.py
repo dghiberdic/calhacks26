@@ -505,7 +505,7 @@ def obs_near(key: str, t: datetime) -> MetarObs:
 # ================================================================ schedule, manifest, PSS documents
 def sched_line(f: Flight) -> str:
     s = (f"{f.number:<6} {f.date.strftime('%d%b').upper()} {f.origin}-{f.dest} STD {f.sched_dep.strftime('%d%H%MZ')} "
-         f"STA {f.sched_arr.strftime('%d%H%MZ')} {ac_type(f.aircraft):<8} {f.aircraft} ")
+         f"STA {f.sched_arr.strftime('%d%H%MZ')} {ac_type(f.aircraft):<8} {f.aircraft} PAX {f.pax} ")
     if f.status == "operated":
         return s + f"OPR ATD {f.actual_dep.strftime('%H%MZ')} ATA {f.actual_arr.strftime('%H%MZ')}"
     return s + "CNL"
@@ -935,6 +935,12 @@ src("SRC-REG-EU261-2004", SourceKind.REGULATION, "Regulation (EC) No 261/2004 ·
     "of the passenger, in travel vouchers and/or other services.\n",
     datetime(2005, 2, 17, tzinfo=UTC), 1, ["legal"], uri="https://eur-lex.europa.eu/eli/reg/2004/261/oj")
 
+# ================================================================ real context (Eurocontrol, Met Éireann) as a document
+def _ctx_text(storm: str, ctx: dict[str, Any]) -> str:
+    return (f"REAL CONTEXT {storm} (public sources)\n"
+            + "\n".join(f"{k}: {v}" for k, v in ctx.items() if not isinstance(v, list)) + "\n")
+
+
 # ================================================================ curves (CONTRACTS §5)
 LH_POINTS = [(1, 0.09), (3, 0.17), (6, 0.24), (12, 0.29), (18, 0.32)]
 N_BY_POINT = [2412, 2412, 2187, 1655, 981]
@@ -958,6 +964,12 @@ REAL_CONTEXT = {
             "sources": ["Eurocontrol airport_traffic_2025.csv", "Cirium (reported)", "Met Éireann"]},
     HERMINIA: {"storm_name": "Herminia", "peak_gust_kt": max(o.gust or 0 for o in METAR[HERMINIA])},
 }
+
+
+for _storm, _ctx in REAL_CONTEXT.items():
+    src(f"SRC-REALCTX-{_storm}", SourceKind.SCHEDULE, f"Real context · {_storm}", _ctx_text(_storm, _ctx),
+        KNOWN_AT if _storm == EOWYN else H_KNOWN_AT, 2, ["ops"],
+        uri="https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" if _storm == EOWYN else None)
 
 
 def storm_meta(key: str, ids: list[str], known_at: datetime, name: str) -> dict[str, Any]:
