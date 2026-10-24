@@ -101,3 +101,8 @@ export function metarSeries(metar: MetarObs[]) {
     .filter((o) => !Number.isNaN(o.at.getTime()))
     .sort((a, b) => a.at.getTime() - b.at.getTime());
 }
+
+/** The window the story is about: the longest one the engine found (Éowyn also has a short one at 23:30Z). */
+export function mainWindowOf<W extends { start: string; end: string }>(windows: W[]): W | null {
+  return windows.reduce<W | null>((best, w) => (!best || Date.parse(w.end) - Date.parse(w.start) > Date.parse(best.end) - Date.parse(best.start) ? w : best), null);
+}

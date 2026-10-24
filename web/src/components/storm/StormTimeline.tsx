@@ -6,7 +6,7 @@ import type { StormRun } from "@/api/types";
 import { zulu, zuluDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { verdictChip, type VerdictKind } from "../verdict";
-import { metarSeries, stormFacts, type Tick } from "./model";
+import { mainWindowOf, metarSeries, stormFacts, type Tick } from "./model";
 import { useWidth } from "./useWidth";
 
 type Props = {
@@ -100,7 +100,7 @@ export function StormTimeline({ run, compact, animate = true, tone = "dark", cla
   const ticks = facts.ticks.filter((t) => t.at >= facts.domain[0] && t.at <= facts.domain[1]);
   const cancelled = ticks.filter((t) => t.verdict !== "operated");
   const operated = ticks.filter((t) => t.verdict === "operated");
-  const mainWindow = facts.windows.reduce<(typeof facts.windows)[number] | null>((best, w) => (!best || w.end.getTime() - w.start.getTime() > best.end.getTime() - best.start.getTime() ? w : best), null);
+  const mainWindow = facts.windows.find((w) => w.raw === mainWindowOf(run.windows)) ?? null;
 
   const tickColor = (t: Tick) => (phase < 2 ? "transparent" : phase < 3 ? c.coded : VERDICT_FILL[t.verdict]);
   const startX = (t: Tick) => {
@@ -177,7 +177,7 @@ export function StormTimeline({ run, compact, animate = true, tone = "dark", cla
                 initial={{ scaleX: play ? 0 : 1 }}
                 animate={{ scaleX: phase >= 1 ? 1 : 0 }}
                 transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-                style={{ transformBox: "fill-box", transformOrigin: "left" }}
+                style={{ originX: 0 }}
               />
               <line x1={x0} x2={x0} y1={M.t - 4} y2={plotBottom} stroke={c.bandEdge} strokeWidth={1} />
               <line x1={x1} x2={x1} y1={M.t - 4} y2={plotBottom} stroke={c.bandEdge} strokeWidth={1} />
