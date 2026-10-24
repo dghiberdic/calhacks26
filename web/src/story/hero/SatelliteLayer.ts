@@ -50,15 +50,21 @@ void main() {
   graded = mix(graded, graded * vec3(0.84, 0.92, 1.08), 1.0 - smoothstep(0.15, 0.6, lum));
   graded *= 0.9;
 
-  // Wash front: distance from the storm centre, roughened by warped fbm.
-  vec2 q = m * 0.11;
-  vec2 warp = vec2(fbm(q + uTime * 0.015), fbm(q + vec2(5.2, 1.3) - uTime * 0.012));
-  float n = fbm(q * 1.7 + warp * 1.6);
-  float d = length((m - uOrigin) * vec2(1.0, 1.15)) / 38.0;
-  float field = d * 0.85 + n * 0.55;
-  float front = uReveal * 1.55 - 0.05;
-  float mask = 1.0 - smoothstep(front - 0.035, front + 0.01, field);
-  float wetEdge = smoothstep(front - 0.11, front - 0.02, field) * mask;
+  // Wash front: distance from the storm centre, roughened by warped fbm. Once the wash is complete the
+  // noise is skipped (a uniform branch), which is most of the time the hero is on screen.
+  float mask = 1.0;
+  float wetEdge = 0.0;
+  float n = 0.0;
+  if (uReveal < 0.999) {
+    vec2 q = m * 0.11;
+    vec2 warp = vec2(fbm(q + uTime * 0.015), fbm(q + vec2(5.2, 1.3) - uTime * 0.012));
+    n = fbm(q * 1.7 + warp * 1.6);
+    float d = length((m - uOrigin) * vec2(1.0, 1.15)) / 38.0;
+    float field = d * 0.85 + n * 0.55;
+    float front = uReveal * 1.55 - 0.05;
+    mask = 1.0 - smoothstep(front - 0.035, front + 0.01, field);
+    wetEdge = smoothstep(front - 0.11, front - 0.02, field) * mask;
+  }
 
   vec3 col = mix(uNight, graded, mask * inside);
   col *= 1.0 - wetEdge * 0.38;
@@ -83,7 +89,8 @@ export class SatelliteLayer {
 
   constructor(opts: { canvas: HTMLCanvasElement; image: string; satBox: Box; origin: [number, number]; night: string }) {
     this.renderer = new THREE.WebGLRenderer({ canvas: opts.canvas, antialias: false, alpha: false, powerPreference: "high-performance" });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+    // Clouds are soft and the image is already upscaled: 1.25× is indistinguishable and half the fragments of 2×.
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     this.material = new THREE.ShaderMaterial({
       vertexShader: vert,
       fragmentShader: frag,

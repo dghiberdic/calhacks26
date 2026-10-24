@@ -226,7 +226,10 @@ function Warmup() {
   return null;
 }
 
-/** With frameloop="demand", a frame is drawn only while the canvas is on screen and not faded out. */
+/**
+ * With frameloop="demand", a frame is drawn only while the canvas is on screen and not faded out: every
+ * frame while the scroll moves the scene, and a few a second otherwise, for the windmilling fans.
+ */
 function Pump({ wrap, progress }: { wrap: RefObject<HTMLDivElement | null>; progress: RefObject<AircraftProgress> }) {
   const invalidate = useThree((s) => s.invalidate);
   useEffect(() => {
@@ -236,9 +239,16 @@ function Pump({ wrap, progress }: { wrap: RefObject<HTMLDivElement | null>; prog
     const io = new IntersectionObserver(([e]) => (onScreen = e.isIntersecting));
     io.observe(el);
     let raf = 0;
+    let last = "";
+    let idle = 0;
     const loop = () => {
       raf = requestAnimationFrame(loop);
-      if (onScreen && (progress.current?.show ?? 0) > 0.001) invalidate();
+      const p = progress.current;
+      if (!onScreen || !p || p.show <= 0.001) return;
+      const key = `${p.sweep}|${p.orbit}|${p.lines}|${p.leak}|${p.show}`;
+      if (key !== last || ++idle % 4 === 0) invalidate();
+      if (key !== last) idle = 0;
+      last = key;
     };
     raf = requestAnimationFrame(loop);
     return () => {
