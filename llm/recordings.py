@@ -66,14 +66,41 @@ def reader_recordings() -> Iterator[Recording]:
 
 def drafter_recordings() -> Iterator[Recording]:
     try:
-        from llm.demo_drafts import DRAFTER_RECORDINGS
-    except ImportError:          # F6 not built yet
+        from llm.demo_drafts import DRAFTER_RECORDINGS  # type: ignore[import-not-found]  (F6, another agent)
+    except ImportError:
         return iter(())
     return iter(DRAFTER_RECORDINGS())
 
 
+PERSONA_OUTPUTS = {   # question id (contracts/fixtures/api/questions.json) → the persona's hand-written answer
+    "Q-1": {"option": "Pay €600 cash; the voucher stays as goodwill",
+            "ruling": "No signed acceptance, no offset: pay €600 cash; the voucher stays as goodwill."},
+    "Q-2": {"option": "Extraordinary if no aircraft within 3 h of STD and the earliest reroute was offered",
+            "ruling": "A return sector of a storm-cancelled rotation is extraordinary only if no aircraft and crew "
+                      "could operate it within 3 h of STD, and passengers were offered the earliest reroute on any "
+                      "carrier (C-74/19)."},
+    "Q-3": {"option": "Keep the expected tail until the six-year limitation",
+            "ruling": "Never release the tail. At M12 keep (ultimate − M12 rate) × entitlement until the six-year "
+                      "limitation."},
+}
+
+
+def demo_questions() -> list[Any]:
+    from contracts.models import Question
+    path = DEMO_CACHE_DIR.parents[2] / "contracts" / "fixtures" / "api" / "questions.json"
+    return [Question.model_validate(q) for q in orjson.loads(path.read_bytes())]
+
+
+def persona_recordings() -> Iterator[Recording]:
+    from llm.personas import PersonaAnswer, PersonaBench
+    for q in demo_questions():
+        if q.id in PERSONA_OUTPUTS:
+            yield Recording(f"persona_{q.id}", "persona", lambda client, q=q: PersonaBench(client).answer(q),
+                            PERSONA_OUTPUTS[q.id], PersonaAnswer)
+
+
 def all_recordings() -> list[Recording]:
-    return [*reader_recordings(), *drafter_recordings()]
+    return [*reader_recordings(), *drafter_recordings(), *persona_recordings()]
 
 
 def record(dest: Path = DEMO_CACHE_DIR, *, live: bool = False, only: str | None = None) -> dict[str, dict[str, str]]:

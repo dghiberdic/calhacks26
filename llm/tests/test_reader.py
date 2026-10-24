@@ -260,6 +260,21 @@ def test_rehearsed_injections(tmp_path: Path) -> None:
         T(c8, "claim.amount_claimed_gbp_pence", 52000), T(c8, "claim.regime", "UK261")}
 
 
+def test_unresolvable_subject_stays_on_the_document(tmp_path: Path) -> None:
+    """No coupon / flight / tail can be resolved → facts go on source:<id>, never on a subject of the wrong kind."""
+    text = "CHARGEBACK RC 13.1 SERVICES NOT PROVIDED EUR 510.00. MCC: PART 25JAN ETA 14:00Z"
+    crm = make_source("SRC-T-NOSUBJ", SourceKind.CRM, text, "2025-01-25T03:00:00Z")
+    out = {"event_kind": {"value": "chargeback", "span": "CHARGEBACK"}, "amount": {"value": 51000, "span": "EUR 510.00"}}
+    r = scripted_reader(tmp_path, out, SourceKind.CRM).read(crm)
+    assert triples(r.facts) == {T("source:SRC-T-NOSUBJ", "crm.chargeback", 51000)}
+    mcc = make_source("SRC-T-NOSUBJ2", SourceKind.MCC_LOG, "EI-NSN AOG BOS. UNIT 26JAN ETA 06:00Z", "2025-01-25T22:00:00Z")
+    out2 = {"tail": {"value": "EI-NSN", "span": "EI-NSN"},
+            "part_eta": {"value": "2025-01-26T06:00:00Z", "span": "26JAN ETA 06:00Z"}}
+    r2 = scripted_reader(tmp_path / "2", out2, SourceKind.MCC_LOG).read(mcc)
+    assert triples(r2.facts) == {T("aircraft:EI-NSN", "aog.tail", "EI-NSN"),
+                                 T("source:SRC-T-NOSUBJ2", "mcc.part_eta", "2025-01-26T06:00:00Z")}
+
+
 def test_claim_id_comes_from_context_when_given(tmp_path: Path) -> None:
     d = DOCS["inj02_duplicate_direct_plus_agency"]
     r = offline_reader(tmp_path).read(d.source, ReaderContext(claim_id="CLM-INJ-7"))

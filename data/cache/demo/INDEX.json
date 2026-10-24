@@ -49,6 +49,11 @@
     "provenance": "hand-written",
     "role": "reader"
   },
+  "6fa38f2d3b28e9c37b24a69b57e2de1843374aba87c49c18b7fb6beb87f292b9": {
+    "label": "persona_Q-2",
+    "provenance": "hand-written",
+    "role": "persona"
+  },
   "71e3452b95dd0e751ae767a650c3abc98e300b0e7cecd72829be720005226b03": {
     "label": "crm_14c_voucher",
     "provenance": "hand-written",
@@ -139,9 +144,19 @@
     "provenance": "hand-written",
     "role": "reader"
   },
+  "f1f15c3848b5b18d471ce9a445ba63e51036a988dbb2ec3ebc181e0fe0120ff1": {
+    "label": "persona_Q-3",
+    "provenance": "hand-written",
+    "role": "persona"
+  },
   "f2e8bc9926d967af86e8617b43006ddbb92f30cf16c5d514cb9050bba1401fe6": {
     "label": "inj07_challenge_storm_anyway",
     "provenance": "hand-written",
     "role": "reader"
+  },
+  "ffe4c77fc02863a08b452723b721a0a4ac59a559f8807b911a3781c7f3e8d964": {
+    "label": "persona_Q-1",
+    "provenance": "hand-written",
+    "role": "persona"
   }
 }
