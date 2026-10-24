@@ -200,7 +200,7 @@ export function WidenDialog({ rule, proposal, pending, error, onRetry, onClose }
                 {confirm.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Waypoints className="size-4" aria-hidden="true" />}
                 Confirm wider rule
               </button>
-            ) : error ? (
+            ) : error && !(error instanceof ApiError && error.status === 403) ? (
               <button type="button" className={PRIMARY} onClick={onRetry}>
                 Try again
               </button>
