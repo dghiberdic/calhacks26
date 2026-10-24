@@ -1,0 +1,1 @@
+{"segment":"short_le1500","basis":"eur","points":[[1,0.0514],[3,0.0971],[6,0.1371],[12,0.1657],[18,0.1829]],"n_by_point":[2412,2412,2187,1655,981],"observed_through_month":18,"ultimate":0.2,"tail_factor":1.0935,"tail_note":"months 18–72 beyond history: documented judgment (Steer 2020 benchmark 18% for cancellations)","version":"SH-v1"}

@@ -1,0 +1,533 @@
+{
+  "flight": {
+    "id": "NS117@2025-01-24",
+    "number": "NS117",
+    "date": "2025-01-24",
+    "origin": "MUC",
+    "dest": "DUB",
+    "sched_dep": "2025-01-24T14:05:00Z",
+    "sched_arr": "2025-01-24T16:20:00Z",
+    "aircraft": "EI-NSL",
+    "status": "cancelled",
+    "actual_dep": null,
+    "actual_arr": null,
+    "pax": 168,
+    "ops_cause_code": "71",
+    "inbound_flight_id": "NS116@2025-01-24",
+    "outbound_pair_id": "NS116@2025-01-24",
+    "notified_at": "2025-01-24T05:20:00Z",
+    "operating_carrier_eu": true
+  },
+  "decision": {
+    "flight_id": "NS117@2025-01-24",
+    "cause": "knock_on",
+    "extraordinary": "needs_legal",
+    "ops_cause_code": "71",
+    "recoded": false,
+    "recode_label": null,
+    "in_window_dep": "out",
+    "in_window_arr": "out",
+    "window_margin_min": 80,
+    "confidence": {
+      "score": 0.417,
+      "kind": "cause",
+      "label": "cause-finding confidence",
+      "features": {
+        "in_window_dep": 0.0,
+        "in_window_arr": 0.0,
+        "window_margin_h": 1.33,
+        "aog_before_window": 0.0,
+        "aog_inside_window": 0.0,
+        "root_cause_internal": 0.0,
+        "sources_disagree": 0.0,
+        "precedent_count": 0.0,
+        "knock_on": 1.0
+      },
+      "caps": [
+        "capped:no-precedent"
+      ],
+      "calibration_version": "cal-default-v1",
+      "contributions": {
+        "in_window_dep": 0.0,
+        "in_window_arr": 0.0,
+        "window_margin_h": 0.665,
+        "aog_before_window": 0.0,
+        "aog_inside_window": 0.0,
+        "root_cause_internal": 0.0,
+        "sources_disagree": 0.0,
+        "precedent_count": 0.0,
+        "knock_on": 0.5
+      },
+      "intercept": -1.5
+    },
+    "reason": "Knock-on: NS116 was cancelled for weather, so EI-NSL never reached MUC; MUC calm at STD, DUB calm at STA. Legal question (C-74/19).",
+    "evidence": [
+      {
+        "fact_id": "F-ROT-NS117-prev",
+        "source_id": "SRC-SCHEDULE",
+        "field": "rotation.prev_cancelled",
+        "value": true,
+        "quote": "NS116 DUB-MUC 11:00Z CNL",
+        "role": "supports",
+        "trust_tier": 2,
+        "struck": false
+      },
+      {
+        "fact_id": "F:METAR-EDDM-20250124T1350Z:metar.sknt",
+        "source_id": "SRC-METAR-EDDM@2025-01-24",
+        "field": "metar.sknt",
+        "value": 6,
+        "quote": "EDDM 241350Z AUTO 13006KT CAVOK 10/02 Q1012 NOSIG",
+        "role": "context",
+        "trust_tier": 1,
+        "struck": false
+      },
+      {
+        "fact_id": "F:METAR-EIDW-20250124T1630Z:metar.gust_kt",
+        "source_id": "SRC-METAR-EIDW@2025-01-24",
+        "field": "metar.gust_kt",
+        "value": 22,
+        "quote": "EIDW 241630Z 23011G22KT 190V270 9999 -RA FEW012 SCT020 BKN050 05/00 Q0990 NOSIG",
+        "role": "context",
+        "trust_tier": 1,
+        "struck": false
+      },
+      {
+        "fact_id": "F:SPARES-2025-01-24T1330Z-NS117:NS117@2025-01-24:spare.available_within_h",
+        "source_id": "SRC-SPARES-2025-01-24T1330Z-NS117",
+        "field": "spare.available_within_h",
+        "value": 4.33,
+        "quote": "No tail at MUC. Earliest ferry ex-DUB 15:30Z → MUC dep 18:25Z = STD+4h20.",
+        "role": "supports",
+        "trust_tier": 2,
+        "struck": false
+      },
+      {
+        "fact_id": "F-WINDOW-EIDW@2025-01-24T0230Z",
+        "source_id": "SRC-METAR-EIDW@2025-01-24",
+        "field": "storm.window",
+        "value": {
+          "start": "2025-01-24T02:30:00Z",
+          "end": "2025-01-24T15:00:00Z",
+          "peak_gust_kt": 56
+        },
+        "quote": null,
+        "role": "context",
+        "trust_tier": 1,
+        "struck": false
+      },
+      {
+        "fact_id": "F:NS117@2025-01-24:flight.ops_cause_code",
+        "source_id": "SRC-OCC-2025-01-24T0512Z",
+        "field": "flight.ops_cause_code",
+        "value": "71",
+        "quote": "05:12Z OCC DM: STORM ÉOWYN CNL LIST → NETLINE, RSN 71",
+        "role": "context",
+        "trust_tier": 3,
+        "struck": false
+      }
+    ],
+    "rules_applied": [],
+    "legal_basis": [
+      "EU261 Art.5(3)",
+      "CJEU C-74/19",
+      "CJEU C-549/07"
+    ],
+    "outcome": "escalated",
+    "routed_to": "legal",
+    "question_id": "Q-2",
+    "known_at": "2025-01-25T06:00:00Z",
+    "commit": "8022620d0ae6fe2e79c276c61657ab589dc27958920afee0444668ff16bab1ec"
+  },
+  "entitlements_summary": {
+    "coupons": 168,
+    "compensation_cents": 4200000,
+    "status_counts": {
+      "held": 168
+    },
+    "reduced": 0,
+    "refunds_already_initiated": 0,
+    "refund_due_cents": 390300,
+    "voucher_offset_cents": 0,
+    "care_due": true,
+    "owed": 0,
+    "needs_ruling": 0,
+    "held": 168,
+    "distance_km": 1381.0,
+    "band_eur": 250,
+    "band_margin_km": 119.0,
+    "band_label": "1,381 km · 119 km under the €400 band",
+    "band_note": "1,381 km · 119 km under the €400 band",
+    "full_entitlement_cents": 4200000,
+    "drafted_liability_cents": 840000,
+    "liability_drafted_cents": 840000,
+    "full_entitlement_label": "€42,000 full Art. 7 entitlement if every passenger claims",
+    "claim_rate": 0.2,
+    "expected_ultimate_claim_rate": 0.2,
+    "claim_rate_label": "20% expected ultimate claim rate (history to M18 + tail judgment)",
+    "statuses": [
+      {
+        "status": "held",
+        "count": 168,
+        "label": "held for Legal"
+      }
+    ],
+    "compensation_breakdown": [
+      {
+        "band_eur": 250,
+        "reduction": "none",
+        "count": 168,
+        "each_cents": 25000,
+        "total_cents": 4200000
+      }
+    ],
+    "formula": "168 × €250",
+    "accrued_cents": 840000,
+    "compensation_if_owed_cents": 4200000,
+    "accrual_basis": "IFRS 15.56 constraint · short_le1500 20%",
+    "status_line": "Held for Legal · €8,400 accrued at the segment rate"
+  },
+  "sample_entitlements": [
+    {
+      "coupon_id": "NS117@2025-01-24:10A",
+      "flight_id": "NS117@2025-01-24",
+      "distance_km": 1381.0,
+      "band_eur": 250,
+      "band_margin_km": 119.0,
+      "regime": "EU261_2004",
+      "compensation_cents": 25000,
+      "reduction": "none",
+      "refund_due_cents": 0,
+      "refund_already_initiated": false,
+      "care_due": true,
+      "voucher_offset_cents": 0,
+      "status": "held",
+      "article": "EU261 Art.5(3), Art.7(1)(a)",
+      "reason": "Held pending Q-2: €250 owed unless the cancellation is extraordinary.",
+      "rules_applied": []
+    }
+  ],
+  "journal_preview": [
+    {
+      "id": "JE-000003",
+      "event_date": "2025-01-24",
+      "period": "2025-01",
+      "memo": "EU261 compensation liability (estimated) · NS117@2025-01-24 · full Art. 7 entitlement €42,000.00 × 20% expected ultimate claim rate (SH-v1, history to M18 + tail judgment) = €8,400.00 · reduction of passenger revenue (IFRS 15 variable consideration) · €42,000.00 of entitlement held pending ruling, accrued under the IFRS 15.56 constraint at the segment rate",
+      "lines": [
+        {
+          "account": "4090",
+          "account_name": "EU261 compensation (reduction of passenger revenue)",
+          "dr_cents": 840000,
+          "cr_cents": 0,
+          "dims": {
+            "cohort": "EIDW@2025-01-24",
+            "flight": "NS117@2025-01-24",
+            "segment": "short_le1500",
+            "storm": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2140",
+          "account_name": "EU261 compensation liability (estimated)",
+          "dr_cents": 0,
+          "cr_cents": 840000,
+          "dims": {
+            "cohort": "EIDW@2025-01-24",
+            "flight": "NS117@2025-01-24",
+            "segment": "short_le1500",
+            "storm": "EIDW@2025-01-24"
+          }
+        }
+      ],
+      "kind": "compensation_estimate",
+      "ias8_class": "none",
+      "reverses": null,
+      "estimate_ref": "day1:NS117@2025-01-24",
+      "source_decision_id": "8022620d0ae6fe2e79c276c61657ab589dc27958920afee0444668ff16bab1ec",
+      "status": "draft",
+      "preparer": "agent.engine",
+      "approver": null,
+      "built_from": 5,
+      "ties_to": [
+        "2140",
+        "register:NS117@2025-01-24"
+      ]
+    },
+    {
+      "id": "JE-000073",
+      "event_date": "2025-01-24",
+      "period": "2025-01",
+      "memo": "Sale (posted by the PSS / revenue accounting, recorded by Books) · NS117@2025-01-24: 168 coupons · fares incl. carrier surcharges YQ/YR €18,610.00 → 2100 ATL · taxes €5,208.00 → 2110 taxes payable (the PSS extract carries no sale dates; dated at departure)",
+      "lines": [
+        {
+          "account": "1110",
+          "account_name": "Card acquirer",
+          "dr_cents": 2381800,
+          "cr_cents": 0,
+          "dims": {
+            "cohort": "EIDW@2025-01-24",
+            "flight": "NS117@2025-01-24",
+            "storm": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2100",
+          "account_name": "ATL",
+          "dr_cents": 0,
+          "cr_cents": 1861000,
+          "dims": {
+            "cohort": "EIDW@2025-01-24",
+            "flight": "NS117@2025-01-24",
+            "storm": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2110",
+          "account_name": "Taxes payable",
+          "dr_cents": 0,
+          "cr_cents": 520800,
+          "dims": {
+            "cohort": "EIDW@2025-01-24",
+            "flight": "NS117@2025-01-24",
+            "storm": "EIDW@2025-01-24"
+          }
+        }
+      ],
+      "kind": "sale",
+      "ias8_class": "none",
+      "reverses": null,
+      "estimate_ref": null,
+      "source_decision_id": null,
+      "status": "posted",
+      "preparer": "system.pss",
+      "approver": null,
+      "built_from": 168,
+      "ties_to": [
+        "2100",
+        "2110"
+      ]
+    },
+    {
+      "id": "JE-000074",
+      "event_date": "2025-01-24",
+      "period": "2025-01",
+      "memo": "Refunds · NS117@2025-01-24: 27 refunds elected · ATL €3,066.00 + taxes €837.00 → 2120 refunds payable · refund draft queued for the payment provider (EU261 Art. 8(1)(a), within 7 days) · drafted, pending approval",
+      "lines": [
+        {
+          "account": "2100",
+          "account_name": "ATL",
+          "dr_cents": 306600,
+          "cr_cents": 0,
+          "dims": {
+            "cohort": "EIDW@2025-01-24",
+            "flight": "NS117@2025-01-24",
+            "storm": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2110",
+          "account_name": "Taxes payable",
+          "dr_cents": 83700,
+          "cr_cents": 0,
+          "dims": {
+            "cohort": "EIDW@2025-01-24",
+            "flight": "NS117@2025-01-24",
+            "storm": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2120",
+          "account_name": "Refunds payable",
+          "dr_cents": 0,
+          "cr_cents": 390300,
+          "dims": {
+            "cohort": "EIDW@2025-01-24",
+            "flight": "NS117@2025-01-24",
+            "storm": "EIDW@2025-01-24"
+          }
+        }
+      ],
+      "kind": "refund",
+      "ias8_class": "none",
+      "reverses": null,
+      "estimate_ref": null,
+      "source_decision_id": null,
+      "status": "draft",
+      "preparer": "agent.engine",
+      "approver": null,
+      "built_from": 27,
+      "ties_to": [
+        "2100",
+        "2110",
+        "2120"
+      ]
+    },
+    {
+      "id": "JE-000075",
+      "event_date": "2025-01-24",
+      "period": "2025-01",
+      "memo": "Refund vouchers · NS117@2025-01-24: 13 vouchers at ticket value incl. taxes €1,849.00 → 2131 refund vouchers (ATL €1,446.00 + taxes €403.00)",
+      "lines": [
+        {
+          "account": "2100",
+          "account_name": "ATL",
+          "dr_cents": 144600,
+          "cr_cents": 0,
+          "dims": {
+            "cohort": "EIDW@2025-01-24",
+            "flight": "NS117@2025-01-24",
+            "storm": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2110",
+          "account_name": "Taxes payable",
+          "dr_cents": 40300,
+          "cr_cents": 0,
+          "dims": {
+            "cohort": "EIDW@2025-01-24",
+            "flight": "NS117@2025-01-24",
+            "storm": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2131",
+          "account_name": "Refund vouchers",
+          "dr_cents": 0,
+          "cr_cents": 184900,
+          "dims": {
+            "cohort": "EIDW@2025-01-24",
+            "flight": "NS117@2025-01-24",
+            "storm": "EIDW@2025-01-24"
+          }
+        }
+      ],
+      "kind": "voucher",
+      "ias8_class": "none",
+      "reverses": null,
+      "estimate_ref": null,
+      "source_decision_id": null,
+      "status": "draft",
+      "preparer": "agent.engine",
+      "approver": null,
+      "built_from": 13,
+      "ties_to": [
+        "2100",
+        "2110",
+        "2131"
+      ]
+    },
+    {
+      "id": "JE-000076",
+      "event_date": "2025-01-24",
+      "period": "2025-01",
+      "memo": "Partner reroutes · NS117@2025-01-24: 7 reroutes on a partner (FIM, net): ATL €768.00 + taxes €217.00 → 2160 interline payable €985.00 · the partner bills through IATA SIS",
+      "lines": [
+        {
+          "account": "2100",
+          "account_name": "ATL",
+          "dr_cents": 76800,
+          "cr_cents": 0,
+          "dims": {
+            "cohort": "EIDW@2025-01-24",
+            "flight": "NS117@2025-01-24",
+            "storm": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2110",
+          "account_name": "Taxes payable",
+          "dr_cents": 21700,
+          "cr_cents": 0,
+          "dims": {
+            "cohort": "EIDW@2025-01-24",
+            "flight": "NS117@2025-01-24",
+            "storm": "EIDW@2025-01-24"
+          }
+        },
+        {
+          "account": "2160",
+          "account_name": "Interline payable",
+          "dr_cents": 0,
+          "cr_cents": 98500,
+          "dims": {
+            "cohort": "EIDW@2025-01-24",
+            "flight": "NS117@2025-01-24",
+            "storm": "EIDW@2025-01-24"
+          }
+        }
+      ],
+      "kind": "reroute_fim",
+      "ias8_class": "none",
+      "reverses": null,
+      "estimate_ref": null,
+      "source_decision_id": null,
+      "status": "draft",
+      "preparer": "agent.engine",
+      "approver": null,
+      "built_from": 7,
+      "ties_to": [
+        "2100",
+        "2110",
+        "2160"
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "at": "2025-01-24T02:30:00Z",
+      "kind": "metar_window_start",
+      "text": "Storm window opens · peak gust 56 kt",
+      "station": "EIDW"
+    },
+    {
+      "at": "2025-01-24T05:12:00Z",
+      "kind": "occ",
+      "id": "OCC-2025-01-24T0512Z",
+      "text": "05:12Z OCC DM: STORM ÉOWYN CNL LIST → NETLINE, RSN 71. NS100/101 NS102/103 NS104/105 NS106/107 NS108/109 NS110/111 NS112/113 NS114/115 NS116/117 NS118 NS21 NS41 NS51 NS31. INBD NS20 NS30 NS40 NS50 RSN 72. ASM SENT. IROPS SMS 05:20Z.",
+      "code": null,
+      "trust_tier": 3
+    },
+    {
+      "at": "2025-01-24T13:30:00Z",
+      "kind": "spares",
+      "id": "SPARES-2025-01-24T1330Z-NS117",
+      "text": "No tail at MUC. Earliest ferry ex-DUB 15:30Z → MUC dep 18:25Z = STD+4h20.",
+      "code": null,
+      "trust_tier": 2
+    },
+    {
+      "at": "2025-01-24T14:00:00Z",
+      "kind": "metar",
+      "text": "EIDW 241400Z 24017G31KT 200V280 9999 FEW012 SCT050 08/M03 Q0986 NOSIG",
+      "station": "EIDW",
+      "mark": "STD",
+      "gust_kt": 31,
+      "sknt": 17
+    },
+    {
+      "at": "2025-01-24T15:00:00Z",
+      "kind": "metar_window_end",
+      "text": "Storm window closes",
+      "station": "EIDW"
+    },
+    {
+      "at": "2025-01-24T16:30:00Z",
+      "kind": "metar",
+      "text": "EIDW 241630Z 23011G22KT 190V270 9999 -RA FEW012 SCT020 BKN050 05/00 Q0990 NOSIG",
+      "station": "EIDW",
+      "mark": "STA",
+      "gust_kt": 22,
+      "sknt": 11
+    }
+  ],
+  "handoff": null,
+  "explanation": {
+    "id": "DRAFT-NS117@2025-01-24-explanation",
+    "kind": "explanation",
+    "text": "NS117: Knock-on: held for Legal. Knock-on: NS116 was cancelled for weather, so EI-NSL never reached MUC; MUC calm at STD, DUB calm at STA. Legal question (C-74/19). Legal basis: EU261 Art.5(3), CJEU C-74/19, CJEU C-549/07. Cause-finding confidence 42%.",
+    "numbers_verified": true,
+    "llm_commit": null,
+    "template_fallback": true
+  }
+}

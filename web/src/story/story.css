@@ -1,0 +1,487 @@
+/*
+ * The story's own surfaces. Colour still means what it means in the app (index.css): red only for
+ * "Not weather", amber for held, cool blue for METAR / the storm window, green only for ties-to-GL.
+ * Two extra grounds live here: the cyanotype of the blueprint, and the A320 hydraulic system names
+ * (green / blue / yellow are the systems' names, drawn on the blueprint only, never as a status).
+ */
+.story {
+  --story-night: var(--color-navy-950);
+  --story-cyan: #11355a;
+  --story-cyan-deep: #0b2641;
+  --story-ink: #e8f0fa;
+  --story-ink-soft: #b4c8de;
+  --hyd-green: #79d6a2;
+  --hyd-blue: #93c9ff;
+  --hyd-yellow: #f2c94c;
+  background: var(--story-night);
+  color: var(--color-cloud-50);
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent],
+.lenis.lenis-smooth [data-lenis-prevent-horizontal] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ── Split-flap (Solari) cells ──────────────────────────────────────────────────────────────── */
+.flap-cell {
+  position: relative;
+  display: inline-block;
+  width: 0.72em;
+  height: 1.32em;
+  border-radius: 0.09em;
+  background: linear-gradient(180deg, #172238 0%, #131d30 49.5%, #0f1828 50.5%, #141e31 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 1px 0 rgba(0, 0, 0, 0.6);
+  /* The Airbus cockpit face (font-cockpit), as a display imitation; its ":" "," "." sit at the left of
+     the cell, so the flap nudges them to the middle (data-p, set with the character). */
+  font-family: var(--font-cockpit);
+  color: var(--color-cloud-50);
+  perspective: 4em;
+  transition: color 0.6s var(--ease-out-quart) var(--d, 0ms);
+}
+.flap-half {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  /* no backface-visibility: the leaves never turn past 90°, and on ~800 halves it forced a layer each */
+}
+.flap-half > span {
+  /* glyphs a little larger than the cell's em, like a real flap; the box stays 1.32 cell-em tall */
+  --g: 1.04;
+  display: block;
+  font-size: calc(var(--g) * 1em);
+  height: calc(1.32em / var(--g));
+  line-height: calc(1.32em / var(--g));
+  text-align: center;
+}
+.flap-top,
+.flap-leaf-front {
+  top: 0;
+  border-radius: 0.09em 0.09em 0 0;
+}
+.flap-bottom,
+.flap-leaf-back {
+  bottom: 0;
+  border-radius: 0 0 0.09em 0.09em;
+}
+.flap-bottom > span,
+.flap-leaf-back > span {
+  transform: translateY(-50%);
+}
+.flap-half > span::before {
+  content: attr(data-c);
+}
+.flap-half > span[data-p] {
+  translate: 0.17em 0;
+}
+.flap-leaf-front {
+  background: #172238;
+  transform-origin: 50% 100%;
+  visibility: hidden;
+}
+.flap-leaf-back {
+  background: #0f1828;
+  transform-origin: 50% 0%;
+  visibility: hidden;
+}
+.flap-axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% - 0.5px);
+  height: 1px;
+  background: rgba(0, 0, 0, 0.75);
+}
+/* The board's ambient light: a slow sheen across the flaps. */
+.board-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+.board-sheen::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  bottom: -40%;
+  left: -45%;
+  width: 30%;
+  background: linear-gradient(100deg, transparent, rgba(190, 210, 240, 0.05) 42%, rgba(225, 235, 250, 0.09) 50%, rgba(190, 210, 240, 0.05) 58%, transparent);
+  transform: translate3d(0, 0, 0) rotate(9deg);
+  opacity: 0;
+  will-change: transform;
+}
+/* The re-check line: runs top to bottom once, at the rows' flip pace (SCAN_LEAD + SCAN_ROW in Board.tsx).
+   The element spans the rows and slides by its own height (a transform: no layout work, no layout shift). */
+.board-scan {
+  position: absolute;
+  left: -0.4em;
+  right: -0.4em;
+  top: 0;
+  bottom: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.board-scan::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-metar);
+  box-shadow: 0 0 14px 2px rgb(79 159 224 / 0.55);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .board-sheen::after {
+    opacity: 1;
+    animation: board-sheen 9s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+  }
+  .board-scan[data-run="true"] {
+    animation: board-scan calc(var(--rows) * 90ms + 240ms) linear 120ms both;
+  }
+  .flap-row[data-tone="notweather"]::before {
+    animation: ns31-breathe 2.8s ease-in-out 1.6s infinite;
+  }
+}
+@keyframes board-sheen {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(9deg);
+  }
+  60%,
+  100% {
+    transform: translate3d(560%, 0, 0) rotate(9deg);
+  }
+}
+@keyframes board-scan {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 100%, 0);
+    opacity: 0;
+  }
+}
+@keyframes ns31-breathe {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+/* NS31's glow lives on its own layer and only its opacity animates (no repaint of the flaps). */
+.flap-row {
+  position: relative;
+  isolation: isolate;
+}
+.flap-row[data-tone="notweather"]::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: 4px;
+  background: rgb(226 69 44 / 0.1);
+  box-shadow:
+    0 0 26px -4px rgb(226 69 44 / 0.5),
+    0 0 0 1px rgb(226 69 44 / 0.4);
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+/* Re-checked rows: weather dims to cloud grey (about 4.5:1 on the cell), held reads amber, NS31 red. */
+.flap-row[data-tone="weather"] .flap-cell {
+  color: var(--color-weather);
+}
+.flap-row[data-tone="held"] .flap-cell {
+  color: var(--color-held);
+}
+.flap-row[data-tone="notweather"] .flap-cell {
+  color: #ff8d72;
+}
+
+/* Odometer drums (RollingNumber): ten digits in one generated column, so the text content stays the number. */
+.rn-drum::before {
+  content: "0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9";
+  white-space: pre;
+}
+.rn-glyph::before {
+  content: attr(data-c);
+}
+
+/* A held camera: the interlude's render (and its line art) drifts a few percent, slowly, while motion is allowed. */
+@media (prefers-reduced-motion: no-preference) {
+  .story-drift {
+    animation: story-drift 26s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+}
+@keyframes story-drift {
+  from {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.045) translate3d(-0.9%, -0.6%, 0);
+  }
+}
+
+/* The storm window chart's ambient: NS31's ring keeps pinging, the tech-log line marches (motion only). */
+@media (prefers-reduced-motion: no-preference) {
+  .sw-ns31-ring {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: sw-ping 2.4s cubic-bezier(0.2, 0.6, 0.35, 1) infinite;
+  }
+  .sw-fault {
+    animation: sw-march 1.1s linear infinite;
+  }
+}
+@keyframes sw-ping {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+@keyframes sw-march {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+
+/* Hydraulic fluid moving along the plan view's systems; the leaking yellow system stutters (motion only). */
+@media (prefers-reduced-motion: no-preference) {
+  .bp-flow {
+    animation: bp-flow 0.9s linear infinite;
+  }
+  .bp-flow-weak {
+    animation: bp-flow 2.6s cubic-bezier(0.5, 0, 0.9, 0.6) infinite;
+    opacity: 0.55;
+  }
+}
+@keyframes bp-flow {
+  to {
+    stroke-dashoffset: -1.91;
+  }
+}
+
+/* The morning after: two cloud bands drifting east, each a tile wide twice over (motion only). */
+.story-clouds {
+  background-repeat: repeat-x;
+  background-size: 50% 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .story-clouds {
+    animation: story-clouds 55s linear infinite;
+    will-change: transform;
+  }
+  .story-clouds-slow {
+    animation-duration: 85s;
+  }
+}
+@keyframes story-clouds {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: -50% 0;
+  }
+}
+
+/* The trace: a reading walks the drawn line from the euros down to the log lines (motion only). The element
+   spans the track and slides by its own height, so the walk is a transform. */
+.tr-pulse {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.tr-pulse::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--color-metar);
+  box-shadow: 0 0 14px 4px rgb(79 159 224 / 0.5);
+}
+/* its trail along the line */
+.tr-pulse::after {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: -64px;
+  width: 3px;
+  height: 60px;
+  border-radius: 3px;
+  background: linear-gradient(to bottom, transparent, rgb(79 159 224 / 0.75));
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tr-pulse[data-on="true"] {
+    opacity: 1;
+    animation: tr-walk 5.5s cubic-bezier(0.45, 0, 0.3, 1) infinite;
+  }
+}
+@keyframes tr-walk {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  92%,
+  100% {
+    transform: translate3d(0, 100%, 0);
+    opacity: 0;
+  }
+}
+
+/* The 3D canvas fades out at its edges, so the apron and its reflections never end in a hard line. */
+.bp-canvas {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent), linear-gradient(to bottom, #000 78%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent), linear-gradient(to bottom, #000 78%, transparent);
+  mask-composite: intersect;
+}
+
+/* The cyanotype's grain shifts like film, a few times a second (motion only; compositor transform). */
+@media (prefers-reduced-motion: no-preference) {
+  .story-grain {
+    animation: story-grain 0.66s steps(1) infinite;
+    will-change: transform;
+  }
+}
+@keyframes story-grain {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  25% {
+    transform: translate3d(-2%, 1.5%, 0);
+  }
+  50% {
+    transform: translate3d(1.5%, -2%, 0);
+  }
+  75% {
+    transform: translate3d(-1%, -1%, 0);
+  }
+}
+
+/* Held cases waiting on one answer: a slow wave of light runs through them (motion only). */
+@media (prefers-reduced-motion: no-preference) {
+  .ao-case {
+    animation: ao-wait 3.2s ease-in-out infinite;
+  }
+}
+@keyframes ao-wait {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+/* The closing's ink chart drifts like paper on a desk (motion only). */
+@media (prefers-reduced-motion: no-preference) {
+  .story-ink {
+    animation: story-ink 26s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+}
+@keyframes story-ink {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.02);
+  }
+  to {
+    transform: translate3d(-7%, 2.5%, 0) scale(1.1);
+  }
+}
+
+/* The drafting grid drifts one major square (120 px) diagonally every 40 s: seamless, on the compositor. */
+@media (prefers-reduced-motion: no-preference) {
+  .story-grid-drift {
+    animation: story-grid-drift 40s linear infinite;
+    will-change: transform;
+  }
+}
+@keyframes story-grid-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(120px, 120px, 0);
+  }
+}
+
+/* The blueprint's drafting grid. */
+.story-grid {
+  background-image:
+    linear-gradient(to right, rgba(232, 240, 250, 0.16) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(232, 240, 250, 0.16) 1px, transparent 1px),
+    linear-gradient(to right, rgba(232, 240, 250, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(232, 240, 250, 0.07) 1px, transparent 1px);
+  background-size:
+    120px 120px,
+    120px 120px,
+    24px 24px,
+    24px 24px;
+}
+
+/* A scroll cue that breathes (motion only). */
+@media (prefers-reduced-motion: no-preference) {
+  .story-cue {
+    animation: story-cue 2.4s var(--ease-out-quart) infinite;
+  }
+}
+@keyframes story-cue {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  45% {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  55% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+}

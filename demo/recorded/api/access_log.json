@@ -1,0 +1,18 @@
+[
+  {
+    "at": "2025-01-25T06:00:00Z",
+    "principal": "claims_lead:onboarding",
+    "action": "activate_rule",
+    "resource": "R-MINED-REDUCE@1",
+    "allowed": true,
+    "reason": "onboarding approval by the Claims Lead · support 41 of 42 · 1 exception: HR-RR-024"
+  },
+  {
+    "at": "2025-01-25T06:00:00Z",
+    "principal": "agent.drafter",
+    "action": "approve_payout",
+    "resource": "JE-000004",
+    "allowed": false,
+    "reason": "SoD: agents never approve payouts"
+  }
+]

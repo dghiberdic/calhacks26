@@ -1,0 +1,207 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+/* Archivo with both axes (weight + width 62–125%) for the livery-style display type. Geist Mono for machine
+   text: chips, IDs, METAR, tech log, journal lines, times. B612 Mono, the Airbus cockpit face, only where it
+   imitates a display (`font-cockpit`: the departure board): it sets ":" "," "." at the left of a full cell,
+   which reads as a gap in running text ("09: 00Z", "€227, 000"). */
+@import "@fontsource-variable/archivo/standard.css";
+@import "@fontsource-variable/geist-mono/index.css";
+@import "@fontsource/b612-mono/400.css";
+@import "@fontsource/b612-mono/700.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * StormCheck palette. Colour carries meaning and nothing else:
+ *   metar / window  cool blue        held      amber
+ *   not weather     red (only that)  ties to GL / invariant ok   green (only that)
+ *   weather         cloud grey       operated  slate
+ * Everything else is storm navy-slate and cloud greys.
+ */
+@theme inline {
+  --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-cockpit: "B612 Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --color-navy-950: #080d17;
+  --color-navy-900: #0d1524;
+  --color-navy-850: #111b2e;
+  --color-navy-800: #162238;
+  --color-navy-700: #1f2d45;
+  --color-slate-600: #33445e;
+  --color-slate-500: #4f617a;
+  --color-slate-400: #73839a;
+  --color-cloud-25: #fafbfc;
+  --color-cloud-50: #f4f6f9;
+  --color-cloud-100: #eceff4;
+  --color-cloud-200: #dfe4eb;
+  --color-cloud-300: #c8d0db;
+  --color-cloud-400: #a5b0bf;
+  --color-cloud-500: #85919f;
+
+  --color-metar: #4f9fe0;
+  --color-metar-ink: #2565a3;
+  --color-metar-wash: #e7f1fb;
+  --color-held: #e2a12a;
+  --color-held-ink: #8a5a00;
+  --color-held-wash: #fcf2dc;
+  --color-notweather: #e2452c;
+  --color-notweather-ink: #b8301b;
+  --color-notweather-wash: #fdebe6;
+  --color-tie: #2e8a57;
+  --color-tie-ink: #1f6b42;
+  --color-tie-wash: #e5f3eb;
+  --color-weather: #8a96a5;
+  --color-weather-ink: #556172;
+  --color-weather-wash: #eef1f5;
+  --color-operated: #3d4c62;
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root {
+  --background: #f4f6f9;
+  --foreground: #0d1524;
+  --card: #ffffff;
+  --card-foreground: #0d1524;
+  --popover: #ffffff;
+  --popover-foreground: #0d1524;
+  --primary: #0d1524;
+  --primary-foreground: #f4f6f9;
+  --secondary: #eceff4;
+  --secondary-foreground: #162238;
+  --muted: #eceff4;
+  --muted-foreground: #556172;
+  --accent: #eceff4;
+  --accent-foreground: #0d1524;
+  --destructive: #b8301b;
+  --border: #dfe4eb;
+  --input: #c8d0db;
+  --ring: #2565a3;
+  --chart-1: #4f9fe0;
+  --chart-2: #8a96a5;
+  --chart-3: #e2a12a;
+  --chart-4: #2e8a57;
+  --chart-5: #e2452c;
+  --radius: 0.625rem;
+  --sidebar: #0d1524;
+  --sidebar-foreground: #c8d0db;
+  --sidebar-primary: #f4f6f9;
+  --sidebar-primary-foreground: #0d1524;
+  --sidebar-accent: #162238;
+  --sidebar-accent-foreground: #f4f6f9;
+  --sidebar-border: #1f2d45;
+  --sidebar-ring: #4f9fe0;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01";
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--color-metar) 28%, transparent);
+  }
+}
+
+@layer utilities {
+  /* Wide livery-style display type: Archivo's width axis does the work. */
+  .display {
+    font-stretch: 118%;
+    font-weight: 640;
+    letter-spacing: -0.03em;
+    line-height: 0.98;
+  }
+  .display-tight {
+    font-stretch: 112%;
+    font-weight: 620;
+    letter-spacing: -0.02em;
+  }
+  /* Money and clocks in prose: tabular Archivo figures. */
+  .figure {
+    font-variant-numeric: tabular-nums;
+    font-stretch: 108%;
+    letter-spacing: -0.01em;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Hyphenate-style micro-labels: "NOT YET POSTED · BUILT FROM 3 SOURCES". */
+  .micro {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}
+
+/* Reduced motion: no slides or draws, content lands in its final state. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
