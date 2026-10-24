@@ -107,7 +107,7 @@ export default function CloseScreen() {
         <CfoBridge metrics={cfo.data} curve={cohortCurve} />
       )}
 
-      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-3 xl:grid-cols-[minmax(0,1fr)_336px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-3 xl:grid-cols-[minmax(0,1fr)_304px]">
         {/* 2140 rollforward */}
         <section aria-labelledby="rollforward-title" className={PANEL}>
           <div className="px-5 pt-4 md:px-6">
@@ -275,7 +275,7 @@ function ReadOnlyHint({ role }: { role: Role }) {
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-white px-4 py-2.5 text-[13px] text-slate-600 shadow-[inset_0_0_0_1px_var(--color-cloud-200)]" data-testid="read-only-hint">
       <RoleAvatar role={role} size="sm" />
       <span className="min-w-[min(100%,16rem)] flex-1">
-        Viewing as {ROLE_LABEL[role]}: read-only. The Controller approves journals, runs month-end and locks periods.
+        Viewing as {ROLE_LABEL[role]}: read-only. The Controller and the CFO approve journals; the Controller runs month-end and locks periods.
       </span>
       <button type="button" onClick={() => void view()} disabled={switching} className="inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[12.5px] font-medium text-navy-900 shadow-[inset_0_0_0_1px_var(--color-cloud-300)] transition-colors hover:bg-cloud-50 disabled:opacity-50">
         <RoleAvatar role="controller" size="sm" className="size-4 text-[7px]" />

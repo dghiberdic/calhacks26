@@ -64,7 +64,7 @@ export function JournalDrafts({ period, entries, loading, error, onRetry, role, 
           </div>
         ) : !shown.length ? (
           <Empty title={filter === "draft" ? `Nothing waiting for approval in ${periodLabel(period)}` : `Nothing approved yet in ${periodLabel(period)}`}>
-            {filter === "draft" ? "Month-end drafts the change in estimate here for the Controller." : "Approved journals stay parked; posting happens in the ledger, never from StormCheck."}
+            {filter === "draft" ? "Month-end drafts the change in estimate here, pending approval." : "Approved journals stay parked; posting happens in the ledger, never from StormCheck."}
           </Empty>
         ) : (
           <ul className="grid grid-cols-[minmax(0,1fr)] items-start gap-3 lg:grid-cols-2">
@@ -112,7 +112,7 @@ function EntryActions({ entry, role, canAct, onEdit }: { entry: JournalEntry; ro
   if (!canAct && !own)
     return (
       <span className="inline-flex items-center gap-3">
-        <span className="text-[12px] text-slate-400">the Controller approves</span>
+        <span className="text-[12px] text-slate-400">pending approval</span>
         {trail}
       </span>
     );

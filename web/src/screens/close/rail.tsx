@@ -17,7 +17,7 @@ import { Denied } from "./ui";
 
 const METHOD: Record<string, string> = { bf: "Bornhuetter-Ferguson", expected_loss: "Expected loss", chain_ladder: "Chain ladder" };
 
-/** The close for one period: month-end, then lock; the invariants are the checklist in between. */
+/** The close for one period: run month-end (drafts the change in estimate), then lock once it ties. */
 export function CloseRail({
   period,
   locked,
@@ -100,7 +100,7 @@ export function CloseRail({
             <MonthEndResult key="result" res={result} />
           ) : (
             <motion.p key="what" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[13px] leading-relaxed text-slate-500">
-              Re-estimates every cohort on its claim curve and drafts the change in estimate for the Controller to approve. Prospective, per IAS 8.36.
+              Re-estimates every cohort on its claim curve and drafts the change in estimate for approval: prospective, per IAS 8.36.
             </motion.p>
           )}
         </AnimatePresence>

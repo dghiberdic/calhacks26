@@ -52,7 +52,14 @@ export function EstimateCardView({ est, curve }: { est: Estimate; curve?: ClaimC
         <h2 id="estimate-card" className="mt-1.5 text-[15.5px] font-semibold text-navy-900">
           {name ?? est.cohort} <span className="font-mono text-[12px] font-normal text-slate-400">{est.cohort}</span>
         </h2>
-        <p className="figure mt-1 text-[12.5px] leading-relaxed text-slate-500">{header.join(" · ")}</p>
+        <p className="figure mt-1 text-[12.5px] leading-relaxed text-slate-500">
+          {header.map((h, i) => (
+            <span key={h} className="whitespace-nowrap">
+              {i ? " · " : ""}
+              {h}
+            </span>
+          ))}
+        </p>
       </div>
 
       <div className="px-5 pt-4">
@@ -138,7 +145,7 @@ export function EstimateCardView({ est, curve }: { est: Estimate; curve?: ClaimC
               </span>
             </>
           ) : (
-            <>Approver pending · the Controller</>
+            <>Approver pending · not the preparer</>
           )}
         </span>
       </div>

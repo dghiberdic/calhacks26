@@ -104,7 +104,7 @@ export function RollforwardTable({ rf, highlight, ties = {}, segments = {} }: { 
                 animate={flash ? { backgroundColor: ["rgba(13,21,36,0.07)", "rgba(13,21,36,0)"] } : undefined}
                 transition={{ duration: 2.6, ease: "easeOut" }}
               >
-                <th scope="row" className={cn(label, "max-w-[230px]", nil ? "text-slate-400" : "text-navy-900")}>
+                <th scope="row" className={cn(label, "max-w-[212px]", nil ? "text-slate-400" : "text-navy-900")}>
                   <span className="block leading-snug">{m.label}</span>
                   {m.note && !nil ? <span className="block text-[11.5px] leading-snug text-slate-400">{m.note}</span> : null}
                 </th>
