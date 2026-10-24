@@ -7,6 +7,7 @@ import { Card, Chip, Kbd } from "@/components/app/ui";
 import { RollingNumber } from "@/components/motion/RollingNumber";
 import { decide, classifyLog, type Window } from "@/lib/engine";
 import { tier } from "@/data/scenario";
+import { gibsImage } from "@/data/airports";
 import { cn } from "@/lib/cn";
 
 type Report = { t: string; raw: string; kt: number | null; gust: number | null; dir: number | null };
@@ -75,6 +76,7 @@ export default function Desk() {
     return data.reports.reduce((a, b) => (Math.abs(m(b.t) - m(t)) < Math.abs(m(a.t) - m(t)) ? b : a));
   };
   const atSched = near(sched);
+  const orbit = gibsImage(icao, date);
   const atFault = fault.time ? near(fault.time) : null;
 
   return (
@@ -157,6 +159,19 @@ export default function Desk() {
               ))}
             </div>
           </div>
+          {orbit && (
+            <figure className="m-0">
+              <div className="relative overflow-hidden rounded-lg bg-night">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img key={orbit.url} src={orbit.url} alt={`NASA MODIS Terra image around ${orbit.airport.name} on ${date}`} className="aspect-[16/10] w-full object-cover" loading="lazy" />
+                <span className="pointer-events-none absolute left-1/2 top-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#ff7a5c]" aria-hidden="true" />
+                <span className="pointer-events-none absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ff7a5c]" aria-hidden="true" />
+              </div>
+              <figcaption className="mt-2 text-[12.5px] text-graphite">
+                {orbit.airport.name} from orbit that day. NASA MODIS Terra, late-morning pass.
+              </figcaption>
+            </figure>
+          )}
         </Card>
 
         <div className="flex flex-col gap-4">
