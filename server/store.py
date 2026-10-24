@@ -164,6 +164,29 @@ class Store:
     def last_seq(self) -> int:
         return int(self._q("SELECT COALESCE(MAX(seq), 0) FROM sc_trace")[0][0])
 
+    # ------------------------------------------------------------------ the commit chain (engine.trace's tables)
+    def head(self) -> str | None:
+        """Head of the trace's commit chain in this file (`scripts/verify.py` compares two boots by it)."""
+        try:
+            rows = self._q("SELECT hash FROM commits ORDER BY seq DESC LIMIT 1")
+        except sqlite3.OperationalError:
+            return None
+        return rows[0][0] if rows else None
+
+    def verify_chain(self) -> tuple[int, list[str]]:
+        """(commits checked, broken hashes) via `engine.trace` over this file's chain."""
+        try:
+            from engine.trace import TraceStore
+        except ImportError:
+            return 0, []
+        ts = TraceStore(self.path, engine_sha="verify", cal_version="verify")
+        try:
+            v = ts.verify()
+            commits = ts.all_commits()
+            return v.checked, [commits[i].hash if i < len(commits) else f"#{i}" for i in v.broken]
+        finally:
+            ts.close()
+
     # ------------------------------------------------------------------ versioned documents
     def put(self, kind: str, key: str, body: Any, at: datetime) -> None:
         data = jsonable(body)

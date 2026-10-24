@@ -297,10 +297,9 @@ class Runtime:
 
     @staticmethod
     def engine_rules(rules: list[Rule]) -> list[Rule]:
-        """What the engine evaluates: learned and ruled policy only. Regulation and hard-control *cards* are display
-        (the engine implements Art. 5(3) and the hard controls in code; an empty-condition ROUTE_TO card would
-        otherwise match every flight), and static cards have no logic."""
-        return [r for r in rules if not r.static_card and r.tier not in ("hard_control", "regulation")]
+        """What the engine evaluates: every rule doc except static cards (display only; the hard-control cards are
+        static and the engine implements those controls in code). Same set `scripts/verify.py` replays with."""
+        return [r for r in rules if not r.static_card]
 
     # facts ------------------------------------------------------------
     def commit_world(self, world: World) -> None:
@@ -397,6 +396,20 @@ class Runtime:
             except Exception:
                 return compose.template_explanation(d)
 
+    def normalize_fact(self, fact_id: str) -> Fact | None:
+        """The real `contracts.normalize` fact when an evidence id is a normalize id (`F:…`); built lazily, once."""
+        if not fact_id.startswith("F:") or self.world is None:
+            return None
+        index = getattr(self, "_norm_index", None)
+        if index is None:
+            norm = _module("contracts.normalize")
+            try:
+                index = {f.id: f for f in norm.world_to_facts(self.world)} if norm is not None else {}
+            except Exception:
+                index = {}
+            self._norm_index = index
+        return index.get(fact_id)
+
     def commit_evidence(self, d: FlightDecision, at: datetime) -> None:
         """Record each cited evidence item as a Fact (span = its verbatim quote) so the decision links to it, and
         through it to its source and, for a raw METAR line, to the observation. The engine's evidence ids are not
@@ -406,8 +419,10 @@ class Runtime:
             if self.store.get("ev_fact", e.fact_id) is not None:
                 continue
             self.store.put("ev_fact", e.fact_id, {"flight": d.flight_id}, at)
-            new.append(Fact(id=e.fact_id, source_id=e.source_id, subject=f"flight:{d.flight_id}", field=e.field,
-                            value=e.value, span=e.quote, extractor="engine:evidence@1", recorded_at=at))
+            real = self.normalize_fact(e.fact_id)
+            new.append(real or Fact(id=e.fact_id, source_id=e.source_id, subject=f"flight:{d.flight_id}",
+                                    field=e.field, value=e.value, span=e.quote, extractor="engine:evidence@1",
+                                    recorded_at=at))
         if new:
             self.record("record_facts", new, "agent.engine", at)
 

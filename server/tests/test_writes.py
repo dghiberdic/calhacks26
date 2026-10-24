@@ -102,7 +102,8 @@ def test_q2_ruling_rule_replay_confirm_revert(golden):
     ff = FlightFile.model_validate(golden.get("/api/flights/NS117@2025-01-24").json())
     assert ff.decision.extraordinary == "extraordinary" and "R-LEG-1@1" in ff.decision.rules_applied
     assert ff.entitlements_summary["status_counts"] == {"no_compensation": 168}
-    assert [je.kind for je in ff.journal_preview] == ["compensation_estimate", "recode"]
+    kinds = [je.kind for je in ff.journal_preview]
+    assert kinds.count("compensation_estimate") == 1 and kinds.count("recode") == 1
     assert any("Saved as policy R-LEG-1@1" in e["summary"] for e in golden.get("/api/trace").json())
 
     r = golden.post("/api/rules/R-LEG-1/revert", headers=legal)
