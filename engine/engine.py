@@ -35,6 +35,7 @@ from contracts.models import (
 )
 from engine import confidence as conf
 from engine import dsl, eu261, routing
+from engine import rules as rulebook
 from engine.case import FlightCase, build_case, overlay_facts, station_obs, stations_for
 from engine.cause import Finding, deciding_margin, find_cause, recode_label
 from engine.geo import UnknownAirport, airport, distance_km, route_region
@@ -132,27 +133,45 @@ class Engine:
         return ev
 
     def _apply_cause_rules(self, ev: Evaluated, rules: Sequence[Rule], known_at: datetime) -> None:
+        """Only a Legal ruling settles or overrides ``extraordinary``; regulation cards and agreeing rules are cited.
+
+        A generic regulation card (e.g. "in window at either end → extraordinary") never flips a case the engine
+        sent to Legal (a concurrent AOG sits in the window too). Two equal Legal rulings that disagree → Legal.
+        """
         f = ev.finding
-        hits = [r for r in dsl.matching(rules, ev.features, actions=CAUSE_ACTIONS, known_at=known_at,
-                                        flight_date=ev.case.flight.date) if r.tier in CAUSE_RULE_TIERS]
-        if hits:
-            r = hits[0]
-            want = Extraordinary.YES if r.action == RuleAction.SET_EXTRAORDINARY else Extraordinary.NO
+        when = dict(known_at=known_at, flight_date=ev.case.flight.date)
+
+        def want(r: Rule) -> Extraordinary:
+            return Extraordinary.YES if r.action == RuleAction.SET_EXTRAORDINARY else Extraordinary.NO
+
+        legal = rulebook.resolve(rules, ev.features, actions=CAUSE_ACTIONS, tiers={"legal_ruling"}, **when)
+        if legal.conflicted:
+            f.extraordinary, f.route, f.pattern = Extraordinary.NEEDS_LEGAL, Role.LEGAL, "rule_conflict"
+            f.reason_tag = "new-legal-pattern"
+            f.caps.append("capped:rule-conflict")
+            f.reason = (f"{f.reason.rstrip('.')}. Conflicting rulings "
+                        f"{', '.join(dsl.ref(r) for r in legal.conflict)}: Legal to resolve.")
+        elif legal.rule is not None and want(legal.rule) != f.extraordinary:
+            r = legal.rule
             ev.rules_applied.append(dsl.ref(r))
-            if f.extraordinary != want:
-                f.extraordinary = want
-                ev.settled_by = r
-                f.route = None
-                f.reason = f"{f.reason.rstrip('.')}. Settled by {dsl.ref(r)}" + (
-                    f" ({r.title})." if r.title else ".")
-        routes = [r for r in dsl.matching(rules, ev.features, actions=[RuleAction.ROUTE_TO], known_at=known_at,
-                                          flight_date=ev.case.flight.date) if r.tier in RULING_TIERS]
-        if routes and routes[0].action_arg and f.extraordinary == Extraordinary.NEEDS_LEGAL:
-            try:
-                f.route = Role(routes[0].action_arg)
-                ev.rules_applied.append(dsl.ref(routes[0]))
-            except ValueError:
-                pass
+            f.extraordinary = want(r)
+            ev.settled_by = r
+            f.route = None
+            f.reason = f"{f.reason.rstrip('.')}. Settled by {dsl.ref(r)}" + (f" ({r.title})." if r.title else ".")
+        else:
+            cited = rulebook.resolve(rules, ev.features, actions=CAUSE_ACTIONS, tiers=CAUSE_RULE_TIERS, **when)
+            agree = next((r for r in cited.hits if want(r) == f.extraordinary), None)
+            if agree is not None:
+                ev.rules_applied.append(dsl.ref(agree))
+        if f.extraordinary == Extraordinary.NEEDS_LEGAL:
+            routes = rulebook.resolve(rules, ev.features, actions=[RuleAction.ROUTE_TO],
+                                      tiers=RULING_TIERS - {"hard_control", "regulation"}, **when)
+            if routes.rule is not None and routes.rule.action_arg:
+                try:
+                    f.route = Role(routes.rule.action_arg)
+                    ev.rules_applied.append(dsl.ref(routes.rule))
+                except ValueError:
+                    pass
 
     def cause_confidence(self, world: World, ev: Evaluated) -> Confidence:
         f, case = ev.finding, ev.case
@@ -249,7 +268,7 @@ def flight_features(world: World, case: FlightCase, finding: Finding, prev: Find
 PATTERN_NO = {
     "voucher_in_lieu_unsigned": 1, "knock_on_return": 2, "cohort_release": 3, "concurrent_causes": 4,
     "external_event": 5, "weather_code_contradicted": 6, "window_unknown": 7, "cause_unknown": 8,
-    "technical_unverified": 9, "crew": 10, "atc": 11, "new_legal_pattern": 12,
+    "technical_unverified": 9, "crew": 10, "atc": 11, "new_legal_pattern": 12, "rule_conflict": 13,
 }
 
 

@@ -165,3 +165,49 @@ A no-go line (`mel_relief` False or None) beats one with relief; ties go to the 
 - `new_legal_pattern` → Legal question `Q-<flight>:new_legal_pattern`, tag `new-legal-pattern`. Confidence is the decision's features with `sources_disagree = 1` (NS31: 0.45, plan says 52%, both < 0.6) plus cap `capped:challenge-tier-4`.
 - `new_fact` → Ops question `Q-<flight>:challenge_new_fact`.
 - The Drafter writes the reply prose; the server assembles `ChallengeResponse`.
+
+## D4 · `engine/rules.py`, `engine/controls.py`
+
+**Authority, by action first and kind second.**
+- Legal: `set_extraordinary`, `set_not_extraordinary`, `allow_offset`.
+- Claims Lead: `deny_offset`, `apply_7_2_reduction`.
+- Controller: `keep_tail`, `deny_release`.
+- `route_to` goes by kind: cause/entitlement/regime → Legal, voucher → Claims Lead, release/routing → Controller.
+- The author must also match the rule's tier (claims_lead → `claims_lead_ruling`, …).
+- Agents, Ops, CFO and the judge never author rules. Nobody authors a `hard_control` or `regulation` rule (code and regulation versions only). Mined rules have no human author and may only carry mined policy.
+
+**Statutory floor.** "Lower EU261 compensation" means going below what the Regulation itself gives:
+- `allow_offset` (offsetting without Art. 7(3) signed consent) and `set_extraordinary` are Legal only.
+- The Art. 7(2) reduction is the statute's own reduction, and the engine enforces its limits, so a Claims Lead / mined policy may apply it. That keeps R-MINED-REDUCE's `authority_required = claims_lead`, as on the stub card.
+
+**Hard-control screening.** A proposal fails `no_hard_control` when:
+- its tier is `hard_control`; or
+- it routes to a non-internal party; or
+- the ruling text, rule title, scope or condition matches the hard-control phrases in `controls._HC_PATTERNS`: SoD ("approve their own", "requesters approve"…), payout bypass, locked-period writes, materiality bypass, or external approval.
+
+The checks themselves are code in `controls.py`:
+- `check_approval`: agents never approve; external or unknown principals never satisfy an approval; preparer ≠ approver; payouts need the Claims Lead; everything else needs the Controller (same split as Books).
+- `check_period_write`, `materiality_ok` and `check_answer` (only the routed role, never an agent or external party).
+- Each result renders as an `AccessDecision`, or as a `TraceEvent` such as "agent.drafter approve_payout → DENIED · SoD".
+
+**Grounding.**
+- Literals map to phrases through a per-(feature, value) lexicon, a per-feature numeric unit table ("within 3 h of STD", "M12", "4,804 km") and the action lexicon ("no offset", "Never release the tail").
+- Keys follow the stub: numbers → `"3"`; others → `"voucher.signed=false"`; the action → `"action=deny_offset"`. Phrases are verbatim substrings of the ruling.
+- An ungrounded scope key is copied from the case as `case:<v>`, which still constrains and is the rung `widen` removes. An ungrounded condition literal or action fails `grounded`.
+- On golden text: R-CL-1 grounds `voucher.signed=false` → "No signed acceptance" and copies `flight.departs_eu` from the case as `case:true`, unless the ruler says "leaving the EU". R-LEG-1 grounds "within 3 h of STD". R-CTL-1 grounds "M12" and "until the six-year limitation", and copies the cohort from the case.
+
+**Conflicts.**
+- `resolve()` returns a conflict, applying nothing, when the strongest applicable rule has an equal-tier, equal-specificity rival with the opposite action (`set_extraordinary` ↔ `set_not_extraordinary`, `allow_offset` ↔ `deny_offset`).
+- In the engine, conflicting Legal rulings make the case `needs_legal` → Legal, pattern `rule_conflict`, cap `capped:rule-conflict`. Conflicting voucher rules leave the coupon `needs_ruling`.
+- A proposal whose action opposes an active same-tier rule with an overlapping scope gets `no_conflict = False`.
+- Shuffling the rule order never changes the result (hypothesis).
+
+**Cause rules in the engine (changed with D4).**
+- Only a `legal_ruling` may settle or override `extraordinary`.
+- Regulation and hard-control cards are only *cited* when they agree. The stub's R-REG-ART5-3 card ("in window at either end → extraordinary") would otherwise have flipped every concurrent-AOG case to "extraordinary".
+- `route_to` rules apply only from ruling tiers (claims_lead / controller / legal), never from the `R-HC-*` display cards, which carry `route_to` with an empty condition.
+
+**Versions (`RuleBook`).**
+- Append-only events: `version` (immutable `Rule` snapshot, version number assigned on add, `supersedes` = the previous version), `status` and `cite`.
+- `rules_known_at(K)` replays the events up to K. A version is shown `retired` while a newer version is active, so retiring (reverting) the newer version brings the older one back. To retire a rule entirely, retire each version.
+- `times_cited` is Σ cite events. The server and trace own persistence; `RuleBook` is the pure view.
