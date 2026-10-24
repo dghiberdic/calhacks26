@@ -17,7 +17,8 @@ const PRESETS = [
   { icao: "EIDW", name: "Dublin", date: "2025-12-09", note: "Storm Bram" },
   { icao: "EIDW", name: "Dublin", date: "2025-01-24", note: "Storm Éowyn" },
   { icao: "EGLL", name: "Heathrow", date: "2024-01-21", note: "Storm Isha" },
-  { icao: "KBOS", name: "Boston", date: "2024-12-21", note: "Nor’easter" },
+  { icao: "KBOS", name: "Boston", date: "2023-12-18", note: "Boston windstorm" },
+  { icao: "KSFO", name: "San Francisco", date: "2023-03-21", note: "SF bomb cyclone" },
 ];
 
 const LOGS = [
