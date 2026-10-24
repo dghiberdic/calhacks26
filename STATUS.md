@@ -8,3 +8,4 @@
 | filip-b | | | F8a | |
 | justin-a | | | J0 | |
 | justin-b | | | J10 | |
+| filip-b2 (books agent) | Sat | F8b postings + F8c invariants / CFO / audit, golden-exact vs expected/ | (queue done) | no |
