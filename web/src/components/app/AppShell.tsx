@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState, ViewTransition } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import { Logo } from "@/components/ui/Logo";
 import { Kbd } from "./ui";
 import { FlightSheet } from "./FlightSheet";
@@ -164,106 +164,109 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const desk = path.startsWith("/app/desk");
   const closeRun = useCallback(() => setRun(false), [setRun]);
   return (
-    <div className={cn("flex min-h-svh flex-col bg-chart text-ink", desk && "bg-[#eef2f8]")}>
-      <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-[#e6e6e0] bg-chart/90 px-4 backdrop-blur-md md:gap-5 md:px-5">
-        <Link href="/" className="flex w-auto items-center gap-2.5 md:w-[196px]" aria-label="StormCheck home">
-          <ViewTransition name="brand-mark">
-            <Logo className="h-[18px] w-auto" />
-          </ViewTransition>
-          <span className="hidden text-[16px] font-semibold tracking-[-0.01em] [font-stretch:112%] sm:inline">StormCheck</span>
-        </Link>
-        <StormSwitcher />
-        <button
-          type="button"
-          onClick={() => setPalette(true)}
-          className="hidden h-9 max-w-[420px] flex-1 items-center gap-2.5 rounded-lg bg-white px-3 text-[14px] text-graphite shadow-[inset_0_0_0_1px_#e2e2dc] transition-shadow hover:shadow-[inset_0_0_0_1px_#c9c9c2] md:flex"
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-            <circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M9.5 9.5 L13 13" stroke="currentColor" strokeWidth="1.5" />
-          </svg>
-          Search flights, passengers, rules
-          <span className="ml-auto">
-            <Kbd>⌘K</Kbd>
-          </span>
-        </button>
-        <div className="ml-auto flex items-center gap-4">
+    // Drawers, sheets and the palette slide; with reduced motion on they only fade.
+    <MotionConfig reducedMotion="user">
+      <div className={cn("flex min-h-svh flex-col bg-chart text-ink", desk && "bg-[#eef2f8]")}>
+        <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-[#e6e6e0] bg-chart/90 px-4 backdrop-blur-md md:gap-5 md:px-5">
+          <Link href="/" className="flex w-auto items-center gap-2.5 md:w-[196px]" aria-label="StormCheck home">
+            <ViewTransition name="brand-mark">
+              <Logo className="h-[18px] w-auto" />
+            </ViewTransition>
+            <span className="hidden text-[16px] font-semibold tracking-[-0.01em] [font-stretch:112%] sm:inline">StormCheck</span>
+          </Link>
+          <StormSwitcher />
           <button
             type="button"
-            onClick={() => setRun(true)}
-            className="hidden items-center gap-2 rounded-full px-2.5 py-1.5 text-[14px] text-settled-ink transition-colors hover:bg-settled-wash lg:flex"
-            title="See what StormCheck did at 09:00Z"
+            onClick={() => setPalette(true)}
+            className="hidden h-9 max-w-[420px] flex-1 items-center gap-2.5 rounded-lg bg-white px-3 text-[14px] text-graphite shadow-[inset_0_0_0_1px_#e2e2dc] transition-shadow hover:shadow-[inset_0_0_0_1px_#c9c9c2] md:flex"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-settled opacity-40" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-settled" />
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+              <circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M9.5 9.5 L13 13" stroke="currentColor" strokeWidth="1.5" />
+            </svg>
+            Search flights, passengers, rules
+            <span className="ml-auto">
+              <Kbd>⌘K</Kbd>
             </span>
-            Re-checked <span className="font-mono">09:00Z</span>
           </button>
-          <RoleSwitcher />
-        </div>
-      </header>
+          <div className="ml-auto flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setRun(true)}
+              className="hidden items-center gap-2 rounded-full px-2.5 py-1.5 text-[14px] text-settled-ink transition-colors hover:bg-settled-wash lg:flex"
+              title="See what StormCheck did at 09:00Z"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-settled opacity-40" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-settled" />
+              </span>
+              Re-checked <span className="font-mono">09:00Z</span>
+            </button>
+            <RoleSwitcher />
+          </div>
+        </header>
 
-      <div className="flex min-h-0 flex-1">
-        <nav aria-label="Main" className="sticky top-14 hidden h-[calc(100svh-56px)] w-[216px] shrink-0 flex-col gap-0.5 px-3 py-4 md:flex">
-          {NAV.map((n) => {
+        <div className="flex min-h-0 flex-1">
+          <nav aria-label="Main" className="sticky top-14 hidden h-[calc(100svh-56px)] w-[216px] shrink-0 flex-col gap-0.5 px-3 py-4 md:flex">
+            {NAV.map((n) => {
+              const active = n.href === "/app" ? path === "/app" : path.startsWith(n.href);
+              return (
+                <Link
+                  key={n.href}
+                  href={n.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "flex items-center justify-between rounded-lg px-2.5 py-2 text-[14.5px] text-[#3e444b] transition-colors hover:bg-[#ececE6]",
+                    active && "bg-[#e9e9e3] font-semibold text-ink",
+                  )}
+                >
+                  {n.label}
+                  {n.label === "Inbox" && open > 0 && (
+                    <span className={cn("min-w-5 rounded-full px-1.5 text-center text-[12px] font-semibold", mine ? "bg-review-wash text-[#7a4f00]" : "bg-fog text-graphite")}>{open}</span>
+                  )}
+                </Link>
+              );
+            })}
+            <div className="mx-2.5 my-3 h-px bg-[#e6e6e0]" />
+            <Link
+              href="/app/desk"
+              className={cn("rounded-lg px-2.5 py-2 text-[14.5px] text-front transition-colors hover:bg-front-wash", desk && "bg-front-wash font-semibold")}
+            >
+              Judge&rsquo;s desk
+            </Link>
+            <div className="mt-auto rounded-lg p-2.5 text-[12.5px] leading-relaxed text-graphite">
+              Drafts, never pays. Every payout waits for a person.
+            </div>
+          </nav>
+
+          <main id="main" className="min-w-0 flex-1 px-4 pb-16 pt-6 md:px-7">
+            {/* App pages cross-fade into each other; the landing has no such wrapper (see the root layout). */}
+            <ViewTransition>{children}</ViewTransition>
+          </main>
+        </div>
+
+        {/* mobile nav */}
+        <nav aria-label="Main" className="fixed inset-x-3 bottom-3 z-40 flex justify-between rounded-2xl bg-ink/95 p-1.5 text-[13px] text-chart shadow-lg backdrop-blur md:hidden">
+          {[...NAV.map((n) => (n.href === "/app" ? { ...n, label: "Home" } : n)), { href: "/app/desk", label: "Desk" }].map((n) => {
             const active = n.href === "/app" ? path === "/app" : path.startsWith(n.href);
             return (
-              <Link
-                key={n.href}
-                href={n.href}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "flex items-center justify-between rounded-lg px-2.5 py-2 text-[14.5px] text-[#3e444b] transition-colors hover:bg-[#ececE6]",
-                  active && "bg-[#e9e9e3] font-semibold text-ink",
-                )}
-              >
+              <Link key={n.href} href={n.href} className={cn("flex-1 rounded-xl py-2 text-center", active && "bg-white/15 font-semibold")}>
                 {n.label}
-                {n.label === "Inbox" && open > 0 && (
-                  <span className={cn("min-w-5 rounded-full px-1.5 text-center text-[12px] font-semibold", mine ? "bg-review-wash text-[#7a4f00]" : "bg-fog text-graphite")}>{open}</span>
-                )}
               </Link>
             );
           })}
-          <div className="mx-2.5 my-3 h-px bg-[#e6e6e0]" />
-          <Link
-            href="/app/desk"
-            className={cn("rounded-lg px-2.5 py-2 text-[14.5px] text-front transition-colors hover:bg-front-wash", desk && "bg-front-wash font-semibold")}
-          >
-            Judge&rsquo;s desk
-          </Link>
-          <div className="mt-auto rounded-lg p-2.5 text-[12.5px] leading-relaxed text-graphite">
-            Drafts, never pays. Every payout waits for a person.
-          </div>
         </nav>
 
-        <main id="main" className="min-w-0 flex-1 px-4 pb-16 pt-6 md:px-7">
-          {/* App pages cross-fade into each other; the landing has no such wrapper (see the root layout). */}
-          <ViewTransition>{children}</ViewTransition>
-        </main>
+        <FlightSheet />
+        <WhyDrawer />
+        <CommandPalette />
+        <AgentRun open={run} onClose={closeRun} />
+        <LetterDrawer />
+        <Suspense fallback={null}>
+          <DemoGuide />
+          <ReceiptFromUrl />
+        </Suspense>
       </div>
-
-      {/* mobile nav */}
-      <nav aria-label="Main" className="fixed inset-x-3 bottom-3 z-40 flex justify-between rounded-2xl bg-ink/95 p-1.5 text-[13px] text-chart shadow-lg backdrop-blur md:hidden">
-        {[...NAV.map((n) => (n.href === "/app" ? { ...n, label: "Home" } : n)), { href: "/app/desk", label: "Desk" }].map((n) => {
-          const active = n.href === "/app" ? path === "/app" : path.startsWith(n.href);
-          return (
-            <Link key={n.href} href={n.href} className={cn("flex-1 rounded-xl py-2 text-center", active && "bg-white/15 font-semibold")}>
-              {n.label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <FlightSheet />
-      <WhyDrawer />
-      <CommandPalette />
-      <AgentRun open={run} onClose={closeRun} />
-      <LetterDrawer />
-      <Suspense fallback={null}>
-        <DemoGuide />
-        <ReceiptFromUrl />
-      </Suspense>
-    </div>
+    </MotionConfig>
   );
 }
