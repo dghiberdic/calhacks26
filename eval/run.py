@@ -69,9 +69,10 @@ Run without `--from-cache` to regenerate the world and execute the real engine o
 ## Held-out results
 
 - Test period: January–June 2025; {report.n_storms} storm days plus background days.
-- Cancelled-flight coupon denominator: {report.n_passengers:,} passengers.
+- Cancelled-flight coupon denominator: {report.n_passengers:,} passengers, including curated golden scenarios.
 - Passenger straight-through: {report.straight_through_pct:.2f}%. A coupon counts only when its flight is auto and it has no held/ruling entitlement or coupon question.
 - Cause **and** extraordinary classification exact accuracy: {m['flight_cause_and_extraordinary_accuracy']:.2%}.
+- Curated golden cancellations: {m['curated_golden_cancellations']:.0f}; independently generated cancellations: {m['non_golden_cancellations']:.0f}. Accuracy on the generated subset alone: {m['non_golden_cause_accuracy']:.2%}. This small generated subset cannot establish broad generalization.
 - Latent internal-AOG weather miscodes caught: {report.miscodes_caught}/{report.miscodes_total}; underlying face cash entitlement €{report.miscodes_eur_cents / 100:,.2f}.
 - False flight holds: {report.false_holds}; an escalated flight whose latent key does not require an authority ruling.
 - Initial engine estimate: €{m['preview_eur']:,.2f}; latent net entitlement × segment ultimate rates: €{m['ultimate_expected_eur']:,.2f}.
@@ -82,12 +83,12 @@ Run without `--from-cache` to regenerate the world and execute the real engine o
 Three independent real Engine + TraceStore + Books runs produced **€34,650 × 3**, with identical canonical decision/accounting hashes: `{report.stormcheck_runs['hashes'][0]}`.
 Before the simulated Legal ruling the estimate is **€82,146**, including held knock-ons. €34,650 is the estimate **after** that ruling; it must not be described as the whole storm's initial estimate.
 The replay supplied the historical Art. 7(2) reduction policy explicitly. It does not benchmark automatic policy mining or LLM rule drafting.
-After confirmed Q1/Q2 rulings, repeated questions: {report.repeat_questions}. The EU-departure voucher rule settled {cache['controls']['in_scope_coupons']} new coupons; the non-EU departure still produced {cache['controls']['out_of_scope_questions']} question. Out-of-scope automatic applications: {report.out_of_scope_auto}.
+After confirmed Q1/Q2/Q3 rulings, repeated questions: {report.repeat_questions}. The EU-departure voucher rule settled {cache['controls']['in_scope_coupons']} new coupons; the non-EU departure still produced {cache['controls']['out_of_scope_questions']} question. Out-of-scope automatic applications: {report.out_of_scope_auto}. The Controller replay kept the €{report.stormcheck_runs['tail_kept_eur'][0]:,.0f} Isha tail; an unconfirmed proposal to widen its scope was not activated.
 
 ## Calibration and model comparison
 
 Logistic models fitted only on training rows: {', '.join(sorted(fitted['models'])) or 'none'}.
-The fitted candidate is in `eval/cache/calibration.json`. It is **not promoted** to `data/calibration.json`: it failed three unchanged golden/demo acceptance checks (NS31 confidence 0.4332, uncalibrated voucher confidence, an extra Ops question). The demo keeps its existing priors. No confidence threshold or expected fixture was weakened.
+The fitted candidate is in `eval/cache/calibration.json`. It is **not promoted** to `data/calibration.json`: it fails unchanged golden/demo confidence checks (NS31 below the required confidence, uncalibrated voucher confidence, an extra Ops question). The demo keeps its existing priors. No confidence threshold or expected fixture was weakened.
 Each fitted kind has five held-out reliability bins with counts and Wilson 95% intervals in `proof.json`. Missing kinds remain explicitly uncalibrated; empty bins are not evidence of accuracy.
 Plain-Claude baseline: **{report.baseline['status']}**, {report.baseline['runs']} completed runs. No live API key was available. There is no measured claim that Claude is less accurate or nondeterministic. `python -m eval.baseline --prepare` writes the nine matched-input requests; `--live` runs through the shared capped Batches wrapper when credentials are supplied.
 Reader prompt-injection regression: {report.injections['facts_only']}/{report.injections['attempted']} facts-only results against **hand-written** cache recordings. This tests validation and wiring, not live model resistance.
@@ -95,6 +96,7 @@ Reader prompt-injection regression: {report.injections['facts_only']}/{report.in
 ## Coverage limits
 
 {chr(10).join('- ' + s for s in status)}
+Ambiguous generated cancellations by split (deliberately hidden crew failures with weather/OCC records): {cache.get('world_diagnostics', {})}.
 The fitted cause model is synthetic development data, not a production guarantee. All outputs remain drafts requiring the repository's existing role approvals.
 
 Input manifest: `cache/manifest.json`. Metric inputs and controls: `cache/results.json`. Independent answer keys: `data/answer_key/`. No labels are copied from engine decisions.
@@ -139,13 +141,18 @@ def main():
             "held_out_storms": len({d["date"] for d in generated.world.meta["days"]
                                     if d["split"] == "test" and d["kind"] == "storm"}),
             "injections": injection_check(),
+            "world_diagnostics": {split: {
+                "non_golden_cancelled": sum(t.split == split and t.status == "cancelled" and not t.golden
+                                             for t in generated.truth.flights.values()),
+                "ambiguous": sum(t.split == split and t.ambiguous and not t.golden
+                                 for t in generated.truth.flights.values())} for split in ("train", "test")},
             "baseline": {"model": "claude-opus-5-5", "status": "not_run_missing_credentials", "runs": 0,
                          "liability_eur": [], "cause_accuracy": [], "hash_identical": None},
             "coverage_gaps": [
                 "Cause calibration only: voucher, release and claim-validity correctness datasets are not fitted.",
                 "The supplemental stress corpus has five input cases per error type per split (140 total); it is separate from natural-world accuracy and is not yet a full scored end-to-end claim benchmark.",
                 "The fitted candidate fails golden/demo confidence acceptance and has not been promoted to runtime data/calibration.json.",
-                "Repeat-question and scope metrics cover the explicit golden Q1/Q2 replay, not every held-out flight.",
+                "Repeat-question and scope metrics cover the explicit golden Q1/Q2/Q3 replay, not every held-out flight.",
                 "Historic reduction policy is supplied, not learned by the unfinished policy miner.",
                 "No paid baseline or live model outputs were available; CP3 is not complete."]}
         write_json(cache_path, cache)

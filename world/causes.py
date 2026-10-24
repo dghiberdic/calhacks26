@@ -105,4 +105,5 @@ ATC_STRIKE_COUNTRIES = ("FR", "ES", "IT", "PT", "CH")
 P_SPARE_CALM = 0.7
 P_SPARE_STORM = 0.4
 P_OCC_MISBATCH = 0.8          # storm day: a non-weather cancellation known before the batch gets RSN 71 anyway
+P_HIDDEN_CREW_IN_WEATHER = 0.30  # positioned weather draws only; yields about 5% ambiguous cancellations overall
 P_REROUTE_EARLIEST = 0.85

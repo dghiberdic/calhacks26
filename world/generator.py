@@ -36,7 +36,7 @@ from world.airports import airport, distance_km
 from world.days import WorldDay
 from world.metar import pinned_day
 
-GENERATOR_VERSION = "northstar-gen@1"
+GENERATOR_VERSION = "northstar-gen@2"
 CARRIER = "Northstar Air"
 WX_LATENT = ("weather_dep", "weather_arr")
 EXTRAORDINARY_LATENT = frozenset({"weather_dep", "weather_arr", "external_hit", "atc"})
@@ -291,7 +291,10 @@ class DaySim:
                     cancel = Cancel(a.latent, a.logged_at, defect_entry=a.entry_id,
                                     spare={"spare": None, "station": s.origin} if s.origin == N.HUB else None)
             elif wx:
-                cancel = Cancel(wx_latent, self._wx_known(s))
+                # Some latent crew failures have exactly the same visible storm/OCC records as weather.
+                # Draw independently of the engine's features; these are deliberately unresolvable from them.
+                hidden_crew = u_crew < C.P_HIDDEN_CREW_IN_WEATHER
+                cancel = Cancel("crew" if hidden_crew else wx_latent, self._wx_known(s))
             elif u_crew < (C.P_CREW_STORM_LATE if self.storm and s.std.hour >= 13 else C.P_CREW):
                 cancel = Cancel("crew", s.std - timedelta(minutes=60 + int(u_delay * 90)))
             elif atc_strike and self._atc_affected(s) and u_atc < C.P_ATC_CANCEL:
@@ -480,7 +483,7 @@ class DaySim:
 
     def _link_rotations(self, sectors: list[N.Sector], actual: dict[str, str]) -> None:
         by_id = {f.id: f for f in self.out.flights}
-        for tail, secs in N.tail_rotation(sectors).items():
+        for secs in N.tail_rotation(sectors).values():
             prev: N.Sector | None = None
             for s in secs:
                 f = by_id[s.id]

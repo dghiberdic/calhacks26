@@ -59,10 +59,21 @@ def replay_once():
         question = next(q for q in run.questions if q.pattern == pattern)
         lifecycle.answer(question, question.recommended_option, text, session, at)
         lifecycle.confirm(rid, session, at)
+    ctl_at = datetime(2025, 1, 25, 11, tzinfo=UTC)
+    controller = Session(principal="controller:eval", role=Role.CONTROLLER, name="eval", issued_at=DAY1)
+    release = next(q for q in run.questions if q.pattern == "cohort_release")
+    lifecycle.reject(release,
+        "Never release the tail. At M12 keep (ultimate − M12 rate) × entitlement until the six-year limitation.",
+        controller, ctl_at)
+    lifecycle.confirm("R-CTL-1", controller, ctl_at)
+    tail = books.gl_balance("2140", cohort="EIDW@2024-01-21")
+    # Proposing a broader rule must not activate it; the controller still needs to confirm the proposal.
+    lifecycle.widen("R-CTL-1", controller, ctl_at)
+    broadened = any(r.id == "R-CTL-1" and not r.scope for r in lifecycle.rules_at(ctl_at))
     after = books.gl_balance("2140", cohort=run.id)
     later_at = datetime(2025, 1, 25, 12, tzinfo=UTC)
     later = engine.run_storm(world, "EIDW", date(2025, 1, 24), lifecycle.rules_at(later_at), later_at)
-    resolved = {"voucher_in_lieu_unsigned", "knock_on_return"}
+    resolved = {"voucher_in_lieu_unsigned", "knock_on_return", "cohort_release"}
     repeat = sum(q.pattern in resolved for q in later.questions)
     herm_at = datetime(2025, 1, 27, 6, tzinfo=UTC)
     herm_rules = lifecycle.rules_at(herm_at)
@@ -75,11 +86,11 @@ def replay_once():
                 "in_scope_coupons": len(applied),
                 "out_of_scope_questions": sum(q.pattern == "voucher_in_lieu_unsigned" and
                                                bool(set(q.case_refs) & outside) for q in herm.questions)}
-    payload = {"before_cents": before, "after_cents": after,
+    payload = {"before_cents": before, "after_cents": after, "tail_cents": tail, "widen_active": broadened,
                "decisions": [d.model_dump(mode="json") for d in decisions],
                "settled_coupons": sorted(applied), "controls": controls}
     digest = sha256(orjson.dumps(payload, option=orjson.OPT_SORT_KEYS)).hexdigest()
-    return before, after, digest, controls
+    return before, after, digest, controls, tail, broadened
 
 
 def replay_three():
@@ -88,5 +99,7 @@ def replay_three():
     return {"runs": 3, "liability_eur": [r[1] / 100 for r in runs],
             "pre_legal_liability_eur": [r[0] / 100 for r in runs], "hashes": hashes,
             "hash_identical": len(set(hashes)) == 1,
-            "phase": "after simulated Claims Lead and Legal rulings; real engine/trace/books",
+            "tail_kept_eur": [r[4] / 100 for r in runs],
+            "unconfirmed_widen_applied": any(r[5] for r in runs),
+            "phase": "after simulated Claims Lead, Legal and Controller rulings; real engine/trace/books",
             "policy_source": "supplied historical reduction fixture; no miner or LLM benchmark"}, runs[0][3]

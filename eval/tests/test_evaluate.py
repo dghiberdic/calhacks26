@@ -3,7 +3,7 @@ from eval.evaluate import summarize
 
 def test_metrics_count_passengers_and_only_genuine_weather_miscodes():
     rows = [
-        {"split": "test", "day": "2025-02-01", "flight_id": "A", "passengers": 100,
+        {"split": "test", "day": "2025-02-01", "flight_id": "A", "golden": True, "passengers": 100,
          "auto_passengers": 80, "correct": True, "miscoded": True, "caught": True,
          "truth_pay_cents": 6000000, "false_hold": False, "preview_cents": 2100000,
          "ultimate_cents": 2100000, "claimed_cents": 1000000},
@@ -23,6 +23,9 @@ def test_metrics_count_passengers_and_only_genuine_weather_miscodes():
     assert m["false_holds"] == 1
     assert m["liability_vs_actual"]["preview_eur"] == 26000
     assert m["liability_vs_actual"]["ultimate_expected_eur"] == 21000
+    assert m["liability_vs_actual"]["non_golden_cancellations"] == 1
+    assert m["liability_vs_actual"]["non_golden_cause_accuracy"] == 0
+    assert m["liability_vs_actual"]["curated_golden_cancellations"] == 1
 
 
 def test_golden_replay_measures_rulings_scope_and_identical_accounting():
@@ -32,6 +35,8 @@ def test_golden_replay_measures_rulings_scope_and_identical_accounting():
     assert result["liability_eur"] == [34650, 34650, 34650]
     assert result["pre_legal_liability_eur"] == [82146, 82146, 82146]
     assert result["hash_identical"] is True
+    assert result["tail_kept_eur"] == [3600, 3600, 3600]
+    assert result["unconfirmed_widen_applied"] is False
     assert len(set(result["hashes"])) == 1
     assert controls == {"repeat_questions": 0, "out_of_scope_auto": 0,
                         "in_scope_coupons": 31, "out_of_scope_questions": 1}

@@ -1,5 +1,9 @@
 # world/ decisions (Filip lane A)
 
+## F3a ambiguity coverage
+
+The original fixed-seed corpus had no ambiguous records. A deterministic hidden-crew draw in the positioned-weather branch now creates the planned unobservable cases in both splits, while leaving METAR and the immutable golden slice untouched. OCC coding still runs normally. Tests check the observed prevalence and hidden-cause semantics; the proof reports exact split counts. This is an intentional simulated error rate, not a claim about real airline operations.
+
 ## F3d · Judge-day WorldAPI
 
 - `world.api.WorldImpl` supplies the public load/weather/airport/day interfaces. `world.generate.generate_day`

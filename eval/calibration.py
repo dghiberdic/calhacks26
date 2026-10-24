@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import math
+from hashlib import sha256
 from typing import Any
 
+import orjson
 from sklearn.linear_model import LogisticRegression
 
 from contracts import calibration
@@ -33,7 +35,8 @@ def fit_calibration(records: list[dict[str, Any]], version: str = "cal-synthetic
             "trained_on": "2023-07-01..2024-12-31",
             "n": len(rows),
         }
-    result = {"version": version, "note": LABEL, "models": models}
+    digest = sha256(orjson.dumps(models, option=orjson.OPT_SORT_KEYS)).hexdigest()[:12]
+    result = {"version": f"{version}-{digest}", "note": LABEL, "models": models}
     errors = calibration.validate(result)
     if errors:
         raise ValueError("; ".join(errors))

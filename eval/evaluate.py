@@ -36,7 +36,7 @@ def collect(world: World, keys: dict, calibration: dict) -> list[dict]:
     rows = []
     for split in ("train", "test"):
         key = keys[split]
-        days = sorted({f["day"] for f in key["flights"].values() if f["status"] == "cancelled"})
+        days = sorted({f["day"] for f in key["flights"].values()})
         for day_text in days:
             day = date.fromisoformat(day_text)
             sample = day_world(world, day)
@@ -67,6 +67,7 @@ def collect(world: World, keys: dict, calibration: dict) -> list[dict]:
                 claimed = sum(c["pay_cents"] for c in key["claims"].values()
                               if c["coupon_id"] in coupons and c["valid"])
                 rows.append({"split": split, "day": day_text, "flight_id": f.id, "kind": "cause",
+                    "golden": bool(truth.get("golden", False)),
                     "features": d.confidence.features, "correct": correct, "passengers": len(coupons),
                     "auto_passengers": sum(e.coupon_id not in held_coupons and e.status not in {"held", "needs_ruling"}
                                            for e in ents) if d.outcome == "auto" else 0,
@@ -84,6 +85,7 @@ def collect(world: World, keys: dict, calibration: dict) -> list[dict]:
 
 def summarize(rows: list[dict]) -> dict:
     test = [r for r in rows if r["split"] == "test"]
+    natural = [r for r in test if not r.get("golden", False)]
     n = sum(r["passengers"] for r in test)
     return {"n_passengers": n,
         "straight_through_pct": round(100 * sum(r["auto_passengers"] for r in test) / n, 6) if n else 0.0,
@@ -94,4 +96,6 @@ def summarize(rows: list[dict]) -> dict:
         "liability_vs_actual": {"preview_eur": sum(r["preview_cents"] for r in test) / 100,
             "ultimate_expected_eur": sum(r["ultimate_cents"] for r in test) / 100,
             "valid_claims_through_2026_06_30_eur": sum(r["claimed_cents"] for r in test) / 100,
-            "flight_cause_and_extraordinary_accuracy": sum(r["correct"] for r in test) / len(test) if test else 0.0}}
+            "flight_cause_and_extraordinary_accuracy": sum(r["correct"] for r in test) / len(test) if test else 0.0,
+            "non_golden_cancellations": len(natural), "curated_golden_cancellations": len(test) - len(natural),
+            "non_golden_cause_accuracy": sum(r["correct"] for r in natural) / len(natural) if natural else 0.0}}
