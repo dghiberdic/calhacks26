@@ -272,7 +272,7 @@ function Recorded({ answer }: { answer: AnswerResponse }) {
     <div className="flex flex-col gap-2" data-testid="recorded">
       <MicroLabel>Ruling recorded</MicroLabel>
       <p className="text-[15px] font-semibold text-navy-900">&ldquo;{answer.ruling.decision}&rdquo;</p>
-      <p className="text-[13px] leading-relaxed text-slate-500">No rule was proposed from it: the case is settled as you ruled, and the next one like it will be asked again.</p>
+      <p className="text-[13px] leading-relaxed text-slate-500">Recorded as your ruling on this case. No rule was proposed from it, so a case like it will be asked again.</p>
     </div>
   );
 }

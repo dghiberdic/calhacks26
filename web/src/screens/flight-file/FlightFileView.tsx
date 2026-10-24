@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { MotionConfig } from "motion/react";
 import { ApiError } from "@/api/client";
 import { useFlightFile, useStormRun, useStorms } from "@/api/queries";
-import type { FlightFile, MetarObs, StormSummary, StormWindow } from "@/api/types";
+import type { Flight, FlightFile, MetarObs, StormSummary, StormWindow } from "@/api/types";
 import { EvidenceList, TIER_NAME } from "@/components/evidence";
 import { Empty, ErrorNote, Shimmer } from "@/components/kit";
 import { verdictOf } from "@/components/verdict";
@@ -19,17 +19,24 @@ import { PassengersPanel } from "./PassengersPanel";
 import { RulesPanel } from "./RulesPanel";
 import { VerdictCover } from "./VerdictCover";
 
-/** The storm run a flight belongs to: same date, else the nearest day (overnight inbounds), else the first. */
-function stormFor(storms: StormSummary[] | undefined, date: string | undefined) {
-  if (!storms?.length || !date) return undefined;
-  const t = Date.parse(date);
-  return storms.find((s) => s.date === date) ?? storms.find((s) => Math.abs(Date.parse(s.date) - t) <= 86_400_000) ?? storms[0];
+/**
+ * The storm run a flight belongs to: its local date, else the UTC day it arrives (overnight inbounds land
+ * on the storm's day), else the day it leaves, else the nearest storm within a day.
+ */
+function stormFor(storms: StormSummary[] | undefined, flight: Flight | undefined) {
+  if (!storms?.length || !flight) return undefined;
+  for (const day of [flight.date, flight.sched_arr.slice(0, 10), flight.sched_dep.slice(0, 10)]) {
+    const hit = storms.find((s) => s.date === day);
+    if (hit) return hit;
+  }
+  const t = Date.parse(flight.date);
+  return storms.find((s) => Math.abs(Date.parse(s.date) - t) <= 86_400_000) ?? storms[0];
 }
 
 export default function FlightFileView({ flightId }: { flightId: string }) {
   const file = useFlightFile(flightId);
   const storms = useStorms();
-  const storm = stormFor(storms.data, file.data?.flight.date);
+  const storm = stormFor(storms.data, file.data?.flight);
   const run = useStormRun(storm?.id);
 
   if (file.isError) {
@@ -52,7 +59,7 @@ export default function FlightFileView({ flightId }: { flightId: string }) {
   const stormLabel = storm ? [stormName(storm.id) ?? storm.station, longDate(storm.date)].join(" · ") : null;
   return (
     <MotionConfig reducedMotion="user">
-      <FileBody file={file.data} stormLabel={stormLabel} hub={iataOf(run.data?.station ?? storm?.station ?? "")} windows={run.data?.windows} metar={run.data?.metar} />
+      <FileBody file={file.data} stormLabel={stormLabel} stormId={storm?.id} hub={iataOf(run.data?.station ?? storm?.station ?? "")} windows={run.data?.windows} metar={run.data?.metar} />
     </MotionConfig>
   );
 }
@@ -92,7 +99,7 @@ function useRailTop(header: number) {
   return [ref, top] as const;
 }
 
-function FileBody({ file, stormLabel, hub, windows, metar }: { file: FlightFile; stormLabel: string | null; hub: string; windows?: StormWindow[]; metar?: MetarObs[] }) {
+function FileBody({ file, stormLabel, stormId, hub, windows, metar }: { file: FlightFile; stormLabel: string | null; stormId?: string; hub: string; windows?: StormWindow[]; metar?: MetarObs[] }) {
   const kind = useMemo(() => verdictOf({ flight: file.flight, decision: file.decision }), [file]);
   const [railRef, railTop] = useRailTop(80);
   const d = file.decision;
@@ -100,11 +107,11 @@ function FileBody({ file, stormLabel, hub, windows, metar }: { file: FlightFile;
 
   return (
     <Frame>
-      <VerdictCover file={file} kind={kind} stormLabel={stormLabel} />
+      <VerdictCover file={file} kind={kind} stormLabel={stormLabel} stormId={stormId} />
 
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_372px]">
         <aside ref={railRef} className="flex flex-col gap-6 lg:sticky lg:col-start-2 lg:row-start-1" style={{ top: railTop }} aria-label="Confidence and money">
-          <ConfidenceCard confidence={d.confidence} reason={d.reason} />
+          {kind === "operated" ? null : <ConfidenceCard confidence={d.confidence} reason={d.reason} />}
           <MoneyCard file={file} kind={kind} />
         </aside>
 
@@ -152,7 +159,7 @@ function FileBody({ file, stormLabel, hub, windows, metar }: { file: FlightFile;
           {file.journal_preview?.length ? <JournalDrafts entries={file.journal_preview} /> : null}
 
           <RulesPanel decision={d} />
-          <ChallengePanel flightId={file.flight.id} kind={kind} />
+          {kind === "operated" ? null : <ChallengePanel flightId={file.flight.id} kind={kind} />}
         </div>
       </div>
     </Frame>

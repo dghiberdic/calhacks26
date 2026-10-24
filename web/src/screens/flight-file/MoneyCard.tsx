@@ -37,10 +37,12 @@ export function MoneyCard({ file, kind, className }: { file: FlightFile; kind: V
   const breakdown = breakdownText(summary);
   const cut = reductionOf(summary);
   const estimate = file.journal_preview?.find((j) => j.kind === "compensation_estimate");
-  const showLiability = kind !== "weather" && liability !== null && liability > 0;
+  const showLiability = kind !== "weather" && kind !== "operated" && liability !== null && liability > 0;
 
   const headline =
-    kind === "weather"
+    kind === "operated"
+      ? { label: "Operated", note: capitalize(summaryText(summary, "status_line") ?? "flew as scheduled; nothing to settle") }
+      : kind === "weather"
       ? { label: "No compensation", note: "No compensation; refunds and care still due" }
       : kind === "held"
         ? { label: "Accrued, held for a ruling", note: "under the IFRS 15.56 constraint, at the segment's claim rate" }
@@ -59,7 +61,7 @@ export function MoneyCard({ file, kind, className }: { file: FlightFile; kind: V
           </p>
         ) : null}
         <p className={cn(showLiability ? "mt-2 text-[13px] text-slate-500" : "mt-2 text-[14px] text-navy-900")}>{headline.note}</p>
-        {rateLine && kind !== "weather" ? <p className="mt-1 text-[13px] leading-snug text-slate-500">{capitalize(rateLine)}</p> : null}
+        {rateLine && kind !== "weather" && kind !== "operated" ? <p className="mt-1 text-[13px] leading-snug text-slate-500">{capitalize(rateLine)}</p> : null}
       </div>
 
       <dl className="flex flex-col gap-2.5 border-t border-cloud-100 px-5 py-3.5 text-[13px]">

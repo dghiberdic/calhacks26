@@ -38,19 +38,20 @@ function windowChip(file: FlightFile): string | null {
   return margin !== null && margin !== undefined ? `outside the storm window · ${duration(Math.abs(margin))} clear` : "outside the storm window at both ends";
 }
 
-export function VerdictCover({ file, kind, stormLabel }: { file: FlightFile; kind: VerdictKind; stormLabel: string | null }) {
+export function VerdictCover({ file, kind, stormLabel, stormId }: { file: FlightFile; kind: VerdictKind; stormLabel: string | null; stormId?: string }) {
   const { flight, decision } = file;
-  const chip = verdictChip(decision);
+  // An operated flight has nothing to decide; key off its status, never off a placeholder decision.
+  const chip = kind === "operated" ? { text: "operated", tone: "slate" as const } : verdictChip(decision);
   const recode = decision.recoded ? splitRecode(decision.recode_label, decision) : null;
   const payouts = kind === "notweather" ? payoutsDrafted(file.entitlements_summary ?? {}) : null;
   // The server's own status line first ("172 payouts drafted, pending Claims Lead approval"), else the plan's wording.
   const effect = summaryText(file.entitlements_summary, "status_line") ?? (kind === "notweather" ? (payouts ? `${count(payouts)} payouts drafted, pending Claims Lead approval` : null) : consequence(kind));
-  const window = windowChip(file);
+  const window = kind === "operated" ? null : windowChip(file);
 
   return (
     <header>
       <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[13px] text-slate-500">
-        <Link to="/flights" className="-ml-1 inline-flex items-center gap-0.5 rounded px-1 py-0.5 hover:bg-cloud-100 hover:text-navy-900">
+        <Link to={stormId ? `/flights?storm=${encodeURIComponent(stormId)}` : "/flights"} className="-ml-1 inline-flex items-center gap-0.5 rounded px-1 py-0.5 hover:bg-cloud-100 hover:text-navy-900">
           <ChevronLeft className="size-3.5" aria-hidden="true" />
           Flight File
         </Link>
