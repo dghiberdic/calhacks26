@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type { AircraftProgress } from "./aircraft/AircraftScene";
-import { sideView, topView, hydraulicRoutes, A321NEO } from "@/lib/drawings/aircraft";
+import { hydraulicRoutes, A321NEO } from "@/lib/drawings/aircraft";
+import { SIDE_LINES, SIDE_VIEW, TOP_LINES, TOP_VIEW } from "@/data/geo/lineart";
 import { NS31 } from "@/data/scenario";
 import { gsap, useGSAP } from "@/components/motion/gsap";
 
@@ -18,8 +19,6 @@ const AircraftScene = dynamic(() => import("./aircraft/AircraftScene").then((m) 
  */
 export function AircraftBlueprint({ render }: { render?: { src: string; lines?: string } }) {
   const root = useRef<HTMLDivElement>(null);
-  const side = useMemo(() => sideView(), []);
-  const plan = useMemo(() => topView(), []);
   const hyd = useMemo(() => hydraulicRoutes(), []);
   const progress = useRef<AircraftProgress>({ sweep: 0, orbit: 0, lines: 1, leak: 0 });
   const column = useRef<HTMLDivElement>(null);
@@ -44,11 +43,9 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
           scrollTrigger: { trigger: root.current, start: "top top", end: "+=260%", scrub: 0.7, pin: true, anticipatePin: 1, refreshPriority: 1 },
         });
         tl.from(".bp-frame", { drawSVG: 0, duration: 0.5, ease: "power1.inOut" })
-          .from(".bp-side-outline", { drawSVG: 0, duration: 1.4, stagger: 0.05 }, 0.2)
-          .from(".bp-side-detail", { drawSVG: 0, opacity: 0, duration: 0.8, stagger: 0.04 }, 0.9)
+          .from(".bp-side-outline", { drawSVG: 0, duration: 0.7, stagger: { amount: 1.5 } }, 0.2)
           .from(".bp-dim", { opacity: 0, duration: 0.4, stagger: 0.1 }, 1.4)
-          .from(".bp-plan-outline", { drawSVG: 0, duration: 1.2, stagger: 0.05 }, 1.6)
-          .from(".bp-plan-detail", { opacity: 0, duration: 0.5 }, 2.3)
+          .from(".bp-plan-outline", { drawSVG: 0, duration: 0.6, stagger: { amount: 1.1 } }, 1.6)
           .from(".bp-hyd-blue", { drawSVG: 0, duration: 0.8 }, 2.6)
           .from(".bp-hyd-yellow", { drawSVG: 0, duration: 0.8 }, 2.75)
           .from(".bp-hyd-green", { drawSVG: 0, duration: 0.8 }, 2.9)
@@ -87,7 +84,6 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
     { scope: root },
   );
 
-  const outline = (k: string) => k === "outline";
   return (
     <div ref={root} className="relative flex min-h-svh flex-col justify-center overflow-hidden bg-cyanotype py-12 text-blueprint-line">
       {/* drafting grid + grain */}
@@ -115,19 +111,11 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
           {/* side elevation */}
           <svg ref={sideRef} viewBox="-3 -13.4 53 15.6" className="bp-side relative w-full" role="img" aria-label="Side elevation of the Airbus A321neo EI-NSA, 44.51 metres long and 11.76 metres tall.">
             <rect className="bp-frame" x="-2.6" y="-13.1" width="52.2" height="15" fill="none" stroke={LINE} strokeOpacity="0.5" strokeWidth="0.04" />
-            {side.map((s, i) => (
-              <path
-                key={i}
-                className={outline(s.kind) ? "bp-side-outline" : "bp-side-detail"}
-                d={s.d}
-                fill="none"
-                stroke={LINE}
-                strokeWidth={outline(s.kind) ? 0.075 : 0.045}
-                strokeOpacity={outline(s.kind) ? 1 : 0.7}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-            ))}
+            <g transform={`scale(${SIDE_VIEW.mpp}) translate(${-SIDE_VIEW.noseX} ${-SIDE_VIEW.groundY})`}>
+              {SIDE_LINES.map((d, i) => (
+                <path key={i} className="bp-side-outline" d={d} fill="none" stroke={LINE} strokeWidth={2.4} strokeLinejoin="round" strokeLinecap="round" />
+              ))}
+            </g>
             <g className="bp-dim" stroke={LINE} strokeWidth="0.03" fill="none" opacity="0.8">
               <path d="M0,0.6 L0,1.7 M44.51,0.6 L44.51,1.7 M0,1.35 L44.51,1.35" />
               <path d="M-0.25,1.6 L0.25,1.1 M44.26,1.6 L44.76,1.1" />
@@ -146,18 +134,11 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
 
           {/* plan view with hydraulic systems */}
           <svg viewBox="-2 -19.4 49 38.8" className="bp-plan mx-auto mt-4 w-[78%]" role="img" aria-label="Plan view with the three hydraulic systems. The green system's engine-1 pump is marked as the leak.">
-            {plan.map((s, i) => (
-              <path
-                key={i}
-                className={outline(s.kind) ? "bp-plan-outline" : "bp-plan-detail"}
-                d={s.d}
-                fill="none"
-                stroke={LINE}
-                strokeWidth={outline(s.kind) ? 0.08 : 0.045}
-                strokeOpacity={outline(s.kind) ? 0.95 : 0.55}
-                strokeLinejoin="round"
-              />
-            ))}
+            <g transform={`scale(${TOP_VIEW.mpp}) translate(${-TOP_VIEW.noseX} ${-TOP_VIEW.centreY})`}>
+              {TOP_LINES.map((d, i) => (
+                <path key={i} className="bp-plan-outline" d={d} fill="none" stroke={LINE} strokeOpacity={0.9} strokeWidth={2.6} strokeLinejoin="round" />
+              ))}
+            </g>
             <path className="bp-hyd-blue" d={hyd.blue.d} fill="none" stroke="var(--color-hyd-blue)" strokeWidth="0.17" strokeLinecap="round" strokeLinejoin="round" />
             <path className="bp-hyd-yellow" d={hyd.yellow.d} fill="none" stroke="var(--color-hyd-yellow)" strokeWidth="0.17" strokeLinecap="round" strokeLinejoin="round" />
             <path className="bp-hyd-green" d={hyd.green.d} fill="none" stroke="var(--color-hyd-green)" strokeWidth="0.2" strokeLinecap="round" strokeLinejoin="round" />
