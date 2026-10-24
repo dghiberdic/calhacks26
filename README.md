@@ -42,7 +42,7 @@ Open http://localhost:8000. Reset to the demo baseline with `curl -X POST localh
 ```bash
 make stub                      # contract stub API on :8001, served from fixtures
 make dev                       # real server on :8000 (serves web/dist if it exists)
-cd web && pnpm i && pnpm dev   # frontend on :5173, proxies /api
+cd web && pnpm i && pnpm dev   # frontend on :5173, proxies /api to :8001 (API_TARGET=http://localhost:8000 for the server)
 make openapi                   # regenerate contracts/openapi.json from the stub
 cd web && pnpm gen:api         # regenerate the TypeScript API types from it
 make record                    # record a full demo run into demo/recorded/
@@ -60,7 +60,8 @@ scripts/land.sh                # merge origin/main, run checks, push (needs STOR
 **Modes**
 - `STORMCHECK_MODE=live|cache|offline` (default `cache`) and `LLM_MODE=live|cache|offline`.
 - `READER_IMPL`, `DRAFTER_IMPL`, `BOOKS_IMPL`, `WORLD_IMPL` and `ENGINE_IMPL` are each `fake|real`.
-- The recorded build (`VITE_MODE=recorded`) serves `demo/recorded/` with no backend. It's deployed at `{{links.recorded_build}}`.
+- The recorded build (`cd web && pnpm build:recorded`) serves `demo/recorded/` with no backend. It's deployed at `{{links.recorded_build}}`.
+- `cd web && pnpm dev:mock` runs the frontend on an in-memory world typed from `CONTRACTS.md`, with no backend at all.
 
 ## Architecture
 
