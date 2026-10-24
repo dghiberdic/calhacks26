@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useLocation } from "react-router";
 import { useAccessLog, useAccessMatrix } from "@/api/queries";
 import type { AccessCell, AccessDecision, AccessMatrix } from "@/api/types";
@@ -64,7 +64,7 @@ function Matrix({ matrix }: { matrix: AccessMatrix }) {
   const principals = useMemo(() => orderPrincipals(matrix.principals), [matrix.principals]);
   const firstAgent = principals.findIndex((p) => isAgent(p));
   return (
-    <div className="relative overflow-x-auto overscroll-x-contain focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-metar-ink" role="region" aria-label="Access matrix" tabIndex={0}>
+    <div className="relative overflow-x-auto overscroll-x-contain focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-metar-ink" style={SCROLL_SHADOWS} role="region" aria-label="Access matrix" tabIndex={0}>
       <table className="w-full min-w-[760px] border-separate border-spacing-0 text-[12.5px]">
         <caption className="sr-only">Access by principal and resource: approve, write, read, redacted or none</caption>
         <thead>
@@ -112,6 +112,12 @@ function Matrix({ matrix }: { matrix: AccessMatrix }) {
     </div>
   );
 }
+
+/** Shadows at an edge only while there is more matrix to scroll that way (backgrounds attached to the content cover them at the ends). */
+const SCROLL_SHADOWS: CSSProperties = {
+  background:
+    "linear-gradient(to right, var(--color-card) 40%, transparent) left center / 48px 100% no-repeat local, linear-gradient(to left, var(--color-card) 40%, transparent) right center / 48px 100% no-repeat local, radial-gradient(farthest-side at 0 50%, rgba(13,21,36,0.10), transparent) left center / 14px 100% no-repeat scroll, radial-gradient(farthest-side at 100% 50%, rgba(13,21,36,0.10), transparent) right center / 14px 100% no-repeat scroll",
+};
 
 /** Let long resource ids wrap after "_" and "." (zero-width spaces; the id itself is unchanged in the API). */
 const softBreaks = (id: string) => id.replace(/([_.])/g, "$1\u200b");
