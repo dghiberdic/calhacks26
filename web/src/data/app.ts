@@ -55,7 +55,7 @@ export const QUESTIONS: Question[] = [
         rule: {
           id: "R-7",
           version: 1,
-          sentence: "A gate voucher is offset against EU261 compensation only with a signed acceptance.",
+          sentence: "A gate voucher is offset against EU261 compensation only with a signed acceptance. A CRM \u201caccepted\u201d flag is not one (Art. 7(3)).",
           highlight: "only with a signed acceptance",
           scope: "Flights departing the EU",
           replay: "Changes 0 past decisions. Applies to 31 open cases.",
@@ -139,7 +139,7 @@ export type Journal = { id: string; when: string; memo: string; status: "drafted
 export const JOURNAL: Journal[] = [
   { id: "JE-2041", when: "10 Dec 09:00Z", memo: "NS31 recoded weather → technical. EU261 exposure at learned claim rate.", status: "held", source: "R-3 v2 · R-6 v4", lines: [{ account: "6410 Passenger compensation", dr: NS31.provision }, { account: "2350 EU261 claims provision", cr: NS31.provision }] },
   { id: "JE-2040", when: "10 Dec 09:00Z", memo: "Refunds for 13 weather cancellations (never revenue).", status: "drafted", source: "R-1 v2 · Art. 8", lines: [{ account: "2400 Air traffic liability", dr: 1_421_380 }, { account: "2410 Refunds payable", cr: 1_421_380 }] },
-  { id: "JE-2039", when: "10 Dec 09:00Z", memo: "Vouchers accepted instead of cash, with expected breakage.", status: "drafted", source: "R-7 v1", lines: [{ account: "2400 Air traffic liability", dr: 41_700 }, { account: "2420 Voucher liability", cr: 41_700 }] },
+  { id: "JE-2039", when: "10 Dec 09:00Z", memo: "Vouchers accepted instead of cash, with expected breakage.", status: "drafted", source: "Art. 7(3) · signed only", lines: [{ account: "2400 Air traffic liability", dr: 41_700 }, { account: "2420 Voucher liability", cr: 41_700 }] },
   { id: "JE-2038", when: "10 Dec 09:00Z", memo: "Hotels and meals for stranded passengers, accrued.", status: "drafted", source: "R-8 v1", lines: [{ account: "6420 Passenger care", dr: 57_680 }, { account: "2360 Accrued care costs", cr: 57_680 }] },
 ];
 

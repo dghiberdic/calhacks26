@@ -44,7 +44,8 @@ export function RollingNumber({
   );
 
   return (
-    <span ref={root} className={cn("tabular inline-flex overflow-hidden leading-[1.12em]", className)} aria-label={text} role="text">
+    <span ref={root} className={cn("tabular inline-flex overflow-hidden leading-[1.12em]", className)}>
+      <span className="sr-only">{text}</span>
       {Array.from(text).map((c, i) =>
         /\d/.test(c) ? (
           <span key={i} aria-hidden="true" className="relative inline-block h-[1.12em] overflow-hidden">

@@ -56,7 +56,7 @@ export function AskOnce() {
             <span className="font-mono text-[13px] text-graphite">R-7 v1</span>
           </header>
           <p className="mt-5 text-[19px] leading-snug text-ink">
-            {"A gate voucher is offset against EU261 compensation only with a signed acceptance.".split(" ").map((w, i) => (
+            {"A gate voucher is offset against EU261 compensation only with a signed acceptance, as Art. 7(3) requires.".split(" ").map((w, i) => (
               <span key={i} className="ao-rule-word">
                 {w}{" "}
               </span>

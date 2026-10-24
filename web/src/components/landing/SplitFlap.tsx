@@ -103,7 +103,8 @@ export function FlapText({
 }) {
   const padded = text.toUpperCase().padEnd(width, " ").slice(0, width);
   return (
-    <span className={cn("inline-flex gap-[0.08em]", className)} role="text" aria-label={text}>
+    <span className={cn("inline-flex gap-[0.08em]", className)}>
+      <span className="sr-only">{text}</span>
       {Array.from(padded).map((c, i) => (
         <FlapCell key={i} value={c} delay={delay + i * stagger} className={cellClassName} />
       ))}
