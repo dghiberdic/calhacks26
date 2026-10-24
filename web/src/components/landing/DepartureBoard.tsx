@@ -52,7 +52,7 @@ export function DepartureBoard() {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-md bg-[#0d1117] p-3 md:p-5" data-lenis-prevent>
+      <div className="overflow-x-auto rounded-md bg-[#0d1117] p-3 md:p-5" data-lenis-prevent-horizontal>
         <div className="min-w-[760px] text-[15px] md:text-[19px]">
           <div className="label mb-3 grid grid-cols-[5.2em_6.2em_11.8em_9.4em_4.6em_1fr] gap-x-[0.9em] px-1 text-[11px] text-mist">
             <span>Time</span>

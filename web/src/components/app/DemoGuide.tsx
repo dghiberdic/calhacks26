@@ -27,8 +27,9 @@ export function DemoGuide() {
 
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || e.metaKey || e.ctrlKey) return;
+      const el = e.target as HTMLElement | null;
+      if (el && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable)) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key.toLowerCase() === "g") setOpen((o) => !o);
     };
     window.addEventListener("keydown", on);

@@ -112,7 +112,7 @@ export default function Overview() {
             ))}
           </div>
         </div>
-        <div className="overflow-x-auto" data-lenis-prevent>
+        <div className="overflow-x-auto" data-lenis-prevent-horizontal>
           <table className="w-full min-w-[760px] border-collapse text-[14px]">
             <thead>
               <tr className="text-left text-[13px] text-graphite">

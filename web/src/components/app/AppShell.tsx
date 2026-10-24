@@ -12,6 +12,7 @@ import { CommandPalette } from "./CommandPalette";
 import { AgentRun } from "./AgentRun";
 import { LetterDrawer } from "./LetterDrawer";
 import { DemoGuide } from "./DemoGuide";
+import { ReceiptFromUrl } from "./ReceiptFromUrl";
 import { useApp } from "@/lib/store";
 import { QUESTIONS, ROLES } from "@/data/app";
 import { cn } from "@/lib/cn";
@@ -260,6 +261,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <LetterDrawer />
       <Suspense fallback={null}>
         <DemoGuide />
+        <ReceiptFromUrl />
       </Suspense>
     </div>
   );

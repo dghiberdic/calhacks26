@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { useApp } from "@/lib/store";
-import { payouts, type Payout } from "@/data/app";
+import { payouts, pseudonym, type Payout } from "@/data/app";
 import { FLIGHTS } from "@/data/scenario";
 import { Card, Chip, Money } from "@/components/app/ui";
 import { RollingNumber } from "@/components/motion/RollingNumber";
@@ -16,19 +16,24 @@ const ease = [0.16, 1, 0.3, 1] as const;
 type StatusFilter = "all" | "held" | "asked" | "not owed";
 type RowStatus = Payout["status"] | "approved";
 
-const pseudonym = (p: Payout) => `Passenger ${p.id.split("-").pop()}`;
-
 export function PayoutsPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const flightParam = searchParams.get("flight");
   const { role, openWhy, openLetter } = useApp();
 
   const all = useMemo(() => payouts(), []);
   const heldIds = useMemo(() => all.filter((p) => p.status === "held").map((p) => p.id), [all]);
 
-  const [flight, setFlight] = useState<string>(() => (flightParam && FLIGHTS.some((f) => f.id === flightParam) ? flightParam : "all"));
+  // The flight filter lives in the URL, so "See payouts" from a flight sheet works even while this page is open.
+  const flight = flightParam && FLIGHTS.some((f) => f.id === flightParam) ? flightParam : "all";
   const [status, setStatus] = useState<StatusFilter>("all");
-  const [page, setPage] = useState(0);
+  // The page number belongs to one filter; a new filter starts on page 1.
+  const filterKey = `${flight}|${status}`;
+  const [paging, setPaging] = useState({ key: filterKey, page: 0 });
+  const page = paging.key === filterKey ? paging.page : 0;
+  const setPage = (fn: (v: number) => number) => setPaging({ key: filterKey, page: fn(page) });
   const [approved, setApproved] = useState<Set<string>>(new Set());
   const [confirming, setConfirming] = useState(false);
 
@@ -57,14 +62,8 @@ export function PayoutsPage() {
 
   const canApprove = role === "claims-lead";
 
-  const updateFlight = (v: string) => {
-    setFlight(v);
-    setPage(0);
-  };
-  const updateStatus = (v: StatusFilter) => {
-    setStatus(v);
-    setPage(0);
-  };
+  const updateFlight = (v: string) => router.replace(v === "all" ? pathname : `${pathname}?flight=${v}`, { scroll: false });
+  const updateStatus = (v: StatusFilter) => setStatus(v);
 
   const confirmApprove = () => {
     setApproved((prev) => {
@@ -202,7 +201,7 @@ export function PayoutsPage() {
 
         {role === "ops" && <p className="border-y border-[#f0f0eb] bg-chart px-5 py-2 text-[13px] text-graphite">Names hidden for Ops (GDPR).</p>}
 
-        <div className="overflow-x-auto" data-lenis-prevent>
+        <div className="overflow-x-auto" data-lenis-prevent-horizontal>
           <table className="w-full min-w-[720px] border-collapse text-[14px]">
             <thead>
               <tr className="text-left text-[13px] text-graphite">
@@ -264,7 +263,7 @@ export function PayoutsPage() {
                           )}
                           <button
                             type="button"
-                            onClick={() => openWhy({ kind: "payout", flight: p.flight, passenger: name, amount: p.amount || 600 })}
+                            onClick={() => openWhy({ kind: "payout", id: p.id, flight: p.flight, passenger: name, amount: p.amount || 600 })}
                             className="text-[13px] text-front underline-offset-4 hover:underline"
                           >
                             Why?

@@ -1,12 +1,16 @@
 "use client";
 
+import { useCallback } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { useDialog } from "@/lib/useDialog";
 import { useApp } from "@/lib/store";
 import { FLIGHTS, NS31, tier } from "@/data/scenario";
 
 /** The Drafter's output: the plain-language EU261 letter a passenger would receive. Drafted, never sent. */
 export function LetterDrawer() {
   const { letter, openLetter, role, answered } = useApp();
+  const close = useCallback(() => openLetter(null), [openLetter]);
+  const dialogRef = useDialog<HTMLElement>(!!letter, close);
   const f = FLIGHTS.find((x) => x.id === letter?.flight) ?? NS31.flight;
   const amount = letter?.amount ?? tier(f.km);
   const waiting = letter?.name === "Aoife Byrne" && !answered["Q-12"];
@@ -19,6 +23,8 @@ export function LetterDrawer() {
           <motion.div key="l-s" className="fixed inset-0 z-[60] bg-ink/20" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => openLetter(null)} />
           <motion.aside
             key="l"
+            ref={dialogRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-label={`Letter to ${letter.name}`}

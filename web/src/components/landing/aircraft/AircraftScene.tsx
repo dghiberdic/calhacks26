@@ -14,7 +14,8 @@ import * as THREE from "three";
  * Model space (from Blender): x = metres aft of the nose, y = up, z = port (+) / starboard (−).
  */
 
-export type AircraftProgress = { sweep: number; orbit: number; lines: number; leak: number };
+/** show: how visible the canvas is (0 = faded out, so nothing is drawn). */
+export type AircraftProgress = { sweep: number; orbit: number; lines: number; leak: number; show: number };
 
 const LINE = new THREE.Color("#e8f0fa");
 const SWEEP_MIN = -2;
@@ -39,7 +40,7 @@ function Model({ progress }: { progress: React.RefObject<AircraftProgress> }) {
   const { scene } = useGLTF("/renders/a321.glb");
   const uniforms = useMemo<Uniforms>(() => ({ uSweep: { value: SWEEP_MIN }, uLines: { value: 1 } }), []);
 
-  const { root, edges, ghost } = useMemo(() => {
+  const { root, edges, ghost, jobs } = useMemo(() => {
     const root = scene.clone(true);
     const edges = new THREE.Group();
     const ghost = new THREE.Group();
@@ -75,6 +76,8 @@ function Model({ progress }: { progress: React.RefObject<AircraftProgress> }) {
         }`,
     });
 
+    // EdgesGeometry over ~117k triangles is too slow for one frame: each mesh's edges are a job for idle time.
+    const jobs: (() => void)[] = [];
     root.updateMatrixWorld(true);
     root.traverse((o) => {
       const mesh = o as THREE.Mesh;
@@ -88,18 +91,36 @@ function Model({ progress }: { progress: React.RefObject<AircraftProgress> }) {
       });
       mesh.castShadow = true;
       // blueprint edges + a cyanotype "ghost" fill behind them
-      const eg = new THREE.EdgesGeometry(mesh.geometry, 28);
-      const seg = new THREE.LineSegments(eg, lineMat);
-      seg.applyMatrix4(mesh.matrixWorld);
-      seg.renderOrder = 2;
-      edges.add(seg);
+      let built = false;
+      jobs.push(() => {
+        if (built) return;
+        built = true;
+        const seg = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry, 28), lineMat);
+        seg.applyMatrix4(mesh.matrixWorld);
+        seg.renderOrder = 2;
+        edges.add(seg);
+      });
       const g = new THREE.Mesh(mesh.geometry, ghostMat);
       g.applyMatrix4(mesh.matrixWorld);
       g.renderOrder = 1;
       ghost.add(g);
     });
-    return { root, edges, ghost };
+    return { root, edges, ghost, jobs };
   }, [scene, uniforms]);
+
+  useEffect(() => {
+    const idle = window.requestIdleCallback ?? ((cb: IdleRequestCallback) => window.setTimeout(() => cb({ didTimeout: true, timeRemaining: () => 0 }), 32));
+    const cancel = window.cancelIdleCallback ?? window.clearTimeout;
+    let i = 0;
+    let handle = 0;
+    const step = (deadline: IdleDeadline) => {
+      do jobs[i++]();
+      while (i < jobs.length && deadline.timeRemaining() > 6);
+      if (i < jobs.length) handle = idle(step, { timeout: 400 });
+    };
+    handle = idle(step, { timeout: 400 });
+    return () => cancel(handle);
+  }, [jobs]);
 
   const fans = useMemo(() => ["engine_1_fan", "engine_2_fan"].map((n) => root.getObjectByName(n)).filter(Boolean) as THREE.Object3D[], [root]);
 
@@ -167,37 +188,65 @@ function Leak({ progress }: { progress: React.RefObject<AircraftProgress> }) {
   );
 }
 
+/** With frameloop="demand", a frame is drawn only while the canvas is on screen and not faded out. */
+function Pump({ wrap, progress }: { wrap: React.RefObject<HTMLDivElement | null>; progress: React.RefObject<AircraftProgress> }) {
+  const invalidate = useThree((s) => s.invalidate);
+  useEffect(() => {
+    const el = wrap.current;
+    if (!el) return;
+    let onScreen = false;
+    const io = new IntersectionObserver(([e]) => (onScreen = e.isIntersecting));
+    io.observe(el);
+    let raf = 0;
+    const loop = () => {
+      raf = requestAnimationFrame(loop);
+      if (onScreen && (progress.current?.show ?? 0) > 0.001) invalidate();
+    };
+    raf = requestAnimationFrame(loop);
+    return () => {
+      cancelAnimationFrame(raf);
+      io.disconnect();
+    };
+  }, [wrap, progress, invalidate]);
+  return null;
+}
+
 export function AircraftScene({ progress, className }: { progress: React.RefObject<AircraftProgress>; className?: string }) {
+  const wrap = useRef<HTMLDivElement>(null);
   useEffect(() => {
     useGLTF.preload("/renders/a321.glb");
   }, []);
   return (
-    <Canvas
-      className={className}
-      dpr={[1, 1.75]}
-      gl={{ antialias: true, alpha: true, powerPreference: "high-performance", toneMapping: THREE.ACESFilmicToneMapping, outputColorSpace: THREE.SRGBColorSpace }}
-      camera={{ fov: 4, position: [23.5, 5.6, 700], near: 0.5, far: 1000 }}
-      shadows={false}
-      fallback={
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src="/renders/ns31-hero-render.webp" alt="Rendering of EI-NSA" className="h-full w-full object-contain" />
-      }
-    >
-      <hemisphereLight args={["#dfe8f2", "#1a1f27", 0.6]} />
-      <directionalLight position={[30, 40, 60]} intensity={1.6} color="#fff4e8" />
-      <directionalLight position={[-40, 10, -30]} intensity={0.7} color="#9fc0ff" />
-      <Environment resolution={256} frames={1}>
-        <Lightformer form="rect" intensity={2.2} position={[0, 18, 10]} scale={[60, 6, 1]} color="#ffffff" />
-        <Lightformer form="rect" intensity={1.2} position={[-30, 6, 20]} rotation-y={0.9} scale={[30, 10, 1]} color="#cfe0ff" />
-        <Lightformer form="rect" intensity={0.8} position={[40, 4, -20]} rotation-y={-2.2} scale={[30, 8, 1]} color="#ffd9c2" />
-        <Lightformer form="circle" intensity={3} position={[10, 30, -10]} scale={8} color="#ffffff" />
-      </Environment>
-      <Suspense fallback={null}>
-        <Model progress={progress} />
-        <Leak progress={progress} />
-        <ContactShadows position={[22, 0.01, 0]} scale={[70, 50]} far={10} blur={2.4} opacity={0.55} resolution={512} color="#000000" />
-      </Suspense>
-      <CameraRig progress={progress} />
-    </Canvas>
+    <div ref={wrap} className={className}>
+      <Canvas
+        frameloop="demand"
+        dpr={[1, 1.75]}
+        gl={{ antialias: true, alpha: true, powerPreference: "high-performance", toneMapping: THREE.ACESFilmicToneMapping, outputColorSpace: THREE.SRGBColorSpace }}
+        camera={{ fov: 4, position: [23.5, 5.6, 700], near: 0.5, far: 1000 }}
+        shadows={false}
+        fallback={
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src="/renders/ns31-hero-render.webp" alt="Rendering of EI-NSA" className="h-full w-full object-contain" />
+        }
+      >
+        <hemisphereLight args={["#dfe8f2", "#1a1f27", 0.6]} />
+        <directionalLight position={[30, 40, 60]} intensity={1.6} color="#fff4e8" />
+        <directionalLight position={[-40, 10, -30]} intensity={0.7} color="#9fc0ff" />
+        <Environment resolution={256} frames={1}>
+          <Lightformer form="rect" intensity={2.2} position={[0, 18, 10]} scale={[60, 6, 1]} color="#ffffff" />
+          <Lightformer form="rect" intensity={1.2} position={[-30, 6, 20]} rotation-y={0.9} scale={[30, 10, 1]} color="#cfe0ff" />
+          <Lightformer form="rect" intensity={0.8} position={[40, 4, -20]} rotation-y={-2.2} scale={[30, 8, 1]} color="#ffd9c2" />
+          <Lightformer form="circle" intensity={3} position={[10, 30, -10]} scale={8} color="#ffffff" />
+        </Environment>
+        <Suspense fallback={null}>
+          <Model progress={progress} />
+          <Leak progress={progress} />
+          {/* the aircraft never moves, so its shadow is drawn once */}
+          <ContactShadows frames={1} position={[22, 0.01, 0]} scale={[70, 50]} far={10} blur={2.4} opacity={0.55} resolution={512} color="#000000" />
+        </Suspense>
+        <CameraRig progress={progress} />
+        <Pump wrap={wrap} progress={progress} />
+      </Canvas>
+    </div>
   );
 }

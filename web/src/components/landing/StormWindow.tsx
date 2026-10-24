@@ -103,11 +103,11 @@ export function StormWindow({ pinned = true }: { pinned?: boolean }) {
             </g>
           ))}
           {[20, 40, 60].map((v) => (
-            <text key={v} x={M.l - 12} y={y(v) + 4} textAnchor="end" className="fill-[#5c6672] font-mono text-[11px]">
+            <text key={v} x={M.l - 12} y={y(v) + 4} textAnchor="end" className="fill-[#8e9aa8] font-mono text-[11px]">
               {v}
             </text>
           ))}
-          <text x={M.l - 12} y={M.t - 4} textAnchor="end" className="fill-[#5c6672] text-[11px]">
+          <text x={M.l - 12} y={M.t - 4} textAnchor="end" className="fill-[#8e9aa8] text-[11px]">
             kt
           </text>
         </g>

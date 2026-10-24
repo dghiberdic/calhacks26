@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { useDialog } from "@/lib/useDialog";
 import { FLIGHTS, METAR, NS31, STORM, totals } from "@/data/scenario";
 import { cn } from "@/lib/cn";
 
@@ -53,6 +54,7 @@ const STEPS: Step[] = [
 /** The 09:00Z morning re-check, replayed step by step. */
 export function AgentRun({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [done, setDone] = useState(0);
+  const dialogRef = useDialog<HTMLElement>(open, onClose);
 
   useEffect(() => {
     if (!open) return;
@@ -66,13 +68,10 @@ export function AgentRun({ open, onClose }: { open: boolean; onClose: () => void
       if (i < STEPS.length) timer = window.setTimeout(next, STEPS[i].ms);
     };
     timer = window.setTimeout(next, STEPS[0].ms);
-    const key = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", key);
     return () => {
       window.clearTimeout(timer);
-      window.removeEventListener("keydown", key);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   return (
     <AnimatePresence>
@@ -81,6 +80,8 @@ export function AgentRun({ open, onClose }: { open: boolean; onClose: () => void
           <motion.div key="ar-s" className="fixed inset-0 z-[60] bg-ink/25" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
           <motion.section
             key="ar"
+            ref={dialogRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-label="The 09:00Z re-check"

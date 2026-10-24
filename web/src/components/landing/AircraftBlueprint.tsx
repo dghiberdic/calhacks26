@@ -20,7 +20,7 @@ const AircraftScene = dynamic(() => import("./aircraft/AircraftScene").then((m) 
 export function AircraftBlueprint({ render }: { render?: { src: string; lines?: string } }) {
   const root = useRef<HTMLDivElement>(null);
   const hyd = useMemo(() => hydraulicRoutes(), []);
-  const progress = useRef<AircraftProgress>({ sweep: 0, orbit: 0, lines: 1, leak: 0 });
+  const progress = useRef<AircraftProgress>({ sweep: 0, orbit: 0, lines: 1, leak: 0, show: 0 });
   const column = useRef<HTMLDivElement>(null);
   const sideRef = useRef<SVGSVGElement>(null);
   const [near, setNear] = useState(false);
@@ -40,7 +40,8 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         const tl = gsap.timeline({
           defaults: { ease: "plotter" },
-          scrollTrigger: { trigger: root.current, start: "top top", end: "+=260%", scrub: 0.7, pin: true, anticipatePin: 1, refreshPriority: 1 },
+          // invalidateOnRefresh: centre() is measured again after a resize
+          scrollTrigger: { trigger: root.current, start: "top top", end: "+=260%", scrub: 0.7, pin: true, anticipatePin: 1, refreshPriority: 1, invalidateOnRefresh: true },
         });
         tl.from(".bp-frame", { drawSVG: 0, duration: 0.5, ease: "power1.inOut" })
           .from(".bp-side-outline", { drawSVG: 0, duration: 0.7, stagger: { amount: 1.5 } }, 0.2)
@@ -69,6 +70,7 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
           .to(".bp-plan, .bp-legend, .bp-log", { opacity: 0, duration: 0.5, ease: "power1.out" }, "three")
           .to(".bp-side", { y: centre, duration: 0.8, ease: "power2.inOut" }, "three")
           .to(".bp-canvas", { opacity: 1, duration: 0.4, ease: "none" }, "three+=0.7")
+          .to(p, { show: 1, duration: 0.4, ease: "none" }, "three+=0.7")
           .to(".bp-side", { opacity: 0, duration: 0.4, ease: "none" }, "three+=1.0")
           .to(p, { sweep: 1, duration: 2.4, ease: "power1.inOut" }, "three+=1.2")
           .to(p, { orbit: 1, duration: 2.2, ease: "power2.inOut" }, "three+=1.7")

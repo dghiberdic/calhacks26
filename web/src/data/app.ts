@@ -150,6 +150,14 @@ const LAST = ["Byrne", "Murphy", "Kelly", "O’Brien", "Walsh", "Ryan", "O’Sul
 
 export type Payout = { id: string; name: string; flight: string; amount: number; status: "drafted" | "held" | "not owed" | "asked"; rule: string };
 
+/** What Ops sees instead of a passenger's name (GDPR). */
+export const pseudonym = (p: Payout) => `Passenger ${p.id.split("-").pop()}`;
+
+/** The auditor's link to a receipt: a payout id or the provision, never a name. */
+export function receiptHref(origin: string, t: { kind: string; flight: string; id?: string }) {
+  return t.kind === "payout" && t.id ? `${origin}/app/payouts?flight=${t.flight}&why=${t.id}` : `${origin}/app?why=provision&flight=${t.flight}`;
+}
+
 export function payouts(): Payout[] {
   const out: Payout[] = [];
   let seed = 7;

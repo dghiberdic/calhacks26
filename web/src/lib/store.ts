@@ -3,7 +3,8 @@
 import { create } from "zustand";
 import { QUESTIONS, RULES, type Role, type Rule } from "@/data/app";
 
-export type WhyTarget = { kind: "provision" | "payout" | "exposure"; flight: string; passenger?: string; amount: number };
+/** id: the payout's id, when the receipt is for one passenger (it goes in the auditor's link instead of the name). */
+export type WhyTarget = { kind: "provision" | "payout" | "exposure"; flight: string; passenger?: string; amount: number; id?: string };
 
 type State = {
   role: Role;

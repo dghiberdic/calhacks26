@@ -1,8 +1,11 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { useDialog } from "@/lib/useDialog";
 import { useApp } from "@/lib/store";
 import { NS31, FLIGHTS, STORM, tier } from "@/data/scenario";
+import { receiptHref } from "@/data/app";
 import { Money } from "./ui";
 import { cn } from "@/lib/cn";
 
@@ -11,6 +14,23 @@ type Step = { label: string; value: React.ReactNode; note?: React.ReactNode; ton
 /** "Why this €?" — a receipt that walks an amount back to the evidence (Trace Precedents for CFOs). */
 export function WhyDrawer() {
   const { why, openWhy } = useApp();
+  const close = useCallback(() => openWhy(null), [openWhy]);
+  const dialogRef = useDialog<HTMLElement>(!!why, close);
+  const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle");
+  useEffect(() => {
+    if (copied === "idle") return;
+    const t = window.setTimeout(() => setCopied("idle"), 2200);
+    return () => window.clearTimeout(t);
+  }, [copied]);
+  const copyLink = () => {
+    if (!why) return;
+    const url = receiptHref(location.origin, why);
+    if (!navigator.clipboard) return setCopied("failed");
+    navigator.clipboard.writeText(url).then(
+      () => setCopied("done"),
+      () => setCopied("failed"),
+    );
+  };
   const f = FLIGHTS.find((x) => x.id === why?.flight) ?? NS31.flight;
   const per = tier(f.km);
 
@@ -37,6 +57,8 @@ export function WhyDrawer() {
           <motion.div key="w-scrim" className="fixed inset-0 z-[60] bg-ink/20" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => openWhy(null)} />
           <motion.aside
             key="w"
+            ref={dialogRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-label="Why this amount"
@@ -76,12 +98,8 @@ export function WhyDrawer() {
             </ol>
             <footer className="flex items-center justify-between gap-3 border-t border-[#ecece7] px-6 py-4">
               <p className="font-mono text-[12px] text-graphite">JE-2041 · decision d-7f3a19</p>
-              <button
-                type="button"
-                className="rounded-lg bg-ink px-3.5 py-2 text-[13px] font-medium text-chart"
-                onClick={() => navigator.clipboard?.writeText(`${location.origin}/app?why=${why?.flight ?? ""}`)}
-              >
-                Copy link for the auditor
+              <button type="button" className="min-w-[180px] rounded-lg bg-ink px-3.5 py-2 text-[13px] font-medium text-chart" onClick={copyLink} aria-live="polite">
+                {copied === "done" ? "Link copied" : copied === "failed" ? "Couldn’t copy. Try again" : "Copy link for the auditor"}
               </button>
             </footer>
           </motion.aside>

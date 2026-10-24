@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { QUESTIONS, ROLES, payouts, type Question } from "@/data/app";
 import { useApp } from "@/lib/store";
+import { dialogOpen } from "@/lib/useDialog";
 import { Card, Kbd } from "@/components/app/ui";
 import { RollingNumber } from "@/components/motion/RollingNumber";
 import { cn } from "@/lib/cn";
@@ -109,14 +110,22 @@ export default function Inbox() {
 
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
-      if (done || !canAnswer || (e.target as HTMLElement)?.tagName === "TEXTAREA") return;
+      const el = e.target as HTMLElement | null;
+      const typing = !!el && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable);
+      if (done || !canAnswer || dialogOpen()) return;
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        if (chosen === "custom" && !custom.trim()) return;
+        e.preventDefault();
+        answer(q.id, chosen);
+        return;
+      }
+      if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
       const n = Number(e.key);
       if (n >= 1 && n <= q.answers.length) setPick((p) => ({ ...p, [q.id]: q.answers[n - 1].id }));
-      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) answer(q.id, chosen);
     };
     window.addEventListener("keydown", on);
     return () => window.removeEventListener("keydown", on);
-  }, [q, done, canAnswer, chosen, answer]);
+  }, [q, done, canAnswer, chosen, custom, answer]);
 
   const next = () => {
     const rest = QUESTIONS.filter((x) => !answered[x.id] && x.id !== q.id);

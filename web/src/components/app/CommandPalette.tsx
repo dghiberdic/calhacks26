@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
+import { useDialog } from "@/lib/useDialog";
 import { useApp } from "@/lib/store";
 import { FLIGHTS } from "@/data/scenario";
 import { cn } from "@/lib/cn";
@@ -39,7 +40,8 @@ export function CommandPalette() {
     }
   }, [palette]);
 
-  const close = () => setPalette(false);
+  const close = useCallback(() => setPalette(false), [setPalette]);
+  const dialogRef = useDialog<HTMLDivElement>(palette, close);
   const pick = (it?: Item) => {
     if (!it) return;
     close();
@@ -53,6 +55,8 @@ export function CommandPalette() {
           <motion.div key="cp-s" className="fixed inset-0 z-[70] bg-ink/20" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close} />
           <motion.div
             key="cp"
+            ref={dialogRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-label="Search"
@@ -70,7 +74,6 @@ export function CommandPalette() {
                 setI(0);
               }}
               onKeyDown={(e) => {
-                if (e.key === "Escape") close();
                 if (e.key === "ArrowDown") (e.preventDefault(), setI((v) => Math.min(items.length - 1, v + 1)));
                 if (e.key === "ArrowUp") (e.preventDefault(), setI((v) => Math.max(0, v - 1)));
                 if (e.key === "Enter") pick(items[i]);

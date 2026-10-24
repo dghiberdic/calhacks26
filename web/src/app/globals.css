@@ -211,7 +211,7 @@ html.lenis body {
   to { transform: rotateX(0deg); }
 }
 .flap-dim .flap-cell {
-  color: #5c6672;
+  color: var(--color-weather); /* about 4.5:1 on the cell gradient */
 }
 .flap-alert .flap-cell {
   color: #ff7a5c;

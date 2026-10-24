@@ -44,45 +44,49 @@ export function MomentFilm() {
     };
   }, []);
 
+  // The camera over the map. The film's timeline tweens it (a slow push-in on Dublin), so pause and restart move it too.
+  const view = useRef({ cx: -8.2 * K, cy: -53.4, w: 22 * K });
+
   useEffect(() => {
-    if (!glRef.current || !root.current) return;
+    const el = root.current;
+    if (!glRef.current || !el) return;
     let alive = true;
     let sat: SatelliteLayer | null = null;
-    let tick: (() => void) | null = null;
-    let size: (() => void) | null = null;
-    const view = { cx: -8.2 * K, cy: -53.4, w: 22 * K };
+    const v = view.current;
+    const go = () => alive && setReady(true);
+    const tick = () => {
+      const W = el.clientWidth;
+      const H = el.clientHeight;
+      const h = v.w * (H / W);
+      sat?.render([v.cx - v.w / 2, v.cy - h / 2, v.cx + v.w / 2, v.cy + h / 2], performance.now() / 1000);
+      const svg = el.querySelector<SVGSVGElement>(".mf-map");
+      svg?.setAttribute("viewBox", `${v.cx - v.w / 2} ${v.cy - h / 2} ${v.w} ${h}`);
+      svg?.style.setProperty("--u", String(v.w / W));
+    };
+    const size = () => sat?.setSize(el.clientWidth, el.clientHeight);
+    gsap.ticker.add(tick);
+    window.addEventListener("resize", size);
     fetch("/data/bram/frames.json")
       .then((r) => r.json())
       .then((fr) => {
-        if (!alive || !glRef.current || !root.current) return;
+        if (!alive || !glRef.current) return;
         const b = fr.bbox;
-        const layer = new SatelliteLayer({ canvas: glRef.current, image: "/data/bram/true-1200.webp", satBox: [b.lonMin * K, -b.latMax, b.lonMax * K, -b.latMin], origin: DUB });
-        sat = layer;
-        layer.reveal = 1;
-        layer.dim = 0.15;
-        const el = root.current;
-        size = () => layer.setSize(el.clientWidth, el.clientHeight);
+        try {
+          sat = new SatelliteLayer({ canvas: glRef.current, image: "/data/bram/true-1200.webp", satBox: [b.lonMin * K, -b.latMax, b.lonMax * K, -b.latMin], origin: DUB });
+        } catch {
+          return; // no WebGL: the film plays over the line map alone
+        }
+        sat.reveal = 1;
+        sat.dim = 0.15;
         size();
-        window.addEventListener("resize", size);
-        tick = () => {
-          const W = el.clientWidth;
-          const H = el.clientHeight;
-          const h = view.w * (H / W);
-          layer.render([view.cx - view.w / 2, view.cy - h / 2, view.cx + view.w / 2, view.cy + h / 2], performance.now() / 1000);
-          const svg = el.querySelector<SVGSVGElement>(".mf-map");
-          svg?.setAttribute("viewBox", `${view.cx - view.w / 2} ${view.cy - h / 2} ${view.w} ${h}`);
-          svg?.style.setProperty("--u", String(view.w / W));
-        };
-        gsap.ticker.add(tick);
-        // slow push-in on Dublin over the whole film
-        gsap.to(view, { w: 15 * K, cx: -7 * K, cy: -53.5, duration: 20, ease: "none" });
-        layer.ready.then(() => alive && setReady(true));
-      });
+        return sat.ready;
+      })
+      .catch(() => {})
+      .finally(go);
     return () => {
       alive = false;
-      if (tick) gsap.ticker.remove(tick);
-      if (size) window.removeEventListener("resize", size);
-      gsap.killTweensOf(view);
+      gsap.ticker.remove(tick);
+      window.removeEventListener("resize", size);
       sat?.dispose();
     };
   }, []);
@@ -98,6 +102,7 @@ export function MomentFilm() {
     };
     paint();
     t.set(q(".mf-scene"), { autoAlpha: 0 })
+      .fromTo(view.current, { w: 22 * K, cx: -8.2 * K, cy: -53.4 }, { w: 15 * K, cx: -7 * K, cy: -53.5, duration: 20, ease: "none" }, 0)
       // 0–4s: the storm, the codes
       .to(q(".mf-s1"), { autoAlpha: 1, duration: 0.6 }, 0.2)
       .from(q(".mf-s1 .mf-line"), { yPercent: 110, duration: 0.9, stagger: 0.5 }, 0.3)

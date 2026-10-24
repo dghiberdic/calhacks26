@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { useDialog } from "@/lib/useDialog";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useApp } from "@/lib/store";
@@ -41,11 +42,8 @@ export function FlightSheet() {
   const { sheet, openSheet, openWhy, role } = useApp();
   const f = FLIGHTS.find((x) => x.id === sheet);
 
-  useEffect(() => {
-    const k = (e: KeyboardEvent) => e.key === "Escape" && openSheet(null);
-    window.addEventListener("keydown", k);
-    return () => window.removeEventListener("keydown", k);
-  }, [openSheet]);
+  const closeSheet = useCallback(() => openSheet(null), [openSheet]);
+  const dialogRef = useDialog<HTMLElement>(!!f, closeSheet);
 
   const technical = f?.verdict === "technical";
   const amount = f ? tier(f.km) : 0;
@@ -65,6 +63,8 @@ export function FlightSheet() {
           />
           <motion.aside
             key="sheet"
+            ref={dialogRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-label={`${f.id} to ${f.city}`}
