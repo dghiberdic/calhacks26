@@ -8,14 +8,14 @@ Run without `--from-cache` to regenerate the world and execute the real engine o
 ## Held-out results
 
 - Test period: January–June 2025; 4 storm days plus background days.
-- Cancelled-flight coupon denominator: 8,098 passengers, including curated golden scenarios.
-- Passenger straight-through: 36.42%. A coupon counts only when its flight is auto and it has no held/ruling entitlement or coupon question.
-- Cause **and** extraordinary classification exact accuracy: 80.95%.
-- Curated golden cancellations: 31; independently generated cancellations: 11. Accuracy on the generated subset alone: 54.55%. This small generated subset cannot establish broad generalization.
-- Latent internal-AOG weather miscodes caught: 2/2; underlying face cash entitlement €146,000.00.
-- False flight holds: 9; an escalated flight whose latent key does not require an authority ruling.
-- Initial engine estimate: €269,219.00; latent net entitlement × segment ultimate rates: €124,335.50.
-- Valid claimed face amounts observed through 30 June 2026: €44,925.00. This is an observed development horizon, not the final actual outcome.
+- Cancelled-flight coupon denominator: 17,593 passengers, including curated golden scenarios.
+- Passenger straight-through: 28.02%. A coupon counts only when its flight is auto and it has no held/ruling entitlement or coupon question.
+- Cause **and** extraordinary classification exact accuracy: 48.42%.
+- Curated golden cancellations: 31; generated cancellations (including controlled plants): 64. Accuracy on the generated subset alone: 28.12%. Simulated plants and curated examples cannot establish broad generalization.
+- Latent internal-AOG weather miscodes caught: 7/9; underlying face cash entitlement €341,600.00.
+- False flight holds: 40; an escalated flight whose latent key does not require an authority ruling.
+- Initial engine estimate: €826,616.00; latent net entitlement × segment ultimate rates: €578,650.00.
+- Valid claimed face amounts observed through 30 June 2026: €438,575.00. This is an observed development horizon, not the final actual outcome.
 
 ## Control replay and accounting phase
 
@@ -40,7 +40,7 @@ Reader prompt-injection regression: 2/2 facts-only results against **hand-writte
 - Repeat-question and scope metrics cover the explicit golden Q1/Q2/Q3 replay, not every held-out flight.
 - Historic reduction policy is supplied, not learned by the unfinished policy miner.
 - No paid baseline or live model outputs were available; CP3 is not complete.
-Ambiguous generated cancellations by split (deliberately hidden crew failures with weather/OCC records): {'test': {'ambiguous': 1, 'non_golden_cancelled': 11}, 'train': {'ambiguous': 11, 'non_golden_cancelled': 346}}.
+Ambiguous generated cancellations by split (the shared world's hidden faults and knock-ons): {'test': {'ambiguous': 7, 'non_golden_cancelled': 64}, 'train': {'ambiguous': 25, 'non_golden_cancelled': 394}}.
 The fitted cause model is synthetic development data, not a production guarantee. All outputs remain drafts requiring the repository's existing role approvals.
 
 Input manifest: `cache/manifest.json`. Metric inputs and controls: `cache/results.json`. Independent answer keys: `data/answer_key/`. No labels are copied from engine decisions.

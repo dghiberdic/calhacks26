@@ -73,7 +73,7 @@ Run without `--from-cache` to regenerate the world and execute the real engine o
 - Cancelled-flight coupon denominator: {report.n_passengers:,} passengers, including curated golden scenarios.
 - Passenger straight-through: {report.straight_through_pct:.2f}%. A coupon counts only when its flight is auto and it has no held/ruling entitlement or coupon question.
 - Cause **and** extraordinary classification exact accuracy: {m['flight_cause_and_extraordinary_accuracy']:.2%}.
-- Curated golden cancellations: {m['curated_golden_cancellations']:.0f}; independently generated cancellations: {m['non_golden_cancellations']:.0f}. Accuracy on the generated subset alone: {m['non_golden_cause_accuracy']:.2%}. This small generated subset cannot establish broad generalization.
+- Curated golden cancellations: {m['curated_golden_cancellations']:.0f}; generated cancellations (including controlled plants): {m['non_golden_cancellations']:.0f}. Accuracy on the generated subset alone: {m['non_golden_cause_accuracy']:.2%}. Simulated plants and curated examples cannot establish broad generalization.
 - Latent internal-AOG weather miscodes caught: {report.miscodes_caught}/{report.miscodes_total}; underlying face cash entitlement €{report.miscodes_eur_cents / 100:,.2f}.
 - False flight holds: {report.false_holds}; an escalated flight whose latent key does not require an authority ruling.
 - Initial engine estimate: €{m['preview_eur']:,.2f}; latent net entitlement × segment ultimate rates: €{m['ultimate_expected_eur']:,.2f}.
@@ -97,7 +97,7 @@ Reader prompt-injection regression: {report.injections['facts_only']}/{report.in
 ## Coverage limits
 
 {chr(10).join('- ' + s for s in status)}
-Ambiguous generated cancellations by split (deliberately hidden crew failures with weather/OCC records): {cache.get('world_diagnostics', {})}.
+Ambiguous generated cancellations by split (the shared world's hidden faults and knock-ons): {cache.get('world_diagnostics', {})}.
 The fitted cause model is synthetic development data, not a production guarantee. All outputs remain drafts requiring the repository's existing role approvals.
 
 Input manifest: `cache/manifest.json`. Metric inputs and controls: `cache/results.json`. Independent answer keys: `data/answer_key/`. No labels are copied from engine decisions.
@@ -158,9 +158,10 @@ def main():
                 "No paid baseline or live model outputs were available; CP3 is not complete."]}
         write_json(cache_path, cache)
         inputs = ["eval/cache/results.json", "eval/cache/calibration.json", "data/answer_key/train.json",
-                  "data/answer_key/test.json", "data/answer_key/stress.json", "contracts/fixtures/golden/world.json",
-                  "uv.lock"]
-        inputs += [str(p.relative_to(ROOT)) for directory in ("world", "engine", "books", "eval")
+                  "data/answer_key/test.json", "data/answer_key/stress.json", "data/answer_key/curves_train.json",
+                  "contracts/fixtures/golden/world.json", "contracts/fixtures/golden/curves.json",
+                  "engine/default_calibration.json", "contracts/calibration_schema.json", "uv.lock"]
+        inputs += [str(p.relative_to(ROOT)) for directory in ("world", "engine", "books", "eval", "contracts")
                    for p in sorted((ROOT / directory).glob("*.py"))]
         inputs += [str(p.relative_to(ROOT)) for p in sorted((ROOT / "data/pinned").iterdir()) if p.is_file()]
         write_json(ROOT / "eval/cache/manifest.json", {"generator_seed": 0,

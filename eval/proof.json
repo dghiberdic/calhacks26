@@ -13,41 +13,41 @@
         "accuracy": 0.0,
         "hi": 0.2,
         "lo": 0.0,
-        "n": 7.0,
-        "wilson_hi": 0.35433,
+        "n": 34.0,
+        "wilson_hi": 0.101515,
         "wilson_lo": 0.0
       },
       {
-        "accuracy": 0.0,
+        "accuracy": 0.714286,
         "hi": 0.4,
         "lo": 0.2,
-        "n": 0.0,
-        "wilson_hi": 1.0,
-        "wilson_lo": 0.0
+        "n": 7.0,
+        "wilson_hi": 0.917781,
+        "wilson_lo": 0.358934
       },
       {
-        "accuracy": 1.0,
+        "accuracy": 0.571429,
         "hi": 0.6,
         "lo": 0.4,
-        "n": 4.0,
-        "wilson_hi": 1.0,
-        "wilson_lo": 0.510109
+        "n": 7.0,
+        "wilson_hi": 0.84178,
+        "wilson_lo": 0.250458
       },
       {
-        "accuracy": 0.0,
+        "accuracy": 0.428571,
         "hi": 0.8,
         "lo": 0.6,
-        "n": 1.0,
-        "wilson_hi": 0.793451,
-        "wilson_lo": 0.0
+        "n": 14.0,
+        "wilson_hi": 0.674094,
+        "wilson_lo": 0.213808
       },
       {
-        "accuracy": 1.0,
+        "accuracy": 0.939394,
         "hi": 1.0,
         "lo": 0.8,
-        "n": 30.0,
-        "wilson_hi": 1.0,
-        "wilson_lo": 0.886487
+        "n": 33.0,
+        "wilson_hi": 0.983219,
+        "wilson_lo": 0.803938
       }
     ],
     "claim_validity": [],
@@ -55,12 +55,12 @@
     "voucher": []
   },
   "coverage_at_90": {
-    "cause": 0.357143,
+    "cause": 0.263158,
     "claim_validity": 0.0,
     "release": 0.0,
     "voucher": 0.0
   },
-  "false_holds": 9,
+  "false_holds": 40,
   "injections": {
     "attempted": 2,
     "facts_only": 2,
@@ -69,17 +69,17 @@
   "label": "calibrated on synthetic labels; validates the pipeline, not the world",
   "liability_vs_actual": {
     "curated_golden_cancellations": 31.0,
-    "flight_cause_and_extraordinary_accuracy": 0.8095238095238095,
-    "non_golden_cancellations": 11.0,
-    "non_golden_cause_accuracy": 0.5454545454545454,
-    "preview_eur": 269219.0,
-    "ultimate_expected_eur": 124335.5,
-    "valid_claims_through_2026_06_30_eur": 44925.0
+    "flight_cause_and_extraordinary_accuracy": 0.4842105263157895,
+    "non_golden_cancellations": 64.0,
+    "non_golden_cause_accuracy": 0.28125,
+    "preview_eur": 826616.0,
+    "ultimate_expected_eur": 578650.0,
+    "valid_claims_through_2026_06_30_eur": 438575.0
   },
-  "miscodes_caught": 2,
-  "miscodes_eur_cents": 14600000,
-  "miscodes_total": 2,
-  "n_passengers": 8098,
+  "miscodes_caught": 7,
+  "miscodes_eur_cents": 34160000,
+  "miscodes_total": 9,
+  "n_passengers": 17593,
   "n_storms": 4,
   "out_of_scope_auto": 0,
   "real_vs_simulated": {
@@ -125,5 +125,5 @@
     ],
     "unconfirmed_widen_applied": false
   },
-  "straight_through_pct": 36.416399
+  "straight_through_pct": 28.016825
 }
