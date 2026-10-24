@@ -25,7 +25,7 @@ const NODES: Node[] = [
     detail: `Gusts at or above ${STORM.limitKt} kt, peaking at ${STORM.peak.gust} kt at ${STORM.peak.t}Z. NS31 was due at 21:30, after the window closed. Three evening flights left on time.`,
     tone: "weather",
   },
-  { value: "Legal", title: "Ruled 12 Mar 2026", detail: "Asked once. Applied 14 times since, never asked again." },
+  { value: "Legal", title: "Ruled 12 Mar 2025", detail: "Asked once. Applied 14 times since, never asked again." },
 ];
 
 export function Trace() {

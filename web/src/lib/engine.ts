@@ -71,7 +71,7 @@ export function decide(args: { windows: Window[]; sched: string; log: string }):
         rule: "R-2 v1",
         routeTo: "Claims Lead",
       };
-    const conf = Math.min(97, Math.round(70 + Math.min(18, margin * 6) + (inWin ? -12 : 9)));
+    const conf = Math.min(97, Math.round(70 + Math.min(12, margin * 6) + (inWin ? -12 : 9)));
     return {
       verdict: "technical",
       owed: true,

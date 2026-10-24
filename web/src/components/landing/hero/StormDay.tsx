@@ -48,6 +48,8 @@ export function StormDay() {
   const [frames, setFrames] = useState<FramesJSON | null>(null);
   const [hours, setHours] = useState<Hour[]>([]);
   const [noGL, setNoGL] = useState(false);
+  const hoursRef = useRef<Hour[]>([]);
+  const hoursReady = hours.length > 0;
   const view = useRef<View>({ ...VIEW_START });
   const state = useRef({ t: T0, reveal: 0, particles: 0 });
 
@@ -72,14 +74,18 @@ export function StormDay() {
       const fr = storm.frames.find((f) => f.h === h)!;
       return { h, isobars: b.isobars, lo: b.lo, u: fr.u, v: fr.v };
     };
+    const first = make(T0);
+    hoursRef.current = [first];
     // eslint-disable-next-line react-hooks/set-state-in-effect -- first hour paints immediately
-    setHours([make(T0)]);
+    setHours([first]);
     const rest = Array.from({ length: 22 - T0 }, (_, i) => T0 + 1 + i);
     const idle = (cb: () => void) => (typeof window.requestIdleCallback === "function" ? window.requestIdleCallback(() => cb()) : setTimeout(cb, 30));
     const step = () => {
       if (cancelled || !rest.length) return;
       const h = rest.shift()!;
-      setHours((prev) => [...prev, make(h)]);
+      const next = make(h);
+      hoursRef.current = [...hoursRef.current, next];
+      setHours(hoursRef.current);
       idle(step);
     };
     idle(step);
@@ -102,11 +108,12 @@ export function StormDay() {
 
   const ns31Arc = useMemo(() => pathOf(greatCircle(AIRPORTS.DUB, AIRPORTS.BOS, 64)), []);
 
-  // Render loop: satellite + particles + HUD, all driven by state refs (no React re-render per frame).
+  // Render loop: satellite + particles + HUD, all driven by refs (no React re-render per frame).
+  // Built once when data is ready; later hours are read from hoursRef as they stream in.
   useEffect(() => {
-    if (!storm || !frames || !glRef.current || !pRef.current || !root.current || hours.length === 0) return;
+    if (!storm || !frames || !glRef.current || !pRef.current || !root.current || !hoursReady) return;
     const fb = frames.bbox;
-    let sat: SatelliteLayer;
+    let sat: SatelliteLayer | null = null;
     try {
       sat = new SatelliteLayer({
         canvas: glRef.current,
@@ -115,12 +122,12 @@ export function StormDay() {
         origin: DUB,
       });
     } catch {
-      // No WebGL (old projector, locked-down browser): show the real 12:00Z frame instead.
+      // No WebGL (old projector, locked-down browser): the real 12:00Z frame stands in, the HUD still runs.
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-off fallback when the GPU context fails
       setNoGL(true);
-      return;
     }
-    const grid: WindGrid = { nx: storm.nx, ny: storm.ny, lonMin: storm.bbox.lonMin, latMax: storm.bbox.latMax, step: storm.step, u: hours[0].u.slice(), v: hours[0].v.slice() };
+    const h0data = hoursRef.current[0];
+    const grid: WindGrid = { nx: storm.nx, ny: storm.ny, lonMin: storm.bbox.lonMin, latMax: storm.bbox.latMax, step: storm.step, u: h0data.u.slice(), v: h0data.v.slice() };
     const wind = new WindParticles(pRef.current, grid, window.innerWidth < 768 ? 1100 : 2400);
     const frameTimes = frames.frames.map((f) => toHours(f.t));
     const el = root.current;
@@ -129,7 +136,7 @@ export function StormDay() {
     const resize = () => {
       W = el.clientWidth;
       H = el.clientHeight;
-      sat.setSize(W, H);
+      sat?.setSize(W, H);
       wind.setSize(W, H);
     };
     resize();
@@ -139,7 +146,8 @@ export function StormDay() {
     const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
     io.observe(el);
 
-    const byHour = new Map(hours.map((h) => [h.h, h]));
+    let byHour = new Map<number, Hour>();
+    let known = 0;
     let lastKey = "";
     let lastMin = -1;
     let last = performance.now();
@@ -151,6 +159,10 @@ export function StormDay() {
       const dt = (now - last) / 1000;
       last = now;
       const { t } = state.current;
+      if (hoursRef.current.length !== known) {
+        byHour = new Map(hoursRef.current.map((h) => [h.h, h]));
+        known = hoursRef.current.length;
+      }
 
       // view
       const v = view.current;
@@ -165,29 +177,29 @@ export function StormDay() {
       }
 
       // satellite frames around t
-      let i = frameTimes.findIndex((ft) => ft > t) - 1;
-      if (i < 0) i = t >= frameTimes[frameTimes.length - 1] ? frameTimes.length - 1 : 0;
-      const j = Math.min(frameTimes.length - 1, i + 1);
-      const mix = j === i ? 0 : Math.min(1, Math.max(0, (t - frameTimes[i]) / (frameTimes[j] - frameTimes[i])));
-      for (const k of [i - 1, i, j, j + 1]) if (frames.frames[k]) sat.frame(`${BASE}/${frames.frames[k].file}`);
-      sat.setFrames(sat.frame(`${BASE}/${frames.frames[i].file}`), sat.frame(`${BASE}/${frames.frames[j].file}`), mix);
-      sat.reveal = state.current.reveal;
-      sat.render(box, now / 1000);
+      if (sat) {
+        let i = frameTimes.findIndex((ft) => ft > t) - 1;
+        if (i < 0) i = t >= frameTimes[frameTimes.length - 1] ? frameTimes.length - 1 : 0;
+        const j = Math.min(frameTimes.length - 1, i + 1);
+        const mix = j === i ? 0 : Math.min(1, Math.max(0, (t - frameTimes[i]) / (frameTimes[j] - frameTimes[i])));
+        for (const k of [i - 1, i, j, j + 1]) if (frames.frames[k]) sat.frame(`${BASE}/${frames.frames[k].file}`);
+        sat.setFrames(sat.frame(`${BASE}/${frames.frames[i].file}`), sat.frame(`${BASE}/${frames.frames[j].file}`), mix);
+        sat.reveal = state.current.reveal;
+        sat.render(box, now / 1000);
+      }
 
       // isobars + low centre + wind for the two hours around t
       const h0 = Math.min(22, Math.max(T0, Math.floor(t)));
       const h1 = Math.min(22, h0 + 1);
       const f = Math.min(1, Math.max(0, t - h0));
-      const A = byHour.get(h0);
+      const A = byHour.get(h0) ?? byHour.get(T0);
       const B = byHour.get(h1) ?? A;
-      {
-        groups().forEach((g) => {
-          const gh = Number(g.dataset.hour);
-          const o = gh === h0 ? 1 - f : gh === h1 && B !== A ? f : 0;
-          g.style.opacity = String(o);
-          g.style.visibility = o > 0.01 ? "visible" : "hidden";
-        });
-      }
+      groups().forEach((g) => {
+        const gh = Number(g.dataset.hour);
+        const o = gh === A?.h ? (B !== A ? 1 - f : 1) : gh === B?.h && B !== A ? f : 0;
+        g.style.opacity = String(o);
+        g.style.visibility = o > 0.01 ? "visible" : "hidden";
+      });
       if (A && B) {
         const lx = A.lo.pt[0] + (B.lo.pt[0] - A.lo.pt[0]) * f;
         const ly = A.lo.pt[1] + (B.lo.pt[1] - A.lo.pt[1]) * f;
@@ -219,21 +231,17 @@ export function StormDay() {
         const n = timeline.cancelled.filter((c) => c.t <= t).length + (t >= 21.45 ? 1 : 0);
         if (hud.current.count) hud.current.count.textContent = String(n);
         hud.current.head?.setAttribute("transform", `translate(${timeline.x(t)} 0)`);
-        svgRef.current?.parentElement?.querySelectorAll<HTMLElement>("[data-cx]").forEach((el2) => {
-          const ct = Number(el2.dataset.cx);
-          el2.dataset.on = String(ct <= t);
-        });
       }
     };
     gsap.ticker.add(tick);
-    sat.ready.then(() => ScrollTrigger.refresh());
+    sat?.ready.then(() => ScrollTrigger.refresh()).catch(() => {});
     return () => {
       gsap.ticker.remove(tick);
       ro.disconnect();
       io.disconnect();
-      sat.dispose();
+      sat?.dispose();
     };
-  }, [storm, frames, hours, timeline]);
+  }, [storm, frames, hoursReady, timeline]);
 
   useGSAP(
     () => {

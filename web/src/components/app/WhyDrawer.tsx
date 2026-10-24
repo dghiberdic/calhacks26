@@ -26,7 +26,7 @@ export function WhyDrawer() {
         { label: "Cause", value: "Technical fault", note: "Not an extraordinary circumstance: CJEU C-549/07 Wallentin-Hermann (R-3 v2)." },
         { label: "Tech log", value: <span className="font-mono">07:55Z · ATA 29-11</span>, note: <span className="font-mono text-[12.5px]">{NS31.techLog.entry}</span>, mono: true },
         { label: "Weather", value: <span className="font-mono">{STORM.windowStart}–{STORM.windowEnd}Z</span>, note: `Storm window from METAR, gusts at or above ${STORM.limitKt} kt. NS31 was due at 21:30, after it.`, tone: "weather" as const },
-        { label: "Who ruled", value: "Legal, 12 Mar 2026", note: "Asked once in R-3’s history. Applied 14 times since." },
+        { label: "Who ruled", value: "Legal, 12 Mar 2025", note: "Asked once in R-3’s history. Applied 14 times since." },
       ]
     : [];
 

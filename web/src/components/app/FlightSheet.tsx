@@ -4,7 +4,7 @@ import { useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useApp } from "@/lib/store";
-import { FLIGHTS, NS31, OPERATED, STORM, tier, metarString } from "@/data/scenario";
+import { FLIGHTS, NS31, OPERATED, STORM, tier, metarNear } from "@/data/scenario";
 import { sideView } from "@/lib/drawings/aircraft";
 import { CauseTimeline } from "./CauseTimeline";
 import { Chip, Confidence, Money } from "./ui";
@@ -49,7 +49,7 @@ export function FlightSheet() {
 
   const technical = f?.verdict === "technical";
   const amount = f ? tier(f.km) : 0;
-  const hour = f ? Math.min(23, parseInt(f.sched)) : 0;
+  const atDep = f ? metarNear(f.sched) : null;
 
   return (
     <AnimatePresence>
@@ -142,7 +142,7 @@ export function FlightSheet() {
                       </span>
                     </li>
                     <li className="grid grid-cols-[68px_1fr] gap-3">
-                      <span className="font-mono text-graphite">{STORM.windowStart.slice(0, 2)}–{STORM.windowEnd.slice(0, 2)}Z</span>
+                      <span className="font-mono text-graphite">{STORM.windowStart}–{STORM.windowEnd}Z</span>
                       <span>
                         <span className="font-medium">Storm window, from METAR.</span> Gusts peaked at {STORM.peak.gust}&nbsp;kt at {STORM.peak.t}Z. NS31 was due 2&nbsp;h&nbsp;30&nbsp;min after it closed.
                       </span>
@@ -157,9 +157,9 @@ export function FlightSheet() {
                 ) : (
                   <>
                     <li className="grid grid-cols-[68px_1fr] gap-3">
-                      <span className="font-mono text-graphite">{String(hour).padStart(2, "0")}:00Z</span>
+                      <span className="font-mono text-graphite">{atDep?.t}Z</span>
                       <span>
-                        <span className="font-medium">METAR at departure.</span> <span className="font-mono text-[12.5px]">{metarString(hour)}</span>
+                        <span className="font-medium">Strongest METAR within 30 min of departure.</span> <span className="font-mono text-[12.5px]">{atDep?.raw}</span>
                       </span>
                     </li>
                     <li className="grid grid-cols-[68px_1fr] gap-3">

@@ -52,7 +52,7 @@ export const useApp = create<State>((set) => ({
               source: "ruling" as const,
               sourceLabel: `${question!.owner === "legal" ? "Legal" : question!.owner === "controller" ? "Controller" : "Claims Lead"} ruling, ${question!.id}`,
               scope: ans.rule.scope,
-              applied: 0,
+              applied: ans.rule.settles ?? 0,
               asked: 1,
               updated: "just now",
             },

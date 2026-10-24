@@ -12,7 +12,7 @@ export const ROLES: { id: Role; name: string; initials: string; sees: string }[]
 
 export type Evidence = { source: string; when?: string; text: string; mono?: boolean };
 export type Answer = { id: string; label: string; effect: string; delta?: number; rule?: RuleDraft };
-export type RuleDraft = { id: string; version: number; sentence: string; highlight: string; scope: string; replay: string };
+export type RuleDraft = { id: string; version: number; sentence: string; highlight: string; scope: string; replay: string; settles?: number };
 
 export type Question = {
   id: string;
@@ -59,6 +59,7 @@ export const QUESTIONS: Question[] = [
           highlight: "only with a signed acceptance",
           scope: "Flights departing the EU",
           replay: "Changes 0 past decisions. Applies to 31 open cases.",
+          settles: 31,
         },
       },
       { id: "offset", label: "Offset the voucher.", effect: "Pay €300.", delta: -300 },
@@ -72,7 +73,7 @@ export const QUESTIONS: Question[] = [
     why: "A cause StormCheck has never seen goes to Legal once.",
     flight: "NS19",
     subject: "NS19 to Chicago, 10 Dec 07:10Z",
-    held: 26400,
+    held: 105600,
     confidence: 22,
     reason: "no precedent",
     question: "NS19 left a day late because its crew timed out flying the storm recovery. Is a crew time-out caused by yesterday’s storm extraordinary?",
@@ -82,8 +83,8 @@ export const QUESTIONS: Question[] = [
       { source: "METAR", when: "10 Dec 06:00Z", text: "EIDW 100600Z 23015G30KT 210V270 9999 FEW014 09/05 Q1000 NOSIG", mono: true },
     ],
     answers: [
-      { id: "not-extra", label: "Not extraordinary.", effect: "Crew planning is the airline’s risk. Pay 176 × €600.", delta: 0, rule: { id: "R-9", version: 1, sentence: "A crew time-out on a later day is not extraordinary, even when the storm caused it.", highlight: "not extraordinary", scope: "All routes", replay: "Changes 2 past decisions." } },
-      { id: "extra", label: "Extraordinary.", effect: "Nothing owed for NS19.", delta: -26400 },
+      { id: "not-extra", label: "Not extraordinary.", effect: "Crew planning is the airline’s risk. Pay 176 × €600.", delta: 0, rule: { id: "R-9", version: 1, sentence: "A crew time-out on a later day is not extraordinary, even when the storm caused it.", highlight: "not extraordinary", scope: "All routes", replay: "Changes 2 past decisions.", settles: 2 } },
+      { id: "extra", label: "Extraordinary.", effect: "Nothing owed for NS19.", delta: -105600 },
       { id: "custom", label: "Something else.", effect: "Write the ruling in your own words." },
     ],
   },
@@ -103,7 +104,7 @@ export const QUESTIONS: Question[] = [
       { source: "Policy", text: "Provisions are released when further claims are no longer probable (IAS 37)." },
     ],
     answers: [
-      { id: "hold", label: "Hold it. Claims can arrive for years.", effect: "Keep €18,300 provided.", delta: 0, rule: { id: "R-10", version: 1, sentence: "Release an EU261 provision only when the claim curve is flat for 6 months, never before 24 months.", highlight: "never before 24 months", scope: "All routes", replay: "Affects 3 open provisions." } },
+      { id: "hold", label: "Hold it. Claims can arrive for years.", effect: "Keep €18,300 provided.", delta: 0, rule: { id: "R-10", version: 1, sentence: "Release an EU261 provision only when the claim curve is flat for 6 months, never before 24 months.", highlight: "never before 24 months", scope: "All routes", replay: "Affects 3 open provisions.", settles: 3 } },
       { id: "release", label: "Release it.", effect: "Credit €18,300 to income.", delta: -18300 },
     ],
   },
@@ -126,11 +127,11 @@ export type Rule = {
 export const RULES: Rule[] = [
   { id: "R-1", version: 2, title: "Storm window", sentence: "A storm window is every stretch of the airport’s METAR with gusts at or above 40 kt, closing at the first report back below it.", source: "policy", sourceLabel: "Ops weather policy", scope: "All airports", applied: 2910, asked: 0, updated: "3 Dec 2024", history: [{ version: 1, when: "2 Mar 2024", change: "Gust limit 50 kt", by: "Ops" }, { version: 2, when: "3 Dec 2024", change: "Gust limit 40 kt, from the A321 crosswind table", by: "Ops" }] },
   { id: "R-2", version: 1, title: "Trust order", sentence: "Tech log and METAR outrank the ops cause code, which outranks the gate note, which outranks the passenger’s account.", source: "policy", sourceLabel: "Claims policy", scope: "All evidence", applied: 2910, asked: 0, updated: "12 Mar 2024" },
-  { id: "R-3", version: 2, title: "Technical faults", sentence: "A technical fault is not an extraordinary circumstance unless it comes from outside the airline’s control.", source: "law", sourceLabel: "CJEU C-549/07 Wallentin-Hermann · Legal", scope: "All routes", applied: 14, asked: 1, updated: "12 Mar 2026", history: [{ version: 1, when: "12 Mar 2024", change: "From the judgment", by: "Legal" }, { version: 2, when: "12 Mar 2026", change: "Bird strike and manufacturer recalls excluded", by: "Legal" }] },
+  { id: "R-3", version: 2, title: "Technical faults", sentence: "A technical fault is not an extraordinary circumstance unless it comes from outside the airline’s control.", source: "law", sourceLabel: "CJEU C-549/07 Wallentin-Hermann · Legal", scope: "All routes", applied: 14, asked: 1, updated: "12 Mar 2025", history: [{ version: 1, when: "12 Mar 2024", change: "From the judgment", by: "Legal" }, { version: 2, when: "12 Mar 2025", change: "Bird strike and manufacturer recalls excluded", by: "Legal" }] },
   { id: "R-4", version: 1, title: "Compensation tiers", sentence: "€250 up to 1,500 km, €400 up to 3,500 km, €600 beyond.", source: "law", sourceLabel: "Reg. 261/2004 Art. 7(1)", scope: "EU-departing flights", applied: 2910, asked: 0, updated: "1 Jan 2024" },
   { id: "R-5", version: 1, title: "Rebooked within 4 hours", sentence: "Halve compensation when the passenger arrives within 4 hours of schedule on a long-haul reroute.", source: "law", sourceLabel: "Reg. 261/2004 Art. 7(2)", scope: "Flights over 3,500 km", applied: 61, asked: 0, updated: "1 Jan 2024" },
-  { id: "R-6", version: 4, title: "Claim rate", sentence: "Provide for 35% of owed passengers on transatlantic routes, trued up monthly against the claim curve.", source: "learned", sourceLabel: "Learned from 2 years of claims", scope: "Transatlantic", applied: 18, asked: 0, updated: "1 Oct 2026" },
-  { id: "R-8", version: 1, title: "Care costs", sentence: "Accrue hotel and meals at €140 per stranded passenger, trued up when the invoices land.", source: "learned", sourceLabel: "Learned from 18 storms", scope: "Stranded passengers", applied: 412, asked: 0, updated: "9 Feb 2026" },
+  { id: "R-6", version: 4, title: "Claim rate", sentence: "Provide for 35% of owed passengers on transatlantic routes, trued up monthly against the claim curve.", source: "learned", sourceLabel: "Learned from 2 years of claims", scope: "Transatlantic", applied: 18, asked: 0, updated: "1 Oct 2025" },
+  { id: "R-8", version: 1, title: "Care costs", sentence: "Accrue hotel and meals at €140 per stranded passenger, trued up when the invoices land.", source: "learned", sourceLabel: "Learned from 18 storms", scope: "Stranded passengers", applied: 412, asked: 0, updated: "9 Feb 2025" },
 ];
 
 export type JournalLine = { account: string; dr?: number; cr?: number };

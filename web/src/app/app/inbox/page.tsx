@@ -40,7 +40,7 @@ const SETTLED = payouts()
 
 function Resolved({ q, answerId, onNext }: { q: Question; answerId: string; onNext: () => void }) {
   const a = q.answers.find((x) => x.id === answerId)!;
-  const applied = a.rule ? (q.id === "Q-12" ? 31 : q.id === "Q-13" ? 2 : 3) : 0;
+  const applied = a.rule?.settles ?? 0;
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease }} className="flex flex-col gap-6">
       <div className="flex items-center gap-3 text-settled-ink">

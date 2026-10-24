@@ -44,9 +44,16 @@ export const STORM = {
 /** EU261 Art. 7 compensation tier by great-circle distance. */
 export const tier = (km: number) => (km <= 1500 ? 250 : km <= 3500 ? 400 : 600);
 
+/** The strongest report within ±30 min of a time: what a dispatcher would have been looking at. */
+export const metarNear = (t: string, spanMin = 30) => {
+  const m0 = toMinutes(t);
+  const near = METAR.filter((r) => Math.abs(toMinutes(r.t) - m0) <= spanMin);
+  return (near.length ? near : [metarAt(t)]).reduce((a, b) => ((b.gust ?? b.kt ?? 0) > (a.gust ?? a.kt ?? 0) ? b : a));
+};
+
 const gustNote = (t: string) => {
-  const m = metarAt(t);
-  return `Gusts ${m.gust ?? m.kt} kt at departure (${m.t}Z METAR)`;
+  const m = metarNear(t);
+  return `Gusts ${m.gust ?? m.kt} kt around departure (${m.t}Z METAR)`;
 };
 
 const F = (id: string, dest: string, city: string, sched: string, reg: string, type: Flight["type"], pax: number, km: number, confidence: number): Flight => ({
@@ -57,8 +64,8 @@ export const FLIGHTS: Flight[] = [
   F("NS102", "LHR", "London", "13:35", "EI-NSE", "A320", 168, 449, 96),
   F("NS21", "JFK", "New York", "13:50", "EI-NSK", "A330", 262, 5103, 95),
   F("NS27", "BOS", "Boston", "14:05", "EI-NSB", "A321", 196, 4802, 95),
+  F("NS25", "EWR", "Newark", "14:15", "EI-NSC", "A321", 188, 5078, 92),
   F("NS214", "CDG", "Paris", "14:20", "EI-NSF", "A320", 171, 784, 93),
-  F("NS25", "EWR", "Newark", "14:40", "EI-NSC", "A321", 188, 5078, 90),
   F("NS41", "ORD", "Chicago", "15:00", "EI-NSL", "A330", 250, 5939, 91),
   F("NS306", "AMS", "Amsterdam", "15:20", "EI-NSG", "A320", 160, 758, 94),
   F("NS51", "IAD", "Washington", "15:45", "EI-NSD", "A321", 190, 5451, 97),

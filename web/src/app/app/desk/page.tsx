@@ -37,20 +37,50 @@ export default function Desk() {
   const [pax, setPax] = useState(212);
   const [km, setKm] = useState(4802);
   const [log, setLog] = useState(LOGS[0].text);
+  const [limitInput, setLimitInput] = useState("40");
   const [limit, setLimit] = useState(40);
   const [data, setData] = useState<MetarResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
+
+  // Debounce + clamp the limit so a half-typed number never asks for a 10 kt storm.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const n = Number(limitInput);
+      if (Number.isFinite(n) && n > 0) setLimit(Math.min(90, Math.max(15, Math.round(n))));
+    }, 350);
+    return () => clearTimeout(t);
+  }, [limitInput]);
+
+  // A new station or day clears the old chart instead of showing it under the new heading.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset when the query identity changes
+    setData(null);
+  }, [icao, date]);
 
   useEffect(() => {
-    if (!/^[A-Z]{4}$/.test(icao) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+    if (!/^[A-Z0-9]{3,4}$/.test(icao) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
     const ctl = new AbortController();
     // eslint-disable-next-line react-hooks/set-state-in-effect -- loading flag for the live METAR fetch
     setLoading(true);
+    setFailed(null);
     fetch(`/api/metar?station=${icao}&date=${date}&limit=${limit}`, { signal: ctl.signal })
-      .then((r) => r.json())
-      .then((j: MetarResponse) => setData(j))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .then(async (r) => {
+        const j = (await r.json()) as MetarResponse & { error?: string };
+        if (ctl.signal.aborted) return;
+        if (!r.ok) {
+          setFailed(j.error ?? `Request failed (${r.status})`);
+          setData(null);
+          return;
+        }
+        setData(j);
+      })
+      .catch(() => {
+        if (!ctl.signal.aborted) setFailed("Couldn’t reach the METAR archive");
+      })
+      .finally(() => {
+        if (!ctl.signal.aborted) setLoading(false);
+      });
     return () => ctl.abort();
   }, [icao, date, limit]);
 
@@ -124,7 +154,7 @@ export default function Desk() {
             </label>
             <label className="text-[13px] text-graphite">
               Gust limit (kt)
-              <input type="number" value={limit} min={25} max={70} onChange={(e) => setLimit(Number(e.target.value))} className="mt-1 w-full rounded-lg bg-chart px-3 py-2 font-mono text-[15px] text-ink outline-none focus:shadow-[0_0_0_1.5px_#2b59c3]" />
+              <input type="number" inputMode="numeric" value={limitInput} min={15} max={90} onChange={(e) => setLimitInput(e.target.value)} className="mt-1 w-full rounded-lg bg-chart px-3 py-2 font-mono text-[15px] text-ink outline-none focus:shadow-[0_0_0_1.5px_#2b59c3]" />
             </label>
             <label className="text-[13px] text-graphite">
               Passengers
@@ -182,7 +212,7 @@ export default function Desk() {
                 {icao} on {date}
               </h2>
               <span className="text-[13px] text-graphite">
-                {loading ? "Pulling METAR…" : data?.error ? data.error : `${data?.reports.length ?? 0} reports · Iowa Environmental Mesonet`}
+                {loading ? "Pulling METAR…" : failed ? failed : data?.error ? data.error : `${data?.reports.length ?? 0} reports · ${data && "source" in data && String((data as { source?: string }).source).startsWith("bundled") ? "bundled copy of the IEM archive" : "Iowa Environmental Mesonet"}`}
               </span>
             </div>
             <CauseTimeline
