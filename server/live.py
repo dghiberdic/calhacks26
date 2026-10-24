@@ -280,8 +280,8 @@ class Live:
             num = fid.split("@")[0]
             if fid in changed:
                 summary = f"Re-decided {num} · {d.cause.value} · {d.extraordinary.value.replace('_', ' ')}" + (
-                    f" · held for {compose.label(d.routed_to)}" if d.outcome == "escalated" else "")
-                chip = "HELD" if d.outcome == "escalated" else "APPLIED"
+                    f" · held for {compose.label(d.routed_to)}" if d.outcome != "auto" else "")
+                chip = "HELD" if d.outcome != "auto" else "APPLIED"
             else:
                 summary, chip = f"Re-decided {num} · decision unchanged ({d.cause.value})", "INFO"
             events.append(rt.emit("decision", "agent.engine", summary, chip, fid))
@@ -308,7 +308,7 @@ class Live:
             if d is None:
                 continue
             s = f"{fid.split('@')[0]} → {d.cause.value} / {d.extraordinary.value}"
-            if d.outcome == "escalated":
+            if d.outcome != "auto":
                 s += f" · routed to {compose.label(d.routed_to)}" + (" (concurrent causes)"
                                                                        if d.cause.value == "concurrent" else "")
             parts.append(s)

@@ -756,7 +756,7 @@ class Runtime:
                 self.emit("rule", "agent.engine", f"↻ {what} settled under {rref}, ruling cited"
                           + (f" · {asks} asks again (outside the rule's scope)" if asks else ""), "CITED", rref,
                           at=known_at)
-        held_ids = {d.flight_id for d in decisions if d.outcome == "escalated"}
+        held_ids = {d.flight_id for d in decisions if d.outcome != "auto"}
         held_total = 0
         for je in journal:
             amt = sum(line.cr_cents for line in je.lines if line.account == "2140")

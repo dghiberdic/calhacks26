@@ -383,7 +383,7 @@ def counters(flights: Sequence[Flight], decisions: Sequence[FlightDecision], ent
              questions: Sequence[Question]) -> dict[str, int]:
     cancelled = [f for f in flights if f.status == "cancelled"]
     all_ents = [e for es in ents.values() for e in es]
-    held_flights = {d.flight_id for d in decisions if d.outcome == "escalated"}
+    held_flights = {d.flight_id for d in decisions if d.outcome != "auto"}
     return {
         "passengers": sum(f.pax for f in cancelled),
         "cancelled": len(cancelled),

@@ -80,3 +80,56 @@ Judgment calls made while building the real server. Newest at the bottom of each
 - **Blame** walks: JE line → entitlement → rules@v (→ ruling quote) → decision → evidence (tier order, struck sources, METAR last). It also accepts coupon, flight, rule and question targets. An unknown target returns an empty chain, never an error. It uses `engine.trace.blame` once that lands.
 - **Audit** = `Books.audit` (JE, events, register rows, claims) with decision commits resolved to `Commit`s, the evidence source ids and the JE's own commits.
 - `/access/matrix` comes from `engine.acl.matrix()` when present, else the stub's matrix. `/controls` and `/injections` are the static fixture lists. `/eval` reads `eval/proof.json` when it validates, else the stub's placeholder.
+
+## Integration (engine.Engine, engine.trace, engine.acl, engine.miner, llm Reader/Drafter): supersedes parts of D10a/D10b
+
+**Superseded:** D10a's own commit chain (`sc_commits`) is gone, and so are D10b's server-side blame walker and its flip-on-cases replay. `engine.trace.TraceStore` is the one commit store. The server's `sc_*` tables keep only the feed (SSE), versioned docs, the clock and the access log.
+
+**Engine**
+- `engine.Engine(world)` runs storms (`run_storm`) and re-decides (`evaluate` / `to_decision`). The composed fallback (`server/compose.py`) is used only on a checkout without an Engine.
+- **Every non-static rule doc goes to the engine.** This is the same set `scripts/verify.py` replays with. Static cards (hard controls, Reg 2026/2202) are display only. Only legal-ruling rules can change `extraordinary` (engine), so the R-REG-ART5-3 card is cited, never decisive.
+- **Held:** any decision whose outcome is not `auto` (escalated or human/batch review) is held, as in `engine.eu261`.
+
+**Trace**
+- All of these are TraceStore commits: sources, METAR obs, the evidence each decision cites (recorded as Facts with span = quote, because the engine's evidence ids are not normalize ids; the real normalize fact is used when the ids match), decisions, per-flight entitlements, Books JEs (`drafted` / `approved`), questions (`asked` / `reminded` / `answered`), rulings, rule events, period locks, access denials, clock moves, LLM calls and drafts.
+- The 73k normalize facts are not re-committed at boot: they restate the engine's base world.
+- `Store.head()` / `verify_chain()` read the trace's chain in the shared file (for `make verify`). The `sc_*` tables have UPDATE, DELETE and reused-seq (`INSERT OR REPLACE`) ABORT triggers, and `verify_chain` reports a missing one.
+- Reset closes the TraceStore, restores `baseline.db` (backup API) and reopens it.
+
+**Replay and lifecycle**
+- `would_flip`, confirm and inject all use `TraceStore.replay_run(now, decide_fn, rules_override, preview_fn=Books.preview)`. `decide_fn` is the real Engine over the base world, with only the *injected* facts overlaid.
+- Coupon-level rules keep each flight's decision and recompute entitlements only.
+- Flight-level rules re-decide only the candidate flights: where the rule's DSL matches the engine's features (cached per clock tick and injected-fact count; features don't depend on the rule set), that cite it, or that are its cases.
+- Revert is `TraceStore.revert(..., post_recode_fn=Books.post_recode)` over the flights that cite the rule.
+- **Rule drafts:** `llm.drafter.Drafter.propose_rule` (its call becomes an `llm_call` commit) → `engine.rules.checks` (allowlist, grounding, authority, hard controls, reproduces the case) → replay checks. A failure, an `LLMUnavailable` or a timeout falls back to the scripted R-CL-1 / R-LEG-1 / R-CTL-1 bodies for the known patterns; for any other pattern the ruling is applied to its own cases as a human override. Never a 500.
+- **Miner (D7):** `engine.miner.mine(world)` at boot. Each clean `shadow` rule is switched on by an explicit onboarding approval from the seeded Claims Lead seat (`claims_lead:onboarding`, a `rule_event` citing "support 41 of 42 · exception: HR-RR-024"), behind the same authority check as any activation (`Runtime.activate_rule`: the wrong role is DENIED and logged). A rule a written policy contradicts stays `proposed`, and the miner's Controller question is asked. The Learns strip is `engine.miner.learned_items(world, curve_lookup=Books.curve)`. With no history to mine (e.g. the mini world), the stub's R-MINED-REDUCE card stands in.
+
+**ACL and sessions**
+- Sessions are `engine.acl.issue` / `session_or_judge`.
+- Approvals and locks go through `acl.Broker.check` (agents never approve; signed internal sessions only; preparer ≠ approver; payouts need the Claims Lead, JEs and locks the Controller) and then Books' own checks.
+- `persona:<role>` principals are refused every approval at the server layer too ("External: a simulated persona…").
+- Question packets are redacted per recipient with `Broker.packet`. Blame quotes are redacted with `Broker.redact` for non-PII viewers.
+- **Challenge (Justin Q-a):** open to every session (judge, agents, external and persona principals). It is a tier-4 Source plus the Drafter's classification, it routes and never flips, and the served matrix gets an explicit `challenge: write` row for every principal.
+
+**LLM (non-negotiable 2)**
+- `/inject` calls the real `llm.reader.Reader().read(source, ReaderContext(flight, tail, flight numbers))` behind an 8 s hard deadline. Its `LlmCallRecord` becomes one `llm_call` commit, and every fact commit cites it.
+- `fallback_used` is the Reader's own flag: the regex fallback ran because the LLM was unavailable, timed out or refused. If the Reader itself raises, `FakeReader` (regex) runs, `fallback_used` is true and the exception class is committed.
+- The Drafter's `record_for(draft.id)` becomes an `llm_call` commit, and the Draft is committed citing it (`Draft.llm_commit` set).
+- **"Why?" explanations are drafted on the flight file's first view, not at boot,** so boot never waits on an LLM. The result is stored, and a template stays on failure.
+- Replay never calls an LLM.
+- `STORMCHECK_MODE` sets `LLM_MODE` unless that is given explicitly.
+- **Personas:** with `STORMCHECK_PERSONAS=1`, `llm.personas.PersonaBench` answers open questions as `persona:<role>` after boot and confirms the rule its ruling drafts. The principal passes through unchanged, and personas never approve or pay.
+
+## D10c · live paths
+- **Clock:** `POST /clock` is forward-only (422 otherwise). A move runs what became due: pending storm days (Herminia at `meta.storms[].known_at`), reminders (one per question once it passes `remind_at`) and claims.
+- **Claims run in a daily 18:00Z batch, not on arrival.** That keeps day 1 (25 Jan 06:00–18:00Z) at "6 claims arrived overnight, still unassessed", and month-end (which moves the clock to the period's last second) picks them up. Claims on held / needs-ruling coupons wait and are retried on the next batch.
+- **Reset (Justin Q-b):** after restoring `baseline.db`, the clock moves to boot + 3 h (09:00Z). Q1, Q2 and Q3 then read "reminded" ("Waiting on Claims Lead 3h · reminder sent") with no scrub. Neither `expected/` nor smoke-1/2 pin the post-reset clock, and day-1 money is unchanged because the claims batch hasn't run. A fresh boot stays at 06:00Z.
+- **SSE `/stream`:** events after `Last-Event-ID`, polled from `sc_trace` every 0.5 s, with an sse-starlette ping every 15 s (`STORMCHECK_HEARTBEAT_S`). The generator stops when the client disconnects.
+- **Desk:** `world.generate.generate_day` (or the server's one-day adapter over `world.generator.generate_world`, else FakeWorld). The engine's `run_storm` runs on the named airport.
+  - Desk days are priced in a scratch in-memory Books, so the demo ledger is never written. Their decisions and entitlements live in `desk_*` docs (outside the demo's lifecycle and replays), their JEs stay off the main chain (scratch ids), and their questions live in the run only.
+  - `real_context.metar_source` is `pinned` / `IEM` / `AWC`.
+  - Errors are 422 with a plain message: `unknown_airport`, `future_date`, `no_metar`, a WorldError's code; anything unexpected is `upstream`.
+- **Inject:** the source gets a tier by kind (tech log 1, manufacturer 2, OCC/CRM 3, claim/email 4). Then the Reader runs. Prompt-injection text yields no facts, and any "approved" in external text goes through `Broker.check(source, approve_payout)` → DENIED (External).
+  - **Re-decision:** the affected flights (fact subjects `flight:`, `aircraft:` tail, `coupon:`, or the given flight id) are re-decided by the engine with the facts overlaid. Each gets a **new decision commit**, even when unchanged, linked to the facts, and changes are recoded in Books. Escalations ask the engine's question.
+  - **Email / manufacturer text about a decided flight** goes through the challenge path. **Claims / CRM lines** are checked against the coupon: duplicate, limitation (Ireland 6 years), weather (no compensation), UK261 on an EU departure (EU261 applies, paid once), or a chargeback after a refund. A clean owed claim goes to `Books.post_claim`.
+  - **Never a 500:** every stage is guarded, failures commit their exception class, and the input becomes a low-confidence Ops question. Text is cleaned: valid UTF-8, no NULs, capped at 20,000 characters.
