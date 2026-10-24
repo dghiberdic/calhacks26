@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Question, ReplayDiff, Rule } from "@/api/types";
-import { caseCount, caseHref, caseLabel, findProposalRule, MASK_RE, nextStormLine, REJECT_RE, reminderText, seatPhrase } from "./lib";
+import { caseCount, caseHref, caseLabel, findProposalRule, MASK_RE, nextStormLine, readableRule, REJECT_RE, reminderText, seatPhrase, settledHereLine } from "./lib";
 
 const q = (over: Partial<Question> = {}): Question => ({
   id: "Q-1",
@@ -63,6 +63,21 @@ describe("question helpers", () => {
     expect(nextStormLine({ ...replay, flips: replay.flips.slice(-1) }, ["NS31@2025-01-24:14C"])).toBeNull();
   });
 
+  it("says what a confirmed ruling settled on its own storm", () => {
+    const replay: ReplayDiff = {
+      rule_ref: "R-LEG-1@1",
+      known_at: "2025-01-25T09:00:00Z",
+      flips: [
+        { entity_id: "NS113@2025-01-24", field: "extraordinary", before: "needs_legal", after: "extraordinary", delta_cents: -1_922_400 },
+        { entity_id: "NS115@2025-01-24", field: "extraordinary", before: "needs_legal", after: "extraordinary", delta_cents: -1_987_200 },
+        { entity_id: "NS117@2025-01-24", field: "extraordinary", before: "needs_legal", after: "extraordinary", delta_cents: -840_000 },
+      ],
+      total_delta_cents: -4_749_600,
+    };
+    expect(settledHereLine(replay, ["NS113@2025-01-24", "NS115@2025-01-24", "NS117@2025-01-24"])).toBe("3 flights settled, ruling cited 3× · Δ (€47,496)");
+    expect(settledHereLine({ ...replay, flips: [] }, ["NS113@2025-01-24"])).toBeNull();
+  });
+
   it("finds the proposed rule a release question is about", () => {
     const rule = (over: Partial<Rule>): Rule => ({ id: "R", version: 1, kind: "release", scope: {}, condition: {}, action: "deny_release", tier: "mined", authority_required: "controller", valid_from: null, recorded_at: "", status: "proposed", ...over });
     const isha = q({ case_refs: ["EIDW@2024-01-21"], reason_tag: "release-proposal" });
@@ -74,6 +89,14 @@ describe("question helpers", () => {
     expect(REJECT_RE.test("Reject: never release the tail. At M12 keep (ultimate − M12 rate) × entitlement until the six-year limitation.")).toBe(true);
     expect(REJECT_RE.test("Keep the €3,600 and re-test next quarter.")).toBe(false);
     expect(REJECT_RE.test("Derecognise the remaining €3,600 now: no new claims in 3 months.")).toBe(false);
+  });
+
+  it("names each fact of a rule once: scope the condition already states is dropped, case-only scope stays", () => {
+    const rule = {
+      condition: { all: [{ f: "voucher.in_lieu", op: "eq", v: true }, { not: { f: "voucher.signed", op: "eq", v: true } }] },
+      scope: { "voucher.in_lieu": true, "voucher.signed": false, "flight.departs_eu": true, "voucher.amount_cents": "case:30000" },
+    };
+    expect(readableRule(rule).scope).toEqual({ "flight.departs_eu": true, "voucher.amount_cents": "case:30000" });
   });
 
   it("recognises server PII masks", () => {

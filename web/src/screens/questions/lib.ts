@@ -1,5 +1,5 @@
 import type { Question, ReplayDiff, Role, Rule } from "@/api/types";
-import { count, idDate, longDate, ROLE_LABEL, routedTo } from "@/lib/format";
+import { count, eur, idDate, longDate, ROLE_LABEL, routedTo } from "@/lib/format";
 import { stormName } from "@/lib/storms";
 
 /** "sources-disagree" → "sources disagree", for `confidence 39% · sources disagree`. */
@@ -79,6 +79,26 @@ export const caseLabel = (ref: string) => {
   return seat ? `${flight} · ${seat}` : flight;
 };
 
+/** Every feature a DSL condition names ({all|any|not} trees of {f, op, v} clauses). */
+export function conditionFeatures(node: unknown, out = new Set<string>()): Set<string> {
+  if (!node || typeof node !== "object") return out;
+  const n = node as Record<string, unknown>;
+  if (typeof n.f === "string") out.add(n.f);
+  for (const key of ["all", "any"]) if (Array.isArray(n[key])) for (const kid of n[key] as unknown[]) conditionFeatures(kid, out);
+  if (n.not) conditionFeatures(n.not, out);
+  return out;
+}
+
+/**
+ * The rule as it should read: scope keys the condition already states are dropped, so the sentence names
+ * each fact once ("…, and the flight leaves the EU: …"), while case-only scope ("the voucher is €300") stays.
+ */
+export function readableRule<T extends Pick<Rule, "condition" | "scope">>(rule: T): T {
+  const named = conditionFeatures(rule.condition);
+  const scope = Object.fromEntries(Object.entries(rule.scope ?? {}).filter(([k]) => !named.has(k)));
+  return { ...rule, scope };
+}
+
 /** A release proposal (Q3) is rejected, not just answered. */
 export const isReleaseProposal = (q: Question) => q.reason_tag === "release-proposal" || /release/.test(q.pattern);
 
@@ -122,6 +142,25 @@ export function nextStormLine(replay: ReplayDiff | null | undefined, caseRefs: s
     settled: `Next storm (${name}): ${count(n.settled)} case${n.settled === 1 ? "" : "s"} settled, ruling cited`,
     asks: n.asks ? `${count(n.asks)} outside the rule's scope ${n.asks === 1 ? "asks" : "ask"} again` : null,
   };
+}
+
+/**
+ * "↻ 3 flights settled, ruling cited 3× · Δ (€47,496)": what the confirm replay changed on the question's own
+ * storm (its cases and their day), read off the flips. Later storms are `nextStormLine`'s.
+ */
+export function settledHereLine(replay: ReplayDiff | null | undefined, caseRefs: string[]): string | null {
+  if (!replay?.flips.length) return null;
+  const flights = new Set(caseRefs.map((r) => r.split(":")[0]));
+  const days = new Set(caseRefs.map(idDate).filter(Boolean));
+  const here = replay.flips.filter((f) => flights.has(f.entity_id.split(":")[0]) || caseRefs.includes(f.entity_id) || days.has(idDate(f.entity_id)));
+  if (!here.length) return null;
+  const ids = [...new Set(here.map((f) => f.entity_id))];
+  const kinds = new Set(ids.map(caseKind));
+  const kind = kinds.size === 1 ? [...kinds][0] : "case";
+  const noun = { passenger: "case", flight: "flight", cohort: "cohort", rule: "rule", case: "case" }[kind];
+  const verb = kind === "cohort" ? "changed" : "settled";
+  const delta = here.reduce((s, f) => s + (f.delta_cents ?? 0), 0);
+  return `${count(ids.length)} ${noun}${ids.length === 1 ? "" : "s"} ${verb}, ruling cited ${count(ids.length)}×${delta ? ` · Δ ${eur(delta, { signed: true })}` : ""}`;
 }
 
 /** Server-side PII masks, recognised so they render as a quiet "hidden" mark instead of raw symbols. */

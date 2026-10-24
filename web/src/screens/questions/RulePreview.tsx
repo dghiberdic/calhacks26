@@ -6,7 +6,7 @@ import { ErrorNote } from "@/components/kit";
 import { GroundedQuote, RuleSentence, ruleRef, TIER_LABEL } from "@/components/rule-sentence";
 import { count, eur } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { CHECK_ORDER, checkLabel } from "./lib";
+import { CHECK_ORDER, checkLabel, readableRule } from "./lib";
 
 /**
  * What a ruling would become before anyone commits to it: the rule as a sentence, the ruler's own
@@ -45,7 +45,7 @@ export function RulePreview({
           {TIER_LABEL[rule.tier]}
           {rule.supersedes ? <> · supersedes <span className="font-mono text-[12px]">{rule.supersedes}</span></> : null} · you ruled <span className="text-navy-900">&ldquo;{answer.ruling.decision}&rdquo;</span>
         </p>
-        <RuleSentence rule={rule} className="mt-3 text-[15.5px]" />
+        <RuleSentence rule={readableRule(rule)} className="mt-3 text-[15.5px]" />
       </div>
 
       <div>

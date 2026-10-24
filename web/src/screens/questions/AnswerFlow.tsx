@@ -12,7 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ruleRef, TIER_LABEL } from "@/components/rule-sentence";
 import { ROLE_LABEL } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { findProposalRule, isReleaseProposal, nextStormLine, REJECT_RE, seatPhrase } from "./lib";
+import { findProposalRule, isReleaseProposal, nextStormLine, REJECT_RE, seatPhrase, settledHereLine } from "./lib";
 import { RulePreview } from "./RulePreview";
 import { useViewAs } from "./viewAs";
 
@@ -215,6 +215,7 @@ function widenQuestion(next: Record<string, unknown>): string {
 
 function Saved({ question, flow }: { question: Question; flow: Extract<Flow, { step: "saved" }> }) {
   const rule = flow.confirmed.rule;
+  const here = settledHereLine(flow.confirmed.replay, question.case_refs);
   const next = nextStormLine(flow.confirmed.replay, question.case_refs);
   const widenNext = flow.answer.proposal?.widen_next ?? null;
   // Asks come from the server as questions; if it raised the widening as one, point at that card.
@@ -246,8 +247,10 @@ function Saved({ question, flow }: { question: Question; flow: Extract<Flow, { s
       </div>
 
       <div className="flex flex-col gap-2 rounded-lg bg-card px-4 py-3 shadow-[0_0_0_1px_var(--color-cloud-200)]">
-        <LoopFooter className="text-navy-900">{next?.settled ?? "The next matching case settles without asking, with this ruling cited."}</LoopFooter>
+        {here ? <LoopFooter className="text-navy-900">{here}</LoopFooter> : null}
+        {next ? <LoopFooter className="text-navy-900">{next.settled}</LoopFooter> : null}
         {next?.asks ? <p className="pl-6 text-[13px] text-slate-500">{next.asks}</p> : null}
+        {!here && !next ? <LoopFooter className="text-navy-900">The next matching case settles without asking, with this ruling cited.</LoopFooter> : null}
         <ReplaySummary diff={flow.confirmed.replay} className="pl-6 text-[11.5px] text-slate-500" />
       </div>
 
