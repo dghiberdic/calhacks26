@@ -149,7 +149,7 @@ describe("an injection's answer", () => {
     const doc = screen.getByTestId("inject-document");
     const marks = [...doc.querySelectorAll("mark")].map((m) => m.textContent?.replace(/\d+$/, ""));
     expect(marks).toEqual(["23JAN 21:40Z", "NO MEL RELIEF"]);
-    expect(screen.getByTestId("inject-dropped")).toHaveTextContent("2 claims in the text couldn't be verified against a span and were dropped.");
+    expect(screen.getByTestId("inject-dropped")).toHaveTextContent("2 facts didn't quote the text verbatim and were dropped.");
     expect(screen.getByTestId("inject-fallback")).toHaveTextContent("Reader timed out; used the labelled regex fallback.");
     expect(screen.getByTestId("inject-affected")).toHaveTextContent("NS31");
     expect(screen.getByRole("link", { name: /NS31/ })).toHaveAttribute("href", "/flights/NS31%402025-01-24");
