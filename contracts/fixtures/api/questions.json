@@ -217,7 +217,8 @@
         "root_cause_internal": 0.0,
         "sources_disagree": 0.0,
         "precedent_count": 0.0,
-        "knock_on": 1.0
+        "knock_on": 1.0,
+        "concurrent_causes": 0.0
       },
       "caps": [
         "capped:no-precedent"

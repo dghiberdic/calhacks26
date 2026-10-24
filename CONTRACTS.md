@@ -573,6 +573,8 @@ golden/
   curves.json       # LH-v1: M1 .09 M3 .17 M6 .24 M12 .29 M18 .32 ultimate .35; medium ultimate .27; short ultimate .20
   expected/decisions.json  expected/entitlements_NS31.json  expected/journal_NS31.json  expected/rollforward_2025-02.json
   expected/SHA256SUMS      # contracts tests verify; nobody edits expected/ to pass a test
+                           # sha256(expected/SHA256SUMS) = b30ef2a332297ec8177e09fb80d2cc796d12fc48a319b3190fdfa2a2d2f7fa1f
+                           #   (pinned here and in contracts/tests/test_expected.py: a change needs both, on purpose)
 api/                # one valid JSON per GET route (generated from golden + fakes) — Justin designs against these
 injections/         # 8 rehearsed judge scenarios (Injection JSON)
   01_aog_inside_window.json        02_duplicate_direct_plus_agency.json   03_prompt_injection_email.json

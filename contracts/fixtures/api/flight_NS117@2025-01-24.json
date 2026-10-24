@@ -41,7 +41,8 @@
         "root_cause_internal": 0.0,
         "sources_disagree": 0.0,
         "precedent_count": 0.0,
-        "knock_on": 1.0
+        "knock_on": 1.0,
+        "concurrent_causes": 0.0
       },
       "caps": [
         "capped:no-precedent"
@@ -101,7 +102,7 @@
     "routed_to": "legal",
     "question_id": "Q-2",
     "known_at": "2025-01-25T06:00:00Z",
-    "commit": "673c9b420601245cd787d7eb003f1d06090d8539764919adaa38613f2f75bc3e"
+    "commit": "c6f352e39975c9a460e9501ff5b8b4c5dcc018aebe08e45a901862fb93a5f15a"
   },
   "entitlements_summary": {
     "coupons": 168,

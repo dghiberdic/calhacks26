@@ -41,7 +41,8 @@
         "root_cause_internal": 0.0,
         "sources_disagree": 0.0,
         "precedent_count": 3.0,
-        "knock_on": 0.0
+        "knock_on": 0.0,
+        "concurrent_causes": 0.0
       },
       "caps": [],
       "calibration_version": "cal-plan-fixture"
@@ -81,7 +82,7 @@
     "routed_to": null,
     "question_id": null,
     "known_at": "2025-01-25T06:00:00Z",
-    "commit": "b69126c23a13137256573db126949ed03644285341019ae1bb37ab4218bc8783"
+    "commit": "62bff6b08313da446b4e2dc17c1f251297c001f64bacf1756776d856f26de76a"
   },
   "entitlements_summary": {
     "coupons": 174,

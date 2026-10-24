@@ -666,7 +666,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -706,7 +707,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "452d7dd12b6846491f5b1ba620b129612008949db44eb10519579496804a8f75"
+        "commit": "8d024d7c65c964157734b70697078d4c7e37824660fb3c79c60254b3083036e7"
       }
     },
     {
@@ -752,7 +753,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -792,7 +794,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "ba24284b2736b3060f1ae4a63429fe55bc78743a053b582bd23f93bf996d2a9f"
+        "commit": "5f0cf07bc96213dc2cf83293d440c85d1a4971c2c5eab60c1fe49e62801d0eb4"
       }
     },
     {
@@ -838,7 +840,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -878,7 +881,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "6c1858dcb641906ee5a9d55d63b14ca66949a1255d7b211db4d951694fbafa59"
+        "commit": "789f697806d004305b0c77cc8da1dacb98f505aebc382b8e3b8c66e3cade948b"
       }
     },
     {
@@ -924,7 +927,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -964,7 +968,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "af14f6c22c5cf723824c1a866160b314dab4ed254aa91e5aa22a44502e1bff3c"
+        "commit": "36cc0eef1448706b872a5e4756bae5e6a16dd538a9dac710e4c13f8909fd04eb"
       }
     },
     {
@@ -1010,7 +1014,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -1050,7 +1055,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "116eaaee46083b2de921f4ce9bc59ae6b09dfcdcfda15e131729afee0494072b"
+        "commit": "0e7094353d922305a8b326852f11bda8ebe6d61c9c14b83de97d96129b46cdc0"
       }
     },
     {
@@ -1096,7 +1101,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -1136,7 +1142,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "0902070553933607b131b501db7db9ed07f8e6c265170808b4a706673afed39f"
+        "commit": "6a65246ab12aa8517cbd353c6e15398bb154f12017e184d9c02097af70b3e215"
       }
     },
     {
@@ -1182,7 +1188,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -1222,7 +1229,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "b69126c23a13137256573db126949ed03644285341019ae1bb37ab4218bc8783"
+        "commit": "62bff6b08313da446b4e2dc17c1f251297c001f64bacf1756776d856f26de76a"
       }
     },
     {
@@ -1268,7 +1275,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -1308,7 +1316,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "15fb4f2c8ffabdf19244ecda52d407f2a38ed60c2f1e7d747360470a396dbfc6"
+        "commit": "6e0c02df888ba0950123d83482fa489031d887ed10f309c0072964fd84badace"
       }
     },
     {
@@ -1354,7 +1362,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -1394,7 +1403,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "45cfddf975c39d95d28aa6a8671e0619840d08dfe74fd01cd3c96065785409d2"
+        "commit": "51d18850559b45f31cb1c2102fb698709d7ada174d4879530da825c635f53cef"
       }
     },
     {
@@ -1440,7 +1449,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -1480,7 +1490,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "c57a079d40b604cd245248b5fb55eeddac2cbcfd50299d21b7b9642e96b26e3c"
+        "commit": "dcbce41d50013f8bb4b7cb33abb6ab35e9107d178e96c24d8369e9e78a59cba5"
       }
     },
     {
@@ -1526,7 +1536,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -1566,7 +1577,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "2a9a2c97edf30f8ffd23e34f7744e2db66c64eb21a9ff08a21d682db17eb0136"
+        "commit": "0fac795352de15f57c522e8c17f0a69f4903c4ce09f8dd47fe9b93f6bb286f6f"
       }
     },
     {
@@ -1612,7 +1623,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -1652,7 +1664,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "30555b1c718eea9a0c751a800ba64e26dbcc007734fa24fcbefde9bd32e4055a"
+        "commit": "55d0dd9be8fc124778b33073a500e9d34fc1641bcbb4e4d70dd5d537e8d3b03e"
       }
     },
     {
@@ -1698,7 +1710,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -1738,7 +1751,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "8e2f836c87e418cb3b9edbb5902eaab2ee062f04ef18fbfd9158f55217d4629f"
+        "commit": "f7b0c67b04c6b1aee4ea2f740eff54ae417b19e6659c4f57484dd363ee16c4fc"
       }
     },
     {
@@ -1784,7 +1797,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -1824,7 +1838,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "6ed03d8ca224b1c112f42421fd760f00ffc5f64b588f1ff9992d5c033703eea8"
+        "commit": "111a24ffd4f6721f3d1a6ef40931d15e9a0bd5ec2e59d0d52514d730e356dc26"
       }
     },
     {
@@ -1870,7 +1884,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -1910,7 +1925,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "51121d6630fcf2a5c006385155ee47ad2bf63608f66ecef43c70b619a7ee905e"
+        "commit": "c38a001c676d3bd7a4e3bea80fa0ce08b7803726416c02a2b5e5804e1029ac63"
       }
     },
     {
@@ -1956,7 +1971,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -1996,7 +2012,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "6d5e3fd4ef2c7cd16d351c802295e9ce3938d2f6d506d972795746e4327c6441"
+        "commit": "18553307904a21f21a2888b5dc27c9ba989734e43055f860090da50cf0c1563f"
       }
     },
     {
@@ -2042,7 +2058,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -2082,7 +2099,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "cc106d6dd3d146a198c0d3ddfdd0e89bf3a7201aee5172253a50d87179f61eb1"
+        "commit": "e342eea53f5919cbb89d2564c97fba1a37cf33ca3aea594403f79e13539b0d2f"
       }
     },
     {
@@ -2128,7 +2145,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -2168,7 +2186,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "800b30da55c3ad75baeca113a2266970f256a8ef727e023368b4601385650ec4"
+        "commit": "6ba77263586f24dd4d3942c80f32d55722803ffafcd223ee6908a202d535495e"
       }
     },
     {
@@ -2214,7 +2232,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -2254,7 +2273,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "1e591762220aea48d711c0b9be3e0f853c192ae8ca16dd4d6d52641a4d6d265a"
+        "commit": "7c65030d68d2ecbc41998d94a8b3a8e4d7fab359c57bb4a2f833cfb45507b741"
       }
     },
     {
@@ -2300,7 +2319,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -2340,7 +2360,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "f16271d4b7569f56f432716c33af3a3f07e9d4a520c0b9e5c3e861e98dfc9d56"
+        "commit": "de56da08c85ed419453d889e333891fb77f107c27d287651f3baaf13020b4b43"
       }
     },
     {
@@ -2386,7 +2406,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -2426,7 +2447,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "8074c85e51e7e42dc29f5aefd6b3880c14653c830a22c3e00fc483ddc878d6b4"
+        "commit": "d5f6465a86f8d279fab94d03adc54a7aa9e0e77bddd9c5e9962880942f94431a"
       }
     },
     {
@@ -2472,7 +2493,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -2512,7 +2534,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "f21bc9d681ff531c881591e0ad202028e6ff684bf86e6e30cd7a29ff1c3ee397"
+        "commit": "0ff62fd32566f72317ba986fe957d0356fabf38cb43ec0e9884dc315d435e1aa"
       }
     },
     {
@@ -2558,7 +2580,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -2598,7 +2621,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "13339e0c9148137c155e73850783dc3208d539c9774041aee0ab48bdd96fbf8e"
+        "commit": "f98264e63db526feab1cc343371cb3d706a99c55b16d04f08c63ea260837b4e4"
       }
     },
     {
@@ -2644,7 +2667,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 0.0,
-            "knock_on": 1.0
+            "knock_on": 1.0,
+            "concurrent_causes": 0.0
           },
           "caps": [
             "capped:no-precedent"
@@ -2704,7 +2728,7 @@
         "routed_to": "legal",
         "question_id": "Q-2",
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "6c8f1009cac609f535957f61699292b85942f7f6efa725e48a923ddbf949c128"
+        "commit": "7b70b766ecf14fd6ecdf03316698a5e8d9a99bd3c6179945870bb1914e061998"
       }
     },
     {
@@ -2750,7 +2774,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 0.0,
-            "knock_on": 1.0
+            "knock_on": 1.0,
+            "concurrent_causes": 0.0
           },
           "caps": [
             "capped:no-precedent"
@@ -2810,7 +2835,7 @@
         "routed_to": "legal",
         "question_id": "Q-2",
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "673c9b420601245cd787d7eb003f1d06090d8539764919adaa38613f2f75bc3e"
+        "commit": "c6f352e39975c9a460e9501ff5b8b4c5dcc018aebe08e45a901862fb93a5f15a"
       }
     },
     {
@@ -2856,7 +2881,8 @@
             "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 0.0,
-            "knock_on": 1.0
+            "knock_on": 1.0,
+            "concurrent_causes": 0.0
           },
           "caps": [
             "capped:no-precedent"
@@ -2916,7 +2942,7 @@
         "routed_to": "legal",
         "question_id": "Q-2",
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "8ae40464cb1138bf18f6da10bc86bac33e9b6c1de469637594d1bc1c9b4835bd"
+        "commit": "425372250b6a8b149ace80f0ebc2437bba199a0ff2c868321b37e271cac30820"
       }
     },
     {
@@ -2962,7 +2988,8 @@
             "root_cause_internal": 1.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
-            "knock_on": 0.0
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture"
@@ -3040,7 +3067,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "e918af7a868cca89b5b1a70b844486afb8a379b621a7672f474ef93a243f791d"
+        "commit": "2634c0d274b70dde38d64b2687234640c95eae9998594779ed49245bec72dd82"
       }
     },
     {
@@ -3542,7 +3569,8 @@
           "root_cause_internal": 0.0,
           "sources_disagree": 0.0,
           "precedent_count": 0.0,
-          "knock_on": 1.0
+          "knock_on": 1.0,
+          "concurrent_causes": 0.0
         },
         "caps": [
           "capped:no-precedent"
