@@ -7,8 +7,9 @@ const port = Number(process.env.E2E_PORT ?? 5180);
 
 export default defineConfig({
   testDir: "e2e",
-  timeout: 30_000,
-  expect: { timeout: 8_000 },
+  // A cold dev server compiles each screen on its first visit, and on a busy laptop that alone can take 20 s.
+  timeout: 90_000,
+  expect: { timeout: 15_000 },
   fullyParallel: true,
   reporter: [["list"]],
   use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure" },

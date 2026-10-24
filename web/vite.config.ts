@@ -35,6 +35,9 @@ export default defineConfig(({ mode }) => {
     resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
     server: { port: Number(env.PORT) || 5173, proxy: { "/api": { target, changeOrigin: true } } },
     preview: { port: 4173 },
+    // Crawl every screen for dependencies at startup: otherwise the first visit to a lazy route (three.js on
+    // /story, recharts on /close) discovers new deps and reloads the page mid-test.
+    optimizeDeps: { entries: ["index.html", "src/**/*.tsx"] },
     build: { outDir: "dist", chunkSizeWarningLimit: 1200 },
   };
 });
