@@ -5,6 +5,7 @@
 //   node scripts/shoot.mjs --url http://localhost:5173/questions --at 0
 //   node scripts/shoot.mjs --sizes 1440x900,390x844,375x667 --at 0,0.3,0.6 --out shots
 //   --hold 5000 (after the load event, before the first shot) · --settle 2200 (after each scroll)
+//   --dpr 2 (retina) · --format jpeg (smaller frames; use it with --dpr 2 on WebGL pages)
 //
 // Needs Node 22+ (global WebSocket). CHROME=/path/to/chrome overrides the macOS default.
 // Exits 1 if the page threw, so it can gate a change.
@@ -23,6 +24,9 @@ const depths = arg("at", "0,0.14,0.28,0.42,0.56,0.7,0.84,1").split(",").map(Numb
 const out = arg("out", "shots");
 const settle = Number(arg("settle", "2200"));
 const hold = Number(arg("hold", "5000"));
+const dpr = Number(arg("dpr", "1"));
+// PNG by default; --format jpeg (quality 88) keeps a DPR 2 WebGL frame small enough for the DevTools socket.
+const format = arg("format", "png") === "jpeg" ? "jpeg" : "png";
 const chrome = process.env.CHROME ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 if (typeof WebSocket === "undefined") throw new Error("Node 22+ is needed (global WebSocket).");
 
@@ -68,7 +72,7 @@ mkdirSync(out, { recursive: true });
 const slug = new URL(url).pathname.replace(/\W+/g, "-").replace(/^-|-$/g, "") || "home";
 
 for (const [w, h] of sizes) {
-  await send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: w < 768 });
+  await send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: dpr, mobile: w < 768 });
   // A cold dev server (fresh profile, files just edited) can take well over 6 s to load every module, so wait
   // for the load event, then hold long enough for the opening animations (Storm Run's settles at ~4.2 s).
   const loaded = new Promise((r) => (onLoad = r));
@@ -79,8 +83,8 @@ for (const [w, h] of sizes) {
     // Native scroll: Lenis and ScrollTrigger follow it, scrubbed timelines catch up during the settle.
     await evaluate(`window.scrollTo(0, (document.documentElement.scrollHeight - innerHeight) * ${at})`);
     await wait(settle);
-    const shot = await send("Page.captureScreenshot", { format: "png" });
-    const file = join(out, `${slug}-${w}x${h}-${String(Math.round(at * 100)).padStart(3, "0")}.png`);
+    const shot = await send("Page.captureScreenshot", format === "jpeg" ? { format, quality: 88 } : { format });
+    const file = join(out, `${slug}-${w}x${h}${dpr !== 1 ? `@${dpr}x` : ""}-${String(Math.round(at * 100)).padStart(3, "0")}.${format === "jpeg" ? "jpg" : "png"}`);
     writeFileSync(file, Buffer.from(shot.data, "base64"));
     console.log(file);
   }

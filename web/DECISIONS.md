@@ -70,4 +70,7 @@ Judgment calls, newest first within each task. One line each, with the why. Requ
 - The Vercel build ships the recorded demo once `demo/recorded/` exists, and the mock world until then; the sidebar says which.
 
 ## J11 · /pitch
+- The deck waits up to 1.6 s for fonts and the API's figures before a slide lays out, so a cold open never shifts (it did on three slides).
+- The cover is a fresh NASA GIBS MODIS Terra export of 24 Jan 2025 at 3840×2160 with the colour grade baked in; its clouds turn counter-clockwise about the low in WebGL while land and sea stay still, and a slow GPU gets half resolution, then the still.
+- Eyebrows dropped "example ·"; every slide's rendered text is checked in e2e against the banned-words list (no generated-sounding words, em dashes, "!", "AI" as a selling word or rhetorical questions).
 - The seats line sits on the cover. The Business slide's footer carries no number until the API counts cases settled by a cited ruling (request 6).
