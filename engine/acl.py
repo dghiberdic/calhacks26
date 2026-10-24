@@ -13,7 +13,10 @@ Hard controls are code here, not configuration:
 - payouts need the Claims Lead;
 - journal entries and period locks need the Controller;
 - an external party never satisfies an internal approval (an email or claim text saying "approved" is just text;
-  only a signed internal ``Session`` approves).
+  only a signed internal ``Session`` approves);
+- a simulated persona (``persona:<role>``, llm/personas.py) is an external party, even holding a (forged) internal
+  session: it never approves, pays or locks a period; it may only read case facts redacted and answer questions
+  (its answers are recorded as simulated), and as an LLM it sees no PII.
 
 Every check becomes an ``AccessDecision`` in ``Broker.log``; every denial is also an ``access_denied`` commit
 (``agent.drafter approve_payout → DENIED · SoD``) when the broker has a trace store.
@@ -50,6 +53,7 @@ from contracts.models import (
     Source,
     SourceKind,
 )
+from engine.controls import PERSONA_DENIAL, is_persona, persona_role
 from engine.trace import canonical, utc
 
 MASK = "[redacted:pii]"
@@ -98,6 +102,11 @@ MATRIX: dict[str, dict[str, str]] = {
     "judge": _row(**_LOGS, sources="redacted", pii="redacted", claims="redacted", case_facts="read", questions="read",
                   journal="read", aggregates="read", rules="read", desk="write", inject="write"),
 }
+# a simulated persona, whatever role it simulates: reads redacted, answers questions, nothing else (not in the
+# displayed matrix: it is not a principal of the business, only of an unattended run)
+PERSONA_ROW = _row(**_LOGS, sources="redacted", claims="redacted", case_facts="read", questions="write",
+                   rules="read")
+PERSONA_NOTE = "{p} is a simulated persona: it answers as simulated, sees no PII and never approves"
 
 ROLE_NOTES = {
     "ops": "Ops sees flights and logs, no PII",
@@ -236,8 +245,9 @@ class Principal:
     id: str                     # what AccessDecision.principal records
     role: Role | None           # None = unknown or external
     authenticated: bool         # a signed internal Session
-    external: str | None        # "email", "claim", "fact", "text", ... for an external party
+    external: str | None        # "email", "claim", "fact", "text", "persona", ... for an external party
     text: str = ""              # what an external party says (checked for "approved" wording)
+    persona: bool = False       # a simulated person (persona:<role>); role = the role it simulates
 
 
 def principal_for(role: Role | str, name: str) -> str:
@@ -249,13 +259,22 @@ def principal_for(role: Role | str, name: str) -> str:
     return f"{role.value}:{slug}"
 
 
+def _persona(pid: str) -> Principal:
+    """Never authenticated, whatever session it came in: its role comes from its id, not from the session."""
+    return Principal(pid, persona_role(pid), False, "persona", persona=True)
+
+
 def principal_of(p: Any) -> Principal:
     if isinstance(p, Session):
+        if is_persona(p.principal):
+            return _persona(p.principal.strip())
         return Principal(p.principal, Role(p.role), True, None)
     if isinstance(p, Role):
         return Principal(p.value, p, False, None)
     if isinstance(p, str):
         s = p.strip()
+        if is_persona(s) and _ID.fullmatch(s):
+            return _persona(s)
         if s in ROLE_VALUES:
             return Principal(s, Role(s), False, None)
         head, sep, tail = s.partition(":")
@@ -356,10 +375,18 @@ class Broker:
             return "none"
         return MATRIX.get(role.value, {}).get(column, "none")
 
+    @classmethod
+    def _level_of(cls, pr: Principal, column: str) -> str:
+        if pr.persona:
+            return PERSONA_ROW.get(column, "none") if pr.role is not None else "none"
+        return cls._level(pr.role, column)
+
     def _decide(self, pr: Principal, action: str, resource: str | None,
                 preparer: str | None) -> tuple[bool, str, str]:
         """(allowed, reason, error code). Reasons read "<Tag>: <why>"; the tag lands in the denial commit."""
         if action in APPROVALS:
+            if pr.persona:
+                return False, f"External: {PERSONA_DENIAL.format(p=pr.id)}", "sod_violation"
             if pr.role in AGENT_ROLES:
                 return False, f"SoD: agents never {APPROVALS[action]}", "sod_violation"
             if not pr.authenticated:
@@ -386,8 +413,8 @@ class Broker:
             return False, f"Fail closed: unknown action {action!r}", "forbidden"
         if column is None:
             return False, f"Fail closed: unknown resource {resource!r}", "forbidden"
-        level = self._level(pr.role, column)
-        note = ROLE_NOTES[pr.role.value]
+        level = self._level_of(pr, column)
+        note = PERSONA_NOTE.format(p=pr.id) if pr.persona else ROLE_NOTES[pr.role.value]
         if level in ok:
             return True, note + (" (PII masked)" if level == "redacted" else ""), ""
         tag = "No PII" if column in PII_RESOURCES and level == "none" else "Least privilege"
@@ -432,7 +459,7 @@ class Broker:
     # ------------------------------------------------------------------ redaction
 
     def sees_pii(self, principal: Any) -> bool:
-        return self._level(principal_of(principal).role, "pii") == "read"
+        return self._level_of(principal_of(principal), "pii") == "read"
 
     def redact(self, principal: Any, obj: Any) -> Any:
         """``obj`` as ``principal`` may see it: unchanged for PII readers (Reader, Claims Lead, CRM bot), else a
