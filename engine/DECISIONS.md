@@ -131,3 +131,37 @@ A no-go line (`mel_relief` False or None) beats one with relief; ties go to the 
   - Money: entitlement 9,900,000 and drafted 8,214,600, with R-MINED-REDUCE active.
   - Herminia: NS106 recoded 71 → 41, NS110 and NS30@01-25 technical. R-CL-1 settles exactly the 31 EU-departure vouchers; the BOS→DUB one asks again.
 - **The Isha release question is in every run** whose `known_at` month-close puts the cohort at ≥ M12 with ≥3 quiet months and no keep-tail/deny-release rule. It has one id (`Q-3` on golden), so the server can de-duplicate it across runs. It disappears once R-CTL-1 is in force.
+- **`expected/` acceptance** (`test_expected.py`) runs both golden storms with R-MINED-REDUCE active. It checks:
+  - decisions compared exactly on the five fields plus `recode_label`, with confidence by band (`min` inclusive, `max` exclusive);
+  - operated flights have no decision;
+  - NS31 entitlements coupon by coupon;
+  - questions by pattern (role, tag, refs, holds, kind, band, "€600" in the recommended option);
+  - golden numbers.
+
+## D6 · `engine/confidence.py`, `engine/routing.py`, `engine/questions.py`, `engine/challenge.py`
+
+**Confidence.**
+- One logistic per `Confidence.kind`. A missing or malformed model (feature/coef length mismatch) gives `score=None`, and the outcome is `human`: an uncalibrated decision is never automatic.
+- Missing features read as 0. Caps are passed through, de-duplicated, and never change the score (tested).
+- Default priors include a `release` model (age, months since last claim, precedents) tuned to the plan's 72% for Isha at M12 with 3 quiet months. There is no `claim_validity` model, so it is uncalibrated.
+
+**Voucher confidence (Q1).** Features are `in_lieu`, `signed`, `sources_disagree`, `precedent_count`.
+- `sources_disagree` = 1 when the CRM voucher text says "accepted" but there is no signature hash, or when a claim on the coupon says the passenger never agreed.
+- On golden 14C both hold: 0.389, tag `sources-disagree`.
+- `precedent_count` counts `history_cases` of kind `voucher_in_lieu_unsigned` (none on golden).
+
+**Thresholds.** ≥0.90 auto (0.90 itself is auto), 0.60–0.90 `human` (batch review), <0.60 `escalated`. The materiality gate is `liability ≥ 5,000,000` → `human` to the Controller, so exactly €50k is *not* auto ("< €50k AND ≥ 0.90").
+
+**Question content.**
+- Holds are the flight ids (flight patterns), coupon ids (vouchers) or cohort ids.
+- `holds_cents` is the accrued liability held for flight patterns (Q2: 4,749,600), the compensation at stake for vouchers (Q1: 60,000), and the balance for a cohort (Q3: 360,000).
+- The question's confidence is the weakest of its cases.
+- A knock-on with prior precedents but no matching rule becomes `new-legal-pattern` instead of `no-precedent`.
+
+**Reminders.** `remind_at = asked_at + 3 h`. `status_at(q, now, answered)` is the view: answered > reminded (now ≥ remind_at) > open. The server's Clock supplies `now`.
+
+**Challenges (`engine/challenge.py`).** Challenge facts are tier 4 and never flip a decision; `decision_stands` is always true.
+- `assertion` cites the decision's tier-1/2 evidence (struck evidence excluded) plus the departures from the same origin that operated between the window end and STD + 2 h. On golden that is 11 departures, the plan's "everyone else flew".
+- `new_legal_pattern` → Legal question `Q-<flight>:new_legal_pattern`, tag `new-legal-pattern`. Confidence is the decision's features with `sources_disagree = 1` (NS31: 0.45, plan says 52%, both < 0.6) plus cap `capped:challenge-tier-4`.
+- `new_fact` → Ops question `Q-<flight>:challenge_new_fact`.
+- The Drafter writes the reply prose; the server assembles `ChallengeResponse`.
