@@ -37,8 +37,8 @@ export function headline(baseline: Runs, sc: Runs) {
   const list = (r: Runs) => r.values.map(euros).join(" / ");
   const hash = (r: Runs) => (r.hashIdentical === true ? "same hash" : r.hashIdentical === false ? "hashes differ" : "hash not reported");
   return {
-    baseline: `Plain Claude, ${baseline.runs} runs: ${list(baseline)}.`,
-    stormcheck: sc.allSame ? `StormCheck: ${euros(sc.values[0])} ×${sc.runs}, ${hash(sc)}.` : `StormCheck, ${sc.runs} runs: ${list(sc)}, ${hash(sc)}.`,
+    baseline: baseline.values.length ? `Plain Claude, ${baseline.runs} runs: ${list(baseline)}.` : "Plain Claude baseline: not reported.",
+    stormcheck: !sc.values.length ? "StormCheck runs: not reported." : sc.allSame ? `StormCheck: ${euros(sc.values[0])} ×${sc.runs}, ${hash(sc)}.` : `StormCheck, ${sc.runs} runs: ${list(sc)}, ${hash(sc)}.`,
   };
 }
 

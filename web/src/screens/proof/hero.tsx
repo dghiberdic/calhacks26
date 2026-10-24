@@ -26,7 +26,7 @@ export function RunsHero({ report }: { report: EvalReport }) {
           <span className="block text-balance text-cloud-500">{h.baseline}</span> <span className="mt-1 block text-cloud-50">{h.stormcheck}</span>
         </h2>
       </div>
-      <RunsPlot base={base} sc={sc} />
+      {base.values.length || sc.values.length ? <RunsPlot base={base} sc={sc} /> : <div className="h-6" />}
       <div className="relative grid gap-px border-t border-white/[0.07] bg-white/[0.07] sm:grid-cols-2">
         <RunFacts title="Plain Claude" runs={base} note={base.model ? `${base.model} on the raw documents` : "the model on the raw documents"} />
         <RunFacts title="StormCheck" runs={sc} note="Reader facts, then the deterministic engine" strong />

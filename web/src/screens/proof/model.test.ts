@@ -32,6 +32,11 @@ describe("runs", () => {
     const h = headline(readRuns(baseline), readRuns({ runs: 2, liability_eur: [34650, 34651], hash_identical: false }));
     expect(h.stormcheck).toBe("StormCheck, 2 runs: €34,650 / €34,651, hashes differ.");
   });
+  it("says plainly when a side wasn't run", () => {
+    const h = headline(readRuns(undefined), readRuns(stormcheck));
+    expect(h.baseline).toBe("Plain Claude baseline: not reported.");
+    expect(headline(readRuns(baseline), readRuns({})).stormcheck).toBe("StormCheck runs: not reported.");
+  });
   it("puts the axis at a round number above everything", () => {
     expect(axisMax([41580, 99000, 27720, 34650])).toBe(100000);
     expect(axisMax([34650])).toBe(40000);
