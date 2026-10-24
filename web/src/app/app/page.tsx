@@ -112,7 +112,33 @@ export default function Overview() {
             ))}
           </div>
         </div>
-        <div className="overflow-x-auto" data-lenis-prevent-horizontal>
+        {/* Phones: what StormCheck decided and what's owed, per flight, without a sideways table. */}
+        <ul className="md:hidden" aria-label="Cancellations">
+          {rows.map((f) => {
+            const tech = f.verdict === "technical";
+            return (
+              <li key={f.id} className={cn("border-t border-[#f0f0eb]", tech && "bg-[#fff6f3]")}>
+                <button type="button" onClick={() => openSheet(f.id)} className="flex w-full items-center justify-between gap-3 px-5 py-3 text-left">
+                  <span className="min-w-0">
+                    <span className={cn("font-mono text-[14px]", tech && "font-bold")}>{f.id}</span>
+                    <span className="ml-2 text-[14px]">{f.city}</span>
+                    <span className="tabular mt-0.5 block text-[12.5px] text-graphite">
+                      {f.sched}Z · {f.pax} pax · ops <span className={cn(tech && "line-through decoration-owed")}>71</span>
+                      {tech && <span className="text-owed-ink"> → 41</span>}
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 flex-col items-end gap-1">
+                    <Chip kind={f.verdict}>
+                      {tech ? "Technical" : "Weather"} · {f.confidence}%
+                    </Chip>
+                    {tech ? <Money value={f.pax * 600} className="text-[14px] text-owed-ink" /> : <Money value={0} className="text-[14px] text-graphite" />}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+        <div className="hidden overflow-x-auto md:block" data-lenis-prevent-horizontal>
           <table className="w-full min-w-[760px] border-collapse text-[14px]">
             <thead>
               <tr className="text-left text-[13px] text-graphite">
@@ -136,7 +162,7 @@ export default function Overview() {
                     onMouseLeave={() => setHover(null)}
                     className={cn("cursor-pointer border-t border-[#f0f0eb] transition-colors hover:bg-chart", tech && "bg-[#fff6f3] hover:bg-[#ffefe9]")}
                   >
-                    <td className="px-5 py-3 font-mono text-graphite">{f.sched}</td>
+                    <td className="tabular px-5 py-3 text-graphite">{f.sched}</td>
                     <td className={cn("px-2 py-3 font-mono", tech && "font-bold")}>
                       <button type="button" className="text-left underline-offset-4 hover:underline" onClick={(e) => (e.stopPropagation(), openSheet(f.id))}>
                         {f.id}

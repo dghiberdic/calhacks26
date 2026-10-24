@@ -53,5 +53,6 @@ export function Card({ className, children }: { className?: string; children: Re
 }
 
 export function Money({ value, className }: { value: number; className?: string }) {
-  return <span className={cn("tabular font-mono", className)}>€{Math.round(value).toLocaleString("en-IE")}</span>;
+  // Archivo tabular, not B612: B612's comma sits at the left of its cell and reads "€127, 200".
+  return <span className={cn("figure", className)}>€{Math.round(value).toLocaleString("en-IE")}</span>;
 }

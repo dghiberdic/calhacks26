@@ -200,7 +200,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-settled opacity-40" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-settled" />
               </span>
-              Re-checked <span className="font-mono">09:00Z</span>
+              Re-checked <span className="tabular">09:00Z</span>
             </button>
             <RoleSwitcher />
           </div>

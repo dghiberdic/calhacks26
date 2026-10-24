@@ -31,9 +31,9 @@ Refetch: `node scripts/fetch-storm.mjs --date 2025-12-09 …`, `node scripts/fet
 
 ## Design rules
 Colour only means a verdict (weather grey, owed vermilion, review amber, settled green, interactive blue).
-B612 Mono only for machine text at reading size (METAR, tech log, codes, table amounts). Clocks and money at
-display size use `.figure` (Archivo, tabular figures): B612 sets `:` and `,` at the left of a full cell, so
-large mono reads "13: 50Z". Evidence inks the drawing: pencil until the sources agree. Art direction lives on
+B612 Mono only for machine text (METAR, tech log, codes, IDs, journal lines). Money anywhere, and clocks at
+display size, use `.figure` (Archivo, tabular figures): B612 sets `:` and `,` at the left of a full cell, so
+"€127,200" reads "€127, 200". Evidence inks the drawing: pencil until the sources agree. Art direction lives on
 the Claude Design canvas "StormCheck — Design".
 
 - Line art plots with `PLOTTED` on the paths and `UNPLOTTED` in a `.from()` (`components/motion/gsap.ts`);

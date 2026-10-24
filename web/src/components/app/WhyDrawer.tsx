@@ -39,10 +39,10 @@ export function WhyDrawer() {
         ...(why.kind === "provision"
           ? [
               { label: "Provision", value: <Money value={NS31.provision} />, note: "EU261 claims provision for NS31, drafted 09:00Z.", tone: "owed" as const },
-              { label: "Exposure × claim rate", value: <span className="font-mono">€127,200 × 35%</span>, note: "Claim rate learned from 18 storms and two years of claims (R-6 v4)." },
+              { label: "Exposure × claim rate", value: <span className="figure">€127,200 × 35%</span>, note: "Claim rate learned from 18 storms and two years of claims (R-6 v4)." },
             ]
           : [{ label: "Payout", value: <Money value={why.amount} />, note: `${why.passenger ?? "Passenger"} on ${f.id}.`, tone: "owed" as const }]),
-        { label: "Passengers × tier", value: <span className="font-mono">{f.pax} × €{per}</span>, note: `Dublin to ${f.city} is ${f.km.toLocaleString("en-IE")} km. Art. 7(1) tier (R-4 v1).` },
+        { label: "Passengers × tier", value: <span className="figure">{f.pax} × €{per}</span>, note: `Dublin to ${f.city} is ${f.km.toLocaleString("en-IE")} km. Art. 7(1) tier (R-4 v1).` },
         { label: "Cause", value: "Technical fault", note: "Not an extraordinary circumstance: CJEU C-549/07 Wallentin-Hermann (R-3 v2)." },
         { label: "Tech log", value: <span className="font-mono">07:55Z · ATA 29-11</span>, note: <span className="font-mono text-[12.5px]">{NS31.techLog.entry}</span>, mono: true },
         { label: "Weather", value: <span className="font-mono">{STORM.windowStart}–{STORM.windowEnd}Z</span>, note: `Storm window from METAR, gusts at or above ${STORM.limitKt} kt. NS31 was due at 21:30, after it.`, tone: "weather" as const },

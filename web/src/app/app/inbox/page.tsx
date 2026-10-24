@@ -69,7 +69,7 @@ function Resolved({ q, answerId, onNext }: { q: Question; answerId: string; onNe
                 >
                   <span>{c.name}</span>
                   <span className="text-graphite">{c.outcome}</span>
-                  <span className="tabular font-mono">€{c.amount}</span>
+                  <span className="figure">€{c.amount}</span>
                   <span className="rounded-full bg-settled-wash px-2 py-[2px] font-mono text-[12px] text-settled-ink">R-7 v1</span>
                 </motion.li>
               ))}

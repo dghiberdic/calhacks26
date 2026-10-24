@@ -58,7 +58,7 @@ function WindowReplay() {
           </p>
           <p className="text-[15px]">
             <span className="font-semibold text-owed-ink">{result.flips.length} of 13</span> weather verdicts would flip to owed, adding{" "}
-            <span className="tabular font-mono text-owed-ink">€{result.exposure.toLocaleString("en-IE")}</span> of exposure. That is why the rule version is stored on every decision.
+            <span className="figure text-owed-ink">€{result.exposure.toLocaleString("en-IE")}</span> of exposure. That is why the rule version is stored on every decision.
           </p>
           <p className="font-mono text-[12px] text-graphite">{result.flips.map((f) => f.id).join("  ")}</p>
         </motion.div>
