@@ -17,8 +17,9 @@ export function SiteNav() {
           <Link href="/app/desk" className="hidden opacity-80 transition-opacity hover:opacity-100 md:inline">
             Judge&rsquo;s desk
           </Link>
-          <Link href="/app" className="rounded-full px-4 py-2 font-medium shadow-[inset_0_0_0_1.5px_currentColor] transition-colors hover:bg-white hover:text-black">
-            Open the storm night
+          <Link href="/app" className="whitespace-nowrap rounded-full px-4 py-2 font-medium shadow-[inset_0_0_0_1.5px_currentColor] transition-colors hover:bg-white hover:text-black">
+            <span className="hidden sm:inline">Open the storm night</span>
+            <span className="sm:hidden">Open app</span>
           </Link>
         </nav>
       </header>
