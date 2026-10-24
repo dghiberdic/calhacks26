@@ -1,0 +1,10 @@
+{
+  "id": "04_chargeback_after_bot_refund",
+  "title": "Chargeback after the CRM bot already refunded",
+  "request": {
+    "kind": "crm",
+    "text": "Chargeback received 2025-02-03 for coupon NS31@2025-01-24:3A, EUR 510.00, reason: service not provided.",
+    "flight_id": "NS31@2025-01-24"
+  },
+  "expected": "Refund already initiated 24 Jan · chargeback flagged as duplicate · Claims Lead"
+}
