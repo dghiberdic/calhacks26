@@ -54,4 +54,10 @@ describe("selectors", () => {
     expect(monthRange(p?.learn)).toBe("Jul 2023 – Dec 2024");
     expect(monthRange("spring")).toBe("spring");
   });
+
+  it("reads straight-through as a fraction whether the eval sends 96.4 or 0.964 (it showed 9640%)", () => {
+    expect(proofOf({ straight_through_pct: 96.4 } as unknown as EvalReport)?.straightThrough).toBeCloseTo(0.964);
+    expect(proofOf({ straight_through_pct: 0.964 } as unknown as EvalReport)?.straightThrough).toBeCloseTo(0.964);
+    expect(proofOf({} as unknown as EvalReport)?.straightThrough).toBeUndefined();
+  });
 });

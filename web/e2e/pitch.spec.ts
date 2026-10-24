@@ -1,4 +1,5 @@
-import { expect, test } from "./fixtures";
+import { copyProblem } from "../src/pitch/copy";
+import { expect, test, type Page } from "./fixtures";
 
 // THREAD_JUSTIN J11: the /pitch deck. Arrow keys move through every slide, the seats line and
 // "2 Claude roles + 1 deterministic engine" are on their slides, and the URL keeps the slide.
@@ -113,4 +114,75 @@ test("out-of-range slides land on the deck, and Esc goes back to the app", async
   await expect(page.getByTestId("slide-cfo")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/$/);
+});
+
+/** Every text node on the slide, one per entry, so words in neighbouring elements never run together. */
+const slideText = (page: Page, id: string) =>
+  page.getByTestId(`slide-${id}`).evaluate((el) => {
+    const parts: string[] = [];
+    const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    while (walk.nextNode()) if (walk.currentNode.textContent?.trim()) parts.push(walk.currentNode.textContent.trim());
+    return parts.join(" \n ");
+  });
+
+test("each slide names itself in the tab, and none of its words read as generated", async ({ page }) => {
+  await page.goto("/pitch/0");
+  for (let i = 0; i < SLIDES.length; i++) {
+    if (i > 0) await page.keyboard.press("ArrowRight");
+    await expect(page.getByTestId(`slide-${SLIDES[i]}`)).toBeVisible();
+    await expect(page).toHaveTitle(`Pitch · ${i + 1}/${SLIDES.length} · StormCheck`);
+    const text = await slideText(page, SLIDES[i]);
+    expect(text.length, `slide ${i} has words to read`).toBeGreaterThan(60);
+    expect(copyProblem(text), `slide ${i} (${SLIDES[i]}) reads:\n${text}`).toBeNull();
+  }
+  // The Business cards carry plain tags, the same four the app uses.
+  await page.keyboard.press("Home");
+  await page.keyboard.press("ArrowRight");
+  const business = page.getByTestId("slide-business");
+  for (const tag of ["from its own history", "overnight", "asks a person", "becomes policy"]) await expect(business.getByText(tag, { exact: true })).toBeVisible();
+  await expect(business).not.toContainText("self-learning");
+  await expect(business).not.toContainText("ai-automated");
+});
+
+/** The marker's distance along the CFO line, from its transform. */
+const markerX = (page: Page) => page.getByTestId("cfo-marker").evaluate((el) => new DOMMatrixReadOnly(getComputedStyle(el).transform).m41);
+
+test("it moves: the cover drifts, the storm strip recodes NS31, the CFO marker slides to the drafted figure", async ({ page }) => {
+  await page.goto("/pitch/0");
+  await expect(page.getByTestId("slide-cover")).toBeVisible();
+  await expect.poll(() => page.getByTestId("cover-camera").evaluate((el) => el.getAnimations().filter((a) => a.playState === "running").length)).toBeGreaterThan(0);
+  const first = await page.screenshot();
+  await page.waitForTimeout(500);
+  expect(first.equals(await page.screenshot()), "two frames 500 ms apart on the cover").toBe(false);
+
+  await page.goto("/pitch/2");
+  const strip = page.getByTestId("storm-strip");
+  await expect(strip).toBeVisible();
+  // It opens on OCC's codes and settles on the re-check; the recoded flight ends red.
+  await expect(strip).toHaveAttribute("data-phase", "3", { timeout: 15_000 });
+  await expect(strip.locator("[data-verdict='notweather']")).toHaveCount(1);
+
+  await page.goto("/pitch/5");
+  await expect(page.getByTestId("cfo-marker")).toBeVisible();
+  expect(await markerX(page), "the marker starts at €0").toBeLessThan(40);
+  await expect.poll(() => markerX(page), { timeout: 10_000 }).toBeGreaterThan(100);
+  await expect(page.getByTestId("cfo-drafted")).toContainText("€34,650");
+});
+
+test("with reduced motion every slide lands in place and nothing drifts", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/pitch/0");
+  await expect(page.getByTestId("slide-cover")).toBeVisible();
+  expect(await page.getByTestId("cover-camera").evaluate((el) => el.getAnimations().length)).toBe(0);
+  await expect(page.getByTestId("cover-flow")).toHaveCount(0);
+
+  await page.goto("/pitch/2");
+  await expect(page.getByTestId("storm-strip")).toHaveAttribute("data-phase", "3");
+
+  await page.goto("/pitch/5");
+  await expect(page.getByTestId("cfo-marker")).toBeVisible();
+  const landed = await markerX(page);
+  expect(landed, "the marker is already on the drafted figure").toBeGreaterThan(100);
+  await page.waitForTimeout(400);
+  expect(await markerX(page)).toBe(landed);
 });
