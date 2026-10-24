@@ -1,13 +1,14 @@
 import { K, type Box } from "../data/geo";
 
 /** ERA5 10 m wind on a regular grid, in knots (u east, v north). */
-export type WindGrid = { nx: number; ny: number; lonMin: number; latMax: number; step: number; u: number[]; v: number[] };
+export type WindGrid = { nx: number; ny: number; lonMin: number; latMax: number; step: number; u: ArrayLike<number>; v: ArrayLike<number> };
 
 type Particle = { x: number; y: number; age: number; life: number };
 
 /**
  * Particles advected through the real wind field and drawn as fading trails on a transparent 2D
- * canvas, in the same map space as the SVG chart. Gale-force air (≥ 34 kt) draws brighter.
+ * canvas, in the same map space as the SVG chart. Gale-force air (≥ 34 kt) draws brighter. The grid's
+ * u and v may change under it every frame (the hero blends ERA5 hours as its clock runs).
  */
 export class WindParticles {
   alpha = 0;
@@ -15,7 +16,7 @@ export class WindParticles {
   private readonly canvas: HTMLCanvasElement;
   private readonly grid: WindGrid;
   private readonly count: number;
-  private readonly dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  private readonly dpr = Math.min(window.devicePixelRatio || 1, 2);
   private ps: Particle[] = [];
   private w = 0;
   private h = 0;
@@ -50,7 +51,7 @@ export class WindParticles {
     const fx = gx - i;
     const fy = gy - j;
     const k = j * g.nx + i;
-    const lerp = (a: number[]) => (a[k] * (1 - fx) + a[k + 1] * fx) * (1 - fy) + (a[k + g.nx] * (1 - fx) + a[k + g.nx + 1] * fx) * fy;
+    const lerp = (a: ArrayLike<number>) => (a[k] * (1 - fx) + a[k + 1] * fx) * (1 - fy) + (a[k + g.nx] * (1 - fx) + a[k + g.nx + 1] * fx) * fy;
     return [lerp(g.u), lerp(g.v)];
   }
 
