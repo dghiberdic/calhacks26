@@ -614,7 +614,7 @@ Also asserted: NS31 is outside the DUB window with margin ≥60 min (window ends
 ## 6. Calibration file (Filip writes `data/calibration.json`; David's `engine/confidence.py` reads it)
 ```json
 {"version":"cal-v1","models":{
-  "cause":{"features":["in_window_dep","in_window_arr","window_margin_h","aog_before_window","aog_inside_window","root_cause_internal","sources_disagree","precedent_count","knock_on"],
+  "cause":{"features":["in_window_dep","in_window_arr","window_margin_h","aog_before_window","aog_inside_window","root_cause_internal","sources_disagree","precedent_count","knock_on","concurrent_causes"],
            "coef":[...],"intercept":0.0,"trained_on":"2023-07..2024-12","n":0},
   "voucher":{"features":["in_lieu","signed","sources_disagree","precedent_count"],"coef":[...],"intercept":0.0,"n":0}}}
 ```
