@@ -87,7 +87,7 @@ describe("Policies screen", () => {
   it("reverts only after a confirmation, then shows what flipped", async () => {
     renderScreen();
     const cl = await screen.findByTestId("rule-R-CL-1");
-    await userEvent.click(within(cl).getByRole("button", { name: "Revert" }));
+    await userEvent.click(within(cl).getByRole("button", { name: "Revert R-CL-1@1" }));
     const dialog = await screen.findByRole("dialog");
     expect(dialog).toHaveTextContent("Locked periods are never rewritten.");
     await userEvent.click(within(dialog).getByRole("button", { name: "Revert and replay" }));

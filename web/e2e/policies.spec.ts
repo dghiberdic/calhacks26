@@ -43,7 +43,7 @@ test("the Reg (EU) 2026/2202 card is visible, display only", async ({ page }) =>
 
 test("revert replays history and shows the diff", async ({ page }) => {
   await open(page);
-  const revert = page.getByRole("button", { name: "Revert", exact: true }).first();
+  const revert = page.getByRole("button", { name: /^Revert \S+@\d+$/ }).first();
   await revert.scrollIntoViewIfNeeded();
   await revert.click();
   const dialog = page.getByRole("dialog");

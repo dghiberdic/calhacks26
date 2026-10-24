@@ -93,7 +93,7 @@ export function RuleCard({ family, index = 0, highlighted, actions }: { family: 
             {canWiden && actions.onWiden ? (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button type="button" onClick={() => actions.onWiden?.(rule)} className={BUTTON}>
+                  <button type="button" aria-label={`Widen ${ruleRef(rule)}`} onClick={() => actions.onWiden?.(rule)} className={BUTTON}>
                     <Waypoints className="size-3.5 text-slate-500" aria-hidden="true" />
                     Widen
                   </button>
@@ -102,12 +102,12 @@ export function RuleCard({ family, index = 0, highlighted, actions }: { family: 
               </Tooltip>
             ) : null}
             {canRevert && actions.onRevert ? (
-              <button type="button" onClick={() => actions.onRevert?.(rule)} className={BUTTON}>
+              <button type="button" aria-label={`Revert ${ruleRef(rule)}`} onClick={() => actions.onRevert?.(rule)} className={BUTTON}>
                 <RotateCcw className="size-3.5 text-slate-500" aria-hidden="true" />
                 Revert
               </button>
             ) : null}
-            <Link to={`/trace?tab=blame&target=${encodeURIComponent(ruleRef(rule))}`} className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] text-slate-500 transition-colors hover:bg-cloud-50 hover:text-navy-900">
+            <Link to={`/trace?tab=blame&target=${encodeURIComponent(ruleRef(rule))}`} aria-label={`Blame ${ruleRef(rule)}`} className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] text-slate-500 transition-colors hover:bg-cloud-50 hover:text-navy-900">
               <GitCommitVertical className="size-3.5" aria-hidden="true" />
               Blame
             </Link>
@@ -234,7 +234,7 @@ function PendingNote({ pending, onReview }: { pending: Rule; onReview?: () => vo
       <span className="font-mono text-[12px] text-navy-900">{ruleRef(pending)}</span>
       <span>waiting for confirmation</span>
       {onReview ? (
-        <button type="button" onClick={onReview} className="ml-auto rounded-md px-2 py-1 text-[12.5px] font-medium text-metar-ink hover:bg-cloud-50">
+        <button type="button" aria-label={`Review ${ruleRef(pending)}`} onClick={onReview} className="ml-auto rounded-md px-2 py-1 text-[12.5px] font-medium text-metar-ink hover:bg-cloud-50">
           Review
         </button>
       ) : null}
@@ -262,6 +262,7 @@ function Record({ family }: { family: RuleFamily }) {
           <Link
             to={`/trace?tab=commits&q=${encodeURIComponent(rule.id)}`}
             title={`Commits that mention ${rule.id}`}
+            aria-label={`Cited ${rule.times_cited} times: commits that mention ${rule.id}`}
             className="figure text-[15px] font-semibold text-navy-900 underline decoration-cloud-300 underline-offset-[3px] hover:decoration-navy-900"
           >
             <TickingCount value={rule.times_cited} />×

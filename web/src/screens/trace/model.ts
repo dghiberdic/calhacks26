@@ -216,7 +216,8 @@ export function suggestTargets(run: StormRun | undefined, rules: Rule[] | undefi
   if (weather) out.push({ id: weather.flight.id, title: `${weather.flight.number} · weather`, hint: "no compensation; refunds and care still due" });
   const knock = rows.find((r) => r.decision?.cause === "knock_on");
   if (knock) out.push({ id: knock.flight.id, title: `${knock.flight.number} · knock-on return`, hint: "ruled on by Legal" });
-  const ruled = (rules ?? []).filter((r) => RULING_TIERS.includes(r.tier) && r.status !== "retired" && r.status !== "proposed");
+  // Rules in force only: a widened version waiting in shadow isn't something to audit yet.
+  const ruled = (rules ?? []).filter((r) => RULING_TIERS.includes(r.tier) && (r.status === "active" || r.status === "suspect"));
   ruled.sort((a, b) => RULING_TIERS.indexOf(b.tier) - RULING_TIERS.indexOf(a.tier));
   for (const r of ruled) {
     if (r.origin_example && COUPON.test(r.origin_example)) out.push({ id: r.origin_example, title: `${shortId(r.origin_example)} · ${ROLE_LABEL[r.authority_required]} ruling`, hint: `cites ${r.id}@${r.version}` });

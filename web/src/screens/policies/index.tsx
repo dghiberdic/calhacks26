@@ -132,7 +132,10 @@ function OriginIndex({ groups }: { groups: Record<Origin, RuleFamily[]> }) {
           const cited = list.reduce((s, f) => s + (f.current.times_cited ?? 0), 0);
           return (
             <li key={origin} className={cn("bg-card", i === shown.length - 1 && shown.length % 2 === 1 && "col-span-2 sm:col-span-1")}>
-              <a href={`#origin-${origin}`} className="group flex h-full flex-col px-4 py-3.5 transition-colors hover:bg-cloud-25 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-metar-ink">
+              <a
+                href={`#origin-${origin}`}
+                aria-label={`${origin === "hard" ? "Hard controls" : ORIGIN_COPY[origin].title}: ${list.length} ${list.length === 1 ? "rule" : "rules"}${origin !== "hard" && cited > 0 ? `, cited ${cited} times` : ""}`}
+                className="group flex h-full flex-col px-4 py-3.5 transition-colors hover:bg-cloud-25 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-metar-ink">
                 <span className="flex items-baseline justify-between gap-2">
                   <span className={cn("figure text-[26px] font-semibold leading-none", list.length ? "text-navy-900" : "text-cloud-400")}>{list.length}</span>
                   {origin !== "hard" && cited > 0 ? <span className="font-mono text-[11px] text-slate-400">cited {cited}×</span> : null}

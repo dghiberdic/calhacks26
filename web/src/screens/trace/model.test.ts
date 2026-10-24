@@ -137,6 +137,7 @@ describe("blame targets", () => {
     { id: "R-CL-1", version: 1, tier: "claims_lead_ruling", authority_required: "claims_lead", origin_example: "NS31@2025-01-24:14C", status: "active" },
     { id: "R-LEG-1", version: 1, tier: "legal_ruling", authority_required: "legal", origin_example: "NS117@2025-01-24", status: "active" },
     { id: "R-MINED-1", version: 2, tier: "mined", authority_required: "claims_lead", status: "active" },
+    { id: "R-LEG-1", version: 2, tier: "legal_ruling", authority_required: "legal", origin_example: "NS117@2025-01-24", status: "shadow" },
   ] as unknown as Rule[];
 
   it("finds the recoded liability first, then weather, knock-on and the rulings", () => {

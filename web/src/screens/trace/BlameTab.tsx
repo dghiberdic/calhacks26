@@ -149,7 +149,7 @@ function Receipt({ blame }: { blame: Blame }) {
         </div>
         <div className="flex gap-2">
           <CopyButton text={receiptText(blame.target, blame.steps, origin)} label="Copy receipt" what="Receipt" />
-          <CopyButton text={link} label="Link" what="Link" />
+          <CopyButton text={link} label="Copy link" what="Link" />
         </div>
       </header>
       <Perforation />
@@ -308,7 +308,7 @@ function CommitMeta({ step }: { step: BlameStep }) {
       <CornerDownRight className="size-3 text-cloud-400" aria-hidden="true" />
       <Mono>{c.kind}</Mono>
       <span aria-hidden="true">·</span>
-      <Link to={`/trace?tab=commits&commit=${encodeURIComponent(c.hash)}`} className="font-mono text-metar-ink hover:underline" title={c.hash}>
+      <Link to={`/trace?tab=commits&commit=${encodeURIComponent(c.hash)}`} aria-label={`Open commit ${shortHash(c.hash)} in the log`} className="font-mono text-metar-ink hover:underline" title={c.hash}>
         {shortHash(c.hash)}
       </Link>
       <span aria-hidden="true">·</span>
