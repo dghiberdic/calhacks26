@@ -1,8 +1,10 @@
-import { useMemo, useState, type ReactNode } from "react";
-import { useSearchParams } from "react-router";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useLocation, useNavigate } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Check, Download, Lock } from "lucide-react";
 import { toast } from "sonner";
-import { invalidateAfterWrite, useCfo, useCommits, useCurve, useEstimate, useInvariants, useJournal, useRollforward, useTrace } from "@/api/queries";
+import { api } from "@/api/client";
+import { invalidateAfterWrite, qk, useCfo, useCommits, useCurve, useEstimate, useInvariants, useJournal, useRollforward, useTrace } from "@/api/queries";
 import { useLiveFeed } from "@/api/stream";
 import type { CurveSegment, EstimateCard, MonthEndResponse, Role, Rollforward } from "@/api/types";
 import { useSession } from "@/app/session";
@@ -27,7 +29,9 @@ const PANEL = "rounded-xl bg-card shadow-[0_0_0_1px_var(--color-cloud-200),0_1px
 
 /** J6 · Liability & Close: the EU261 compensation liability for the Controller and the CFO. */
 export default function CloseScreen() {
-  const [params, setParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const params = new URLSearchParams(location.search);
   const asked = params.get("period") ?? "";
   const period: string = (CLOSE_PERIODS as readonly string[]).includes(asked) ? asked : DEFAULT_PERIOD;
   const role = useSession((s) => s.role);
@@ -66,15 +70,26 @@ export default function CloseScreen() {
   const justRan = !!monthEnd && monthEnd.rollforward?.period === period;
   const ties = useMemo(() => (rf.data && journal.data ? journalTies(rf.data, journal.data) : {}), [rf.data, journal.data]);
 
-  const setPeriod = (p: string) =>
-    setParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        next.set("period", p);
-        return next;
-      },
-      { replace: true },
-    );
+  // The period lives in the URL; the hash (a journal entry, from the Flight File) survives a period switch.
+  const setPeriod = useCallback(
+    (p: string) => {
+      const next = new URLSearchParams(location.search);
+      next.set("period", p);
+      navigate({ pathname: location.pathname, search: `?${next}`, hash: location.hash }, { replace: true });
+    },
+    [location.pathname, location.search, location.hash, navigate],
+  );
+
+  // /close#JE-000123: open the entry's period, then the journal scrolls to it.
+  const focusId = /^#JE-[A-Za-z0-9:_-]+$/.test(location.hash) ? decodeURIComponent(location.hash.slice(1)) : null;
+  const everyEntry = useQuery({ queryKey: qk.journal(undefined, undefined), queryFn: () => api.journal(), enabled: !!focusId });
+  const focusPeriod = focusId ? everyEntry.data?.find((e) => e.id === focusId)?.period : undefined;
+  const jumped = useRef<string | null>(null);
+  useEffect(() => {
+    if (!focusId || !focusPeriod || jumped.current === focusId) return;
+    jumped.current = focusId;
+    if (focusPeriod !== period && (CLOSE_PERIODS as readonly string[]).includes(focusPeriod)) setPeriod(focusPeriod);
+  }, [focusId, focusPeriod, period, setPeriod]);
 
   return (
     <div className="mx-auto flex max-w-[1280px] flex-col gap-3">
@@ -195,7 +210,16 @@ export default function CloseScreen() {
         </section>
       </div>
 
-      <JournalDrafts period={period} entries={journal.data} loading={journal.isLoading} error={journal.isError ? journal.error : null} onRetry={() => void journal.refetch()} role={role} canAct={canAct} />
+      <JournalDrafts
+        period={period}
+        entries={journal.data}
+        loading={journal.isLoading}
+        error={journal.isError ? journal.error : null}
+        onRetry={() => void journal.refetch()}
+        role={role}
+        canAct={canAct}
+        focusId={focusId}
+      />
     </div>
   );
 }

@@ -1,13 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/api/client";
 import { invalidateAfterWrite, useAudit } from "@/api/queries";
 import type { JournalEntry, Role } from "@/api/types";
 import { MicroLabel, StatusChip } from "@/components/chips";
-import { JournalCard, statusLabel } from "@/components/journal";
+import { JournalCard, KIND_LABEL, statusLabel } from "@/components/journal";
 import { ActionPair, Empty, ErrorNote, Money, Shimmer } from "@/components/kit";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { count, longDate, periodLabel, shortId, zuluDay } from "@/lib/format";
@@ -24,9 +24,49 @@ const rank = (k: JournalEntry["kind"]) => {
 };
 
 /** Parked journals for the period, newest first, with [Edit][Approve] where the seat may act. */
-export function JournalDrafts({ period, entries, loading, error, onRetry, role, canAct }: { period: string; entries: JournalEntry[] | undefined; loading: boolean; error: unknown; onRetry: () => void; role: Role; canAct: boolean }) {
+export function JournalDrafts({
+  period,
+  entries,
+  loading,
+  error,
+  onRetry,
+  role,
+  canAct,
+  focusId,
+}: {
+  period: string;
+  entries: JournalEntry[] | undefined;
+  loading: boolean;
+  error: unknown;
+  onRetry: () => void;
+  role: Role;
+  canAct: boolean;
+  focusId?: string | null;
+}) {
   const [filter, setFilter] = useState<Filter>("draft");
   const [editing, setEditing] = useState<JournalEntry | null>(null);
+  const [ringed, setRinged] = useState<string | null>(null);
+  const reduce = useReducedMotion();
+  const jumped = useRef<string | null>(null);
+
+  // A deep link (#JE-…) opens the entry's tab, scrolls to it once and rings it briefly. Later refetches don't scroll.
+  useEffect(() => {
+    if (!focusId || jumped.current === focusId || !entries) return;
+    const target = entries.find((e) => e.id === focusId);
+    if (!target) return;
+    jumped.current = focusId;
+    const open = window.setTimeout(() => {
+      setFilter(target.status === "draft" ? "draft" : "approved");
+      setRinged(focusId);
+    }, 0);
+    const scroll = window.setTimeout(() => document.getElementById(focusId)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" }), 180);
+    const unring = window.setTimeout(() => setRinged(null), 2800);
+    return () => {
+      window.clearTimeout(open);
+      window.clearTimeout(scroll);
+      window.clearTimeout(unring);
+    };
+  }, [focusId, entries, reduce]);
   const sorted = useMemo(() => [...(entries ?? [])].sort((a, b) => b.event_date.localeCompare(a.event_date) || rank(a.kind) - rank(b.kind) || a.id.localeCompare(b.id)), [entries]);
   const drafts = sorted.filter((e) => e.status === "draft");
   const approved = sorted.filter((e) => e.status !== "draft");
@@ -77,8 +117,9 @@ export function JournalDrafts({ period, entries, loading, error, onRetry, role, 
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.98 }}
                   transition={{ duration: 0.25 }}
+                  id={je.id}
                   data-testid={`je-${je.id}`}
-                  className="[&_tbody_td:nth-child(2)]:pr-5"
+                  className={cn("scroll-mt-24 rounded-xl transition-shadow duration-500 [&_tbody_td:nth-child(2)]:pr-5", ringed === je.id && "shadow-[0_0_0_2px_var(--color-navy-900)]")}
                 >
                   <JournalCard entry={je} actions={<EntryActions key={`${je.id}:${role}`} entry={je} role={role} canAct={canAct} onEdit={() => setEditing(je)} />} />
                 </motion.li>
@@ -153,7 +194,7 @@ function ProposeChange({ entry, onClose }: { entry: JournalEntry | null; onClose
             <SheetHeader className="border-b border-cloud-200 bg-card px-5 pb-4 pt-5">
               <MicroLabel>Propose a change · read-only</MicroLabel>
               <SheetTitle className="mt-1 text-[17px] font-semibold text-navy-900">
-                {entry.id} <span className="font-normal text-slate-500">· {entry.kind.replace(/_/g, " ")}</span>
+                {entry.id} <span className="font-normal text-slate-500">· {KIND_LABEL[entry.kind] ?? entry.kind.replace(/_/g, " ")}</span>
               </SheetTitle>
               <SheetDescription className="mt-1 text-[13px] leading-relaxed text-slate-500">
                 Drafts are parked and their amounts are never typed. Change what the entry was built from and StormCheck redrafts it, with the trail.

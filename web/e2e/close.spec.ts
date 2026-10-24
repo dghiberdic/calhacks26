@@ -89,3 +89,12 @@ test("other seats read the close; they don't act on it", async ({ page }) => {
   await expect(page.getByTestId("read-only-hint")).toBeVisible();
   await expect(page.getByTestId("month-end")).toHaveCount(0);
 });
+
+test("a journal link (#JE-…) opens the entry's period and tab and scrolls to it", async ({ page }) => {
+  // JE-000110: January's six approved NS31 claims, so this crosses both the period and the status tab.
+  await page.goto("/close#JE-000110");
+  const card = page.locator("#JE-000110");
+  await expect(card).toBeInViewport();
+  await expect(page).toHaveURL(/period=2025-01/);
+  await expect(page.getByRole("radio", { name: /Approved/ })).toHaveAttribute("aria-checked", "true");
+});
