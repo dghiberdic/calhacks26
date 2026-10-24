@@ -91,7 +91,8 @@ export const ROLE_INITIALS: Record<Role, string> = {
 };
 
 /** "Routed to the Claims Lead" — people get "the". */
-export const routedTo = (role: Role) => `Routed to ${role.startsWith("agent.") ? "" : "the "}${ROLE_LABEL[role]}`;
+/** "Routed to the Claims Lead", "Routed to Legal" (plan §2: departments and agents take no article). */
+export const routedTo = (role: Role) => `Routed to ${role.startsWith("agent.") || role === "legal" || role === "ops" ? "" : "the "}${ROLE_LABEL[role]}`;
 
 /** Minutes → "1 h 30 min". */
 export function duration(min: number | null | undefined): string {

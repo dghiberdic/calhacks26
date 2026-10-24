@@ -4,6 +4,7 @@
 //   node scripts/shoot.mjs                                   # landing, desktop + phone, 8 depths
 //   node scripts/shoot.mjs --url http://localhost:5173/questions --at 0
 //   node scripts/shoot.mjs --sizes 1440x900,390x844,375x667 --at 0,0.3,0.6 --out shots
+//   --hold 5000 (after the load event, before the first shot) · --settle 2200 (after each scroll)
 //
 // Needs Node 22+ (global WebSocket). CHROME=/path/to/chrome overrides the macOS default.
 // Exits 1 if the page threw, so it can gate a change.
@@ -21,6 +22,7 @@ const sizes = arg("sizes", "1440x900,390x844").split(",").map((s) => s.split("x"
 const depths = arg("at", "0,0.14,0.28,0.42,0.56,0.7,0.84,1").split(",").map(Number);
 const out = arg("out", "shots");
 const settle = Number(arg("settle", "2200"));
+const hold = Number(arg("hold", "5000"));
 const chrome = process.env.CHROME ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 if (typeof WebSocket === "undefined") throw new Error("Node 22+ is needed (global WebSocket).");
 
@@ -42,9 +44,11 @@ let id = 0;
 const pending = new Map();
 const problems = [];
 let threw = false;
+let onLoad = () => {};
 ws.onmessage = ({ data }) => {
   const msg = JSON.parse(data);
   if (msg.id) return pending.get(msg.id)?.(msg.result ?? msg.error);
+  if (msg.method === "Page.loadEventFired") onLoad();
   if (msg.method === "Runtime.exceptionThrown") {
     threw = true;
     problems.push(`exception: ${msg.params.exceptionDetails.exception?.description ?? msg.params.exceptionDetails.text}`);
@@ -56,13 +60,21 @@ const evaluate = async (expression) => (await send("Runtime.evaluate", { express
 
 await send("Runtime.enable");
 await send("Page.enable");
+// A tab opened over DevTools starts in the background, where Chrome pauses requestAnimationFrame: animations
+// would freeze half-played and the shots would lie. Foreground it and keep it focused.
+await send("Page.bringToFront");
+await send("Emulation.setFocusEmulationEnabled", { enabled: true });
 mkdirSync(out, { recursive: true });
 const slug = new URL(url).pathname.replace(/\W+/g, "-").replace(/^-|-$/g, "") || "home";
 
 for (const [w, h] of sizes) {
   await send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: w < 768 });
+  // A cold dev server (fresh profile, files just edited) can take well over 6 s to load every module, so wait
+  // for the load event, then hold long enough for the opening animations (Storm Run's settles at ~4.2 s).
+  const loaded = new Promise((r) => (onLoad = r));
   await send("Page.navigate", { url });
-  await wait(6000); // hydration, fonts, data
+  await Promise.race([loaded, wait(30000)]);
+  await wait(hold);
   for (const at of depths) {
     // Native scroll: Lenis and ScrollTrigger follow it, scrubbed timelines catch up during the settle.
     await evaluate(`window.scrollTo(0, (document.documentElement.scrollHeight - innerHeight) * ${at})`);

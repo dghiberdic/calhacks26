@@ -1,9 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-/* Archivo with both axes (weight + width 62–125%) for the livery-style display type; B612 Mono, the
-   Airbus cockpit face, only for machine text: chips, IDs, METAR, tech log, journal lines. */
+/* Archivo with both axes (weight + width 62–125%) for the livery-style display type. Geist Mono for machine
+   text: chips, IDs, METAR, tech log, journal lines, times. B612 Mono, the Airbus cockpit face, only where it
+   imitates a display (`font-cockpit`: the departure board): it sets ":" "," "." at the left of a full cell,
+   which reads as a gap in running text ("09: 00Z", "€227, 000"). */
 @import "@fontsource-variable/archivo/standard.css";
+@import "@fontsource-variable/geist-mono/index.css";
 @import "@fontsource/b612-mono/400.css";
 @import "@fontsource/b612-mono/700.css";
 
@@ -19,7 +22,8 @@
 @theme inline {
   --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-sans);
-  --font-mono: "B612 Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-cockpit: "B612 Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
   --color-navy-950: #080d17;
   --color-navy-900: #0d1524;
@@ -167,7 +171,7 @@
     font-weight: 620;
     letter-spacing: -0.02em;
   }
-  /* Money and clocks: tabular Archivo figures (B612 sets ":" and "," at the left of a full cell). */
+  /* Money and clocks in prose: tabular Archivo figures. */
   .figure {
     font-variant-numeric: tabular-nums;
     font-stretch: 108%;
