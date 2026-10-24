@@ -4,14 +4,15 @@ Notes from Justin's Claude after building the landing and the app overnight. For
 
 ## The pitch, in the order a judge sees it
 1. **Open on `/moment`.** 20 seconds, self-playing, all real Storm Bram data: the storm, the METAR window,
-   NS31 after it, the 07:55 tech log, "Not weather. Broken plane.", €127,200 → €44,520, the trace. Record it at
-   1920×1080 for the Devpost video's first 20 s.
+   NS31 after it, the 07:55 tech log, "Not weather. Broken plane.", €127,200 → €44,520, the trace. No screen
+   recording needed: `npm run film` renders it frame by frame to `moment.mp4` (1920×1080, 30 fps).
 2. **The proof shot.** At 21:30Z the EUMETSAT GeoColour frame shows clear sky and Dublin's city lights. "The
    storm had cleared. The plane hadn't." Any judge can check it on EUMETView. It's the landing hero's last frame.
 3. **Live demo path (under 3 min):**
    - Overview: 14 cancellations, all ops-coded 71. NS31 is the red row (71 → 41, 91%).
    - Open NS31: the evidence, strongest first; the aircraft inks in with engine 1 in red.
-   - "Why this €?": €44,520 → claim rate → 212 × €600 → R-3 v2 → tech log → METAR → Legal.
+   - "Why this €?": €44,520 → claim rate → 212 × €600 → R-3 v2 → tech log → METAR → Legal. "Copy link for
+     the auditor" opens the same receipt in a fresh tab (by payout id, never a name).
    - "Replay the 09:00Z run": the work StormCheck did before anyone was in.
    - Inbox: rule on the voucher. It becomes R-7 v1 and 31 cases settle. Then show it in Rules.
    - Rules → R-1 → "Replay with v1 (50 kt)": the real Bram METAR re-runs and 9 of 13 weather verdicts flip
@@ -47,3 +48,5 @@ Notes from Justin's Claude after building the landing and the app overnight. For
 - **Seat count:** 212 passengers is high for a 184-seat A321LR. Fine for a fictional all-economy cabin; have the line ready.
 - **"The AI decides":** never say it. The engine decides; the model reads the mess and drafts.
 - **Claim rate:** 35% needs its source on screen (the Ledger shows the curve and the lookback).
+- **Judges' laptops:** with "Reduce motion" on, the landing shows every section still (tested); if the 3D model
+  can't load on venue Wi-Fi, the blueprint falls back to the Blender render instead of breaking the page.
