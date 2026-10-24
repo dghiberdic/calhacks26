@@ -8,3 +8,13 @@ node_modules/
 .DS_Store
 .next/
 dist/
+.claude/worktrees/
+.claude/scheduled_tasks.lock
+data/cache/llm/
+data/world/*.json
+*.db
+*.db-wal
+*.db-shm
+.pytest_cache/
+.hypothesis/
+.ruff_cache/

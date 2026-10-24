@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Owner check + secret scan. Enable with: git config core.hooksPath .githooks
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+python3 scripts/check_owners.py --staged
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --no-banner --redact
+else
+  # minimal fallback: block obvious Anthropic keys
+  if git diff --cached -U0 | grep -E '^\+.*sk-ant-[A-Za-z0-9_-]{20,}' >/dev/null; then
+    echo "pre-commit: looks like an Anthropic API key in the diff — refusing" >&2; exit 1
+  fi
+fi

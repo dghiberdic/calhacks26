@@ -1,0 +1,3 @@
+contracts/CHANGELOG.md merge=union
+STATUS.md merge=union
+contracts/requests/*.md merge=union
