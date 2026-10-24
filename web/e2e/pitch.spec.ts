@@ -6,6 +6,20 @@ const SLIDES = ["cover", "business", "judged", "architecture", "real", "cfo"];
 const SEATS_LINE =
   "StormCheck fills two seats at Northstar Air, the Passenger Claims Accountant and the Revenue Accountant, with one step between them: what really caused each cancellation. It drafts every payout and the EU261 compensation liability; the Claims Lead approves every payment.";
 
+// These tests type and click, so they run in order in one worker, after one warm-up: a cold Vite server
+// pre-bundles dependencies on first load (and may reload the page once), which would swallow key presses.
+test.describe.configure({ mode: "default" });
+
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(120_000);
+  const page = await browser.newPage();
+  await page.goto("/pitch/2");
+  await expect(page.getByTestId("slide-judged")).toBeVisible({ timeout: 90_000 });
+  await page.goto("/");
+  await expect(page.getByRole("navigation", { name: "Main" })).toBeVisible({ timeout: 90_000 });
+  await page.close();
+});
+
 test("arrow keys walk the whole deck, forward and back", async ({ page }) => {
   await page.goto("/pitch");
   await expect(page).toHaveURL(/\/pitch\/0$/);
