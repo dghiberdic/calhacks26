@@ -56,6 +56,8 @@ export const DateField = forwardRef<
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
+                    // Show exactly which day is about to run ("21/01/2024" → "21 Jan 2024").
+                    if (value && text !== editLabel(value)) onChange(value, editLabel(value));
                     onSubmit?.();
                   } else if (e.key === "ArrowDown" && e.altKey) {
                     e.preventDefault();
