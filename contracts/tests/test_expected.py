@@ -103,6 +103,10 @@ def test_questions_match_world_and_models(world: World):
     assert q1["herminia_settled"] == h["in_lieu_unsigned_eu_departures"] and len(q1["herminia_settled"]) == 31
     assert q1["herminia_asks_again"]["case_refs"] == h["in_lieu_unsigned_non_eu"]
     assert q["rulings"]["Q2"]["delta_cents"] == load("golden_numbers.json")["r_leg_1_delta_cents"]
+    # citations count the ruling's own case too: Q1 = 14C + 31 Herminia cases; Q2 = its 3 flights
+    assert q1["times_cited_on_herminia"] == len(q1["herminia_settled"]) == 31
+    assert q1["times_cited_after_herminia"] == 1 + q1["times_cited_on_herminia"] == 32
+    assert q["rulings"]["Q2"]["times_cited"] == len(q["rulings"]["Q2"]["settles"]) == 3
 
 
 def test_ns31_entitlements_match_world(world: World):

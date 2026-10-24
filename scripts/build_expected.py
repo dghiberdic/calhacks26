@@ -127,7 +127,8 @@ def questions(world: World) -> dict[str, Any]:
                    "herminia_settled": h["in_lieu_unsigned_eu_departures"],
                    "herminia_asks_again": {"pattern": "voucher_in_lieu_unsigned", "routed_to": "claims_lead",
                                            "case_refs": h["in_lieu_unsigned_non_eu"]},
-                   "times_cited_after_herminia": 31},
+                   "times_cited_on_herminia": 31,
+                   "times_cited_after_herminia": 32},     # 14C itself + the 31 Herminia cases (as Q2 counts its 3)
             "Q2": {"rule": "R-LEG-1@1", "author_role": "legal", "action": "set_extraordinary",
                    "scope_features_hint": ["flight.is_return_sector", "rotation.prev_cancelled", "spare.available_within_h",
                                       "pax.reroute_earliest_offered"],
