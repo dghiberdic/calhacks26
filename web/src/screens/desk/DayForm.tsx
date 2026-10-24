@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { ArrowRight, CornerDownLeft, Loader2 } from "lucide-react";
+import { CornerDownLeft, Loader2 } from "lucide-react";
 import { stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
 import { AirportField } from "./AirportField";
@@ -136,7 +136,7 @@ export function DayForm() {
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-cloud-100 pt-3">
-        <span className="micro mr-1 text-slate-400">Quick picks</span>
+        <span className="micro mr-0.5 text-slate-400">Quick picks</span>
         {PICKS.map((p) => {
           const a = airportByIcao(p.icao);
           const active = s.ranFor?.icao === p.icao && s.ranFor?.date === p.date;
@@ -147,7 +147,7 @@ export function DayForm() {
               disabled={busy}
               onClick={() => run({ icao: p.icao, date: p.date })}
               className={cn(
-                "group inline-flex h-9 items-center gap-2 rounded-lg px-3 text-[13px] transition-colors disabled:opacity-50",
+                "group inline-flex h-9 items-center gap-2 rounded-lg px-2.5 text-[13px] transition-colors disabled:opacity-50",
                 active ? "bg-navy-900 text-cloud-50" : "bg-cloud-50 text-navy-900 shadow-[inset_0_0_0_1px_var(--color-cloud-200)] hover:bg-cloud-100",
               )}
               title={`${a ? a.name : p.icao} · ${dayLabel(p.date)}`}
@@ -155,7 +155,6 @@ export function DayForm() {
               <span className={cn("font-mono text-[11.5px]", active ? "text-cloud-400" : "text-slate-500")}>{a?.iata ?? p.icao}</span>
               <span className="font-medium">{p.label}</span>
               <span className={cn("figure text-[12px]", active ? "text-cloud-400" : "text-slate-500")}>{editLabel(p.date)}</span>
-              <ArrowRight className={cn("size-3.5 transition-transform group-hover:translate-x-0.5", active ? "text-cloud-400" : "text-slate-400")} aria-hidden="true" />
             </button>
           );
         })}

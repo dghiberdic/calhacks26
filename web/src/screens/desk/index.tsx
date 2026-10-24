@@ -33,8 +33,10 @@ export default function DeskScreen() {
       <div aria-busy={!!pending}>
         {run ? (
           // A new run dims the last one instead of replacing it, so a plain 422 leaves the old day exactly as it was.
-          <div className={cn("relative transition-opacity duration-200", pending && "pointer-events-none opacity-40")}>
-            <DayResult key={`${run.id}-${ranFor?.date ?? ""}`} run={run} />
+          <div className="relative">
+            <div className={cn("transition-opacity duration-200", pending && "pointer-events-none opacity-40 saturate-50")} aria-hidden={pending ? true : undefined}>
+              <DayResult key={`${run.id}-${ranFor?.date ?? ""}`} run={run} />
+            </div>
             {pending ? <RunningPill icao={pending.icao} date={pending.date} /> : null}
           </div>
         ) : pending ? (

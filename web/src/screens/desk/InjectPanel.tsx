@@ -56,22 +56,26 @@ export function InjectPanel() {
                 <Shimmer className="h-[160px] rounded-xl" />
               </motion.div>
             ) : result ? (
-              <Answer key={result.response.source.id + String(result.startSeq)} dim={busy}>
-                <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1 px-1 text-[13px] text-slate-500">
+              <Answer key={result.response.source.id + String(result.startSeq)} dim={busy} scenarioId={result.scenarioId}>
+                <div className="px-1 text-[13px] text-slate-500">
                   {scenario ? (
                     <>
-                      <span className="micro text-slate-400">Rehearsed</span>
-                      <span className="font-medium text-navy-900">{scenario.title}</span>
-                      <span>· expected: {scenario.expected}</span>
+                      <p className="flex flex-wrap items-baseline gap-x-2">
+                        <span className="micro text-slate-400">Rehearsed</span>
+                        <span className="font-medium text-navy-900">{scenario.title}</span>
+                      </p>
+                      <p className="mt-0.5">
+                        <span className="text-slate-400">Expected:</span> {scenario.expected}
+                      </p>
                     </>
                   ) : (
-                    <>
+                    <p className="flex flex-wrap items-baseline gap-x-2">
                       <span className="micro text-slate-400">Your document</span>
                       <span className="font-medium text-navy-900">{KIND_BY_ID[result.request.kind]?.label ?? result.request.kind}</span>
                       {result.request.flight_id ? <span className="font-mono text-[12px]">· {shortId(result.request.flight_id)}</span> : null}
-                    </>
+                    </p>
                   )}
-                </p>
+                </div>
                 <InjectResult request={result.request} response={result.response} startSeq={result.startSeq} before={result.before} after={result.after} />
               </Answer>
             ) : null}
@@ -82,11 +86,13 @@ export function InjectPanel() {
   );
 }
 
-function Answer({ children, dim }: { children: React.ReactNode; dim: boolean }) {
+function Answer({ children, dim, scenarioId }: { children: React.ReactNode; dim: boolean; scenarioId: string | null }) {
   const ref = useBringIntoView<HTMLDivElement>();
   return (
     <motion.div
       ref={ref}
+      data-testid="inject-answer"
+      data-scenario-id={scenarioId ?? "own"}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: dim ? 0.45 : 1, y: 0 }}
       exit={{ opacity: 0 }}

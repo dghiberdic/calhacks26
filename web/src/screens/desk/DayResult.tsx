@@ -31,6 +31,9 @@ const COUNTERS: [string, string][] = [
   ["repeat_questions", "repeat questions"],
 ];
 
+/** Cool blue on the navy readout; wraps on a phone instead of running off the panel. */
+const WINDOW_CHIP = "h-auto min-h-6 whitespace-normal bg-metar/15 py-1 text-[#9ccbf2]";
+
 const runKey = (run: StormRun) => run.id.match(/[A-Z0-9]{4}@\d{4}-\d{2}-\d{2}/)?.[0] ?? `${run.station}@${run.date}`;
 
 function windowSpan(w: StormWindow, runDate: string) {
@@ -82,61 +85,61 @@ export function DayResult({ run }: { run: StormRun }) {
       <section className="relative overflow-hidden rounded-2xl bg-navy-900 text-cloud-50 shadow-[0_20px_60px_-24px_rgba(8,13,23,0.55)]" aria-label={`Run for ${run.station}, ${longDate(run.date)}`}>
         <div aria-hidden="true" className="pointer-events-none absolute -right-32 -top-44 size-[480px] rounded-full bg-[radial-gradient(closest-side,rgba(79,159,224,0.14),transparent)]" />
         <div className="relative px-4 pb-4 pt-5 md:px-7 md:pt-6">
-          <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
-            <div className="min-w-0">
-              <p className="micro text-cloud-500">
-                {name ? `${name} · ` : ""}
-                {place ? `${place.name} · ` : ""}
-                {run.station} · {dayLabel(run.date)} · local
+          <div className="min-w-0">
+          <p className="micro text-cloud-500">
+            {name ? `${name} · ` : ""}
+            {place ? `${place.name} · ` : ""}
+            {run.station} · {dayLabel(run.date)} · local
+          </p>
+          {run.message ? (
+            <>
+              <h2 className="display mt-2.5 text-[28px] text-cloud-50 md:text-[36px]" data-testid="desk-headline">
+                <span data-testid="desk-message">{run.message}</span>
+              </h2>
+              <p className="mt-2 font-mono text-[12.5px] text-cloud-400">
+                {[c.operated !== undefined ? `${count(c.operated)} operated` : null, `${count(cancelled)} cancelled`, c.questions !== undefined ? `${count(c.questions)} ${c.questions === 1 ? "question" : "questions"}` : null].filter(Boolean).join(" · ")}
               </p>
-              {run.message ? (
+            </>
+          ) : (
+            <h2 className="display mt-2.5 text-[28px] text-cloud-50 md:text-[36px]" data-testid="desk-headline">
+              {c.passengers !== undefined ? (
                 <>
-                  <h2 className="display mt-2.5 text-[28px] text-cloud-50 md:text-[36px]" data-testid="desk-headline">
-                    <span data-testid="desk-message">{run.message}</span>
-                  </h2>
-                  <p className="mt-2 font-mono text-[12.5px] text-cloud-400">
-                    {[c.operated !== undefined ? `${count(c.operated)} operated` : null, `${count(cancelled)} cancelled`, c.questions !== undefined ? `${count(c.questions)} ${c.questions === 1 ? "question" : "questions"}` : null].filter(Boolean).join(" · ")}
-                  </p>
+                  {count(c.passengers)} passengers <span className="text-cloud-500">·</span>{" "}
                 </>
-              ) : (
-                <h2 className="display mt-2.5 text-[28px] text-cloud-50 md:text-[36px]" data-testid="desk-headline">
-                  {c.passengers !== undefined ? (
-                    <>
-                      {count(c.passengers)} passengers <span className="text-cloud-500">·</span>{" "}
-                    </>
-                  ) : null}
-                  {count(cancelled)} cancelled
-                  {c.questions !== undefined ? (
-                    <>
-                      {" "}
-                      <span className="text-cloud-500">·</span> {count(c.questions)} {c.questions === 1 ? "question" : "questions"}
-                    </>
-                  ) : null}
-                </h2>
-              )}
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <StatusChip tone="metar" className="bg-metar/15 text-[#9ccbf2]">
-                  real METAR · {count(run.metar.length)} obs
-                </StatusChip>
-                {run.windows.map((w, i) => (
-                  <StatusChip key={i} tone="metar" dot={false} className="bg-metar/15 text-[#9ccbf2]" title={w.definition}>
-                    storm window {windowSpan(w, run.date)} · peak gust {w.peak_gust_kt} kt{w.obs_count ? ` · ${w.obs_count} obs` : ""}
-                  </StatusChip>
-                ))}
-              </div>
-              {run.windows[0]?.definition ? <p className="mt-2 font-mono text-[11px] leading-relaxed text-cloud-500">window = {run.windows[0].definition}</p> : null}
-            </div>
-
-            {recoded.length ? <NotWeather rows={recoded} onOpen={select} /> : null}
+              ) : null}
+              {count(cancelled)} cancelled
+              {c.questions !== undefined ? (
+                <>
+                  {" "}
+                  <span className="text-cloud-500">·</span> {count(c.questions)} {c.questions === 1 ? "question" : "questions"}
+                </>
+              ) : null}
+            </h2>
+          )}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <StatusChip tone="metar" className={WINDOW_CHIP}>
+              real METAR · {count(run.metar.length)} obs
+            </StatusChip>
+            {run.windows.map((w, i) => (
+              <StatusChip key={i} tone="metar" dot={false} className={WINDOW_CHIP} title={w.definition}>
+                storm window {windowSpan(w, run.date)} · peak gust {w.peak_gust_kt} kt{w.obs_count ? ` · ${w.obs_count} obs` : ""}
+              </StatusChip>
+            ))}
+          </div>
+          {run.windows[0]?.definition ? <p className="mt-2 font-mono text-[11px] leading-relaxed text-cloud-500">window = {run.windows[0].definition}</p> : null}
           </div>
 
+          {recoded.length ? <NotWeather rows={recoded} onOpen={select} /> : null}
 
-          <div className="mt-5">
-            <StormTimeline key={run.id} run={run} tone="dark" compact={narrow} onSelectFlight={select} />
+          {/* On a phone the day keeps a readable width and scrolls sideways inside the readout. */}
+          <div className="-mx-4 mt-5 overflow-x-auto overscroll-x-contain px-4 md:mx-0 md:overflow-visible md:px-0">
+            <div className="min-w-[640px] md:min-w-0">
+              <StormTimeline key={run.id} run={run} tone="dark" compact={narrow} onSelectFlight={select} />
+            </div>
           </div>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-3">
             <RouteLegend tone="dark" />
-            <span className="font-mono text-[11px] text-cloud-500">UTC · hover the curve for the raw METAR</span>
+            <span className="font-mono text-[11px] text-cloud-500">UTC · point at the curve for the raw METAR</span>
           </div>
         </div>
       </section>
@@ -145,7 +148,7 @@ export function DayResult({ run }: { run: StormRun }) {
 
       <div className={cn("grid gap-3", hasMap && "lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]")}>
         {hasMap ? (
-          <section className="rounded-xl bg-navy-900 p-4 text-cloud-50 shadow-[0_0_0_1px_var(--color-navy-800)]" aria-label="Routes">
+          <section className="min-w-0 overflow-hidden rounded-xl bg-navy-900 p-4 text-cloud-50 shadow-[0_0_0_1px_var(--color-navy-800)]" aria-label="Routes">
             <div className="flex items-center justify-between gap-3 px-1">
               <h3 className="text-[14.5px] font-semibold">Routes from {place?.name ?? run.station}</h3>
             </div>
@@ -154,7 +157,7 @@ export function DayResult({ run }: { run: StormRun }) {
           </section>
         ) : null}
         <div ref={listRef} className="min-w-0">
-          <FlightList run={run} open={openFlight} onToggle={(id) => setOpenFlight((cur) => (cur === id ? null : id))} linkable={known} />
+          <FlightList run={run} open={openFlight} onToggle={(id) => setOpenFlight((cur) => (cur === id ? null : id))} linkable={known} beside={hasMap} />
         </div>
       </div>
 
@@ -184,12 +187,12 @@ export function DayResult({ run }: { run: StormRun }) {
   );
 }
 
-/** "Not weather." for each flight the re-check recoded: the miscode it caught. */
+/** "Not weather." for each flight the re-check recoded: the miscode it caught, one line each. */
 function NotWeather({ rows, onOpen }: { rows: FlightRow[]; onOpen: (id: string) => void }) {
   const reduce = useReducedMotion();
   return (
-    <div className="flex w-full max-w-[360px] flex-col gap-2" data-testid="desk-recoded">
-      {rows.slice(0, 2).map((r) => {
+    <div className="mt-4 flex flex-col gap-2" data-testid="desk-recoded">
+      {rows.slice(0, 3).map((r, i) => {
         const d = r.decision!;
         const notWeather = d.extraordinary === "not_extraordinary";
         return (
@@ -197,28 +200,38 @@ function NotWeather({ rows, onOpen }: { rows: FlightRow[]; onOpen: (id: string) 
             key={r.flight.id}
             type="button"
             onClick={() => onOpen(r.flight.id)}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: reduce ? 0 : 3.6, duration: reduce ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="rounded-xl bg-navy-950/70 p-3.5 text-left ring-1 ring-white/10 transition-colors hover:bg-navy-950"
+            transition={{ delay: reduce ? 0 : 3.5 + i * 0.12, duration: reduce ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className={cn(
+              "group grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 rounded-xl bg-navy-950/70 px-4 py-3 text-left ring-1 ring-white/10 transition-colors hover:bg-navy-950",
+              notWeather && "shadow-[inset_3px_0_0_var(--color-notweather)]",
+            )}
           >
-            <p className="display-tight text-[19px] leading-tight text-cloud-50">
-              {notWeather ? (
-                <>
-                  Not weather. <span className="text-notweather">Miscode caught.</span>
-                </>
-              ) : (
-                "Recoded."
-              )}
-            </p>
-            <p className="mt-1.5 font-mono text-[12px] text-cloud-300">
-              {r.flight.number} {r.flight.origin}–{r.flight.dest} · <span className={notWeather ? "text-notweather" : undefined}>{d.recode_label ?? "recoded"}</span> · {count(r.flight.pax)} passengers
-            </p>
-            <ConfidenceLine confidence={d.confidence} reason={d.reason} showCaps={false} className="mt-1.5 text-[11.5px] text-cloud-400 [&_span.font-bold]:text-cloud-50" />
+            <span className="min-w-0">
+              <span className="display-tight block text-[18px] leading-tight text-cloud-50">
+                {notWeather ? (
+                  <>
+                    Not weather. <span className="text-notweather">Miscode caught.</span>
+                  </>
+                ) : (
+                  "Recoded."
+                )}
+              </span>
+              <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="font-mono text-[12px] text-cloud-300">
+                  {r.flight.number} {r.flight.origin}–{r.flight.dest} · <span className={notWeather ? "text-notweather" : undefined}>{d.recode_label ?? "recoded"}</span> · {count(r.flight.pax)} passengers
+                </span>
+                <ConfidenceLine confidence={d.confidence} reason={d.reason} showCaps={false} className="text-[11.5px] text-cloud-400 [&_span.font-bold]:text-cloud-50" />
+              </span>
+            </span>
+            <span className="inline-flex items-center gap-1 text-[12.5px] text-cloud-400 transition-colors group-hover:text-cloud-50">
+              Why <ArrowRight className="size-3.5" aria-hidden="true" />
+            </span>
           </motion.button>
         );
       })}
-      {rows.length > 2 ? <p className="font-mono text-[11.5px] text-cloud-500">and {rows.length - 2} more recoded</p> : null}
+      {rows.length > 3 ? <p className="px-1 font-mono text-[11.5px] text-cloud-500">and {rows.length - 3} more recoded, in the list below</p> : null}
     </div>
   );
 }
@@ -291,7 +304,7 @@ function VerdictMix({ rows }: { rows: FlightRow[] }) {
 }
 
 /** Flights in reading order (miscode, held, weather, then operated), each with its verdict. Click to see why. */
-function FlightList({ run, open, onToggle, linkable }: { run: StormRun; open: string | null; onToggle: (id: string) => void; linkable: boolean }) {
+function FlightList({ run, open, onToggle, linkable, beside }: { run: StormRun; open: string | null; onToggle: (id: string) => void; linkable: boolean; beside: boolean }) {
   const rows = useMemo(() => {
     const at = (r: FlightRow) => new Date(r.flight.sched_dep).getTime();
     return [...run.flights].sort((a, b) => SEVERITY[verdictOf(a)] - SEVERITY[verdictOf(b)] || at(a) - at(b));
@@ -303,7 +316,7 @@ function FlightList({ run, open, onToggle, linkable }: { run: StormRun; open: st
   return (
     <Panel title={`Flights · ${count(run.flights.length)}`} padded={false} className="h-full">
       {rows.length === 0 ? <p className="px-5 pb-5 text-[13.5px] text-slate-500">No Northstar flights at {run.station} that day.</p> : null}
-      <ul className="max-h-[520px] overflow-y-auto px-2 pb-2" data-testid="desk-flights">
+      <ul className={cn("max-h-[520px] overflow-y-auto overscroll-contain px-2 pb-2", beside && "lg:max-h-[364px]")} data-testid="desk-flights">
         {disrupted.map((r) => (
           <FlightItem key={r.flight.id} row={r} open={open === r.flight.id} onToggle={() => onToggle(r.flight.id)} linkable={linkable} />
         ))}
@@ -339,7 +352,7 @@ function FlightItem({ row, open, onToggle, linkable }: { row: FlightRow; open: b
   const chip = f.status === "operated" ? { text: "operated", tone: "slate" as const } : verdictChip(d);
   return (
     <li data-flight-id={f.id} className={cn("rounded-lg transition-colors", open && "bg-cloud-50")}>
-      <button type="button" onClick={onToggle} aria-expanded={open} className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-1 rounded-lg px-3 py-2.5 text-left hover:bg-cloud-50">
+      <button type="button" onClick={onToggle} aria-expanded={open} className="flex w-full flex-col gap-1.5 rounded-lg px-3 py-2.5 text-left hover:bg-cloud-50 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-x-3 sm:gap-y-1">
         <span className="min-w-0">
           <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
             <span className="font-mono text-[13px] font-bold text-navy-900">{f.number}</span>
@@ -351,7 +364,7 @@ function FlightItem({ row, open, onToggle, linkable }: { row: FlightRow; open: b
           </span>
           {d?.reason && f.status !== "operated" ? <span className="mt-1 block text-[12.5px] leading-snug text-slate-500">{d.reason}</span> : null}
         </span>
-        <span className="flex items-center gap-1.5 pt-px">
+        <span className="flex flex-wrap items-center gap-1.5 pt-px">
           {d?.recoded && d.recode_label ? (
             <StatusChip tone={v === "notweather" ? "notweather" : "outline"} dot={false} className="h-5 text-[10.5px]">
               {d.recode_label}
@@ -360,7 +373,7 @@ function FlightItem({ row, open, onToggle, linkable }: { row: FlightRow; open: b
           <StatusChip tone={chip.tone} className="h-5 text-[10.5px]">
             {chip.text}
           </StatusChip>
-          <ChevronDown className={cn("size-4 text-slate-400 transition-transform", open && "rotate-180")} aria-hidden="true" />
+          <ChevronDown className={cn("ml-auto size-4 text-slate-400 transition-transform sm:ml-0", open && "rotate-180")} aria-hidden="true" />
         </span>
       </button>
       <AnimatePresence initial={false}>
