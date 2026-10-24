@@ -52,8 +52,8 @@ PLAN_CAL = {
     "models": {
         "cause": {"features": ["in_window_dep", "in_window_arr", "window_margin_h", "aog_before_window",
                                "aog_inside_window", "root_cause_internal", "sources_disagree", "precedent_count",
-                               "knock_on"],
-                  "coef": [2.9, 2.9, 0.4, 1.0, -3.5, 1.21, -0.5, 0.1, 0.3], "intercept": -0.8, "n": 0},
+                               "knock_on", "concurrent_causes"],
+                  "coef": [2.9, 2.9, 0.4, 1.0, -3.5, 1.21, -0.5, 0.1, 0.3, -4.0], "intercept": -0.8, "n": 0},
         "voucher": _default["models"]["voucher"], "release": _default["models"]["release"],
     },
 }

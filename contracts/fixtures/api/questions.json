@@ -82,7 +82,9 @@
       "caps": [
         "capped:sources-disagree"
       ],
-      "calibration_version": "cal-plan-fixture"
+      "calibration_version": "cal-plan-fixture",
+      "contributions": {},
+      "intercept": null
     },
     "reason_tag": "sources-disagree",
     "holds": [
@@ -90,7 +92,9 @@
     ],
     "holds_cents": 60000,
     "status": "open",
-    "remind_at": "2025-01-25T09:00:00Z"
+    "remind_at": "2025-01-25T09:00:00Z",
+    "others_settled": 0,
+    "proposal_rule_id": null
   },
   {
     "id": "Q-2",
@@ -217,12 +221,15 @@
         "root_cause_internal": 0.0,
         "sources_disagree": 0.0,
         "precedent_count": 0.0,
-        "knock_on": 1.0
+        "knock_on": 1.0,
+        "concurrent_causes": 0.0
       },
       "caps": [
         "capped:no-precedent"
       ],
-      "calibration_version": "cal-plan-fixture"
+      "calibration_version": "cal-plan-fixture",
+      "contributions": {},
+      "intercept": null
     },
     "reason_tag": "no-precedent",
     "holds": [
@@ -232,7 +239,9 @@
     ],
     "holds_cents": 4749600,
     "status": "open",
-    "remind_at": "2025-01-25T09:00:00Z"
+    "remind_at": "2025-01-25T09:00:00Z",
+    "others_settled": 0,
+    "proposal_rule_id": null
   },
   {
     "id": "Q-3",
@@ -294,7 +303,9 @@
         "precedent_count": 0.0
       },
       "caps": [],
-      "calibration_version": "cal-plan-fixture"
+      "calibration_version": "cal-plan-fixture",
+      "contributions": {},
+      "intercept": null
     },
     "reason_tag": "release-proposal",
     "holds": [
@@ -302,6 +313,8 @@
     ],
     "holds_cents": 360000,
     "status": "open",
-    "remind_at": "2025-01-25T09:00:00Z"
+    "remind_at": "2025-01-25T09:00:00Z",
+    "others_settled": 0,
+    "proposal_rule_id": null
   }
 ]

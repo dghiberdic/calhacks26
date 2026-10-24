@@ -13,7 +13,8 @@
       "out_of_period_cents": 0,
       "derecognised_cents": 0,
       "closing_cents": 2574000,
-      "unclaimed_entitlement_cents": 8610000
+      "unclaimed_entitlement_cents": 8610000,
+      "je_ids": []
     },
     {
       "cohort": "EIDW@2024-01-21",
@@ -26,10 +27,12 @@
       "out_of_period_cents": 0,
       "derecognised_cents": 0,
       "closing_cents": 360000,
-      "unclaimed_entitlement_cents": 4260000
+      "unclaimed_entitlement_cents": 4260000,
+      "je_ids": []
     }
   ],
   "closing_total_cents": 2934000,
   "gl_balance_cents": 2934000,
-  "ties_to_gl": true
+  "ties_to_gl": true,
+  "locked": false
 }

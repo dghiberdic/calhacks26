@@ -41,10 +41,13 @@
         "root_cause_internal": 0.0,
         "sources_disagree": 0.0,
         "precedent_count": 3.0,
-        "knock_on": 0.0
+        "knock_on": 0.0,
+        "concurrent_causes": 0.0
       },
       "caps": [],
-      "calibration_version": "cal-plan-fixture"
+      "calibration_version": "cal-plan-fixture",
+      "contributions": {},
+      "intercept": null
     },
     "reason": "Weather: Dublin inside the storm window at STA 14:20Z.",
     "evidence": [
@@ -81,7 +84,7 @@
     "routed_to": null,
     "question_id": null,
     "known_at": "2025-01-25T06:00:00Z",
-    "commit": "f16271d4b7569f56f432716c33af3a3f07e9d4a520c0b9e5c3e861e98dfc9d56"
+    "commit": "d21ecea285f370025ab15a9c0ee16244a5d471e220995371fb39b305f4ed88d7"
   },
   "entitlements_summary": {
     "coupons": 186,
