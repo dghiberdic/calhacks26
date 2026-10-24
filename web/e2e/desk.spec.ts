@@ -2,6 +2,15 @@ import { expect, test, type Page } from "@playwright/test";
 
 // J7 · Judge's Desk. Runs against the mock world by default (E2E_API_MODE=http for the stub or server).
 
+// A cold dev server compiles the whole app on the first request; with every worker arriving at once
+// that can take most of a minute, so the first load gets room and each test a longer budget.
+test.describe.configure({ timeout: 120_000 });
+
+async function openDesk(page: Page) {
+  await page.goto("/desk");
+  await expect(page.getByRole("heading", { name: "Name an airport and a date." })).toBeVisible({ timeout: 60_000 });
+}
+
 async function pickAirport(page: Page, typed: string) {
   const airport = page.getByRole("combobox", { name: "Airport" });
   await airport.click();
@@ -17,7 +26,7 @@ async function runDay(page: Page, airport: string, date: string) {
 }
 
 test("Dublin on 24 Jan 2025 renders a run", async ({ page }) => {
-  await page.goto("/desk");
+  await openDesk(page);
   await runDay(page, "dub", "24 Jan 2025");
 
   const result = page.getByTestId("desk-run-result");
@@ -31,7 +40,7 @@ test("Dublin on 24 Jan 2025 renders a run", async ({ page }) => {
 });
 
 test("a future date shows the plain 422 message next to the inputs, and the form still works", async ({ page }) => {
-  await page.goto("/desk");
+  await openDesk(page);
   await runDay(page, "dub", "1 Jan 2099");
 
   const problem = page.getByTestId("desk-error");
@@ -54,10 +63,10 @@ test("a future date shows the plain 422 message next to the inputs, and the form
 });
 
 test("all 8 rehearsed scenarios render a result", async ({ page }) => {
-  test.setTimeout(120_000);
-  await page.goto("/desk");
+  test.setTimeout(180_000);
+  await openDesk(page);
   const scenarios = page.getByTestId("desk-scenario");
-  await expect(scenarios).toHaveCount(8, { timeout: 15_000 });
+  await expect(scenarios).toHaveCount(8, { timeout: 30_000 });
 
   for (let i = 0; i < 8; i++) {
     const button = scenarios.nth(i);
@@ -79,7 +88,7 @@ test("all 8 rehearsed scenarios render a result", async ({ page }) => {
 });
 
 test("an unknown airport is a plain message, not a crash", async ({ page }) => {
-  await page.goto("/desk");
+  await openDesk(page);
   await runDay(page, "ZZZZ", "24 Jan 2025");
   const problem = page.getByTestId("desk-error");
   await expect(problem).toBeVisible({ timeout: 15_000 });
