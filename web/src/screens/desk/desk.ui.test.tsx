@@ -54,6 +54,26 @@ describe("the day form", () => {
     expect(date).toHaveAttribute("aria-invalid", "true");
   });
 
+  it("the airport list is keyboard-driven: arrows move, Enter picks, an unlisted ICAO can be used as typed", async () => {
+    setTransport(async () => reply(200, {}));
+    render(<DayForm />);
+    const user = userEvent.setup();
+    const airport = screen.getByRole("combobox", { name: "Airport" });
+    await user.click(airport);
+    await user.keyboard("london");
+    const options = await screen.findAllByRole("option");
+    expect(options[0]).toHaveAccessibleName("LHR · EGLL · London Heathrow");
+    await user.keyboard("{ArrowDown}{Enter}");
+    expect(useDesk.getState().airport?.icao).toBe("EGKK");
+    await waitFor(() => expect(screen.getByLabelText("Local date")).toHaveFocus());
+
+    await user.click(airport);
+    await user.keyboard("{Control>}a{/Control}KXYZ");
+    expect(await screen.findByRole("option", { name: /Use KXYZ as typed/ })).toBeInTheDocument();
+    await user.keyboard("{Enter}");
+    expect(useDesk.getState().airport).toEqual({ icao: "KXYZ" });
+  });
+
   it("asks for what's missing without calling the server", async () => {
     const calls: string[] = [];
     setTransport(async (path) => {
