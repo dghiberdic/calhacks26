@@ -150,3 +150,42 @@ def test_new_fields_ops_not_weather_and_mcc_rts_est():
     assert parse.parse_not_weather("storm weather cancel") is False
     assert parse.verify("mcc.rts_est", "2025-01-25T20:00:00Z", "RTS EST 20:00Z",
                         "ETA 14:00Z, RTS EST 20:00Z.", datetime(2025, 1, 25, 14, 0, tzinfo=timezone.utc))[0]
+
+
+# ---------------------------------------------------------------- integrity review #3 / #4 (exact cases)
+@pytest.mark.parametrize("fn,span", [
+    (parse.parse_time, "23JAN 25:99Z"), (parse.parse_time, "31FEB 21:40Z"), (parse.parse_time, "2025-02-30T10:00Z"),
+    (parse.parse_time, "321640Z"), (parse.parse_time, "242599Z"),
+    (parse.parse_date, "31/02/2025"), (parse.parse_date, "1/13/2025"), (parse.parse_date, "Feb 30, 2025"),
+    (parse.parse_date, "29FEB"), (parse.parse_date, "00JAN"),
+    (parse.parse_eur, "€1\t234"), (parse.parse_eur, "EUR 1\n234"), (parse.parse_eur, "€" + "9" * 400),
+    (parse.parse_eur, "1e309 €"), (parse.parse_int, "NS" + "9" * 5000),
+    (parse.parse_time, "21:40 CET"), (parse.parse_time, "16:30 local"), (parse.parse_time, "2025-01-24 16:30 BST"),
+])
+def test_review_cases_are_unparseable(fn, span):
+    with pytest.raises(parse.ParseError):
+        fn(span, REF)
+
+
+@pytest.mark.parametrize("span,expected", [
+    ("2025-01-23T21:40+05:00", "2025-01-23T16:40:00+00:00"),
+    ("2025-01-23T16:40:00-08:00", "2025-01-24T00:40:00+00:00"),
+    ("2025-01-23T21:40:00Z", "2025-01-23T21:40:00+00:00"),
+    ("2025-01-23 21:40 UTC", "2025-01-23T21:40:00+00:00"),
+    ("21:40+01:00", "2025-01-24T20:40:00+00:00"),
+    ("23JAN 21:40+0100", "2025-01-23T20:40:00+00:00"),
+    ("2025-01-24 16:30", "2025-01-24T16:30:00+00:00"),            # IEM CSV: UTC by definition
+])
+def test_numeric_offsets_are_converted_to_utc(span, expected):
+    assert parse.parse_time(span, REF).isoformat() == expected
+
+
+def test_money_with_spaces_still_parses():
+    assert parse.parse_eur("€1 234") == 123400 and parse.parse_eur("€1 234,50") == 123450
+    assert parse.parse_eur("EUR 510.00") == 51000
+
+
+def test_reparse_and_verify_absorb_value_errors():
+    assert parse.verify("coupon.fare_cents", 1, "€" + "9" * 400, "x €" + "9" * 400, REF) == (False, "unparseable_span")
+    with pytest.raises(parse.ParseError):
+        parse.reparse("flight.pax", "NS" + "9" * 5000)

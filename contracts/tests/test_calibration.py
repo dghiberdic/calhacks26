@@ -20,7 +20,7 @@ def test_schema_lists_every_confidence_kind_and_encodes_every_feature():
     assert feats <= set(s["x-encoding"]), feats - set(s["x-encoding"])
     assert s["x-features"]["cause"] == ["in_window_dep", "in_window_arr", "window_margin_h", "aog_before_window",
                                         "aog_inside_window", "root_cause_internal", "sources_disagree",
-                                        "precedent_count", "knock_on"]          # CONTRACTS §6
+                                        "precedent_count", "knock_on", "concurrent_causes"]   # CONTRACTS §6 (+D0b-6)
     assert s["x-features"]["voucher"] == ["in_lieu", "signed", "sources_disagree", "precedent_count"]
 
 
@@ -51,3 +51,16 @@ def test_score_is_logistic():
     doc["models"]["voucher"]["intercept"] = 50.0
     assert calibration.score(doc, "voucher", {}) == 1.0
     assert calibration.load()["version"]
+
+
+def test_validate_rejects_non_finite_numbers():
+    import math
+    for bad in (float("nan"), float("inf"), -math.inf):
+        doc = json.loads(calibration.DEFAULT_PATH.read_text())
+        doc["models"]["cause"]["intercept"] = bad
+        assert any("intercept" in e for e in calibration.validate(doc)), bad
+        doc = json.loads(calibration.DEFAULT_PATH.read_text())
+        doc["models"]["voucher"]["coef"][0] = bad
+        assert any("coef" in e for e in calibration.validate(doc)), bad
+    nan_text = calibration.DEFAULT_PATH.read_text().replace('"intercept": -1.5', '"intercept": NaN')
+    assert calibration.validate(json.loads(nan_text)), "a NaN literal in the file is rejected"

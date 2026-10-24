@@ -1826,6 +1826,17 @@
           "care_invoiced_cents": {
             "type": "integer",
             "title": "Care Invoiced Cents"
+          },
+          "cohort": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cohort"
           }
         },
         "type": "object",
@@ -2071,6 +2082,18 @@
           "message": {
             "type": "string",
             "title": "Message"
+          },
+          "recorded_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded At"
           }
         },
         "type": "object",
@@ -2131,6 +2154,25 @@
           "calibration_version": {
             "type": "string",
             "title": "Calibration Version"
+          },
+          "contributions": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Contributions",
+            "default": {}
+          },
+          "intercept": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intercept"
           }
         },
         "type": "object",
@@ -3115,9 +3157,378 @@
             "$ref": "#/components/schemas/FlightDecision"
           },
           "entitlements_summary": {
+            "properties": {
+              "coupons": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Coupons"
+              },
+              "distance_km": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Distance Km"
+              },
+              "band_eur": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Band Eur"
+              },
+              "band_margin_km": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Band Margin Km"
+              },
+              "band_label": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Band Label"
+              },
+              "band_note": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Band Note"
+              },
+              "compensation_cents": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Compensation Cents"
+              },
+              "full_entitlement_cents": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Full Entitlement Cents"
+              },
+              "full_entitlement_label": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Full Entitlement Label"
+              },
+              "drafted_liability_cents": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Drafted Liability Cents"
+              },
+              "liability_drafted_cents": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Liability Drafted Cents"
+              },
+              "claim_rate": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Claim Rate"
+              },
+              "expected_ultimate_claim_rate": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Expected Ultimate Claim Rate"
+              },
+              "claim_rate_label": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Claim Rate Label"
+              },
+              "status_counts": {
+                "anyOf": [
+                  {
+                    "additionalProperties": {
+                      "type": "integer"
+                    },
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Status Counts"
+              },
+              "statuses": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Statuses"
+              },
+              "status_line": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Status Line"
+              },
+              "elections": {
+                "anyOf": [
+                  {
+                    "additionalProperties": {
+                      "type": "integer"
+                    },
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Elections"
+              },
+              "compensation_breakdown": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Compensation Breakdown"
+              },
+              "formula": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Formula"
+              },
+              "reduction_7_2": {
+                "anyOf": [
+                  {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Reduction 7 2"
+              },
+              "reduced": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Reduced"
+              },
+              "refunds_already_initiated": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Refunds Already Initiated"
+              },
+              "refund_due_cents": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Refund Due Cents"
+              },
+              "voucher_offset_cents": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Voucher Offset Cents"
+              },
+              "claims_received": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Claims Received"
+              },
+              "care_due": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Care Due"
+              },
+              "accrued_cents": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Accrued Cents"
+              },
+              "accrual_basis": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Accrual Basis"
+              },
+              "compensation_if_owed_cents": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Compensation If Owed Cents"
+              },
+              "question_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Question Id"
+              },
+              "headline": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Headline"
+              }
+            },
             "additionalProperties": true,
             "type": "object",
-            "title": "Entitlements Summary"
+            "title": "EntitlementsSummary"
           },
           "sample_entitlements": {
             "items": {
@@ -3135,8 +3546,91 @@
           },
           "timeline": {
             "items": {
+              "properties": {
+                "at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "At"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "tech_log",
+                    "mcc",
+                    "occ",
+                    "spares",
+                    "metar",
+                    "window_start",
+                    "window_end",
+                    "metar_window_start",
+                    "metar_window_end",
+                    "crm",
+                    "operated",
+                    "schedule",
+                    "pss",
+                    "claim",
+                    "care",
+                    "warning",
+                    "email",
+                    "injection",
+                    "challenge",
+                    "ruling",
+                    "info"
+                  ],
+                  "title": "Kind"
+                },
+                "label": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Label"
+                },
+                "text": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Text"
+                },
+                "source_id": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Source Id"
+                },
+                "trust_tier": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Trust Tier"
+                }
+              },
               "additionalProperties": true,
-              "type": "object"
+              "type": "object",
+              "required": [
+                "at",
+                "kind"
+              ],
+              "title": "TimelineItem"
             },
             "type": "array",
             "title": "Timeline"
@@ -3848,6 +4342,22 @@
               }
             ],
             "title": "Remind At"
+          },
+          "others_settled": {
+            "type": "integer",
+            "title": "Others Settled",
+            "default": 0
+          },
+          "proposal_rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposal Rule Id"
           }
         },
         "type": "object",
@@ -4007,6 +4517,11 @@
           "ties_to_gl": {
             "type": "boolean",
             "title": "Ties To Gl"
+          },
+          "locked": {
+            "type": "boolean",
+            "title": "Locked",
+            "default": false
           }
         },
         "type": "object",
@@ -4068,6 +4583,14 @@
           "unclaimed_entitlement_cents": {
             "type": "integer",
             "title": "Unclaimed Entitlement Cents"
+          },
+          "je_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Je Ids",
+            "default": []
           }
         },
         "type": "object",
@@ -4244,6 +4767,25 @@
               }
             ],
             "title": "Title"
+          },
+          "origin_quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin Quote"
+          },
+          "cases_settled_by_storm": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Cases Settled By Storm",
+            "default": {}
           }
         },
         "type": "object",
@@ -4621,6 +5163,17 @@
             "type": "array",
             "title": "Airports",
             "default": []
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
           }
         },
         "type": "object",
