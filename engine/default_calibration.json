@@ -1,0 +1,28 @@
+{
+  "version": "cal-default-v1",
+  "note": "Hand-set priors shipped until data/calibration.json (fitted by eval/) lands. Logistic: p = 1/(1+exp(-(intercept + coef.x))). Not fitted on data.",
+  "models": {
+    "cause": {
+      "features": ["in_window_dep", "in_window_arr", "window_margin_h", "aog_before_window", "aog_inside_window",
+                   "root_cause_internal", "sources_disagree", "precedent_count", "knock_on"],
+      "coef": [4.0, 4.0, 0.5, 1.5, -3.0, 1.55, -2.5, 0.35, 0.5],
+      "intercept": -1.5,
+      "trained_on": "prior",
+      "n": 0
+    },
+    "voucher": {
+      "features": ["in_lieu", "signed", "sources_disagree", "precedent_count"],
+      "coef": [-1.0, 3.0, -0.45, 0.35],
+      "intercept": 1.0,
+      "trained_on": "prior",
+      "n": 0
+    },
+    "release": {
+      "features": ["cohort_age_months", "months_since_last_claim", "precedent_count"],
+      "coef": [0.1, 0.33, 0.35],
+      "intercept": -1.25,
+      "trained_on": "prior",
+      "n": 0
+    }
+  }
+}

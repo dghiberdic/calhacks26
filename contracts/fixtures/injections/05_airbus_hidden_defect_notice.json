@@ -1,0 +1,10 @@
+{
+  "id": "05_airbus_hidden_defect_notice",
+  "title": "Manufacturer notice: hidden defect in the EDP batch",
+  "request": {
+    "kind": "manufacturer",
+    "text": "Airbus operator notice: hidden manufacturing defect identified in engine-driven pump batch P/N 3036-7 including EI-NSB.",
+    "flight_id": "NS31@2025-01-24"
+  },
+  "expected": "New legal pattern (C-549/07 ¶26) · routed to Legal at confidence 52% · decision unchanged"
+}
