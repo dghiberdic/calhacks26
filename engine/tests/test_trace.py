@@ -267,9 +267,10 @@ def test_commit_hash_is_sha256_of_canonical_fields():
     c = s.commit("fact", {"b": 2, "a": [1, "x"]}, "agent.engine", [], T_RUN, ref="X-1", message="m")
     ph = hashlib.sha256(orjson.dumps({"a": [1, "x"], "b": 2}, option=orjson.OPT_SORT_KEYS)).hexdigest()
     assert c.payload_hash == ph
-    expected = hashlib.sha256(orjson.dumps(
-        {"kind": "fact", "parent": None, "payload_hash": ph, "inputs": ["engine@abc1234", "cal@cal-v1"],
-         "at": "2025-01-25T08:00:00Z", "actor": "agent.engine"}, option=orjson.OPT_SORT_KEYS)).hexdigest()
+    expected = hashlib.sha256(orjson.dumps(   # trace/2: every Commit field but hash (labels included)
+        {"kind": "fact", "parent": None, "payload_hash": ph, "payload_ref": "X-1",
+         "inputs": ["engine@abc1234", "cal@cal-v1"], "at": "2025-01-25T08:00:00Z", "actor": "agent.engine",
+         "message": "m"}, option=orjson.OPT_SORT_KEYS)).hexdigest()
     assert c.hash == expected == trace.commit_hash(c)
     assert c.parent is None and c.payload_ref == "X-1"
 
