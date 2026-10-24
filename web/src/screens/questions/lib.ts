@@ -42,13 +42,14 @@ export function reminderText(q: Question): string | null {
   return null;
 }
 
-export type CaseKind = "passenger" | "flight" | "cohort" | "case";
+export type CaseKind = "passenger" | "flight" | "cohort" | "rule" | "case";
 
-/** What a case ref points at: a coupon (a passenger), a flight, or a storm cohort. */
+/** What a case ref points at: a coupon (a passenger), a flight, a storm cohort, or a rule (a widening question). */
 export function caseKind(ref: string): CaseKind {
   if (/^[A-Z0-9]{2}\d+@[\d-]+:/.test(ref)) return "passenger";
   if (/^[A-Z0-9]{2}\d+@/.test(ref)) return "flight";
   if (/^[A-Z]{4}@/.test(ref)) return "cohort";
+  if (/^(R|REG|HC)-[A-Z0-9-]+(@\d+)?$/.test(ref)) return "rule";
   return "case";
 }
 
@@ -56,7 +57,7 @@ export function caseKind(ref: string): CaseKind {
 export function caseCount(refs: string[]): string {
   const kinds = new Set(refs.map(caseKind));
   const k = kinds.size === 1 ? [...kinds][0] : "case";
-  const noun = { passenger: "passenger", flight: "flight", cohort: "cohort", case: "case" }[k];
+  const noun = { passenger: "passenger", flight: "flight", cohort: "cohort", rule: "rule", case: "case" }[k];
   return `${count(refs.length)} ${noun}${refs.length === 1 ? "" : "s"}`;
 }
 
@@ -65,12 +66,14 @@ export function caseHref(ref: string): string | null {
   const k = caseKind(ref);
   if (k === "passenger" || k === "flight") return `/flights/${encodeURIComponent(ref.split(":")[0])}`;
   if (k === "cohort") return `/close`;
+  if (k === "rule") return `/policies#${encodeURIComponent(ref.split("@")[0])}`;
   return null;
 }
 
 export const caseLabel = (ref: string) => {
   const k = caseKind(ref);
   if (k === "cohort") return `${stormName(ref) ?? ref} cohort`;
+  if (k === "rule") return ref;
   const [head, seat] = ref.split(":");
   const flight = head.split("@")[0];
   return seat ? `${flight} · ${seat}` : flight;

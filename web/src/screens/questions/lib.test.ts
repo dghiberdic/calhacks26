@@ -35,6 +35,8 @@ describe("question helpers", () => {
     expect(caseLabel("NS31@2025-01-24:14C")).toBe("NS31 · 14C");
     expect(caseLabel("EIDW@2024-01-21")).toBe("Storm Isha cohort");
     expect(caseHref("NS31@2025-01-24:14C")).toBe("/flights/NS31%402025-01-24");
+    expect(caseCount(["R-CTL-1"])).toBe("1 rule");
+    expect(caseHref("R-CTL-1@1")).toBe("/policies#R-CTL-1");
   });
 
   it("says the seat the way a sentence needs it", () => {
