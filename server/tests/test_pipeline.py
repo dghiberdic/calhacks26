@@ -85,11 +85,12 @@ def test_commit_chain_verifies_through_engine_trace(mini_app):
 def test_baseline_snapshot_and_reset(mini, mini_app):
     rt = mini_app.state.runtime
     assert rt.settings.baseline.exists()
+    assert mini.post("/api/reset").status_code == 200
     before = rt.store.trace()
     rt.emit("info", "test", "scribble", "INFO")
     assert len(rt.store.trace()) == len(before) + 1
     assert mini.post("/api/reset").status_code == 200
-    assert rt.store.trace() == before
+    assert rt.store.trace() == before                    # baseline + the same reset (+3 h) events, every time
     assert mini.get("/api/storms").json()[0]["liability_drafted_cents"] == 4_305_000
 
 

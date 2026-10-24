@@ -98,10 +98,10 @@ def install(app: FastAPI, rt: Any) -> None:
     # ---------------------------------------------------------------- challenge
     @app.post("/api/flights/{flight_id}/challenge", response_model=ChallengeResponse, responses=ERRORS)
     def challenge(flight_id: str, req: ChallengeRequest, request: Request) -> ChallengeResponse:
+        """Justin Q-a: open to every session (judge, external and persona principals included). A challenge is a
+        tier-4 Source plus a Drafter classification; it routes and never flips a decision by itself."""
         s = sess(request)
-        if s.role.value.startswith("agent."):
-            rt.deny(s.principal, "challenge", flight_id, "Least privilege: agents never challenge a decision")
-            raise ApiError(403, "forbidden", "Agents never challenge a decision.")
+        rt.allow(s.principal, "challenge", flight_id, "challenge: all sessions (tier 4, routes, never flips)")
         with rt.lock:
             try:
                 return rt.live.challenge(flight_id, req.text)

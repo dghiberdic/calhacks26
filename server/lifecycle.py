@@ -339,11 +339,57 @@ class Lifecycle:
                     "RULED", q.id, q.holds_cents or None)
         return ruling, proposal
 
-    def draft_proposal(self, q: Question, ruling: Ruling, principal: str) -> RuleProposal | None:
+    def drafted_rule(self, q: Question, ruling: Ruling, rule_id: str | None) -> Rule | None:
+        """The Drafter's rule draft (`llm.drafter.Drafter.propose_rule`), committed as an `llm_call`, then verified
+        by the engine (`engine.rules.checks`: allowlist, grounding in condition and scope, authority, hard
+        controls, reproduces the case). Anything that fails, raises or times out returns None."""
         rt = self.rt
+        drafter = rt.impls.drafter
+        if drafter is None or not hasattr(drafter, "propose_rule"):
+            return None
+        from .live import timed
+        before = len(getattr(drafter, "records", None) or [])
+        try:
+            rule = timed(call, rt.settings.reader_timeout_s, drafter.propose_rule, ruling, q, [], rule_id=rule_id,
+                         existing_ids=[r.id for r in rt.rules()])
+        except Exception as exc:
+            rt.store.put("draft_failure", f"{q.id}:{ruling.id}", {"error": type(exc).__name__}, rt.now)
+            return None
+        recs = getattr(drafter, "records", None) or []
+        rt.commit_llm(recs[-1] if len(recs) > before else None)
+        if not isinstance(rule, Rule):
+            return None
+        rb = _module("engine.rules")
+        if rb is not None:
+            feats = self.features().get(q.case_refs[0]) if q.case_refs else None
+            active = [r for r in rt.rules() if r.status == "active" and r.id != rule.id]
+            try:
+                rule, chk, problems = rb.checks(rule, author_role=ruling.author_role, ruling=ruling,
+                                                case_feats=feats, existing=active)
+            except Exception:
+                return None
+            if not all(chk.values()):
+                rt.store.put("draft_rejected", f"{q.id}:{ruling.id}", {"problems": problems[:10]}, rt.now)
+                return None
+        return rule.model_copy(update={"status": "proposed", "origin_ruling_id": rule.origin_ruling_id or ruling.id,
+                                       "recorded_at": max(rule.recorded_at, rt.now)})
+
+    def draft_proposal(self, q: Question, ruling: Ruling, principal: str) -> RuleProposal | None:
+        """Drafter's rule → engine checks → replay. If the draft fails any check (or there is none), the scripted
+        rule for the known patterns stands in; for other patterns the ruling is applied to its cases directly."""
+        rt = self.rt
+        canned = PATTERN_TO_CANNED.get(q.pattern)
+        from contracts import stub_app as stub
+        canned_id = next((rid for rid, qid in stub.RULE_TO_QUESTION.items() if qid == canned), None)
+        if self.world is not None:
+            drafted = self.drafted_rule(q, ruling, canned_id)
+            if drafted is not None:
+                p = self.build_proposal(drafted, cases=q.case_refs, author_role=ruling.author_role, actor=principal)
+                if all(p.checks.values()):
+                    self.store_proposal(p, cases=q.case_refs)
+                    return p
         rule: Rule | None = None
         widen_next = None
-        canned = PATTERN_TO_CANNED.get(q.pattern)
         if canned is not None:
             from contracts import stub_app as stub
             base = stub.canned_proposal(canned, ruling, rt.now)
@@ -360,13 +406,6 @@ class Lifecycle:
                 p = base.model_copy(update={"rule": rule})
                 self.store_proposal(p, cases=q.case_refs)
                 return p
-        else:
-            drafter = rt.impls.drafter
-            if drafter is not None and hasattr(drafter, "propose_rule"):
-                try:
-                    rule = drafter.propose_rule(ruling, q, [])
-                except Exception:
-                    rule = None
         if rule is None:
             return None
         rule = rule.model_copy(update={"recorded_at": max(rule.recorded_at, rt.now), "status": "proposed",

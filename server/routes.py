@@ -195,14 +195,15 @@ def install(app: FastAPI, rt: Any) -> None:
     def access_matrix() -> AccessMatrix:
         acl = _module("engine.acl")
         fn = (getattr(acl, "access_matrix", None) or getattr(acl, "matrix", None)) if acl else None
+        out = stub.ACCESS_MATRIX
         if fn is not None:
             try:
-                out = fn()
-                if isinstance(out, AccessMatrix):
-                    return out
+                got = fn()
+                if isinstance(got, AccessMatrix):
+                    out = got
             except Exception:
                 pass
-        return stub.ACCESS_MATRIX
+        return with_challenge_row(out)
 
     @app.get("/api/access/log", response_model=list[AccessDecision])
     def access_log() -> list[AccessDecision]:
@@ -406,6 +407,16 @@ def approve_je(rt: Any, s: Session, je_id: str) -> JournalEntry:
         for fid in {line.dims.get("flight") for line in je.lines} - {None}:
             rt.lifecycle.refresh_flight(fid)
     return je
+
+
+def with_challenge_row(m: AccessMatrix) -> AccessMatrix:
+    """Justin Q-a: `challenge` is writable by every session (server-enforced; tier 4, it never flips)."""
+    if "challenge" in m.resources:
+        return m
+    cells = {p: {**row, "challenge": "write"} for p, row in m.cells.items()}
+    for p in m.principals:
+        cells.setdefault(p, {})["challenge"] = "write"
+    return m.model_copy(update={"resources": [*m.resources, "challenge"], "cells": cells})
 
 
 def primary_cohort(rt: Any) -> str:

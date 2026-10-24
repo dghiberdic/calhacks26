@@ -93,6 +93,10 @@ class Store:
                 for op in ("UPDATE", "DELETE"):
                     c.execute(f"CREATE TRIGGER IF NOT EXISTS {name}_no_{op.lower()} BEFORE {op} ON {name} "
                               f"BEGIN SELECT RAISE(ABORT, '{name} is append-only'); END")
+                # INSERT OR REPLACE rewrites a row without firing DELETE triggers: refuse any reused seq
+                c.execute(f"CREATE TRIGGER IF NOT EXISTS {name}_no_replace BEFORE INSERT ON {name} "
+                          f"WHEN EXISTS (SELECT 1 FROM {name} WHERE seq = NEW.seq) "
+                          f"BEGIN SELECT RAISE(ABORT, '{name} is append-only'); END")
             for ddl in INDEXES:
                 c.execute(ddl)
 
@@ -173,17 +177,25 @@ class Store:
             return None
         return rows[0][0] if rows else None
 
+    def protections(self) -> list[str]:
+        """Missing append-only protections on the server's own tables (empty = all in place)."""
+        have = {r[0] for r in self._q("SELECT name FROM sqlite_master WHERE type = 'trigger'")}
+        return [f"trigger {t}_{suffix} missing" for t in TABLES for suffix in ("no_update", "no_delete", "no_replace")
+                if f"{t}_{suffix}" not in have]
+
     def verify_chain(self) -> tuple[int, list[str]]:
-        """(commits checked, broken hashes) via `engine.trace` over this file's chain."""
+        """(commits checked, problems) via `engine.trace` over this file's chain, plus the server tables'
+        append-only protections."""
+        problems = self.protections()
         try:
             from engine.trace import TraceStore
         except ImportError:
-            return 0, []
+            return 0, problems
         ts = TraceStore(self.path, engine_sha="verify", cal_version="verify")
         try:
             v = ts.verify()
             commits = ts.all_commits()
-            return v.checked, [commits[i].hash if i < len(commits) else f"#{i}" for i in v.broken]
+            return v.checked, [commits[i].hash if i < len(commits) else f"#{i}" for i in v.broken] + problems
         finally:
             ts.close()
 

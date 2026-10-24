@@ -36,6 +36,7 @@ from .store import Store, iso
 log = logging.getLogger("stormcheck.server")
 DEMO_START = datetime(2025, 1, 25, 6, 0, tzinfo=UTC)     # "the morning after" Éowyn
 MORNING_AFTER = timedelta(days=1, hours=6)
+RESET_OFFSET = timedelta(hours=3)                         # POST /reset lands at boot + 3 h (09:00Z)
 RULING_TIERS = ("legal_ruling", "controller_ruling", "claims_lead_ruling")
 
 
@@ -258,6 +259,10 @@ class Runtime:
             if self.broker is not None:
                 self.broker.trace = self.trace
                 self.broker.log.clear()
+            if self.world is not None:
+                # Justin Q-b: the demo starts 3 h after the morning run, so Q1 already reads "Waiting on Claims
+                # Lead 3h · reminder sent" with no scrub (claims wait for the 18:00Z batch; day-1 numbers hold)
+                self.advance(self._boot_known_at() + RESET_OFFSET, "reset")
 
     def _boot_stub(self) -> None:
         from contracts import stub_app as stub
@@ -307,9 +312,39 @@ class Runtime:
         if m is not None:
             rules = {k: r for k, r in rules.items() if r.tier != "mined"}
             for p in m.proposals:
-                rule = p.rule
-                rules[rule.id] = rule.model_copy(update={"status": "active"}) if rule.status == "shadow" else rule
+                rules[p.rule.id] = p.rule             # shadow (or proposed when a written policy disagrees)
         return list(rules.values())
+
+    ONBOARDING = Session(principal="claims_lead:onboarding", role=Role.CLAIMS_LEAD, name="Claims Lead (onboarding)",
+                         issued_at=DEMO_START)
+
+    def activate_rule(self, rule: Rule, session: Session, reason: str) -> Rule:
+        """A rule becomes active only on the say-so of a principal who holds the authority it automates (hard
+        control); anyone else is DENIED (access log, `access_denied` commit, DENIED event)."""
+        need = rule.authority_required
+        ref = f"{rule.id}@{rule.version}"
+        if session.role != need or session.role in (Role.JUDGE,) or session.principal.startswith(("agent.",
+                                                                                                  "persona:")):
+            self.deny(session.principal, "activate_rule", ref, f"Least privilege: {ref} automates the "
+                      f"{compose.label(need)}'s authority; {session.principal} cannot activate it")
+            raise PermissionError(f"{session.principal} may not activate {ref}")
+        active = rule.model_copy(update={"status": "active"})
+        self.store.put("rule", rule.id, active, self.now)
+        self.record("record_rule", active, session.principal, self.now, event="active", reason=reason)
+        self.allow(session.principal, "activate_rule", ref, reason)
+        return active
+
+    def onboard_mined(self, rules: list[Rule]) -> None:
+        """Mined at onboarding: the seeded Claims Lead seat approves each clean shadow rule (support + exceptions on
+        the record), so blame shows who switched on the 50% reroute cut."""
+        for r in rules:
+            if r.tier != "mined" or r.status != "shadow":
+                continue
+            exc = ""
+            if r.origin_example and "exception" in r.origin_example:
+                exc = " · " + r.origin_example.split(";", 1)[-1].strip(" )")
+            seat = self.ONBOARDING.model_copy(update={"issued_at": self.now})
+            self.activate_rule(r, seat, f"onboarding approval by the Claims Lead · support {r.support}{exc}")
 
     def mined_questions(self, world: World) -> list[Question]:
         miner = _module("engine.miner")
@@ -378,7 +413,9 @@ class Runtime:
 
     def _boot_world(self, world: World) -> None:
         now = self.now
-        self.commit_rules(self.boot_rules(world))
+        rules = self.boot_rules(world)
+        self.commit_rules(rules)
+        self.onboard_mined(rules)
         self.commit_world(world)
         ran = 0
         for station, day in self.storm_days(world):
@@ -433,15 +470,22 @@ class Runtime:
         return n
 
     @staticmethod
-    def last_record(agent: Any) -> Any:
-        """The LlmCallRecord of an agent's latest call (`.last.record`, `.last_record`), if it exposes one."""
+    def last_record(agent: Any, draft_id: str | None = None) -> Any:
+        """The LlmCallRecord behind an agent's output: `record_for(draft_id)` (Drafter), `.last.record` (Reader),
+        `.last_record`, or the newest of `.records`."""
+        if draft_id is not None and hasattr(agent, "record_for"):
+            rec = agent.record_for(draft_id)
+            if rec is not None:
+                return rec
         last = getattr(agent, "last", None)
         rec = getattr(last, "record", None) if last is not None else None
-        return rec if rec is not None else getattr(agent, "last_record", None)
+        if rec is None:
+            rec = getattr(agent, "last_record", None)
+        return rec
 
     def commit_draft(self, draft: Draft, agent: Any) -> Draft:
         """A Drafter output: its llm_call commit (when it called the LLM), then the Draft itself citing it."""
-        h = self.commit_llm(self.last_record(agent))
+        h = self.commit_llm(self.last_record(agent, draft.id))
         if h is not None and draft.llm_commit is None:
             draft = draft.model_copy(update={"llm_commit": h})
         self.record("commit", "fact", draft, "agent.drafter", [h] if h else [], self.now, ref=draft.id,
@@ -489,10 +533,12 @@ class Runtime:
     def entitlements(self, d: FlightDecision, world: World, rules: list[Rule], known_at: datetime) -> list[Entitlement]:
         return compose.entitlements_for(d, world, self.engine_rules(rules), known_at, self.impls.engine)
 
-    def explain(self, d: FlightDecision) -> Draft:
+    def explain(self, d: FlightDecision, *, now: bool = False) -> Draft:
+        """The "Why?" text. At boot a template (never wait on an LLM at boot); the Drafter's version is drafted on
+        the flight file's first view (`now=True`, 8 s timeout, template on any failure) and stored."""
         drafter = self.impls.drafter
         fn = getattr(drafter, "explain", None) if drafter is not None else None
-        if fn is None or self.settings.mode == "offline":
+        if fn is None or not now:
             return compose.template_explanation(d)
         from .live import timed
         try:
@@ -761,12 +807,22 @@ class Runtime:
                                source="clock")
             self.store.put("pending_storm", key, {**info, "done": True}, self.now)
 
+    CLAIMS_BATCH_HOUR = 18          # claims are assessed in a daily 18:00Z batch, not the moment they arrive
+
+    def claims_batch_at(self) -> datetime:
+        """The latest daily claims batch at or before now."""
+        now = self.now
+        b = now.replace(hour=self.CLAIMS_BATCH_HOUR, minute=0, second=0, microsecond=0)
+        return b if b <= now else b - timedelta(days=1)
+
     def _process_claims(self) -> None:
-        """Claims received by now are assessed at face value (Books drafts; the Claims Lead approves)."""
+        """Claims received before the latest daily batch are assessed at face value (Books drafts; the Claims Lead
+        approves). On day 1 (25 Jan 06:00Z-18:00Z) the 6 overnight claims are still unassessed (plan §1.3)."""
         if self.world is None or self.books is None:
             return
+        batch = self.claims_batch_at()
         for claim in sorted(self.world.claims, key=lambda c: (c.received_at, c.id)):
-            if claim.received_at > self.now:
+            if claim.received_at > batch:
                 continue
             state = self.store.get("claim_state", claim.id)
             if state is not None and state.get("state") != "held":
@@ -833,7 +889,20 @@ class Runtime:
 
     def flight_file(self, flight_id: str) -> FlightFile | None:
         data = self.store.get("flight_file", flight_id)
-        return FlightFile.model_validate(data) if data is not None else None
+        if data is None:
+            return None
+        ff = FlightFile.model_validate(data)
+        if ff.explanation is not None and ff.explanation.id.startswith("DRAFT-EXPL-") and \
+                self.impls.drafter is not None:
+            with self.lock:                          # first view: the Drafter writes the "Why?" (stored once)
+                draft = self.explain(ff.decision, now=True)
+                if not draft.id.startswith("DRAFT-EXPL-"):
+                    ff = ff.model_copy(update={"explanation": draft})
+                    self.store.put("flight_file", flight_id, ff, self.now)
+                else:
+                    ff = ff.model_copy(update={"explanation": draft.model_copy(update={"id": f"DRAFT-T-{flight_id}"})})
+                    self.store.put("flight_file", flight_id, ff, self.now)
+        return ff
 
     def known_flight(self, flight_id: str) -> bool:
         for key in self.store.keys("storm_run"):

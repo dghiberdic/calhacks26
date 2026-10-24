@@ -225,12 +225,26 @@ def test_challenge_defends_and_routes(golden):
     assert d["cause"] == "technical" and d["extraordinary"] == "not_extraordinary"     # tier 4 never flips
 
 
-def test_challenge_access(golden):
+def test_challenge_is_open_to_every_session(golden):
     assert golden.post("/api/flights/NS999@2025-01-24/challenge", json={"text": "x"}).status_code == 404
-    r = golden.post(f"/api/flights/{NS31}/challenge", json={"text": "x"}, headers=token(golden, "agent.drafter"))
-    assert r.status_code == 403
-    r = golden.post(f"/api/flights/{NS31}/challenge", json={"text": "x"}, headers=token(golden, "legal"))
-    assert r.status_code == 200
+    for h in ({}, token(golden, "agent.drafter"), token(golden, "legal"), token(golden, "cfo")):
+        r = golden.post(f"/api/flights/{NS31}/challenge", json={"text": "storm anyway"}, headers=h)
+        assert r.status_code == 200 and r.json()["decision_stands"]
+    m = golden.get("/api/access/matrix").json()
+    assert "challenge" in m["resources"]
+    assert all(m["cells"][p]["challenge"] == "write" for p in m["principals"])
+
+
+def test_reset_lands_three_hours_after_the_morning_run(golden):
+    assert golden.post("/api/clock", json={"known_at": "2025-01-25T09:00:00Z"}).json()["known_at"].startswith(
+        "2025-01-25T09:00:00")                       # the fixture's reset already put the clock here
+    q1 = next(q for q in golden.get("/api/questions").json() if q["id"] == "Q-1")
+    assert q1["status"] == "reminded"
+    assert any(e["kind"] == "reminder" and e["ref"] == "Q-1" and "Waiting on Claims Lead 3h" in e["summary"]
+               for e in golden.get("/api/trace").json())
+    # the overnight claims wait for the 18:00Z batch, so day 1 still reads 8,214,600
+    eowyn = next(s for s in golden.get("/api/storms").json() if s["id"] == "EIDW@2025-01-24")
+    assert eowyn["liability_drafted_cents"] == 8_214_600
 
 
 def test_mode_is_reported(golden):
@@ -286,3 +300,23 @@ def test_mined_rule_comes_from_the_miner(golden):
     assert ff["entitlements_summary"]["compensation_cents"] == 9_900_000
     learned = golden.get("/api/storms/EIDW@2025-01-24").json()["learned"]
     assert any(x["support"] == "41 of 42" for x in learned)
+
+
+def test_mined_rule_was_switched_on_by_the_claims_lead(golden_app):
+    rt = golden_app.state.runtime
+    events = [c for c in rt.trace.log(None, kind="rule_event") if c.payload_ref == "R-MINED-REDUCE@1"]
+    on = [c for c in events if c.message.startswith("R-MINED-REDUCE@1 active")]
+    assert on and on[0].actor == "claims_lead:onboarding"
+    assert "41 of 42" in on[0].message and "HR-RR-024" in on[0].message
+
+
+def test_activating_a_rule_without_its_authority_is_denied(golden, golden_app):
+    from contracts.models import Role, Rule, Session
+    rt = golden_app.state.runtime
+    rule = Rule.model_validate(rt.store.get("rule", "R-MINED-REDUCE")).model_copy(update={"status": "shadow"})
+    legal = Session(principal="legal:aoife", role=Role.LEGAL, name="Aoife", issued_at=rt.now)
+    with pytest.raises(PermissionError):
+        rt.activate_rule(rule, legal, "trying")
+    assert any(a["action"] == "activate_rule" and not a["allowed"] for a in golden.get("/api/access/log").json())
+    r = golden.post("/api/proposals/R-CL-1/confirm", headers=token(golden, "legal"))
+    assert r.status_code == 403 and code(r) == "forbidden"
