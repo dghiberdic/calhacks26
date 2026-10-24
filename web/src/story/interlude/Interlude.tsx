@@ -46,7 +46,7 @@ export function Interlude() {
   );
 
   return (
-    <section ref={root} aria-label={`${f?.aircraft ?? "The aircraft"} on stand at Dublin`} className="relative h-svh overflow-hidden bg-navy-950">
+    <section ref={root} aria-label={`${f?.aircraft ?? "The aircraft"} on stand at Dublin`} data-section="interlude" className="relative h-svh overflow-hidden bg-navy-950">
       {/* the render, revealed by a soft radial wash centred on the nose */}
       <img
         src={asset("ns31-render.webp")}

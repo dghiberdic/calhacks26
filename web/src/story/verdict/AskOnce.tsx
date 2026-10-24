@@ -44,7 +44,7 @@ export function AskOnce() {
   );
 
   return (
-    <section ref={root} aria-label="Asks once" className="bg-cloud-50 px-5 py-28 text-navy-900 md:px-16 md:py-36">
+    <section ref={root} aria-label="Asks once" data-section="ask" className="bg-cloud-50 px-5 py-28 text-navy-900 md:px-16 md:py-36">
       <div className="mx-auto max-w-[1280px]">
         <div className="ao-head">
           <h2 className="display max-w-[14ch] text-[clamp(42px,5.8vw,100px)]">Asks once. Never twice.</h2>

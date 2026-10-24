@@ -1,6 +1,7 @@
-import type { Cents, CfoMetrics, Evidence, FlightDecision, FlightFile, FlightRow, JournalEntry, MetarObs, Question, Role, Rule, StormRun, StormWindow } from "@/api/types";
+import type { Blame, Cents, CfoMetrics, Evidence, FlightDecision, FlightFile, FlightRow, JournalEntry, MetarObs, Question, Role, Rule, StormRun, StormWindow } from "@/api/types";
 import { verdictOf, type VerdictKind } from "@/components/verdict";
 import { airport, iataOf } from "@/lib/airports";
+import { count, eur, zulu, zuluDay } from "@/lib/format";
 
 /**
  * Everything the story says comes from the API; this module only picks and shapes it. Identifiers
@@ -232,3 +233,91 @@ export function ruleFrom(rules: Rule[] | undefined, q: Question | null): Rule | 
 export const minutesBetween = (a: number, b: number) => Math.round((b - a) / MS_MIN);
 
 export type Amount = Cents | null;
+
+// ---------- every euro, traced ----------
+export type ChainTone = "money" | "rule" | "fault" | "metar" | "plain";
+export type ChainStep = { key: string; label: string; quote: string | null; meta: string; tone: ChainTone; struck?: boolean };
+
+const kindOf = (sourceId: string) => sourceId.split(":")[0];
+const toneOfSource = (sourceId: string): ChainTone => (/tech_log|mcc_log/.test(sourceId) ? "fault" : /^metar/.test(sourceId) ? "metar" : "plain");
+
+/** GET /blame, as chain steps (the server's own labels and quotes). */
+export function chainFromBlame(blame: Blame | undefined): ChainStep[] {
+  return (blame?.steps ?? []).map((s) => {
+    const text = `${s.label} ${s.commit.payload_ref} ${s.quote ?? ""}`;
+    const tone: ChainTone = s.commit.kind === "journal_event" || /€/.test(s.label) ? "money" : s.commit.kind === "rule_event" || s.commit.kind === "ruling" ? "rule" : /tech[ _-]?log|AOG|EDP/i.test(text) ? "fault" : /METAR|EIDW \d{6}Z/.test(text) ? "metar" : "plain";
+    return { key: s.commit.hash, label: s.label, quote: s.quote ?? null, meta: `${s.commit.kind.replace(/_/g, " ")} · ${s.commit.hash.slice(0, 8)} · ${s.commit.actor}`, tone };
+  });
+}
+
+/** Plain words for an evidence field and value, when the timeline has no label for that line. */
+function evidenceLabel(e: Evidence): string {
+  const v = e.value;
+  switch (e.field) {
+    case "aog.logged_at":
+      return typeof v === "string" ? `Tech log, ${zuluDay(v)}` : "Tech log";
+    case "aog.mel_relief":
+      return v === false ? "No MEL relief: the aircraft is on the ground" : "MEL relief";
+    case "aog.ata":
+      return `ATA ${String(v).replace(/^(\d{2})(\d{2})$/, "$1-$2")}: the engine-driven pump`;
+    case "aog.rts_est":
+      return typeof v === "string" ? `Back in service ${zuluDay(v)} at the earliest` : "Return to service";
+    case "metar.sknt_at_aog":
+      return `${String(v)} kt at Dublin when the fault was logged`;
+    case "metar.max_gust_kt_from_16z":
+      return `Gusts at most ${String(v)} kt from 16:00Z`;
+    case "flight.in_window_dep":
+      return v === "out" ? "Departure outside the storm window" : `Departure ${String(v)} the storm window`;
+    case "flight.sched_dep":
+      return typeof v === "string" ? `Scheduled out ${zulu(v)}` : "Schedule";
+    case "spare.long_range_at_dub":
+      return v === false ? "No long-range spare at Dublin" : "Spare at Dublin";
+    case "flight.ops_cause_code":
+      return `OCC coded it ${String(v)}`;
+    default:
+      return `${e.field} = ${typeof v === "string" ? v : JSON.stringify(v)}`;
+  }
+}
+
+/**
+ * The same chain from the Flight File, for a server without /blame: the drafted euros, the entitlement
+ * they come from, the rule that decided the cause, then every piece of evidence as the engine ranked it,
+ * with the timeline's own label where it has one. The OCC code that lost is shown struck.
+ */
+export function chainFromFile(file: FlightFile | undefined, rules: Rule[] | undefined, m: ReturnType<typeof money>): ChainStep[] {
+  if (!file) return [];
+  const d = file.decision;
+  const s = (file.entitlements_summary ?? {}) as Record<string, unknown>;
+  const steps: ChainStep[] = [];
+  if (m.drafted !== null) steps.push({ key: "je", label: `${eur(m.drafted)} drafted`, quote: m.je?.memo ?? null, meta: m.je ? `${m.je.id} · ${m.je.status === "draft" ? "not yet posted" : m.je.status}${m.je.built_from ? ` · built from ${m.je.built_from} sources` : ""}` : "EU261 compensation liability", tone: "money" });
+  if (m.full !== null) {
+    const parts = Array.isArray(s.compensation_breakdown) ? (s.compensation_breakdown as { count: number; band_eur: number }[]).map((b) => `${count(b.count)} × €${b.band_eur}`).join(" + ") : null;
+    const reduction = (s.reduction_7_2 ?? null) as { rule_ref?: string; support?: string; label?: string } | null;
+    steps.push({ key: "ent", label: `${eur(m.full)} full Art. 7 entitlement`, quote: [parts, typeof s.band_label === "string" ? s.band_label : null].filter(Boolean).join(" · ") || null, meta: reduction ? [reduction.rule_ref, reduction.support, reduction.label].filter(Boolean).join(" · ") : "if every passenger claims", tone: "money" });
+  }
+  for (const ref of d.rules_applied) {
+    const [id, version] = ref.split("@");
+    const rule = rules?.find((r) => r.id === id && (!version || String(r.version) === version));
+    steps.push({ key: ref, label: `${d.cause.replace(/_/g, " ")}, ${d.extraordinary.replace(/_/g, " ")}`.replace(/^./, (c) => c.toUpperCase()), quote: rule?.origin_example ?? null, meta: [ref, ...d.legal_basis].join(" · "), tone: "rule" });
+  }
+  // The evidence as the engine ranked it: one step per log (its full line), every METAR hour it quoted,
+  // context only when it is weather. Spares stay out: they don't bear on a technical fault (plan §1.2).
+  const seen = new Set<string>();
+  for (const e of d.evidence) {
+    const kind = kindOf(e.source_id);
+    if (e.role === "context" && kind !== "metar") continue;
+    if (kind !== "metar" && seen.has(e.source_id)) continue;
+    seen.add(e.source_id);
+    const mark = file.timeline.find((t) => t.source_id === e.source_id && t.text === e.quote);
+    steps.push({
+      key: `${e.fact_id}`,
+      label: typeof mark?.label === "string" && kind !== "occ_log" ? mark.label : evidenceLabel(e),
+      quote: e.quote ?? null,
+      meta: [e.source_id, `tier ${e.trust_tier}`, typeof mark?.at === "string" ? zuluDay(mark.at) : null, e.struck ? "struck" : null].filter(Boolean).join(" · "),
+      tone: toneOfSource(e.source_id),
+      struck: !!e.struck,
+    });
+  }
+  // one line per source quote: drop repeats of the same quoted line
+  return steps.filter((x, i) => !x.quote || steps.findIndex((y) => y.quote === x.quote && y.tone === x.tone) === i);
+}

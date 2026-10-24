@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { zulu, zuluDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { asset } from "../data/assets";
 import { SIDE_LINES, SIDE_VIEW, TOP_LINES, TOP_VIEW } from "../data/lineart";
@@ -11,9 +12,23 @@ import { A321, HYDRAULICS, LEAK, type HydSystem } from "./hydraulics";
 
 const AircraftScene = lazy(() => import("./AircraftScene"));
 const INK = "#e8f0fa";
-const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-const amosStamp = (d: Date) => `${String(d.getUTCDate()).padStart(2, "0")} ${MONTHS[d.getUTCMonth()]} ${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}Z`;
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const stamp = (d: Date) => `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}Z`;
 const HYD_COLOR: Record<HydSystem, string> = { green: "var(--hyd-green)", blue: "var(--hyd-blue)", yellow: "var(--hyd-yellow)" };
+
+/** "At 21:40Z on 23 Jan, EI-NSB's engine-2 pump …" (time and tail from the API). */
+function Copy({ log, reg }: { log: ReturnType<typeof useStory>["log"]; reg: string | null }) {
+  return (
+    <>
+      {log?.at ? (
+        <>
+          At <span className="figure">{zulu(log.at.toISOString())}</span> on {zuluDay(log.at.toISOString()).split(" ").slice(0, 2).join(" ")},{" "}
+        </>
+      ) : null}
+      {reg ?? "the aircraft"}&rsquo;s engine-2 pump was leaking yellow-system fluid beyond limits. No MEL relief, so it couldn&rsquo;t fly. A technical fault isn&rsquo;t weather.
+    </>
+  );
+}
 
 /**
  * The aircraft as evidence. A cyanotype drawing plots itself, the three hydraulic systems trace in,
@@ -31,7 +46,7 @@ export function Blueprint() {
   const still = prefersReducedMotion();
   const log = story.log;
   const reg = story.focus?.flight.aircraft ?? story.file?.flight.aircraft ?? null;
-  const leakLabel = `${LEAK.label} · leak${log?.at ? ` · ${amosStamp(log.at)}` : ""}`;
+  const leakLabel = `${LEAK.label} · leak${log?.at ? ` · ${stamp(log.at)}` : ""}`;
 
   // Mount the WebGL scene only when the section is close (and never with reduced motion).
   useEffect(() => {
@@ -73,7 +88,7 @@ export function Blueprint() {
         };
         const p = progress.current;
         tl.addLabel("three", 5.0)
-          .to(".bp-plan, .bp-legend, .bp-log", { opacity: 0, duration: 0.5, ease: "power1.out" }, "three")
+          .to(".bp-plan, .bp-evidence", { opacity: 0, duration: 0.5, ease: "power1.out" }, "three")
           .to(".bp-side", { y: centre, duration: 0.8, ease: "power2.inOut" }, "three")
           .to(".bp-canvas", { opacity: 1, duration: 0.4, ease: "none" }, "three+=0.7")
           .to(p, { show: 1, duration: 0.4, ease: "none" }, "three+=0.7")
@@ -101,7 +116,7 @@ export function Blueprint() {
   return (
     <section
       ref={root}
-      aria-label="The aircraft as evidence"
+      aria-label="The aircraft as evidence" data-section="blueprint"
       className="relative flex min-h-svh flex-col justify-center overflow-hidden bg-[var(--story-cyan)] py-12 text-[var(--story-ink)] max-lg:py-6 [@media(max-height:760px)]:py-6"
     >
       <div className="bp-grid story-grid pointer-events-none absolute inset-0 opacity-[0.22]" aria-hidden="true" />
@@ -165,7 +180,8 @@ export function Blueprint() {
             <g className="bp-leak">
               <circle className="bp-leak-pulse" cx={LEAK.x} cy={LEAK.y} r="0.9" fill="none" stroke="var(--color-notweather)" strokeWidth="0.12" />
               <circle cx={LEAK.x} cy={LEAK.y} r="0.55" fill="var(--color-notweather)" />
-              <text x={LEAK.x + 1.3} y={LEAK.y - 1.1} fill="#ffb3a1" className="font-mono" style={{ fontSize: 0.95 }}>
+              <path d={`M${LEAK.x - 1.1},${LEAK.y - 0.6} L${LEAK.x - 2.6},${LEAK.y - 2.2} L${LEAK.x - 5.4},${LEAK.y - 2.2}`} fill="none" stroke="#ffb3a1" strokeWidth="0.06" />
+              <text x={LEAK.x - 5.7} y={LEAK.y - 1.95} textAnchor="end" fill="#ffb3a1" className="font-mono" style={{ fontSize: 0.9 }}>
                 {LEAK.label}
               </text>
             </g>
@@ -184,41 +200,45 @@ export function Blueprint() {
         <aside className="flex flex-col justify-center gap-8">
           <div>
             <h2 className="display text-[clamp(38px,4.2vw,68px)] text-white">Grounded the night before.</h2>
-            {/* On a phone the copy, the log and the caption share one slot and take turns, so the pinned section fits. */}
-            <div className="mt-5 flex flex-col gap-7 max-lg:motion-safe:grid max-lg:motion-safe:gap-0">
-              <p className="bp-copy max-w-[36ch] text-[16.5px] leading-relaxed text-[var(--story-ink-soft)] max-lg:motion-safe:[grid-area:1/1]">
-                {log?.at ? <>At {amosStamp(log.at).replace(/^0/, "")}, </> : null}
-                {reg ?? "the aircraft"}&rsquo;s engine-2 pump was leaking yellow-system fluid beyond limits. No MEL relief, so it couldn&rsquo;t fly. A technical fault isn&rsquo;t weather.
+            <p className="bp-copy mt-5 max-w-[36ch] text-[16.5px] leading-relaxed text-[var(--story-ink-soft)] max-lg:motion-safe:hidden">
+              <Copy log={log} reg={reg} />
+            </p>
+            {/* The log and the 3D caption share one slot and take turns; on a phone the copy joins them, so the pinned section fits. */}
+            <div className="mt-7 grid max-lg:mt-4">
+              <p className="bp-copy max-w-[36ch] text-[15.5px] leading-relaxed text-[var(--story-ink-soft)] [grid-area:1/1] lg:hidden motion-reduce:hidden">
+                <Copy log={log} reg={reg} />
               </p>
-              <div className="bp-legend flex gap-5 text-[13px] text-[var(--story-ink-soft)] max-lg:motion-safe:hidden">
-                {(["yellow", "green", "blue"] as const).map((s) => (
-                  <span key={s} className={cn("flex items-center gap-2", s !== LEAK.system && "opacity-70")}>
-                    <span className="h-[3px] w-5 rounded-full" style={{ background: HYD_COLOR[s] }} />
-                    {HYDRAULICS[s].label}
-                    {s === LEAK.system ? <span className="font-mono text-[11px] text-[#ffb3a1]">{HYDRAULICS[s].pump}</span> : null}
-                  </span>
-                ))}
-              </div>
-              <figure className="bp-log rounded-md border border-[#e8f0fa]/25 bg-[var(--story-cyan-deep)]/85 p-5 backdrop-blur-sm max-lg:p-4 max-lg:motion-safe:[grid-area:1/1] max-lg:motion-safe:self-start">
-                <figcaption className="mb-3 flex justify-between gap-3 text-[13px] text-[var(--story-ink-soft)]">
-                  <span>Technical log{reg ? `, ${reg}` : ""}</span>
-                  {log?.ata ? <span className="font-mono">ATA {log.ata}</span> : null}
-                </figcaption>
-                <div className="font-mono text-[13px] leading-[1.65] text-white max-lg:text-[12px]">
-                  {log?.lines.length ? (
-                    log.lines.map((l, i) => (
-                      <p key={i} className={cn("bp-log-line", i === 0 && "text-[#ffb3a1]", /ENG 2|HYD Y/.test(l) && i > 0 && "text-[var(--hyd-yellow)]")}>
-                        {l}
-                      </p>
-                    ))
-                  ) : (
-                    <p className="bp-log-line">
-                      <Pending ch={28} />
-                    </p>
-                  )}
+              <div className="bp-evidence flex flex-col gap-6 self-start [grid-area:1/1] max-lg:gap-3">
+                <div className="bp-legend flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-[var(--story-ink-soft)] max-lg:motion-safe:hidden">
+                  {(["yellow", "green", "blue"] as const).map((s) => (
+                    <span key={s} className={cn("flex items-center gap-2", s !== LEAK.system && "opacity-70")}>
+                      <span className="h-[3px] w-5 rounded-full" style={{ background: HYD_COLOR[s] }} />
+                      {HYDRAULICS[s].label}
+                      {s === LEAK.system ? <span className="font-mono text-[11px] text-[#ffb3a1]">{HYDRAULICS[s].pump}</span> : null}
+                    </span>
+                  ))}
                 </div>
-              </figure>
-              <p className="bp-caption-3d -mt-3 max-w-[34ch] text-[15px] leading-relaxed text-[var(--story-ink-soft)] opacity-0 motion-reduce:hidden max-lg:motion-safe:mt-0 max-lg:motion-safe:[grid-area:1/1]">
+                <figure className="bp-log rounded-md border border-[#e8f0fa]/25 bg-[var(--story-cyan-deep)]/85 p-5 backdrop-blur-sm max-lg:p-3.5 [@media(max-height:760px)]:p-4">
+                  <figcaption className="mb-3 flex justify-between gap-3 text-[13px] text-[var(--story-ink-soft)] max-lg:mb-2">
+                    <span>Technical log{reg ? `, ${reg}` : ""}</span>
+                    {log?.ata ? <span className="font-mono">ATA {log.ata}</span> : null}
+                  </figcaption>
+                  <div className="font-mono text-[13px] leading-[1.6] text-white max-lg:text-[11.5px] [@media(max-height:760px)]:text-[12px]">
+                    {log?.lines.length ? (
+                      log.lines.map((l, i) => (
+                        <p key={i} className={cn("bp-log-line", i === 0 && "text-[#ffb3a1]", /ENG 2|HYD Y/.test(l) && i > 0 && "text-[var(--hyd-yellow)]")}>
+                          {l}
+                        </p>
+                      ))
+                    ) : (
+                      <p className="bp-log-line">
+                        <Pending ch={28} />
+                      </p>
+                    )}
+                  </div>
+                </figure>
+              </div>
+              <p className="bp-caption-3d max-w-[34ch] self-start text-[15px] leading-relaxed text-[var(--story-ink-soft)] opacity-0 [grid-area:1/1] motion-reduce:hidden">
                 The same aircraft, from the same drawing. It stays in pencil until the evidence agrees, then it inks in.
               </p>
             </div>

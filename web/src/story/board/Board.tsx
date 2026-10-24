@@ -24,11 +24,15 @@ function FlapBoard({ title, rows, phase, entitlement, side }: { title: string; r
   const placeholders = rows.length ? rows : Array.from({ length: side === "dep" ? 14 : 13 }, () => null);
   return (
     <div className="w-fit min-w-0">
-      <div className="mb-3 flex items-baseline justify-between gap-4 px-1">
-        <span className="micro text-cloud-300">{title}</span>
-        <span className="micro text-cloud-500">{side === "dep" ? "to" : "from"} · reason · art. 7</span>
-      </div>
+      <p className="micro mb-3 px-1 text-cloud-300">{title}</p>
       <div className="rounded-lg bg-[#0a1220] p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05),0_30px_60px_-30px_rgba(0,0,0,0.8)] md:p-4">
+        <div className={cn(COLS, "mb-2 px-1 text-[0.62em] uppercase tracking-[0.08em] text-cloud-500")} aria-hidden="true">
+          <span>{side === "dep" ? "STD" : "STA"}</span>
+          <span>Flight</span>
+          <span>{side === "dep" ? "To" : "From"}</span>
+          <span>Reason</span>
+          <span>Art. 7</span>
+        </div>
         <div className="flex flex-col gap-[0.3em]">
           {placeholders.map((row, i) => {
             const coded = row ? (row.coded ? `WX ${row.coded}` : "WX") : "";
@@ -94,7 +98,7 @@ export function Board() {
   );
 
   return (
-    <section ref={root} aria-label="The cancellations, as coded" className="relative bg-navy-950 px-5 pb-28 pt-32 md:px-16 md:pb-36 md:pt-40">
+    <section ref={root} aria-label="The cancellations, as coded" data-section="board" className="relative bg-navy-950 px-5 pb-28 pt-32 md:px-16 md:pb-36 md:pt-40">
       <div className="board-head mx-auto max-w-[1180px]">
         <h2 className="display max-w-[15ch] text-[clamp(38px,5.4vw,88px)] text-cloud-50">
           All {cancelled !== undefined ? count(cancelled) : <Pending ch={2} />} coded weather.
@@ -104,7 +108,7 @@ export function Board() {
         </p>
       </div>
 
-      <div className="board-boards mx-auto mt-14 grid max-w-[1180px] grid-cols-1 gap-8 text-[12.5px] min-[1180px]:grid-cols-2 min-[1180px]:text-[clamp(13px,1.12vw,16.5px)] md:mt-20 md:text-[15px]">
+      <div className="board-boards mx-auto mt-14 grid max-w-[1180px] grid-cols-1 justify-between gap-x-10 gap-y-8 text-[12.5px] min-[390px]:text-[13px] min-[1180px]:grid-cols-[auto_auto] min-[1180px]:text-[clamp(14px,1.2vw,18px)] md:mt-20 md:text-[16px]">
         <div className="board-dep">
           <FlapBoard title="Dublin departures · cancelled" rows={departures} phase={phase} entitlement={story.money.full} side="dep" />
         </div>

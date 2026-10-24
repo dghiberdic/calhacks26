@@ -13,11 +13,11 @@ import { Pending } from "../ui";
 import { windBarb } from "./barbs";
 
 const W = 1200;
-const H = 540;
-const M = { l: 70, r: 36, t: 96, b: 170 };
+const H = 560;
+const M = { l: 70, r: 36, t: 96, b: 176 };
 const PLOT_BOTTOM = H - M.b;
-const DEP_Y = PLOT_BOTTOM + 46;
-const ARR_Y = PLOT_BOTTOM + 86;
+const DEP_Y = PLOT_BOTTOM + 66;
+const ARR_Y = PLOT_BOTTOM + 112;
 const DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 const dayLabel = (d: Date) => `${DAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
@@ -95,6 +95,7 @@ export function StormWindow() {
           .from(".sw-tick", { opacity: 0, y: -16, stagger: 0.025, duration: 0.35, ease: "back.out(2)" })
           .addLabel("check")
           .from(".sw-tick-dot", { fill: CODED, duration: 0.5, stagger: 0.015 })
+          .from(".sw-legend", { opacity: 0, y: 6, duration: 0.4 }, "<")
           .from(".sw-op", { opacity: 0, scaleY: 0, transformOrigin: "50% 100%", stagger: 0.03, duration: 0.3 }, "<0.2")
           .from(".sw-op-label", { opacity: 0, duration: 0.3 })
           .addLabel("ns31")
@@ -132,7 +133,7 @@ export function StormWindow() {
   const aria = g && win ? `Gusts at Dublin from METAR, ${zulu(g.facts.domain[0].toISOString())} the evening before to midnight. The storm window ran ${winLabel}. ${focus ? `${focus.flight.number} was due out at ${zulu(focus.flight.sched_dep)}, after it.` : ""}` : "Gusts at Dublin from METAR, with the storm window.";
 
   return (
-    <section ref={root} aria-label="Weather has a window" className="relative bg-navy-950">
+    <section ref={root} aria-label="Weather has a window" data-section="window" className="relative bg-navy-950">
       <div className="mx-auto max-w-[1180px] px-5 pt-28 md:px-0 md:pt-36">
         <h2 className="display max-w-[15ch] text-[clamp(38px,5.4vw,88px)] text-cloud-50">Weather has a window.</h2>
         <p className="mt-6 max-w-[48ch] text-[16.5px] leading-relaxed text-cloud-400 md:text-[19px]">
@@ -169,10 +170,10 @@ export function StormWindow() {
                 })}
                 {win ? (
                   <g className="sw-window-label">
-                    <text x={g.x(new Date(win.start)) + 10} y={M.t + 8} className="fill-metar font-mono text-[13px]">
+                    <text x={g.x(new Date(win.end)) - 12} y={M.t + 8} textAnchor="end" className="tabular fill-metar text-[13.5px] font-medium">
                       Storm window {winLabel}
                     </text>
-                    <text x={g.x(new Date(win.start)) + 10} y={M.t + 26} className="fill-cloud-500 text-[12px]">
+                    <text x={g.x(new Date(win.end)) - 12} y={M.t + 26} textAnchor="end" className="fill-cloud-500 text-[12px]">
                       computed from METAR, not typed in
                     </text>
                   </g>
@@ -184,7 +185,7 @@ export function StormWindow() {
                   {g.hours.map((h) => (
                     <g key={h.getTime()}>
                       <line x1={g.x(h)} x2={g.x(h)} y1={PLOT_BOTTOM} y2={PLOT_BOTTOM + 5} stroke="#33445e" />
-                      <text x={g.x(h)} y={PLOT_BOTTOM + 21} textAnchor="middle" className="fill-cloud-500 font-mono text-[11.5px]">
+                      <text x={g.x(h)} y={PLOT_BOTTOM + 21} textAnchor="middle" className="tabular fill-cloud-500 text-[12px]">
                         {hhmm(h.toISOString())}
                       </text>
                     </g>
@@ -192,12 +193,12 @@ export function StormWindow() {
                   {[20, 40, 60].map((v) => (
                     <g key={v}>
                       <line x1={M.l} x2={W - M.r} y1={g.y(v)} y2={g.y(v)} stroke="rgba(200,208,219,0.06)" />
-                      <text x={M.l - 12} y={g.y(v) + 4} textAnchor="end" className="fill-cloud-500 font-mono text-[11px]">
+                      <text x={M.l - 12} y={g.y(v) + 4} textAnchor="end" className="tabular fill-cloud-500 text-[11.5px]">
                         {v}
                       </text>
                     </g>
                   ))}
-                  <text x={M.l - 12} y={M.t - 2} textAnchor="end" className="fill-cloud-500 font-mono text-[11px]">
+                  <text x={M.l - 12} y={M.t - 2} textAnchor="end" className="fill-cloud-500 text-[11.5px]">
                     kt
                   </text>
                   <line x1={g.x(g.midnight)} x2={g.x(g.midnight)} y1={M.t - 70} y2={ARR_Y + 10} stroke="#4f617a" strokeDasharray="2 4" />
@@ -224,7 +225,7 @@ export function StormWindow() {
                 {g.facts.gustLimitKt ? (
                   <>
                     <line className="sw-limit" style={{ transformBox: "fill-box" }} x1={M.l} x2={W - M.r} y1={g.y(g.facts.gustLimitKt)} y2={g.y(g.facts.gustLimitKt)} stroke="#4f9fe0" strokeOpacity={0.7} strokeWidth="1.3" strokeDasharray="6 5" />
-                    <text x={W - M.r} y={g.y(g.facts.gustLimitKt) - 8} textAnchor="end" className="sw-limit-label fill-metar font-mono text-[12px]">
+                    <text x={W - M.r} y={g.y(g.facts.gustLimitKt) - 8} textAnchor="end" className="sw-limit-label tabular fill-metar text-[12.5px]">
                       gust {g.facts.gustLimitKt} kt
                     </text>
                   </>
@@ -268,7 +269,7 @@ export function StormWindow() {
                     <rect key={t.id} className="sw-op" x={g.x(t.at) - 1.5} y={DEP_Y - 8} width="3" height="16" rx="1" fill={TONE.operated} />
                   ))}
                 {opFirst && opLast ? (
-                  <text x={(g.x(new Date(opFirst.flight.sched_dep)) + g.x(new Date(opLast.flight.sched_dep))) / 2} y={DEP_Y - 18} textAnchor="middle" className="sw-op-label fill-slate-400 text-[12px]">
+                  <text x={(g.x(new Date(opFirst.flight.sched_dep)) + g.x(new Date(opLast.flight.sched_dep))) / 2} y={DEP_Y - 17} textAnchor="middle" className="sw-op-label tabular fill-slate-400 text-[12px]">
                     {count(operated.length)} departures flew {hhmm(opFirst.flight.sched_dep)}–{hhmm(opLast.flight.sched_dep)}Z
                   </text>
                 ) : null}
@@ -285,8 +286,8 @@ export function StormWindow() {
                       <line x1={g.x(new Date(win.end))} x2={g.x(new Date(win.end))} y1={DEP_Y + 20} y2={DEP_Y + 28} stroke="#ff8d72" />
                       <line x1={g.x(new Date(focus.flight.sched_dep))} x2={g.x(new Date(focus.flight.sched_dep))} y1={DEP_Y + 20} y2={DEP_Y + 28} stroke="#ff8d72" />
                     </g>
-                    <text x={g.x(new Date(focus.flight.sched_dep)) + 22} y={DEP_Y + 29} className="sw-margin-label fill-[#ff8d72] text-[12.5px]">
-                      <tspan className="font-mono">{focus.flight.number} {zulu(focus.flight.sched_dep)}</tspan>
+                    <text x={g.x(new Date(focus.flight.sched_dep)) + 22} y={DEP_Y + 28} className="sw-margin-label fill-[#ff8d72] text-[12.5px]">
+                      <tspan className="tabular font-medium">{focus.flight.number} {zulu(focus.flight.sched_dep)}</tspan>
                       {margin !== null ? <tspan className="fill-cloud-300"> · {duration(margin)} after the window</tspan> : null}
                     </text>
                   </>
@@ -298,7 +299,7 @@ export function StormWindow() {
                     <path className="sw-fault" style={{ transformBox: "fill-box" }} d={`M${g.x(log.at)},${DEP_Y} L${g.x(log.at)},${M.t - 30}`} stroke={TONE.notweather} strokeWidth="1.6" strokeDasharray="3 4" />
                     <g className="sw-fault-label">
                       <rect x={g.x(log.at) + 10} y={M.t - 30} width="300" height="70" rx="4" fill="#160d10" stroke={TONE.notweather} strokeOpacity="0.55" />
-                      <text x={g.x(log.at) + 22} y={M.t - 10} className="fill-[#ff8d72] font-mono text-[12px] tracking-[0.04em]">
+                      <text x={g.x(log.at) + 22} y={M.t - 10} className="tabular fill-[#ff8d72] text-[12.5px] font-medium tracking-[0.02em]">
                         TECH LOG · {zulu(log.at.toISOString())} · {focus?.flight.aircraft ?? ""}
                       </text>
                       <text x={g.x(log.at) + 22} y={M.t + 9} className="fill-cloud-50 font-mono text-[12px]">
@@ -312,9 +313,25 @@ export function StormWindow() {
                 ) : null}
               </svg>
             ) : (
-              <div className={cn("mx-auto aspect-[1200/540] w-[1000px] max-w-none animate-pulse rounded-xl bg-white/[0.03] md:w-full")} aria-hidden="true" />
+              <div className={cn("mx-auto aspect-[1200/560] w-[1000px] max-w-none animate-pulse rounded-xl bg-white/[0.03] md:w-full")} aria-hidden="true" />
             )}
           </div>
+        </div>
+        <div className="sw-legend mx-auto mt-2 flex w-full max-w-[1280px] flex-wrap gap-x-6 gap-y-2 px-5 text-[12.5px] text-cloud-400 md:px-12 md:pl-[calc(3rem+70px*var(--sw-scale,1))]">
+          {[
+            ["weather", "weather: no compensation"],
+            ["held", "held: one question to Legal"],
+            ["notweather", "not weather"],
+          ].map(([tone, label]) => (
+            <span key={tone} className="flex items-center gap-2">
+              <span className="size-2 rounded-full" style={{ background: TONE[tone as keyof typeof TONE] }} aria-hidden="true" />
+              {label}
+            </span>
+          ))}
+          <span className="flex items-center gap-2">
+            <span className="h-3 w-[3px] rounded-sm" style={{ background: TONE.operated }} aria-hidden="true" />
+            operated
+          </span>
         </div>
       </div>
     </section>

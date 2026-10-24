@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useBlame, useCfo, useCurve, useFlightFile, useQuestions, useRules, useStormRun, useStorms } from "@/api/queries";
 import { HERO_STORM, stormName } from "@/lib/storms";
-import { aircraftType, focusRow, HERO_FLIGHT, mainWindow, money, NEXT_STORM, ruleFrom, techLog, voucherQuestion } from "./model";
+import { aircraftType, chainFromBlame, chainFromFile, focusRow, HERO_FLIGHT, mainWindow, money, NEXT_STORM, ruleFrom, techLog, voucherQuestion } from "./model";
 
 /** One place that asks the API for everything the story shows; sections read from it. */
 export function useStoryQueries() {
@@ -19,8 +19,13 @@ export function useStoryQueries() {
   const je = file.data?.journal_preview.find((j) => j.kind === "compensation_estimate") ?? file.data?.journal_preview[0];
   const blame = useBlame(je?.id ?? (file.data ? file.data.flight.id : undefined));
 
+  // /blame when the server has it; until it answers, nothing; if it can't, the Flight File's own chain.
+  const blameSettled = !!blame.data || blame.isError || blame.fetchStatus === "idle";
+
   return useMemo(() => {
     const q1 = voucherQuestion(questions.data);
+    const m = money(file.data, cfo.data);
+    const fromBlame = chainFromBlame(blame.data);
     return {
       stormId,
       stormName: stormName(stormId),
@@ -30,15 +35,18 @@ export function useStoryQueries() {
       file: file.data,
       cfo: cfo.data,
       curve: curve.data,
+      curveMissing: curve.isError,
       window: mainWindow(run.data?.windows),
       log: techLog(file.data, run.data),
       aircraftType: aircraftType(file.data),
-      money: money(file.data, cfo.data),
+      money: m,
+      chain: fromBlame.length ? fromBlame : blameSettled ? chainFromFile(file.data, rules.data, m) : [],
+      chainSource: fromBlame.length ? ("blame" as const) : ("flight-file" as const),
+      learned: run.data?.learned ?? [],
       q1,
       rule: ruleFrom(rules.data, q1),
       next: next.data,
       nextName: stormName(nextId),
-      blame: blame.data,
     };
-  }, [stormId, nextId, run.data, run.error, focus, file.data, cfo.data, curve.data, questions.data, rules.data, next.data, blame.data]);
+  }, [stormId, nextId, run.data, run.error, focus, file.data, cfo.data, curve.data, curve.isError, questions.data, rules.data, next.data, blame.data, blameSettled]);
 }

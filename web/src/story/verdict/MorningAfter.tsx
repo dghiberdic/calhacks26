@@ -23,7 +23,7 @@ export function MorningAfter() {
   return (
     <section
       ref={root}
-      aria-label="The morning after"
+      aria-label="The morning after" data-section="morning"
       className="relative h-[170vh] motion-reduce:h-[70vh]"
       style={{ background: "linear-gradient(to bottom, #080d17 0%, #0d1524 22%, #33445e 50%, #c8d0db 78%, #f4f6f9 100%)" }}
     >

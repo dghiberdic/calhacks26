@@ -205,7 +205,7 @@ export function Hero() {
   );
 
   return (
-    <section ref={root} aria-label={`${story.stormName ?? "The storm"} over Ireland`} className="relative h-svh w-full overflow-hidden bg-navy-950">
+    <section ref={root} aria-label={`${story.stormName ?? "The storm"} over Ireland`} data-section="hero" className="relative h-svh w-full overflow-hidden bg-navy-950">
       <canvas ref={glRef} className={noGL ? "hidden" : "absolute inset-0 h-full w-full"} aria-hidden="true" />
       <svg ref={svgRef} className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style={{ ["--u" as string]: 0.03 } as CSSProperties}>
         <g className="hero-lines" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -236,7 +236,7 @@ export function Hero() {
         {arcs.map((a) => (
           <g key={a.iata} className="hero-arc-label" transform={`translate(${a.pt[0]} ${a.pt[1]})`} style={{ opacity: still ? 1 : 0 }}>
             <circle fill="#f4f6f9" style={{ r: u(2.6) } as CSSProperties} />
-            <text fill="#c8d0db" className="font-mono" style={{ fontSize: u(11.5), transform: `translate(${u(7)}, ${u(-7)})` }}>
+            <text fill="#dfe4eb" className="font-mono" style={{ fontSize: u(11.5), transform: `translate(${u(7)}, ${u(-7)})`, paintOrder: "stroke", stroke: "rgba(8,13,23,0.85)", strokeWidth: u(3.5), strokeLinejoin: "round" }}>
               {a.iata}
             </text>
           </g>

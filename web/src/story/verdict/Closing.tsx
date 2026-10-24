@@ -25,7 +25,7 @@ export function Closing() {
   );
 
   return (
-    <section ref={root} aria-label="Two seats" data-testid="story-closing" className="bg-cloud-50 px-5 pb-14 pt-28 text-navy-900 md:px-16 md:pt-36">
+    <section ref={root} aria-label="Two seats" data-section="closing" data-testid="story-closing" className="bg-cloud-50 px-5 pb-14 pt-28 text-navy-900 md:px-16 md:pt-36">
       <div className="mx-auto max-w-[1280px]">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           <div>
