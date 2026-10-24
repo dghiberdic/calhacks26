@@ -1,33 +1,18 @@
 // The mock router: every route in CONTRACTS §3, answered from state.ts. Paths arrive as the API client
 // sends them (after `/api`, segments URI-encoded, query string attached). Errors use the contract
 // envelope {"error":{"code","message"}} with plain messages; user input never produces a 500.
-import type { CfoMetrics, Role, Session } from "@/api/types";
+import type { CfoMetrics, CurveSegment, Role, Session } from "@/api/types";
+import { answerQuestion, approveJournal, challenge, confirmProposal, lockPeriod, monthEnd, rejectRule, revertRule, setClock, widenRule } from "./actions";
+import { CURVES, invariants } from "./data/books";
+import { INJECTIONS } from "./data/injections";
+import { deskRun, inject } from "./live";
+import { accessMatrix, audit, blame, CONTROLS, EVAL_REPORT, newestCommits } from "./views";
+import { fail, ok, PEOPLE, ROLE_NAME, ROLES, type Reply, type Req } from "./reply";
 import { AIRPORTS } from "./data/airports";
 import { cfoMetrics, COHORT_ISHA, COHORT_LH, estimateCard, rollforward } from "./data/books";
 import { decide, fullEntitlementCents, HERO_FLIGHT, liabilityCents, stormMoney } from "./data/engine";
 import { EOWYN_ID } from "./data/flights";
-import { cohortEntitlement, ctxOf, flightFile, publicQuestion, rulesView, S, specOf, stormById, stormRun, stormSummaries, type MockState } from "./state";
-
-export type Reply = { status: number; body: unknown };
-export type Req = { method: string; segs: string[]; query: URLSearchParams; body: unknown; session: Session; role: Role };
-
-export const ok = (body: unknown, status = 200): Reply => ({ status, body });
-export const fail = (status: number, code: string, message: string): Reply => ({ status, body: { error: { code, message } } });
-
-export const PEOPLE: Role[] = ["claims_lead", "legal", "controller", "ops", "cfo", "judge"];
-export const ROLES: Role[] = [...PEOPLE, "agent.reader", "agent.drafter", "agent.engine", "agent.crm_bot"];
-export const ROLE_NAME: Record<Role, string> = {
-  claims_lead: "Claims Lead",
-  legal: "Legal",
-  controller: "Controller",
-  ops: "Ops",
-  cfo: "CFO",
-  judge: "Judge",
-  "agent.reader": "Reader agent",
-  "agent.drafter": "Drafter agent",
-  "agent.engine": "Engine",
-  "agent.crm_bot": "CRM bot",
-};
+import { cohortEntitlement, ctxOf, flightFile, publicQuestion, resetState, rulesView, S, specOf, stormById, stormRun, stormSummaries, type MockState } from "./state";
 
 // ---------- session tokens: mock.<base64url(JSON Session)> ----------
 function b64urlEncode(text: string) {
@@ -148,10 +133,128 @@ const routes: Route[] = [
       return ok({ token: encodeToken(session), session });
     },
   },
+  // ---------- trace, books, access, proof (reads) ----------
+  {
+    method: "GET",
+    path: "/commits",
+    run: (req) => {
+      const limit = Number(req.query.get("limit") ?? 100);
+      if (!Number.isInteger(limit) || limit < 1 || limit > 5000) return fail(422, "validation", "limit must be a whole number from 1 to 5000.");
+      return ok(newestCommits(S(), limit));
+    },
+  },
+  {
+    method: "GET",
+    path: "/blame",
+    run: (req) => {
+      const target = req.query.get("target") ?? "";
+      if (!target) return fail(422, "validation", "Name what to blame: ?target=NS31@2025-01-24, a coupon, a JE or a rule.");
+      const b = blame(S(), target);
+      return b ? ok(b) : fail(404, "not_found", `Nothing to blame for ${target}.`);
+    },
+  },
+  {
+    method: "GET",
+    path: "/audit/:id",
+    run: (_req, p) => {
+      const a = audit(S(), p.id);
+      return a ? ok(a) : fail(404, "not_found", `No journal entry ${p.id}.`);
+    },
+  },
+  {
+    method: "GET",
+    path: "/books/rollforward",
+    run: (req) => {
+      const s = S();
+      const period = req.query.get("period") ?? latestPeriod(s);
+      if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return fail(422, "validation", "period must look like 2025-02.");
+      return ok(rollforward(s.journal, period, (c) => cohortEntitlement(s, c)));
+    },
+  },
+  {
+    method: "GET",
+    path: "/books/estimate",
+    run: (req) => {
+      const cohort = req.query.get("cohort") ?? COHORT_LH;
+      const card = estimateFor(S(), cohort);
+      return card ? ok(card) : fail(404, "not_found", `No estimate card for ${cohort}. Try ${COHORT_LH} or ${COHORT_ISHA}.`);
+    },
+  },
+  {
+    method: "GET",
+    path: "/books/journal",
+    run: (req) => {
+      const period = req.query.get("period");
+      const status = req.query.get("status");
+      if (status && !["draft", "approved", "posted"].includes(status)) return fail(422, "validation", "status must be draft, approved or posted.");
+      if (period && !/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return fail(422, "validation", "period must look like 2025-02.");
+      const rows = S().journal.filter((e) => (!period || e.period === period) && (!status || e.status === status));
+      return ok([...rows].sort((a, b) => a.event_date.localeCompare(b.event_date) || a.id.localeCompare(b.id)));
+    },
+  },
+  {
+    method: "GET",
+    path: "/books/curve",
+    run: (req) => {
+      const segment = (req.query.get("segment") ?? "long_haul_gt3500") as CurveSegment;
+      return CURVES[segment] ? ok(CURVES[segment]) : fail(422, "validation", "segment must be long_haul_gt3500, medium_1500_3500 or short_le1500.");
+    },
+  },
+  {
+    method: "GET",
+    path: "/books/invariants",
+    run: () => {
+      const s = S();
+      const eowyn = stormById(s, EOWYN_ID);
+      const flights = eowyn?.flights ?? [];
+      const rf = rollforward(s.journal, latestPeriod(s), (c) => cohortEntitlement(s, c));
+      return ok(invariants({ entries: s.journal, locked: s.locked, lockedWrites: s.lockedWrites, rf, scheduled: flights.length, operated: flights.filter((f) => f.flight.status === "operated").length, cancelled: flights.filter((f) => f.flight.status === "cancelled").length }));
+    },
+  },
+  { method: "GET", path: "/access/matrix", run: () => ok(accessMatrix()) },
+  { method: "GET", path: "/access/log", run: () => ok([...S().accessLog].sort((a, b) => b.at.localeCompare(a.at))) },
+  { method: "GET", path: "/controls", run: () => ok(CONTROLS) },
+  { method: "GET", path: "/injections", run: () => ok(INJECTIONS) },
+  { method: "GET", path: "/eval", run: () => ok(EVAL_REPORT) },
+  {
+    method: "GET",
+    path: "/stream",
+    run: () => ok({ error: { code: "not_found", message: "In mock mode the stream comes from createMockStream(); poll /trace?since= otherwise." } }, 404),
+  },
+
+  // ---------- writes ----------
+  { method: "POST", path: "/flights/:id/challenge", run: (req, p) => challenge(req, p.id) },
+  { method: "POST", path: "/questions/:id/answer", run: (req, p) => answerQuestion(req, p.id) },
+  { method: "POST", path: "/proposals/:id/confirm", run: (req, p) => confirmProposal(req, p.id) },
+  { method: "POST", path: "/rules/:id/reject", run: (req, p) => rejectRule(req, p.id) },
+  { method: "POST", path: "/rules/:id/widen", run: (req, p) => widenRule(req, p.id) },
+  { method: "POST", path: "/rules/:id/revert", run: (req, p) => revertRule(req, p.id) },
+  { method: "POST", path: "/books/journal/:id/approve", run: (req, p) => approveJournal(req, p.id) },
+  {
+    method: "POST",
+    path: "/books/month-end",
+    run: (req) => {
+      const s = S();
+      return monthEnd(req, () => estimateFor(s, COHORT_LH), (c) => cohortEntitlement(s, c));
+    },
+  },
+  { method: "POST", path: "/books/lock", run: (req) => lockPeriod(req) },
+  { method: "POST", path: "/desk", run: (req) => deskRun(req) },
+  { method: "POST", path: "/inject", run: (req) => inject(req) },
+  { method: "POST", path: "/clock", run: (req) => setClock(req) },
+  {
+    method: "POST",
+    path: "/reset",
+    run: () => {
+      resetState();
+      return ok({ ok: true });
+    },
+  },
 ];
 
-export function addRoutes(more: Route[]) {
-  routes.push(...more);
+/** The latest period with journal activity (the Feb close in the baseline). */
+function latestPeriod(s: MockState) {
+  return s.journal.reduce((max, e) => (e.period > max ? e.period : max), "2025-01");
 }
 
 function match(pattern: string, segs: string[]): Record<string, string> | null {
