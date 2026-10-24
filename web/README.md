@@ -50,3 +50,6 @@ npm run shoot                                              # landing, 1440×900 
 npm run shoot -- --url http://localhost:3000/app/payouts --at 0
 npm run shoot -- --sizes 375x667 --at 0,0.4,0.6 --out shots
 ```
+
+`npm run film` renders `/moment` to `moment.mp4` (1920×1080, 30 fps) frame by frame, encoded with Blender's
+FFmpeg (or `ffmpeg` if it's on PATH). Run it against `npm run dev`; `--fps 60` and `--out` are optional.

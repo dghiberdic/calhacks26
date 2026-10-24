@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "shoot": "node scripts/shoot.mjs"
+    "shoot": "node scripts/shoot.mjs",
+    "film": "node scripts/render-film.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
