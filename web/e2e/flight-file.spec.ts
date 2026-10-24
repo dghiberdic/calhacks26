@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 
 const NS31 = "/flights/NS31%402025-01-24";
 /** First paint of a lazily loaded screen on a cold dev server can take a while; the checks after it use the default. */
-const LOADED = { timeout: 30_000 };
-test.describe.configure({ timeout: 60_000 });
+const LOADED = { timeout: 45_000 };
+test.describe.configure({ timeout: 90_000 });
 
 test("NS31's file shows the confidence, the struck weather code and the parked journal", async ({ page }) => {
   await page.goto(NS31);

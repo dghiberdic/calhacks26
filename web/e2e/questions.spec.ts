@@ -10,8 +10,8 @@ async function viewAs(page: Page, role: keyof typeof LABEL) {
 }
 
 /** First paint of a lazily loaded screen on a cold dev server can take a while; the checks after it use the default. */
-const LOADED = { timeout: 30_000 };
-test.describe.configure({ timeout: 60_000 });
+const LOADED = { timeout: 45_000 };
+test.describe.configure({ timeout: 90_000 });
 
 /** Q1 is the 14C service-desk voucher: its case ref chip reads "NS31 · 14C". */
 const q1 = (page: Page) => page.locator("article", { hasText: "14C" });
