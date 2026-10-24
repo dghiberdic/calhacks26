@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "gen:api": "openapi-typescript ../contracts/openapi.json -o src/api/schema.d.ts",
-    "shoot": "node scripts/shoot.mjs"
+    "shoot": "node scripts/shoot.mjs",
+    "record": "node scripts/record.mjs"
   },
   "dependencies": {
     "@fontsource-variable/archivo": "^5.3.0",
