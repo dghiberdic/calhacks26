@@ -32,7 +32,7 @@ Voice-over is timed at about 155 words a minute. If a line runs long, cut words;
 | 9 | 0:59–1:08 | The Challenge box: "The storm would have grounded it anyway" → "Decision stands.", with the citations. | "Push back, and it defends the decision with the record: the METAR, the eleven flights that left, the fault logged before the storm." | Challenge: assertion → Decision stands. |
 | 10 | 1:08–1:27 | Questions as Claims Lead. The Q1 card and its chips; the ruling pasted; the preview with her words highlighted; Confirm → "Saved as policy · Never asked again". | "It asks only when the evidence disagrees, and it asks the right person. CRM says this passenger took a €300 service-desk voucher. She says she never agreed, and there's no signature. The Claims Lead rules once. Her words become a scoped rule." | Routed to the Claims Lead · confidence 39% · sources disagree · Holds €600 |
 | 11 | 1:27–1:35 | The next storm, Herminia (`EIDW@2025-01-26`): "31 voucher cases settled, ruling cited"; the BOS→DUB case asks. | "Two days later, Storm Herminia: 31 cases settle on her ruling. The one that doesn't leave the EU asks." | ↻ Next storm: 31 voucher cases settled, ruling cited · BOS→DUB asks |
-| 12 | 1:35–1:46 | Questions as Legal: "3 flights", 47% · no precedent → ruling → "3 settled, cited 3×". | "New law goes to Legal, once. Three return flights the storm stranded: one question, one ruling, three settled." | The engine decides facts; Legal rules on law · C-74/19 |
+| 12 | 1:35–1:46 | Questions as Legal: "3 flights", 47% · no precedent → ruling → "3 settled, cited 3×". | "New legal questions go to Legal, once. Three return flights the storm stranded: one question, one ruling, three settled." | The engine decides facts; Legal rules on law · C-74/19 |
 | 13 | 1:46–1:57 | Questions as Controller: the Isha release proposal (72%) → rejected → rule → "All storm cohorts?" | "When the Controller says no, that's a lesson too. 'Never release the tail' becomes a rule, and it asks once whether it holds for every storm." | Rejected → R-CTL-1 · reduce to the expected tail at M12; derecognise at limitation |
 | 14 | 1:57–2:10 | Liability & Close: the CFO bridge; Month-end for February → "+€3,990 change in estimate"; the rollforward at €25,740 · TIES TO GL 2140 · Jan locked, untouched. | "A month on, claims run ahead of the curve. It re-estimates: plus €3,990, a change in estimate for the Controller to approve. January stays locked, and it ties to the ledger." | A/E 1.45 · Bornhuetter-Ferguson · €25,740 = (35% − 9%) × €99,000 · TIES TO GL 2140 |
 | 15 | 2:10–2:27 | Judge's Desk: Heathrow, 21 Jan 2024 → real METAR → Run → the contradicted 'weather' code → the ↻ voucher line. | "Pick any airport and date. It pulls that day's real METAR, simulates Northstar's flights on it, mess included, and runs the same engine. A 'weather' code the weather doesn't back up: caught." | Judge's Desk · your airport, your date, real METAR |
@@ -55,6 +55,7 @@ Fill the `{{…}}` captions from `eval/proof.json` and the links list in `DEVPOS
   ```bash
   open -na "Google Chrome" --args --user-data-dir="$HOME/sc-video-profile" --app="{{links.recorded_build}}"
   ```
+  For shots recorded from `make demo`, use `--app="http://localhost:8000"`.
 - Zoom 100%, the same in every shot.
 - Reduce motion off (System Settings → Accessibility → Display), or the Storm Run animation won't play. Do Not Disturb on. Dock and desktop icons hidden.
 - **Recorder:** OBS (canvas and output 1920×1080, 30 fps; 60 fps if the timeline animation stutters at 30) or macOS Screenshot (Cmd+Shift+5). Record each shot as its own take, with 2 s of still frame before and after.
@@ -100,6 +101,7 @@ cd web            # in that build, not this repo's web/
 npm run dev       # the film's timeline is exposed only in development
 npm run film      # → moment.mp4, 1920×1080, 30 fps; needs Node 22+, Chrome, and Blender or ffmpeg
 npm run film -- --fps 60 --out ~/Desktop/stormcheck-moment.mp4
+npm run film -- --url http://localhost:3100/moment   # if the dev server isn't on :3000
 ```
 
 It predates the plan. It tells the story on Storm Bram (9 Dec 2025) with 212 passengers, €127,200 and €44,520, and its wording ("provision", "held for the Claims Lead", "Confidence 91%") is on the §9 don't-say list. It can open the video only once it's re-cut to Éowyn's numbers and §9 wording; it would then replace shots 1–6, so keep it to 35 s or less. Until then, don't use it. The recorded build stays the primary source.

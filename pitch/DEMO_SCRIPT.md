@@ -58,6 +58,7 @@ Who speaks and who drives isn't decided. Suggested: one voice, one driver, and t
 
 ### Before every judge group
 - [ ] Reset: `curl -s -X POST localhost:8000/api/reset` → `{"ok":true}`. Reload Tab 1.
+- [ ] If rehearsal showed the reminder chip needs it: time scrubber forward 3 h.
 - [ ] Role switcher on Judge (the default with no token).
 - [ ] The Storm Run headline reads "5,292 passengers · 3 questions · 3 people".
 
@@ -209,7 +210,7 @@ If a judge asks about the name: Ops sees it masked, and the Drafter never sees i
 >
 > *[point]*
 >
-> "A 'weather' code the weather doesn't back up: caught. And the Claims Lead's voucher rule from a minute ago: N cases settled, ruling cited. The one flight that doesn't leave the EU asks again, because her rule was about EU departures."
+> "A 'weather' code the weather doesn't back up: caught. And the Claims Lead's voucher rule from a minute ago: N cases settled, ruling cited. The one flight that doesn't leave the EU asks again, because her rule covers flights that leave the EU."
 
 Read N off the screen. On the Herminia day (`EIDW@2025-01-26`) it's 31 settled and the BOS→DUB case asks; on a judge's day the counts are smaller.
 
@@ -254,11 +255,11 @@ Each of these is a click or two from where the run ends. Reset after anything th
 | They ask | Clicks (role) | On screen | Say |
 |---|---|---|---|
 | "What happens a month later?" (Feb true-up, estimate card) | Controller. Liability & Close → **Lock period** 2025-01 if it isn't locked → time scrubber to 28 Feb 2025 if the Feb claims aren't in → **Month-end** 2025-02 | "+€3,990 change in estimate". Estimate card: expected-loss €21,750 · Bornhuetter-Ferguson €25,740 (selected) · chain-ladder; A/E 1.45; ±5pp ±€4,950. Rollforward: €34,650 → (€3,600) → (€9,300) → +€3,990 → €25,740 · TIES TO GL 2140 · Jan locked, untouched | "Claims ran ahead of the curve, so it re-estimates: a change in estimate for the Controller to approve. January stays locked." |
-| "Can it approve its own entry?" | Controller. On the month-end draft, **[Approve]** as its preparer | `DENIED · SoD` | "Preparer and approver are different people, in code." |
+| "Can it approve its own entry?" | Liability & Close → a JE draft → **[Approve]** as the principal the card names as its preparer | `DENIED · SoD` | "Preparer and approver are different people, in code." |
 | "Where does €34,650 come from?" (Trace, blame) | Trace → **Blame**, target NS31's €34,650 | € → entitlement → rule@v → ruling quote → facts → span → METAR obs | "Every euro walks back to a log line, a weather hour, a rule and the person who ruled." Then Commits (`llm_call` rows) and `make verify`. |
 | "Who can see what?" (Access, Controls) | Trace → **Access**, then **Controls** | Principals × resources, people and agents; denied log `agent.drafter approve_payout → DENIED · SoD`; "view as Ops" masks PII. Controls: "SOC 2 is the floor", CC6.1 · CC6.3 · CC7.2 · CC8.1 · PI1 | "It's a mapping to evidence, not a certification." |
 | "What if a rule is wrong?" (revert) | Policies → Ruled → `R-LEG-1@1` → **Revert** | Replay diff: "flips N · Δ€ · Jan locked, untouched" | "Revert replays everything the rule touched and drafts the correction in the open period." |
 | "Where do the rules come from?" | Policies | Learned ("41 of 42"), Ruled, Rejected (the Controller's sentence), Regulation (Reg (EU) 2026/2202 · in force 22 Oct 2026 · applies from 23 Oct 2027) | "No rule editor. Rules come from history, rulings, rejections and regulation." |
 | "And later?" (time scrubber) | Time scrubber, forward | Reminders fire, claims arrive, month-end opens | "One clock drives everything, and it only goes forward." |
-| "What if Airbus says it was a hidden defect?" | Judge's Desk → rehearsed scenario 05 (or Flight File → Challenge with the notice) | `new_legal_pattern` → routed to Legal, `confidence 52% · no precedent` | "New law goes to Legal. A challenge routes; it doesn't flip." |
+| "What if Airbus says it was a hidden defect?" | Judge's Desk → rehearsed scenario 05 (or Flight File → Challenge with the notice) | `new_legal_pattern` → routed to Legal, `confidence 52% · no precedent` | "A new legal question goes to Legal. A challenge routes; it doesn't flip." |
 | The other rehearsed scenarios | Judge's Desk → the 8 buttons: AOG inside the window, duplicate direct + agency claim, prompt-injection email, chargeback after a bot refund, hidden-defect notice, claim after limitation, "storm anyway", UK261 £520 on DUB–LHR | The facts with quoted spans, what changed, and each scenario's expected outcome | Read the result. Don't predict it. |

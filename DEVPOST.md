@@ -52,7 +52,7 @@ Finds what really caused each cancelled flight, drafts every EU261 payout and th
 
 On Friday 24 January 2025, Storm Éowyn hit Dublin. Eurocontrol counted 179 departures at Dublin that day, against roughly 300 on a normal day. About 119 departures and 109 arrivals were reported cancelled (Cirium), and Met Éireann's red warning for Dublin ran from 06:00 to 11:00.
 
-For an airline's finance team, a day like that runs on what Hyphenate calls a human runtime: a cancel list coded "weather" at 5 a.m., a spreadsheet, and a Monday spent emailing maintenance to ask "was it really weather?". The answer decides who is owed €600 and who gets no compensation (refunds and care still due), and whether the number on the balance sheet is right.
+For an airline's finance team, a day like that runs on what Hyphenate calls a human runtime: a cancel list coded "weather" at 5 a.m., a spreadsheet, and a Monday spent emailing maintenance to ask "was it really weather?". The answer decides who is owed €250 to €600 in compensation and who gets none (refunds and care still due), and whether the number on the balance sheet is right.
 
 Hyphenate's brief asked for one corner of a finance team, made autonomous. We picked the seats where an operational fact decides the money.
 
@@ -116,7 +116,7 @@ Three of us built it overnight, each running two Claude Code agents in parallel 
 
 ## What we learned
 
-- The expensive fact is the cause. Once it's right, the EU261 bands and the accounting are arithmetic.
+- The expensive fact is the cause. Once it's right, the EU261 band is a lookup, and what's left is estimating who will claim.
 - A fixed trust order resolves the routine disagreements: tech log and METAR, then schedule and manifest, then the operations batch code and CRM, then a passenger's account. People are needed only where that order runs out, and once they rule, the ruling becomes a rule.
 - A confidence needs a reason. "39% · sources disagree" tells the Claims Lead what to look at; "39%" doesn't.
 - Rejections teach as much as answers. The Controller's "never release the tail" became a rule, and StormCheck asked once whether it should cover every storm cohort.
