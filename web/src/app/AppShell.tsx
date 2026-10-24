@@ -7,7 +7,7 @@ import { invalidateAfterWrite, useHealth, useQuestions, useStorms } from "@/api/
 import { useLiveFeed, useStreamConnection } from "@/api/stream";
 import { Logo } from "@/components/brand/Logo";
 import { longDate } from "@/lib/format";
-import { stormName } from "@/lib/storms";
+import { HERO_STORM, stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { RoleSwitcher } from "./RoleSwitcher";
@@ -108,11 +108,22 @@ function ResetButton() {
   );
 }
 
+/** Which storm a URL is about: /run/:id, /flights?storm=:id, or a flight's own date (NS31@2025-01-24). */
+function stormFromUrl(pathname: string, search: string, ids: string[]): string | undefined {
+  const run = pathname.match(/^\/run\/([^/]+)/)?.[1];
+  if (run) return decodeURIComponent(run);
+  const q = new URLSearchParams(search).get("storm");
+  if (q) return q;
+  const flightDate = decodeURIComponent(pathname.match(/^\/flights\/([^/]+)/)?.[1] ?? "").match(/@(\d{4}-\d{2}-\d{2})/)?.[1];
+  return flightDate ? ids.find((id) => id.endsWith(`@${flightDate}`)) : undefined;
+}
+
 function StormContext() {
   const storms = useStorms();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const navigate = useNavigate();
-  const current = decodeURIComponent(pathname.match(/^\/run\/([^/]+)/)?.[1] ?? "") || storms.data?.[0]?.id;
+  const ids = storms.data?.map((s) => s.id) ?? [];
+  const current = stormFromUrl(pathname, search, ids) ?? (ids.includes(HERO_STORM) ? HERO_STORM : ids[0]);
   const storm = storms.data?.find((s) => s.id === current) ?? storms.data?.[0];
   if (!storm) return <span className="h-5 w-48 animate-pulse rounded bg-cloud-100" aria-hidden="true" />;
   return (
@@ -120,7 +131,8 @@ function StormContext() {
       <span className="sr-only">Storm</span>
       <select
         value={storm.id}
-        onChange={(e) => navigate(`/run/${encodeURIComponent(e.target.value)}`)}
+        // The flights list stays the flights list; everywhere else the storm's run is the place to land.
+        onChange={(e) => navigate(pathname === "/flights" ? `/flights?storm=${encodeURIComponent(e.target.value)}` : `/run/${encodeURIComponent(e.target.value)}`)}
         className="min-w-0 max-w-full cursor-pointer truncate rounded-md bg-transparent py-1 pr-1 font-medium text-navy-900 outline-none hover:bg-cloud-50"
       >
         {storms.data?.map((s) => (
