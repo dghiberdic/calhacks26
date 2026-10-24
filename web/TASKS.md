@@ -19,4 +19,4 @@
 | Switch off mocks: `pnpm gen:api`, CP1 against the stub, then the server | A | waiting on David (CP0a) |
 | Record the demo (`pnpm record` against `make demo`) and redeploy | B | waiting on CP3 |
 
-Tests: `pnpm test` (212 unit), `pnpm e2e` (46, including `e2e/demo.spec.ts`, the 3:00 script clicked end to end).
+Tests: `pnpm test` (221 unit), `pnpm e2e` (51 in 1.6 min, including `e2e/demo.spec.ts`, the 3:00 script clicked end to end).

@@ -13,7 +13,9 @@ export default defineConfig({
   // The mock world lives in each page, so tests run in parallel; the stub and the server hold one shared
   // world, so there they run one at a time, each from a reset (e2e/fixtures.ts).
   fullyParallel: mode === "mock",
-  workers: mode === "mock" ? undefined : 1,
+  // /story and /pitch run WebGL and a video; more than two at once starves a laptop and tests time out
+  // (8 of 51 failed at the default worker count, 0 at two). E2E_WORKERS overrides.
+  workers: mode === "mock" ? Number(process.env.E2E_WORKERS ?? 2) : 1,
   reporter: [["list"]],
   use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure" },
   // The Chrome already on the machine: no Playwright browser download.
