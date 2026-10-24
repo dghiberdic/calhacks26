@@ -33,8 +33,8 @@ def test_embedded_slice_equals_golden_canonical_hash(embedded):
     assert embedded.world.meta["golden_hash"] == golden.canonical_hash(g)
 
 
-def test_full_world_embed_keeps_golden_identical():
-    full = generate_world(0, embed_golden=True)
+def test_full_world_embed_keeps_golden_identical(full_world):
+    full = full_world
     assert golden.canonical_hash(golden.golden_slice(full.world)) == golden.canonical_hash(golden.load_golden())
     # the generator did not simulate golden's days
     gen_days = {m["date"] for m in full.world.meta["days"] if not m.get("golden")}
