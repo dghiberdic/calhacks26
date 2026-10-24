@@ -33,3 +33,13 @@ test("the Claims Lead rules on Q1 with the recommended option, and it is never a
   await card.getByRole("button", { name: "Confirm as policy" }).click();
   await expect(card.getByText("Never asked again")).toBeVisible();
 });
+
+test("passenger data shows only to the Claims Lead; other seats get it masked", async ({ page }) => {
+  await page.goto("/questions");
+  // The judge sees every question read-only, with the passenger's name masked by the server.
+  await expect(q1(page).first().getByTitle(/visible to the Claims Lead only/)).toBeVisible();
+  await expect(q1(page).first().getByRole("button", { name: /View as Claims Lead to answer/ })).toBeVisible();
+  await viewAs(page, "claims_lead");
+  await expect(q1(page).first().getByText("PII visible to this role")).toBeVisible();
+  await expect(q1(page).first().getByTitle(/visible to the Claims Lead only/)).toHaveCount(0);
+});
