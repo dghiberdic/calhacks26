@@ -10,11 +10,13 @@ import { Closing } from "@/components/landing/Closing";
 import { SiteNav } from "@/components/landing/SiteNav";
 import { MorningAfter } from "@/components/landing/MorningAfter";
 import { Interlude } from "@/components/landing/Interlude";
+import { ScrollProgress } from "@/components/landing/ScrollProgress";
 
 export default function Home() {
   return (
     <SmoothScroll>
       <SiteNav />
+      <ScrollProgress />
       <main id="main" className="bg-night text-[#eef1f4]">
         <StormDay />
 
