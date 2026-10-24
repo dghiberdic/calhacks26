@@ -1,22 +1,36 @@
 """D8 · Trace: the event-sourced, append-only, hash-chained record behind blame, replay(known_at) and revert.
 
 Every fact, source, METAR obs, decision, entitlement, rule event, ruling, question, journal event, period lock, LLM
-call and access denial is a content-hashed ``Commit``::
+call and access denial is a content-hashed ``Commit`` (schema ``trace/2``)::
 
-    hash         = sha256(canonical({kind, parent, payload_hash, inputs, at, actor}))
+    hash         = sha256(canonical(the Commit without its hash))
+                 = sha256(canonical({kind, parent, payload_hash, payload_ref, inputs, at, actor, message}
+                                    + any additive Commit field that is set, e.g. recorded_at))
     payload_hash = sha256(canonical(payload))
     canonical(x) = orjson.dumps(x as JSON (pydantic mode="json"), option=OPT_SORT_KEYS)
 
-Commits form one chain through ``parent``. ``inputs`` holds the hashes of the commits a commit was derived from
-(the stored links ``blame`` walks) plus ``engine@<git sha>`` and ``cal@<version>``, both passed in by the caller.
+So anyone holding ``GET /commits`` can recompute every hash (``verify_chain``). Commits form one chain through
+``parent``. ``inputs`` holds the hashes of the commits a commit was derived from (the stored links ``blame`` walks),
+``engine@<git sha>`` and ``cal@<version>`` (both passed in by the caller) and, on a typed commit, ``rows@<sha256>``:
+the digest of the index rows it writes (below), so those rows are covered by the chain too.
 
-SQLite tables are append-only event logs: triggers abort every UPDATE and DELETE. Mutable-looking fields (rule
-status, ``times_cited``, question status, the current decision per flight, locked periods) are views over events.
+Storage. ``commits`` holds the chain. The index tables (``sources``, ``metar``, ``facts``, ``decisions``,
+``rule_events``, ``rulings``, ``questions``, ``periods``) drive every view; each row is written by exactly one typed
+commit and is derived from that commit's payload (``_side_rows``). Every table is append-only: triggers abort every
+UPDATE and DELETE, and every INSERT that would land on an existing key (``INSERT OR REPLACE``/``REPLACE`` delete
+silently, without firing a DELETE trigger). Mutable-looking fields (rule status, ``times_cited``, question status,
+the current decision per flight, locked periods) are views over events.
+
+``verify`` recomputes every hash along the chain and cross-checks the index: every row belongs to a commit, sits in
+chain order, equals what its commit's payload says and matches the commit's ``rows@`` digest; every typed commit has
+its rows; untyped commits have none. ``verify(expected_head=, expected_count=)`` checks a published anchor
+(``anchor()``: "head <sha> · N commits"), which is what makes truncation or a rewritten history detectable.
 
 ``replay`` re-runs a caller-supplied pure decide function over the stored facts as known at ``known_at``. It never
-calls an LLM and writes nothing. ``revert`` records a ``retired`` rule event, replays, and reports the adjustment in
-the current open period; it never writes into a locked period. The IAS 8.5 class follows the evidence-availability
-test (plan §2 rule 8), not commit timestamps.
+calls an LLM and writes nothing. ``revert`` replays with the rule retired, asks Books for the adjustment only once
+the trace-side checks pass, and then records the retirement, the revert and the re-decisions in one transaction:
+a refused revert (e.g. ``LockedPeriodWrite``) writes nothing. It never writes into a locked period. The IAS 8.5 class
+follows the evidence-availability test (plan §2 rule 8), not commit timestamps.
 
 Pure: no wall clock (every ``at`` is passed in), no randomness, no LLM.
 """
@@ -59,7 +73,9 @@ from contracts.models import (
 )
 from engine import dsl
 
-HASHED_FIELDS = ("kind", "parent", "payload_hash", "inputs", "at", "actor")
+SCHEMA = "trace/2"            # trace/1 hashed only (kind, parent, payload_hash, inputs, at, actor)
+HASHED_FIELDS = ("kind", "parent", "payload_hash", "payload_ref", "inputs", "at", "actor", "message")
+ROWS_TAG = "rows@"
 COMMIT_KINDS = frozenset(get_args(Commit.model_fields["kind"].annotation))
 # what a commit's payload is; "fact" commits carry facts, sources and METAR obs
 REF_TYPES = frozenset(COMMIT_KINDS | {"source", "metar"})
@@ -77,7 +93,9 @@ PreviewFn = Callable[[list[Entitlement], list[Entitlement]], ReplayDiff]
 PostRecodeFn = Callable[..., Iterable[JournalEntry]]
 
 _HEX64 = re.compile(r"[0-9a-f]{64}")
-_JE_LINE = re.compile(r"(JE-[A-Za-z0-9_.-]+):(\d+)")
+_JE_LINE = re.compile(r"(JE-[A-Za-z0-9_.-]+):([0-9]{1,9})")
+_VERSION = re.compile(r"[0-9]{1,18}")      # fits SQLite's 64-bit INTEGER; anything longer is no version at all
+_MAX_TARGET = 512                           # blame targets are ids or hashes; longer input is never one
 _DATE_IN_ID = re.compile(r"@(\d{4}-\d{2}-\d{2})")
 _PERIOD = re.compile(r"(\d{4})-(0[1-9]|1[0-2])")
 _KEY_FMT = "%Y-%m-%dT%H:%M:%S.%fZ"
@@ -132,10 +150,21 @@ def payload_hash(payload: Any) -> str:
 model_hash = payload_hash   # CONTRACTS hash of any model, e.g. two ReplayDiffs compared for "same hash"
 
 
-def commit_hash(c: Commit) -> str:
-    """sha256(canonical(kind, parent, payload_hash, inputs, at, actor)); ``message``/``payload_ref`` are labels."""
+def hash_input(c: Commit) -> dict[str, Any]:
+    """Every Commit field but ``hash``: the ``HASHED_FIELDS`` always (labels ``message``/``payload_ref`` are evidence
+    too), and any other (additive) field whenever it differs from its default, so a new optional contract field
+    never changes an existing hash yet is covered as soon as it carries a value."""
     d = c.model_dump(mode="json")
-    return sha256_hex(canonical({k: d[k] for k in HASHED_FIELDS}))
+    out = {k: d[k] for k in HASHED_FIELDS}
+    for k, f in Commit.model_fields.items():
+        if k != "hash" and k not in out and d[k] != to_jsonable_python(f.get_default(call_default_factory=True)):
+            out[k] = d[k]
+    return out
+
+
+def commit_hash(c: Commit) -> str:
+    """sha256(canonical(``hash_input(c)``)): recomputable by anyone holding the Commit (``GET /commits``)."""
+    return sha256_hex(canonical(hash_input(c)))
 
 
 def _input_key(i: str) -> tuple[int, str]:
@@ -245,16 +274,35 @@ def ias8_class(evidence: Iterable[EvidenceUse], locked_at: datetime | None) -> I
 class Verification:
     checked: int
     broken: tuple[int, ...]     # chain positions (0 = genesis) that fail, in order
-    reasons: tuple[str, ...]
+    reasons: tuple[str, ...]    # every problem: the chain's, then the index's and the anchor's (``issues``)
+    head: str | None = None     # the stored head when verified
+    issues: tuple[str, ...] = ()   # index rows that disagree with the chain, a missed anchor, a wrong schema
 
     @property
     def ok(self) -> bool:
-        return not self.broken
+        return not self.broken and not self.issues
 
     def summary(self) -> str:
         if self.ok:
             return f"{self.checked} commits verified · chain intact"
-        return f"{len(self.broken)} of {self.checked} commits fail verification · first at #{self.broken[0]}"
+        if self.broken:
+            return f"{len(self.broken)} of {self.checked} commits fail verification · first at #{self.broken[0]}"
+        return f"{self.checked} commits verified · {len(self.issues)} problems · {self.issues[0]}"
+
+    def anchor_text(self) -> str:
+        """``head 1a2b3c4d5e6f · 412 commits``: what the server and UI publish, and ``verify`` checks again."""
+        return f"head {(self.head or 'none')[:12]} · {self.checked} commits"
+
+
+@dataclass(frozen=True)
+class Anchor:
+    """An externally checkable head: publish it, then ``verify(expected_head=a.head, expected_count=a.count)``."""
+    head: str | None
+    count: int
+    schema: str = SCHEMA
+
+    def text(self) -> str:
+        return f"head {(self.head or 'none')[:12]} · {self.count} commits"
 
 
 def _digest(payload: Any) -> str:
@@ -295,6 +343,8 @@ def verify_chain(commits: Sequence[Commit | None], payloads: Sequence[Any] | Non
 # ---------- schema ----------
 
 TABLES: dict[str, str] = {
+    "meta": """
+        seq INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT NOT NULL UNIQUE, value TEXT NOT NULL""",
     "commits": """
         seq INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT NOT NULL UNIQUE, parent TEXT, kind TEXT NOT NULL,
         at TEXT NOT NULL, at_key TEXT NOT NULL, actor TEXT NOT NULL, payload_hash TEXT NOT NULL,
@@ -309,7 +359,8 @@ TABLES: dict[str, str] = {
     "facts": """
         seq INTEGER PRIMARY KEY AUTOINCREMENT, fact_id TEXT NOT NULL, subject TEXT NOT NULL, field TEXT NOT NULL,
         source_id TEXT NOT NULL, recorded_key TEXT NOT NULL, pii INTEGER NOT NULL, commit_hash TEXT NOT NULL""",
-    # one row per flight decision and per coupon entitlement; the current one is the current_decisions view
+    # one row per flight decision and per coupon entitlement; the current one is the current_decisions view.
+    # body = the commit payload (a decision's ``commit`` field is filled from commit_hash when read)
     "decisions": """
         seq INTEGER PRIMARY KEY AUTOINCREMENT, entity_id TEXT NOT NULL, flight_id TEXT NOT NULL,
         kind TEXT NOT NULL CHECK (kind IN ('decision', 'entitlement')), known_key TEXT NOT NULL,
@@ -369,6 +420,29 @@ VIEWS: dict[str, str] = {
 }
 
 
+# keys an INSERT may not land on (REPLACE resolves a conflict on any of them by deleting the old row, silently)
+UNIQUE_KEYS: dict[str, tuple[str, ...]] = {"meta": ("seq", "key"), "commits": ("seq", "hash")}
+
+# index tables: the columns a commit's payload determines (``seq`` and ``commit_hash`` aside)
+SIDE_COLS: dict[str, tuple[str, ...]] = {
+    "sources": ("source_id", "kind", "trust_tier", "received_key", "pii"),
+    "metar": ("station", "valid_key", "raw"),
+    "facts": ("fact_id", "subject", "field", "source_id", "recorded_key", "pii"),
+    "decisions": ("entity_id", "flight_id", "kind", "known_key", "at_key", "body"),
+    "rule_events": ("rule_id", "version", "event", "at_key", "actor", "case_ref", "reason"),
+    "rulings": ("ruling_id", "question_id", "author_role", "author", "kind", "at_key"),
+    "questions": ("question_id", "event", "routed_to", "at_key"),
+    "periods": ("period", "event", "at_key", "actor"),
+}
+# typed ref_type -> (commit kind, index table)
+TYPED: dict[str, tuple[str, str]] = {
+    "source": ("fact", "sources"), "metar": ("fact", "metar"), "fact": ("fact", "facts"),
+    "decision": ("decision", "decisions"), "entitlement": ("entitlement", "decisions"),
+    "rule_event": ("rule_event", "rule_events"), "ruling": ("ruling", "rulings"), "question": ("question", "questions"),
+    "period_lock": ("period_lock", "periods"),
+}
+
+
 def init_schema(conn: sqlite3.Connection) -> None:
     for name, cols in TABLES.items():
         conn.execute(f"CREATE TABLE IF NOT EXISTS {name} ({cols})")
@@ -376,10 +450,63 @@ def init_schema(conn: sqlite3.Connection) -> None:
             conn.execute(
                 f"CREATE TRIGGER IF NOT EXISTS {name}_no_{op.lower()} BEFORE {op} ON {name} "
                 f"BEGIN SELECT RAISE(ABORT, '{name} is append-only'); END")
+        clash = " OR ".join(f"{k} = NEW.{k}" for k in UNIQUE_KEYS.get(name, ("seq",)))
+        conn.execute(
+            f"CREATE TRIGGER IF NOT EXISTS {name}_no_replace BEFORE INSERT ON {name} "
+            f"WHEN EXISTS (SELECT 1 FROM {name} WHERE {clash}) "
+            f"BEGIN SELECT RAISE(ABORT, '{name} is append-only (no INSERT OR REPLACE)'); END")
     for sql in INDEXES:
         conn.execute(sql)
     for name, sql in VIEWS.items():
         conn.execute(f"CREATE VIEW IF NOT EXISTS {name} AS {sql}")
+
+
+# ---------- index rows: what a typed commit writes, derived from its payload ----------
+
+def _key_of(iso: str) -> str:
+    return time_key(datetime.fromisoformat(iso))
+
+
+def _pii(p: Mapping[str, Any]) -> int:
+    return int("pii" in (p.get("acl_tags") or []))
+
+
+def _side_rows(ref_type: str, p: Any, at_key: str, actor: str,
+               notes: tuple[str | None, str | None] = (None, None)) -> dict[str, list[tuple]]:
+    """The index rows a typed commit writes, from its payload as stored (JSON). ``notes`` = (case_ref, reason) of
+    a rule status event: caller-supplied, not in the payload, so the ``rows@`` digest is what vouches for them."""
+    if ref_type == "source":
+        return {"sources": [(p["id"], p["kind"], int(p["trust_tier"]), _key_of(p["received_at"]), _pii(p))]}
+    if ref_type == "metar":
+        return {"metar": [(p["station"], _key_of(p["valid"]), p["raw"].strip())]}
+    if ref_type == "fact":
+        return {"facts": [(p["id"], p["subject"], p["field"], p["source_id"], _key_of(p["recorded_at"]), _pii(p))]}
+    if ref_type == "decision":
+        return {"decisions": [(p["flight_id"], p["flight_id"], "decision", _key_of(p["known_at"]), at_key,
+                               canonical(p))]}
+    if ref_type == "entitlement":
+        return {"decisions": [(e["coupon_id"], e["flight_id"], "entitlement", at_key, at_key, canonical(e))
+                              for e in p]}
+    if ref_type == "rule_event":
+        if isinstance(p, Mapping) and "id" not in p and "rule" in p:       # a citation
+            rid, v = parse_rule_ref(p["rule"])
+            return {"rule_events": [(rid, v, "cited", at_key, actor, p["case_ref"], None)]}
+        return {"rule_events": [(p["id"], int(p["version"]), p["status"], at_key, actor, *notes)]}
+    if ref_type == "ruling":
+        return {"rulings": [(p["id"], p.get("question_id"), p["author_role"], p["author"], p["kind"], at_key)]}
+    if ref_type == "question":
+        event = "asked" if p["status"] == "open" else p["status"]
+        return {"questions": [(p["id"], event, p["routed_to"], at_key)]}
+    if ref_type == "period_lock":
+        return {"periods": [(p["period"], "lock", at_key, actor)]}
+    raise TraceError(f"{ref_type!r} writes no index rows")
+
+
+def rows_digest(rows: Mapping[str, Sequence[Sequence[Any]]]) -> str:
+    """sha256 over the index rows (table → rows in insertion order; BLOBs by their sha256)."""
+    def cell(v: Any) -> Any:
+        return {"sha256": sha256_hex(bytes(v))} if isinstance(v, (bytes, bytearray, memoryview)) else v
+    return payload_hash({t: [[cell(v) for v in r] for r in rs] for t, rs in sorted(rows.items()) if rs})
 
 
 # ---------- replay / revert results ----------
@@ -446,9 +573,10 @@ def _due(e: Entitlement | None) -> int:
 
 
 def parse_rule_ref(ref: str) -> tuple[str, int | None]:
-    """``R-CL-1@2`` → (``R-CL-1``, 2); ``R-CL-1`` → (``R-CL-1``, None = latest version)."""
+    """``R-CL-1@2`` → (``R-CL-1``, 2); ``R-CL-1`` → (``R-CL-1``, None = latest version). A suffix that is not 1–18
+    ASCII digits is part of the id (so ``R-X@99999999999999999999`` is simply no rule)."""
     rid, sep, v = (ref or "").strip().rpartition("@")
-    if sep and v.isdigit():
+    if sep and _VERSION.fullmatch(v):
         return rid, int(v)
     return (ref or "").strip(), None
 
@@ -568,16 +696,32 @@ class TraceStore:
         self.cal_version = cal_version
         self.base_inputs = (f"engine@{engine_sha}", f"cal@{cal_version}")
         self.db_path = str(db_path)
-        self.conn = sqlite3.connect(self.db_path, check_same_thread=False, isolation_level=None)
+        self.conn = sqlite3.connect(self.db_path, check_same_thread=False, isolation_level=None, timeout=30)
         self.conn.row_factory = sqlite3.Row
         if self.db_path != ":memory:" and "mode=memory" not in self.db_path:
             self.conn.execute("PRAGMA journal_mode=WAL")
         self._lock = threading.RLock()
         self._depth = 0
-        self._head: str | None = None
-        with self._tx():
-            init_schema(self.conn)
-        self._head = self._q1("SELECT hash FROM commits ORDER BY seq DESC LIMIT 1")
+        self.schema = SCHEMA
+        try:
+            with self._tx():
+                init_schema(self.conn)
+                self._check_schema()
+        except BaseException:
+            self.conn.close()
+            raise
+
+    def _check_schema(self) -> None:
+        row = self.conn.execute("SELECT value FROM meta WHERE key = 'schema'").fetchone()
+        if row is None:
+            if self.conn.execute("SELECT 1 FROM commits LIMIT 1").fetchone() is not None:
+                raise TraceError(f"{self.db_path} holds a chain written by trace schema trace/1 (its hashes skip "
+                                 f"payload_ref and message); this engine writes {SCHEMA}. Re-run the pipeline into a "
+                                 "fresh database.", schema="trace/1")
+            self.conn.execute("INSERT INTO meta(key, value) VALUES ('schema', ?)", (SCHEMA,))
+        elif row[0] != SCHEMA:
+            raise TraceError(f"{self.db_path} holds trace schema {row[0]}; this engine reads {SCHEMA}",
+                             schema=row[0])
 
     def close(self) -> None:
         with self._lock:
@@ -587,9 +731,9 @@ class TraceStore:
 
     @contextmanager
     def _tx(self) -> Iterator[sqlite3.Connection]:
+        """One SQLite write transaction (``BEGIN IMMEDIATE``); nested calls join it. Any exception rolls it back."""
         with self._lock:
             outer = self._depth == 0
-            head = self._head if outer else None
             if outer:
                 self.conn.execute("BEGIN IMMEDIATE")
             self._depth += 1
@@ -599,7 +743,6 @@ class TraceStore:
                 self._depth -= 1
                 if outer:
                     self.conn.execute("ROLLBACK")
-                    self._head = head
                 raise
             self._depth -= 1
             if outer:
@@ -614,42 +757,73 @@ class TraceStore:
         return rows[0][0] if rows else None
 
     def _append(self, kind: str, payload: Any, actor: str, inputs: Iterable[str | None], at: datetime, *, ref: str,
-                message: str, ref_type: str) -> Commit:
-        """Append one commit at the head of the chain. Call inside ``_tx``."""
+                message: str, ref_type: str, notes: tuple[str | None, str | None] = (None, None),
+                typed: bool = True) -> Commit:
+        """Append one commit at the head of the chain, plus its index rows when it is ``typed``. Call inside
+        ``_tx``. The parent is read from the database inside the write transaction, so a second connection or a
+        restored file can never fork the chain."""
         if kind not in COMMIT_KINDS:
             raise TraceError(f"unknown commit kind {kind!r}")
         if ref_type not in REF_TYPES:
             raise TraceError(f"unknown ref_type {ref_type!r}")
+        typed = typed and ref_type in TYPED
+        if typed and TYPED[ref_type][0] != kind:
+            raise TraceError(f"a {ref_type} commit is of kind {TYPED[ref_type][0]!r}, not {kind!r}")
         if not actor:
             raise TraceError("every commit needs an actor")
         at = utc(at)
+        at_key = time_key(at)
         body = canonical(payload)
-        c = Commit(hash="", parent=self._head, kind=kind, at=at, actor=str(actor), payload_hash=sha256_hex(body),
-                   payload_ref=str(ref), inputs=normalize_inputs([*inputs, *self.base_inputs]), message=message)
+        inputs = [i for i in inputs if not (isinstance(i, str) and i.startswith(ROWS_TAG))]
+        rows: dict[str, list[tuple]] = {}
+        if typed:
+            rows = _side_rows(ref_type, orjson.loads(body), at_key, str(actor), notes)
+            inputs.append(ROWS_TAG + rows_digest(rows))
+        c = Commit(hash="", parent=self._head_row(), kind=kind, at=at, actor=str(actor),
+                   payload_hash=sha256_hex(body), payload_ref=str(ref),
+                   inputs=normalize_inputs([*inputs, *self.base_inputs]), message=message)
         c = c.model_copy(update={"hash": commit_hash(c)})
         self.conn.execute(
             "INSERT INTO commits(hash, parent, kind, at, at_key, actor, payload_hash, payload_ref, inputs, message, "
             "ref_type, payload) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-            (c.hash, c.parent, c.kind, c.model_dump(mode="json")["at"], time_key(at), c.actor, c.payload_hash,
+            (c.hash, c.parent, c.kind, c.model_dump(mode="json")["at"], at_key, c.actor, c.payload_hash,
              c.payload_ref, orjson.dumps(c.inputs).decode(), c.message, ref_type, body))
-        self._head = c.hash
+        for table, trs in rows.items():
+            cols = SIDE_COLS[table]
+            self.conn.executemany(
+                f"INSERT INTO {table}({', '.join(cols)}, commit_hash) VALUES ({', '.join('?' * (len(cols) + 1))})",
+                [(*r, c.hash) for r in trs])
         return c
+
+    def _head_row(self) -> str | None:
+        row = self.conn.execute("SELECT hash FROM commits ORDER BY seq DESC LIMIT 1").fetchone()
+        return row[0] if row else None
 
     # ------------------------------------------------------------------ commits
 
     def commit(self, kind: str, payload: Any, actor: str, inputs: Iterable[str], at: datetime, *,
                ref: str | None = None, message: str = "", ref_type: str | None = None) -> Commit:
-        """Append a commit. ``inputs`` = hashes of the commits this one derives from (plus any tags)."""
+        """Append an untyped commit (no index rows). ``inputs`` = hashes of the commits this one derives from (plus
+        any tags). Facts, decisions, rules, … that views must see go through the typed ``record_*`` methods."""
         ref = ref or _default_ref(payload)
+        if ref_type not in (None, kind):
+            raise TraceError(f"a generic commit's ref_type is its kind ({kind!r}); record a {ref_type} through its "
+                             "typed recorder")
         with self._tx():
             return self._append(kind, payload, actor, inputs, at, ref=ref, message=message or f"{kind} {ref}",
-                                ref_type=ref_type or kind)
+                                ref_type=kind, typed=False)
 
     def head(self) -> str | None:
-        return self._head
+        with self._lock:
+            return self._head_row()
 
     def __len__(self) -> int:
         return int(self._q1("SELECT COUNT(*) FROM commits") or 0)
+
+    def anchor(self) -> Anchor:
+        """The head and length to publish ("head <sha> · N commits"); ``verify`` checks them later."""
+        with self._lock:
+            return Anchor(head=self._head_row(), count=len(self), schema=self.schema)
 
     def get(self, commit_hash_: str) -> Commit:
         rows = self._q("SELECT * FROM commits WHERE hash = ?", [commit_hash_])
@@ -676,17 +850,112 @@ class TraceStore:
         """Oldest first: the chain in order."""
         return [_commit_of(r) for r in self._q("SELECT * FROM commits ORDER BY seq")]
 
-    def verify(self) -> Verification:
-        """Recompute every payload hash and commit hash along the stored chain (``make verify``)."""
+    def verify(self, expected_head: str | None = None, expected_count: int | None = None) -> Verification:
+        """Recompute every payload hash and commit hash along the stored chain, and cross-check every index row
+        against the commit that wrote it (``make verify``).
+
+        ``expected_head`` (and ``expected_count``) is a published ``anchor()``: the head must still be in the chain
+        (at position ``expected_count - 1`` when given). Without an anchor a truncated chain verifies; with one it
+        cannot, and neither can a history rewritten before the anchor.
+        """
+        with self._lock:
+            rows = self._q("SELECT * FROM commits ORDER BY seq")
+            side = {t: self._q(f"SELECT * FROM {t} ORDER BY seq") for t in SIDE_COLS}
+            schema = self._q1("SELECT value FROM meta WHERE key = 'schema'")
         commits: list[Commit | None] = []
         payloads: list[Any] = []
-        for r in self._q("SELECT * FROM commits ORDER BY seq"):
+        for r in rows:
             try:
                 commits.append(_commit_of(r))
             except (ValidationError, ValueError, TypeError, orjson.JSONDecodeError):
                 commits.append(None)
             payloads.append(bytes(r["payload"]) if r["payload"] is not None else b"")
-        return verify_chain(commits, payloads)
+        chain = verify_chain(commits, payloads)
+        issues: list[str] = []
+        if schema != SCHEMA:
+            issues.append(f"schema is {schema!r}, expected {SCHEMA!r}")
+
+        # every index row belongs to a commit and sits in chain order
+        pos = {c.hash: i for i, c in enumerate(commits) if c is not None}
+        actual: dict[str, dict[str, list[tuple]]] = {}
+        for table, trs in side.items():
+            last = -1
+            for r in trs:
+                i = pos.get(r["commit_hash"])
+                if i is None:
+                    issues.append(f"{table} row {r['seq']}: no commit {str(r['commit_hash'])[:12]} wrote it")
+                    continue
+                if i < last:
+                    issues.append(f"{table} row {r['seq']}: out of chain order (commit #{i} after #{last})")
+                last = max(last, i)
+                actual.setdefault(r["commit_hash"], {}).setdefault(table, []).append(
+                    tuple(r[col] for col in SIDE_COLS[table]))
+
+        # every commit wrote exactly the rows its payload and rows@ digest say
+        for i, (r, c) in enumerate(zip(rows, commits)):
+            if c is not None:
+                issues += [f"#{i}: {p}" for p in self._index_problems(r, c, actual.get(c.hash, {}))]
+
+        head = commits[-1].hash if commits and commits[-1] is not None else (rows[-1]["hash"] if rows else None)
+        if expected_head is not None or expected_count is not None:
+            issues += self._anchor_problems(rows, expected_head, expected_count)
+        return Verification(checked=chain.checked, broken=chain.broken, reasons=chain.reasons + tuple(issues),
+                            head=head, issues=tuple(issues))
+
+    @staticmethod
+    def _anchor_problems(rows: Sequence[sqlite3.Row], head: str | None, count: int | None) -> list[str]:
+        hashes = [r["hash"] for r in rows]
+        if count is not None:
+            if count < 0 or count > len(hashes):
+                return [f"anchor: {count} commits published, {len(hashes)} stored (truncated)"]
+            if head is not None and (count == 0 or hashes[count - 1] != head):
+                return [f"anchor: commit #{count - 1} is not the published head {head[:12]} (rewritten)"]
+            return []
+        if head not in hashes:
+            return [f"anchor: published head {str(head)[:12]} is not in the chain (truncated or rewritten)"]
+        return []
+
+    @staticmethod
+    def _index_problems(r: sqlite3.Row, c: Commit, actual: Mapping[str, list[tuple]]) -> list[str]:
+        out: list[str] = []
+        ref_type = r["ref_type"]
+        if r["at_key"] != time_key(c.at):
+            out.append("at_key does not match at")
+        tags = [i for i in c.inputs if i.startswith(ROWS_TAG)]
+        if not tags:
+            if actual:
+                out.append(f"untyped commit, yet {', '.join(sorted(actual))} rows point at it")
+            if ref_type != c.kind:
+                out.append(f"ref_type {ref_type!r} on an untyped {c.kind} commit")
+            return out
+        if len(tags) > 1:
+            out.append("more than one rows@ digest")
+        if ref_type not in TYPED or TYPED[ref_type][0] != c.kind:
+            out.append(f"ref_type {ref_type!r} does not fit a typed {c.kind} commit")
+            return out
+        if rows_digest(actual) != tags[0][len(ROWS_TAG):]:
+            out.append(f"{', '.join(sorted(actual) or [TYPED[ref_type][1]])} rows do not match the commit's rows@ "
+                       "digest (missing, extra or altered)")
+        notes: tuple[str | None, str | None] = (None, None)
+        ev = actual.get("rule_events", [])
+        if ref_type == "rule_event" and len(ev) == 1:
+            notes = (ev[0][5], ev[0][6])
+        try:
+            expected = _side_rows(ref_type, orjson.loads(r["payload"]), time_key(c.at), c.actor, notes)
+        except (KeyError, TypeError, ValueError, AttributeError, orjson.JSONDecodeError) as e:
+            out.append(f"payload does not describe its {TYPED[ref_type][1]} rows ({type(e).__name__})")
+            return out
+        for table in sorted(set(expected) | set(actual)):
+            a, x = actual.get(table, []), expected.get(table, [])
+            if a == x:
+                continue
+            if not a:
+                out.append(f"missing {table} rows")
+            elif not x:
+                out.append(f"unexpected {table} rows")
+            else:
+                out.append(f"{table} rows differ from the payload")
+        return out
 
     # ------------------------------------------------------------------ links
 
@@ -705,7 +974,7 @@ class TraceStore:
 
     def _rule_version(self, rule_id: str, version: int | None) -> int | None:
         if version is not None:
-            return version
+            return version if 0 <= version < 2 ** 63 else None     # SQLite INTEGER; anything else is no rule
         return self._q1("SELECT MAX(version) FROM rule_events WHERE rule_id = ?", [rule_id])
 
     def _rule_commit(self, ref: str, at_key: str = _MAX_KEY) -> str | None:
@@ -739,13 +1008,8 @@ class TraceStore:
 
     def record_source(self, source: Source, actor: str, at: datetime, inputs: Iterable[str] = ()) -> Commit:
         with self._tx():
-            c = self._append("fact", source, actor, inputs, at, ref=source.id, ref_type="source",
-                             message=f"source {source.kind.value} · {source.title} (tier {source.trust_tier})")
-            self.conn.execute(
-                "INSERT INTO sources(source_id, kind, trust_tier, received_key, pii, commit_hash) VALUES (?,?,?,?,?,?)",
-                (source.id, source.kind.value, source.trust_tier, time_key(source.received_at),
-                 int("pii" in source.acl_tags), c.hash))
-        return c
+            return self._append("fact", source, actor, inputs, at, ref=source.id, ref_type="source",
+                                message=f"source {source.kind.value} · {source.title} (tier {source.trust_tier})")
 
     def record_metar(self, obs: Iterable[MetarObs], actor: str, at: datetime, *,
                      source_id: str | None = None) -> list[Commit]:
@@ -755,11 +1019,8 @@ class TraceStore:
             src = self._source_commit(source_id)
             for o in sorted(obs, key=lambda o: (o.station, o.valid, o.raw)):
                 valid = utc(o.valid)
-                c = self._append("fact", o, actor, [src], at, ref=f"{o.station}@{valid:%Y-%m-%dT%H:%MZ}",
-                                 ref_type="metar", message=f"METAR {o.station} {valid:%d %b %H:%MZ}")
-                self.conn.execute("INSERT INTO metar(station, valid_key, raw, commit_hash) VALUES (?,?,?,?)",
-                                  (o.station, time_key(valid), o.raw.strip(), c.hash))
-                out.append(c)
+                out.append(self._append("fact", o, actor, [src], at, ref=f"{o.station}@{valid:%Y-%m-%dT%H:%MZ}",
+                                        ref_type="metar", message=f"METAR {o.station} {valid:%d %b %H:%MZ}"))
         return out
 
     def record_fact(self, fact: Fact, actor: str, at: datetime, inputs: Iterable[str] = ()) -> Commit:
@@ -773,13 +1034,8 @@ class TraceStore:
         with self._tx():
             for f in facts:
                 links = [*inputs, self._source_commit(f.source_id), self._metar_by_raw(f.span)]
-                c = self._append("fact", f, actor, links, at, ref=f.id, ref_type="fact",
-                                 message=f"fact {f.subject} · {f.field}")
-                self.conn.execute(
-                    "INSERT INTO facts(fact_id, subject, field, source_id, recorded_key, pii, commit_hash) "
-                    "VALUES (?,?,?,?,?,?,?)",
-                    (f.id, f.subject, f.field, f.source_id, time_key(f.recorded_at), int("pii" in f.acl_tags), c.hash))
-                out.append(c)
+                out.append(self._append("fact", f, actor, links, at, ref=f.id, ref_type="fact",
+                                        message=f"fact {f.subject} · {f.field}"))
         return out
 
     def record_decision(self, decision: FlightDecision, actor: str, at: datetime,
@@ -790,15 +1046,9 @@ class TraceStore:
             links = list(inputs)
             links += [self._fact_commit(e.fact_id) for e in decision.evidence]
             links += [self._rule_commit(r, key) for r in decision.rules_applied]
-            payload = decision.model_copy(update={"commit": None})
-            c = self._append("decision", payload, actor, links, at, ref=decision.flight_id, ref_type="decision",
-                             message=_decision_message(decision))
-            self.conn.execute(
-                "INSERT INTO decisions(entity_id, flight_id, kind, known_key, at_key, commit_hash, body) "
-                "VALUES (?,?,?,?,?,?,?)",
-                (decision.flight_id, decision.flight_id, "decision", time_key(decision.known_at), key, c.hash,
-                 canonical(decision.model_copy(update={"commit": c.hash}))))
-        return c
+            payload = decision.model_copy(update={"commit": None})   # the commit field is filled in when read
+            return self._append("decision", payload, actor, links, at, ref=decision.flight_id, ref_type="decision",
+                                message=_decision_message(decision))
 
     def record_entitlements(self, ents: Iterable[Entitlement], actor: str, at: datetime,
                             inputs: Iterable[str] = ()) -> list[Commit]:
@@ -815,14 +1065,9 @@ class TraceStore:
                 links = [*inputs, self._entity_commit(fid, "decision")]
                 links += [self._rule_commit(r, key) for r in sorted({r for e in group for r in e.rules_applied})]
                 total = sum(_due(e) for e in group)
-                c = self._append("entitlement", group, actor, links, at, ref=fid, ref_type="entitlement",
-                                 message=f"{fid.split('@')[0]} · {len(group)} entitlements · {eur(total)} full "
-                                         f"Art. 7 entitlement")
-                self.conn.executemany(
-                    "INSERT INTO decisions(entity_id, flight_id, kind, known_key, at_key, commit_hash, body) "
-                    "VALUES (?,?,?,?,?,?,?)",
-                    [(e.coupon_id, fid, "entitlement", key, key, c.hash, canonical(e)) for e in group])
-                out.append(c)
+                out.append(self._append("entitlement", group, actor, links, at, ref=fid, ref_type="entitlement",
+                                        message=f"{fid.split('@')[0]} · {len(group)} entitlements · {eur(total)} "
+                                                f"full Art. 7 entitlement"))
         return out
 
     def record_rule(self, rule: Rule, actor: str, at: datetime, *, event: str | None = None,
@@ -834,12 +1079,9 @@ class TraceStore:
         ref = dsl.ref(rule)
         with self._tx():
             payload = rule.model_copy(update={"status": ev, "times_cited": 0})   # both are views over events
-            c = self._append("rule_event", payload, actor, [*inputs, self._ruling_commit(rule.origin_ruling_id)], at,
-                             ref=ref, ref_type="rule_event", message=f"{ref} {ev}" + (f" · {reason}" if reason else ""))
-            self.conn.execute(
-                "INSERT INTO rule_events(rule_id, version, event, at_key, actor, case_ref, reason, commit_hash) "
-                "VALUES (?,?,?,?,?,?,?,?)", (rule.id, rule.version, ev, time_key(at), actor, case_ref, reason, c.hash))
-        return c
+            return self._append("rule_event", payload, actor, [*inputs, self._ruling_commit(rule.origin_ruling_id)],
+                                at, ref=ref, ref_type="rule_event",
+                                message=f"{ref} {ev}" + (f" · {reason}" if reason else ""), notes=(case_ref, reason))
 
     def cite_rule(self, rule_ref: str, case_ref: str, actor: str, at: datetime) -> Commit:
         """``times_cited`` is the count of these events."""
@@ -850,26 +1092,16 @@ class TraceStore:
             raise NotFound(f"no rule {rule_ref}", rule_ref=rule_ref)
         ref = f"{rid}@{v}"
         with self._tx():
-            c = self._append("rule_event", {"rule": ref, "case_ref": case_ref}, actor, [target], at, ref=ref,
-                             ref_type="rule_event", message=f"{ref} cited · {case_ref}")
-            self.conn.execute(
-                "INSERT INTO rule_events(rule_id, version, event, at_key, actor, case_ref, reason, commit_hash) "
-                "VALUES (?,?,?,?,?,?,?,?)", (rid, v, "cited", time_key(at), actor, case_ref, None, c.hash))
-        return c
+            return self._append("rule_event", {"rule": ref, "case_ref": case_ref}, actor, [target], at, ref=ref,
+                                ref_type="rule_event", message=f"{ref} cited · {case_ref}")
 
     def record_ruling(self, ruling: Ruling, actor: str, at: datetime, inputs: Iterable[str] = ()) -> Commit:
         with self._tx():
-            c = self._append("ruling", ruling, actor, [*inputs, self._question_commit(ruling.question_id)], at,
-                             ref=ruling.id, ref_type="ruling",
-                             message=f"{ruling.author_role.value} {ruling.author} ruled"
-                                     + (f" on {ruling.question_id}" if ruling.question_id else "")
-                                     + f": {ruling.decision}")
-            self.conn.execute(
-                "INSERT INTO rulings(ruling_id, question_id, author_role, author, kind, at_key, commit_hash) "
-                "VALUES (?,?,?,?,?,?,?)",
-                (ruling.id, ruling.question_id, ruling.author_role.value, ruling.author, ruling.kind, time_key(at),
-                 c.hash))
-        return c
+            return self._append("ruling", ruling, actor, [*inputs, self._question_commit(ruling.question_id)], at,
+                                ref=ruling.id, ref_type="ruling",
+                                message=f"{ruling.author_role.value} {ruling.author} ruled"
+                                        + (f" on {ruling.question_id}" if ruling.question_id else "")
+                                        + f": {ruling.decision}")
 
     def record_question(self, question: Question, actor: str, at: datetime, *, event: str = "asked",
                         inputs: Iterable[str] = ()) -> Commit:
@@ -887,15 +1119,11 @@ class TraceStore:
                 links.append(prev)
             status = {"asked": "open"}.get(event, event)
             score = question.confidence.score
-            c = self._append("question", question.model_copy(update={"status": status}), actor, links, at,
-                             ref=question.id, ref_type="question",
-                             message=f"{question.id} {event} → {question.routed_to.value} · {question.pattern}"
-                                     + (f" · {score:.2f}" if score is not None else "")
-                                     + f" · {question.reason_tag}")
-            self.conn.execute(
-                "INSERT INTO questions(question_id, event, routed_to, at_key, commit_hash) VALUES (?,?,?,?,?)",
-                (question.id, event, question.routed_to.value, time_key(at), c.hash))
-        return c
+            return self._append("question", question.model_copy(update={"status": status}), actor, links, at,
+                                ref=question.id, ref_type="question",
+                                message=f"{question.id} {event} → {question.routed_to.value} · {question.pattern}"
+                                        + (f" · {score:.2f}" if score is not None else "")
+                                        + f" · {question.reason_tag}")
 
     def record_journal(self, je: JournalEntry, actor: str, at: datetime, *, event: str = "drafted",
                        inputs: Iterable[str] = ()) -> Commit:
@@ -914,11 +1142,8 @@ class TraceStore:
     def record_period_lock(self, period: str, actor: str, at: datetime) -> Commit:
         _parse_period(period)
         with self._tx():
-            c = self._append("period_lock", {"period": period, "locked_by": actor}, actor, [], at, ref=period,
-                             ref_type="period_lock", message=f"Period {period} locked")
-            self.conn.execute("INSERT INTO periods(period, event, at_key, actor, commit_hash) VALUES (?,?,?,?,?)",
-                              (period, "lock", time_key(at), actor, c.hash))
-        return c
+            return self._append("period_lock", {"period": period, "locked_by": actor}, actor, [], at, ref=period,
+                                ref_type="period_lock", message=f"Period {period} locked")
 
     def record_llm_call(self, payload: Mapping[str, Any], actor: str, at: datetime, inputs: Iterable[str] = (), *,
                         ref: str | None = None, message: str | None = None) -> Commit:
@@ -984,28 +1209,34 @@ class TraceStore:
         qs = [self.question(i) for i in ids]
         return [q for q in qs if status is None or q.status == status]
 
-    def _current(self, kind: str, known_at: datetime | None, flight_id: str | None = None) -> list[bytes]:
+    def _current(self, kind: str, known_at: datetime | None, flight_id: str | None = None) -> list[sqlite3.Row]:
         key = time_key(known_at) if known_at is not None else _MAX_KEY
-        sql = ("SELECT body FROM decisions WHERE seq IN (SELECT MAX(seq) FROM decisions WHERE kind = ? AND at_key <= ? "
-               + ("AND flight_id = ? " if flight_id else "") + "GROUP BY entity_id) ORDER BY entity_id")
-        return [r[0] for r in self._q(sql, [kind, key, *([flight_id] if flight_id else [])])]
+        sql = ("SELECT body, commit_hash FROM decisions WHERE seq IN (SELECT MAX(seq) FROM decisions WHERE kind = ? "
+               "AND at_key <= ? " + ("AND flight_id = ? " if flight_id else "") + "GROUP BY entity_id) "
+               "ORDER BY entity_id")
+        return self._q(sql, [kind, key, *([flight_id] if flight_id else [])])
+
+    @staticmethod
+    def _decision_of(body: bytes, commit_hash_: str) -> FlightDecision:
+        return FlightDecision.model_validate({**orjson.loads(body), "commit": commit_hash_})
 
     def decisions(self, known_at: datetime | None = None) -> dict[str, FlightDecision]:
         """The latest recorded decision per flight (as recorded by ``known_at`` when given)."""
         out = {}
-        for body in self._current("decision", known_at):
-            d = FlightDecision.model_validate(orjson.loads(body))
+        for r in self._current("decision", known_at):
+            d = self._decision_of(r["body"], r["commit_hash"])
             out[d.flight_id] = d
         return out
 
     def decision(self, flight_id: str) -> FlightDecision | None:
-        body = self._q1("SELECT body FROM current_decisions WHERE entity_id = ? AND kind = 'decision'", [flight_id])
-        return FlightDecision.model_validate(orjson.loads(body)) if body is not None else None
+        rows = self._q("SELECT body, commit_hash FROM current_decisions WHERE entity_id = ? AND kind = 'decision'",
+                       [flight_id])
+        return self._decision_of(rows[0]["body"], rows[0]["commit_hash"]) if rows else None
 
     def entitlements(self, flight_id: str | None = None, known_at: datetime | None = None) -> dict[str, Entitlement]:
         out = {}
-        for body in self._current("entitlement", known_at, flight_id):
-            e = Entitlement.model_validate(orjson.loads(body))
+        for r in self._current("entitlement", known_at, flight_id):
+            e = Entitlement.model_validate(orjson.loads(r["body"]))
             out[e.coupon_id] = e
         return out
 
@@ -1065,10 +1296,31 @@ class TraceStore:
         Never calls an LLM, never writes. ``preview_fn`` (``BooksAPI.preview``) prices the € delta; without it the
         delta is the change in gross entitlement still due. The class is IAS 8.5 (see ``_ias8``).
         """
+        return self._replay_run(known_at, decide_fn, rules_override, preview_fn, rule_ref=rule_ref, locks=locks)
+
+    def _rules_at(self, known_at: datetime, retire: tuple[Rule, datetime] | None = None) -> list[Rule]:
+        """``rules_known_at``, as it will read once ``retire`` = (rule, at) is recorded: from ``at`` on, that rule
+        version is retired. Lets ``revert`` replay before it writes anything."""
+        rules = self.rules_known_at(known_at)
+        if retire is None or time_key(known_at) < time_key(retire[1]):
+            return rules
+        rule, _ = retire
+        key = (rule.id, rule.version)
+        cited = next((r.times_cited for r in rules if (r.id, r.version) == key), None)
+        if cited is None:
+            cited = int(self._q1("SELECT COUNT(*) FROM rule_events WHERE rule_id = ? AND version = ? AND "
+                                 "event = 'cited' AND at_key <= ?", [rule.id, rule.version, time_key(known_at)]) or 0)
+        out = [r for r in rules if (r.id, r.version) != key]
+        out.append(rule.model_copy(update={"status": "retired", "times_cited": cited}))
+        return sorted(out, key=lambda r: (r.id, r.version))
+
+    def _replay_run(self, known_at: datetime, decide_fn: DecideFn, rules_override: Iterable[Rule] | None,
+                    preview_fn: PreviewFn | None, *, rule_ref: str, locks: Mapping[str, datetime] | Iterable[str] | None,
+                    retire: tuple[Rule, datetime] | None = None) -> ReplayRun:
         known_at = utc(known_at)
         facts = self.facts_known_at(known_at)
         rules = (sorted(rules_override, key=lambda r: (r.id, r.version)) if rules_override is not None
-                 else self.rules_known_at(known_at))
+                 else self._rules_at(known_at, retire))
         after_d, after_e = self._run(decide_fn, facts, rules, known_at)
         on_record_d = self.decisions(known_at)
         on_record_e = self.entitlements(known_at=known_at)
@@ -1101,14 +1353,15 @@ class TraceStore:
         locked = self._locks(locks)
         diff = ReplayDiff(rule_ref=rule_ref, known_at=known_at, flips=flips, total_delta_cents=total,
                           locked_periods_untouched=sorted(locked), adjustment_je_ids=[])
-        cls, decisive_at = self._ias8(decide_fn, facts, before_d, after_d, locked)
+        cls, decisive_at = self._ias8(decide_fn, facts, before_d, after_d, locked, retire)
         output_hash = payload_hash({"decisions": list(after_d.values()), "entitlements": list(after_e.values())})
         return ReplayRun(diff=diff, before=before_d, after=after_d, before_entitlements=before_e,
                          after_entitlements=after_e, ias8_class=cls, decisive_received_at=decisive_at,
                          output_hash=output_hash)
 
     def _ias8(self, decide_fn: DecideFn, facts: list[Fact], before: dict[str, FlightDecision],
-              after: dict[str, FlightDecision], locked: Mapping[str, datetime]) -> tuple[Ias8Class, datetime | None]:
+              after: dict[str, FlightDecision], locked: Mapping[str, datetime],
+              retire: tuple[Rule, datetime] | None = None) -> tuple[Ias8Class, datetime | None]:
         """IAS 8.5 evidence-availability test for every flipped decision whose event period is locked.
 
         Counterfactual: re-decide with only the information available at the lock (facts whose source was received
@@ -1130,7 +1383,7 @@ class TraceStore:
         for period, fids in sorted(by_lock.items()):
             lock_at = locked[period]
             available = [f for f in facts if received[f.id] <= lock_at]
-            cf, _ = self._run(decide_fn, available, self.rules_known_at(lock_at), lock_at)
+            cf, _ = self._run(decide_fn, available, self._rules_at(lock_at, retire), lock_at)
             avail_ids = {f.id for f in available}
             for fid in fids:
                 if fid not in cf or _changed(cf[fid], after[fid], DECISION_FIELDS):
@@ -1150,12 +1403,18 @@ class TraceStore:
                preview_fn: PreviewFn | None = None, post_recode_fn: PostRecodeFn | None = None,
                locks: Mapping[str, datetime] | Iterable[str] | None = None, reason: str = "",
                persist: bool = True) -> RevertOutcome:
-        """Record a ``retired`` rule event, replay at ``at``, and report the adjustment in the current open period.
+        """Retire the rule, replay at ``at``, and report the adjustment in the current open period. All or nothing.
 
-        ``post_recode_fn`` is ``BooksAPI.post_recode(before, after, known_at)``; ``evidence_received_at`` and
-        ``rule_ref`` are passed too when its signature takes them. Every JE it returns must sit in an open period,
-        else ``LockedPeriodWrite``: a revert never writes into a locked period. With ``persist`` the re-decided
-        flights and coupons and the adjustment JEs are recorded, linked to the revert commit.
+        Order (so a refused revert leaves no trace):
+
+        1. the adjustment period is fixed first: the period of ``at``, moved past every locked period;
+        2. replay with the rule as it will read once retired (nothing written yet);
+        3. only then ``post_recode_fn`` (``BooksAPI.post_recode(before, after, known_at)``; ``evidence_received_at``
+           and ``rule_ref`` are passed too when its signature takes them). Every JE it returns must sit in an open
+           period, else ``LockedPeriodWrite`` and the trace is unchanged. Books runs outside the trace's write
+           transaction: it may share the SQLite file, and holding the write lock across it would deadlock;
+        4. one transaction records the ``retired`` event, the revert commit and (``persist``) the re-decided flights
+           and coupons and the adjustment JEs, linked to the revert commit. A failure rolls all of it back.
         """
         at = utc(at)
         rule = self.rule(rule_ref)
@@ -1164,12 +1423,13 @@ class TraceStore:
                              rule_ref=rule_ref)
         ref = dsl.ref(rule)
         with self._lock:
-            retired = None
-            if rule.status != "retired":
-                retired = self.record_rule(rule, actor, at, event="retired", reason=reason or "reverted")
-            run = self.replay_run(at, decide_fn, preview_fn=preview_fn, rule_ref=ref, locks=locks)
             locked = self._locks(locks)
             period = adjustment_period(at, locked)
+            if period in locked:            # adjustment_period never returns one; a guard, not a branch
+                raise LockedPeriodWrite(f"revert of {ref}: no open period at {period}", periods=[period],
+                                        adjustment_period=period)
+            retire = (rule, at) if rule.status != "retired" else None
+            run = self._replay_run(at, decide_fn, None, preview_fn, rule_ref=ref, locks=locks, retire=retire)
             jes: list[JournalEntry] = []
             coupons = run.changed_coupons()
             if post_recode_fn is not None and coupons:
@@ -1189,18 +1449,21 @@ class TraceStore:
                    + (" · prior-period error, corrected in current period (immaterial)"
                       if run.ias8_class == "prior_period_error" else " · change in estimate (IAS 8.36)")
                    + f" · {period}")
-            link = retired.hash if retired else self._rule_commit(ref)
-            rc = self.commit("revert", {"rule_ref": ref, "diff": diff, "ias8_class": run.ias8_class,
-                                        "adjustment_period": period, "reason": reason},
-                             actor, [link], at, ref=ref, message=msg, ref_type="revert")
-            if persist:
-                for fid in run.changed_flights():
-                    self.record_decision(run.after[fid], actor, at, inputs=[rc.hash])
-                if coupons:
-                    self.record_entitlements([run.after_entitlements[c] for c in coupons], actor, at,
-                                             inputs=[rc.hash])
-                for je in jes:
-                    self.record_journal(je, je.preparer or actor, at, inputs=[rc.hash])
+            with self._tx():
+                retired = (self.record_rule(rule, actor, at, event="retired", reason=reason or "reverted")
+                           if retire else None)
+                link = retired.hash if retired else self._rule_commit(ref)
+                rc = self.commit("revert", {"rule_ref": ref, "diff": diff, "ias8_class": run.ias8_class,
+                                            "adjustment_period": period, "reason": reason},
+                                 actor, [link], at, ref=ref, message=msg)
+                if persist:
+                    for fid in run.changed_flights():
+                        self.record_decision(run.after[fid], actor, at, inputs=[rc.hash])
+                    if coupons:
+                        self.record_entitlements([run.after_entitlements[c] for c in coupons], actor, at,
+                                                 inputs=[rc.hash])
+                    for je in jes:
+                        self.record_journal(je, je.preparer or actor, at, inputs=[rc.hash])
         return RevertOutcome(diff=diff, ias8_class=run.ias8_class, adjustment_period=period, retired=retired,
                              commit=rc, journal=tuple(jes), run=run)
 
@@ -1217,7 +1480,14 @@ class TraceStore:
         return self._q1("SELECT hash FROM commits WHERE payload_ref = ? ORDER BY seq DESC LIMIT 1", [ref])
 
     def _resolve(self, target: str) -> tuple[str, tuple[str, Any] | None]:
-        t = (target or "").strip()
+        t = (target or "").strip() if isinstance(target, str) else ""
+        try:
+            t.encode("utf-8")               # a lone surrogate cannot be bound as SQLite text
+        except UnicodeEncodeError:
+            t = ""
+        if not t or len(t) > _MAX_TARGET:
+            shown = str(target)[:80].encode("utf-8", "backslashreplace").decode("utf-8")
+            raise NotFound(f"nothing to blame for {shown!r}", target=shown)
         if _HEX64.fullmatch(t) and self._row(t) is not None:
             return t, None
         m = _JE_LINE.fullmatch(t)

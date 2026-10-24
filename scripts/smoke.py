@@ -63,6 +63,24 @@ def golden_meta() -> dict[str, Any]:
     return json.loads((GOLDEN / "world.json").read_text(encoding="utf-8"))["meta"]
 
 
+def expected_rulings() -> dict[str, Any]:
+    return json.loads((GOLDEN / "expected" / "questions.json").read_text(encoding="utf-8"))["rulings"]
+
+
+def coupon_settled_by(client, coupon_id: str, rule_id: str | None) -> bool:
+    """Blame the coupon: its entitlement is owed (no longer needs a ruling) and the chain cites ``rule_id``."""
+    if not rule_id:
+        return False
+    r = client.get("/api/blame", params={"target": coupon_id})
+    if r.status_code != 200:
+        return False
+    b = Blame.model_validate(r.json())
+    if not b.steps or not b.steps[0].label.startswith(f"Entitlement {coupon_id}") or " · owed" not in \
+            b.steps[0].label:
+        return False
+    return any(s.commit.payload_ref.split("@")[0] == rule_id for s in b.steps)
+
+
 def storm(client, sid: str = EOWYN) -> StormRun:
     r = client.get(f"/api/storms/{sid}")
     r.raise_for_status()
@@ -171,6 +189,8 @@ def cp2(client, c: Check) -> None:
     c.guard("inject a tech-log line → fact → decision → commit, streamed within 20 s", inject_sse)
 
     def q1_herminia() -> tuple[bool, str]:
+        want = expected_rulings()["Q1"]                    # expected/questions.json: R-CL-1@1 settles 31 coupons
+        want_rule, want_version = want["rule"].split("@")
         cl = session(client, "claims_lead", "Maria")
         q1 = next(q for q in client.get("/api/questions", headers=cl).json() if q["id"] == "Q-1")
         r = client.post("/api/questions/Q-1/answer", headers=cl,
@@ -178,22 +198,32 @@ def cp2(client, c: Check) -> None:
         if r.status_code != 200:
             return False, f"answer {r.status_code} {r.text[:120]}"
         rule = (r.json().get("proposal") or {}).get("rule", {}).get("id")
+        if rule != want_rule:
+            return False, f"the ruling proposed {rule!r}, expected {want_rule}"
         rc = client.post(f"/api/proposals/{rule}/confirm", headers=cl)
         if rc.status_code != 200:
             return False, f"confirm {rule} → {rc.status_code}"
         client.post("/api/clock", json={"known_at": "2025-01-27T06:00:00Z"})
         h = storm(client, HERMINIA)
         meta = golden_meta()["herminia"]
-        asks = [q for q in h.questions if q.pattern == "voucher_in_lieu_unsigned"]
-        settled = 0
-        for fid in ("NS106@2025-01-26", "NS110@2025-01-26"):
+        asks = [q for q in h.questions if q.pattern == want["herminia_asks_again"]["pattern"]]
+        for fid in sorted({cid.split(":")[0] for cid in want["herminia_settled"]}):
             ff = FlightFile.model_validate(client.get(f"/api/flights/{fid}").json())
-            settled += sum(1 for e in ff.sample_entitlements if rule and any(x.startswith(rule) for x in e.rules_applied))
-            if ff.entitlements_summary.get("status_counts", {}).get("needs_ruling"):
+            if ff.entitlements_summary.get("needs_ruling") or \
+                    ff.entitlements_summary.get("status_counts", {}).get("needs_ruling"):
                 return False, f"{fid} still has needs_ruling coupons"
-        ok = bool(asks) and asks[0].case_refs == meta["in_lieu_unsigned_non_eu"]
-        cited = h.counters.get("rules_cited")
-        return ok, f"rule {rule} · Herminia asks {asks[0].case_refs if asks else None} · rules_cited {cited}"
+        # every one of the 31 coupons, not a sample: owed, and its blame chain cites the rule
+        settled = [cid for cid in want["herminia_settled"] if coupon_settled_by(client, cid, rule)]
+        missing = sorted(set(want["herminia_settled"]) - set(settled))
+        cited = next((x.get("times_cited") for x in client.get("/api/rules").json()
+                      if x.get("id") == rule and x.get("version") == int(want_version)), None)
+        ok = (len(want["herminia_settled"]) == 31 and not missing
+              and cited == want["times_cited_after_herminia"]
+              and bool(asks) and asks[0].case_refs == meta["in_lieu_unsigned_non_eu"]
+              == want["herminia_asks_again"]["case_refs"])
+        return ok, (f"rule {rule} · settled {len(settled)}/31" + (f" (missing {missing[:3]}…)" if missing else "")
+                    + f" · {want['rule']} times_cited {cited} (want {want['times_cited_after_herminia']}) · "
+                    f"Herminia asks {asks[0].case_refs if asks else None}")
     c.guard("Q1 → R-CL-1 → Herminia settles 31, the BOS→DUB case asks again", q1_herminia)
 
     def blame() -> tuple[bool, str]:
@@ -214,6 +244,107 @@ def cp2(client, c: Check) -> None:
 
 # ---------------------------------------------------------------- CP3
 FUZZ_KINDS = ["tech_log", "claim", "crm", "email", "occ_log", "manufacturer"]
+STUB_ECHO = "stub · expected outcome"           # contracts/stub_app.py echoes the fixture; that proves nothing
+DECISION_KEYS = ("cause", "extraordinary", "recoded", "recode_label", "outcome", "routed_to")
+
+
+def _decision(client, fid: str) -> dict[str, Any] | None:
+    r = client.get(f"/api/flights/{fid}")
+    if r.status_code != 200:
+        return None
+    d = FlightFile.model_validate(r.json()).decision.model_dump(mode="json")
+    return {k: d.get(k) for k in DECISION_KEYS}
+
+
+def _journal_statuses(client, fid: str) -> dict[str, str]:
+    r = client.get(f"/api/flights/{fid}")
+    if r.status_code != 200:
+        return {}
+    return {je.id: je.status for je in FlightFile.model_validate(r.json()).journal_preview}
+
+
+def _said(resp: InjectResponse) -> str:
+    return " ".join([resp.message or "", *(e.summary for e in resp.events)]).lower()
+
+
+def _unchanged(before: dict | None, after: dict | None) -> tuple[bool, str]:
+    return before is not None and before == after, f"decision {'unchanged' if before == after else after}"
+
+
+# One machine check per rehearsed fixture, each clause traced to the fixture's `expected` sentence. A fixture with
+# no entry fails: a new rehearsal needs a check, not just an HTTP 200.
+#   watch: the flight whose decision is snapshotted before the injection
+INJECTION_CHECKS: dict[str, dict[str, Any]] = {
+    "01_aog_inside_window": {   # NS110 → concurrent / needs_legal · routed to Legal (concurrent causes)
+        "watch": "NS110@2025-01-24",
+        "check": lambda resp, before, after, said: (
+            bool(after) and after["cause"] == "concurrent" and after["extraordinary"] == "needs_legal"
+            and after["routed_to"] == "legal", f"NS110 {after}"),
+    },
+    "02_duplicate_direct_plus_agency": {   # Duplicate of the direct claim for 9B · pay once · agency claim held
+        "watch": NS31,
+        "check": lambda resp, before, after, said: (
+            "duplicate" in said and ("held" in said or any(e.chip == "HELD" for e in resp.events)),
+            said[:120]),
+    },
+    "03_prompt_injection_email": {   # 0 facts accepted · external parties never satisfy an internal approval
+        "watch": NS31,
+        "check": lambda resp, before, after, said: (
+            not resp.facts and before == after, f"{len(resp.facts)} facts · decision "
+                                                 f"{'unchanged' if before == after else 'CHANGED'}"),
+        "no_approval": True,
+    },
+    "04_chargeback_after_bot_refund": {   # Refund already initiated 24 Jan · chargeback flagged as duplicate · CL
+        "watch": NS31,
+        "check": lambda resp, before, after, said: (
+            "duplicate" in said and ("claims lead" in said or "claims_lead" in said), said[:120]),
+    },
+    "05_airbus_hidden_defect_notice": {   # New legal pattern (C-549/07 ¶26) · routed to Legal · decision unchanged
+        "watch": NS31,
+        "check": lambda resp, before, after, said: (
+            _unchanged(before, after)[0] and "legal" in said, f"{_unchanged(before, after)[1]} · {said[:80]}"),
+    },
+    "06_claim_after_limitation": {   # After limitation (Ireland 6 years, C-139/11) · no compensation
+        "watch": None,
+        "check": lambda resp, before, after, said: ("limitation" in said, said[:120]),
+    },
+    "07_challenge_storm_anyway": {   # Assertion · Decision stands.
+        "watch": NS31,
+        "check": lambda resp, before, after, said: (
+            _unchanged(before, after)[0] and "decision stands" in said, f"{_unchanged(before, after)[1]} · "
+                                                                          f"{said[:80]}"),
+    },
+    "08_uk261_520_on_dub_lhr": {   # EU261 applies to a DUB departure · weather · no compensation · paid once
+        "watch": "NS100@2025-01-24",
+        "check": lambda resp, before, after, said: (
+            bool(after) and after["cause"] == "weather" and after["extraordinary"] == "extraordinary"
+            and "eu261" in said, f"NS100 {after} · {said[:60]}"),
+    },
+}
+
+
+def check_injection(client, inj: Injection) -> tuple[bool, str]:
+    """POST a rehearsed injection and compare what the server did with the fixture's `expected`."""
+    spec = INJECTION_CHECKS.get(inj.id)
+    if spec is None:
+        return False, f"no machine check for {inj.id} (add one to INJECTION_CHECKS)"
+    watch = spec["watch"]
+    before = _decision(client, watch) if watch else None
+    jes_before = _journal_statuses(client, watch) if watch and spec.get("no_approval") else {}
+    r = client.post("/api/inject", json=inj.request.model_dump(mode="json"), timeout=30)
+    if r.status_code != 200:
+        return False, f"HTTP {r.status_code} {r.text[:120]}"
+    resp = InjectResponse.model_validate(r.json())
+    if (resp.message or "").startswith(STUB_ECHO):
+        return False, "answered by the contract stub (it echoes the fixture), not the pipeline"
+    after = _decision(client, watch) if watch else None
+    ok, detail = spec["check"](resp, before, after, _said(resp))
+    if spec.get("no_approval"):
+        approved = [j for j, s in _journal_statuses(client, watch).items()
+                    if s in ("approved", "posted") and jes_before.get(j) != s]
+        ok = ok and not approved
+        detail += f" · newly approved {approved}" if approved else " · nothing approved"
+    return ok, detail[:200]
 
 
 def fuzz_inputs(n: int = 20, seed: int = 13) -> list[dict[str, Any]]:
@@ -235,13 +366,7 @@ def cp3(client, c: Check) -> None:
     injs = [Injection.model_validate(x) for x in client.get("/api/injections").json()]
     c("8 rehearsed injections listed", len(injs) == 8, str(len(injs)))
     for inj in injs:
-        def one(inj=inj) -> tuple[bool, str]:
-            r = client.post("/api/inject", json=inj.request.model_dump(mode="json"), timeout=30)
-            if r.status_code >= 500:
-                return False, f"HTTP {r.status_code}"
-            resp = InjectResponse.model_validate(r.json())
-            return r.status_code == 200, f"{len(resp.facts)} facts · {resp.message or ''}"[:160]
-        c.guard(f"inject {inj.id} ends in an answer or an escalation", one)
+        c.guard(f"inject {inj.id}: {inj.expected}"[:120], lambda inj=inj: check_injection(client, inj))
     fives = []
     for i, body in enumerate(fuzz_inputs()):
         try:
@@ -256,6 +381,14 @@ def cp3(client, c: Check) -> None:
     proof = ROOT / "eval" / "proof.json"
     c("eval/proof.json is real", proof.is_file() and EvalReport.model_validate_json(proof.read_text()) is not None,
       str(proof.relative_to(ROOT)) + (" present" if proof.is_file() else " missing"))
+
+    def proof_current() -> tuple[bool, str]:
+        # F9: exits 1 unless eval/cache/manifest.json matches the tree and proof.json/NUMBERS.md rebuild byte-identical
+        p = subprocess.run([sys.executable, "-m", "eval.run", "--check"], capture_output=True, text=True,
+                           timeout=600, cwd=ROOT)
+        tail = (p.stdout.strip().splitlines() or p.stderr.strip().splitlines() or [""])[-1]
+        return p.returncode == 0, f"exit {p.returncode} · {tail}"[:200]
+    c.guard("proof is current (eval.run --check)", proof_current)
     rec = ROOT / "demo" / "recorded"
     c("recorded build captured (make record)", rec.is_dir() and any(rec.rglob("*.json")),
       f"{sum(1 for _ in rec.rglob('*.json')) if rec.is_dir() else 0} files under demo/recorded")
