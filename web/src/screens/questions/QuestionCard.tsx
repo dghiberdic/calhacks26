@@ -38,9 +38,9 @@ export function QuestionCard({ question, role, flow, onFlow }: { question: Quest
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <RoutedLine role={question.routed_to} holdsCents={resolved ? null : question.holds_cents} />
             {reminder && !resolved ? (
-              <StatusChip tone="held" dot={false} className="gap-1.5">
-                <BellRing className="size-3" aria-hidden="true" />
-                {reminder}
+              <StatusChip tone="held" dot={false} className="h-auto min-h-6 items-start gap-1.5 whitespace-normal py-1 leading-snug">
+                <BellRing className="mt-px size-3 shrink-0" aria-hidden="true" />
+                <ClockText text={reminder} />
               </StatusChip>
             ) : null}
           </div>
@@ -88,6 +88,23 @@ export function QuestionCard({ question, role, flow, onFlow }: { question: Quest
         </div>
       </div>
     </article>
+  );
+}
+
+/** Mono chip text with its clock times in tabular Archivo (B612 sets "09:00Z" as "09: 00Z"). */
+function ClockText({ text }: { text: string }) {
+  return (
+    <span>
+      {text.split(/(\d{1,2}:\d{2}Z)/).map((part, i) =>
+        i % 2 ? (
+          <span key={i} className="font-sans tabular-nums">
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      )}
+    </span>
   );
 }
 

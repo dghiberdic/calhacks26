@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight, Check, Loader2 } from "lucide-react";
 import { api } from "@/api/client";
-import { invalidateAfterWrite, useRules } from "@/api/queries";
+import { invalidateAfterWrite, useQuestions, useRules } from "@/api/queries";
 import type { AnswerResponse, ConfirmResponse, Question } from "@/api/types";
 import { MicroLabel, StatusChip } from "@/components/chips";
 import { ReplaySummary } from "@/components/journal";
@@ -18,8 +18,8 @@ import { useViewAs } from "./viewAs";
 
 export type Flow =
   | { step: "answer" }
-  | { step: "preview"; answer: AnswerResponse; widened?: boolean }
-  | { step: "saved"; answer: AnswerResponse; confirmed: ConfirmResponse; widenDone?: boolean }
+  | { step: "preview"; answer: AnswerResponse }
+  | { step: "saved"; answer: AnswerResponse; confirmed: ConfirmResponse }
   | { step: "recorded"; answer: AnswerResponse };
 
 const REJECT_OPTION = "Reject the proposal";
@@ -30,7 +30,7 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 export function AnswerFlow({ question, flow, onFlow, canAnswer }: { question: Question; flow: Flow; onFlow: (f: Flow) => void; canAnswer: boolean }) {
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <motion.div key={flow.step + ("widened" in flow && flow.widened ? "-w" : "")} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.28, ease: EASE }}>
+      <motion.div key={flow.step} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.28, ease: EASE }}>
         {flow.step === "answer" ? (
           canAnswer ? (
             <AnswerForm question={question} onFlow={onFlow} />
@@ -40,7 +40,7 @@ export function AnswerFlow({ question, flow, onFlow, canAnswer }: { question: Qu
         ) : flow.step === "preview" ? (
           <Preview question={question} flow={flow} onFlow={onFlow} />
         ) : flow.step === "saved" ? (
-          <Saved question={question} flow={flow} onFlow={onFlow} />
+          <Saved question={question} flow={flow} />
         ) : (
           <Recorded answer={flow.answer} />
         )}
@@ -53,14 +53,17 @@ function AnswerForm({ question, onFlow }: { question: Question; onFlow: (f: Flow
   const id = useId();
   const rules = useRules();
   const release = isReleaseProposal(question);
-  const options = release && !question.options.some((o) => REJECT_RE.test(o)) ? [...question.options, REJECT_OPTION] : question.options;
+  // When the server already offers a rejection among the options, answering with it is the rejection.
+  // Otherwise the UI adds one, sent to POST /rules/{id}/reject when the proposal is a rule.
+  const serverReject = question.options.some((o) => REJECT_RE.test(o));
+  const options = release && !serverReject ? [...question.options, REJECT_OPTION] : question.options;
   const recommended = options.includes(question.recommended_option) ? question.recommended_option : options[0];
   const [choice, setChoice] = useState(recommended);
   const [explanation, setExplanation] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const rejecting = release && (choice === REJECT_OPTION || REJECT_RE.test(choice));
-  const proposalRule = release ? findProposalRule(rules.data, question) : null;
+  const proposalRule = release && !serverReject ? findProposalRule(rules.data, question) : null;
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -69,7 +72,7 @@ function AnswerForm({ question, onFlow }: { question: Question; onFlow: (f: Flow
     setBusy(true);
     setError(null);
     try {
-      const answer = rejecting && proposalRule ? await api.reject(proposalRule.id, text) : await api.answer(question.id, { decision: choice, explanation: text });
+      const answer = choice === REJECT_OPTION && proposalRule ? await api.reject(proposalRule.id, text) : await api.answer(question.id, { decision: choice, explanation: text });
       void invalidateAfterWrite();
       onFlow(answer.proposal ? { step: "preview", answer } : { step: "recorded", answer });
     } catch (err) {
@@ -192,14 +195,14 @@ function Preview({ question, flow, onFlow }: { question: Question; flow: Extract
     try {
       const confirmed = await api.confirm(rule.id);
       void invalidateAfterWrite();
-      onFlow({ step: "saved", answer: flow.answer, confirmed, widenDone: flow.widened });
+      onFlow({ step: "saved", answer: flow.answer, confirmed });
     } catch (err) {
       setError(err);
     } finally {
       setBusy(false);
     }
   };
-  return <RulePreview answer={flow.answer} question={question} onConfirm={() => void confirm()} confirming={busy} error={error} widened={flow.widened} />;
+  return <RulePreview answer={flow.answer} question={question} onConfirm={() => void confirm()} confirming={busy} error={error} />;
 }
 
 /** widen_next is loosely typed: prefer a question the server wrote, else name the scope it would drop. */
@@ -210,26 +213,13 @@ function widenQuestion(next: Record<string, unknown>): string {
   return `Apply it beyond ${entries.map(([k, v]) => `${k.replace(/[._]/g, " ")} ${String(v).replace(/^case:/, "")}`).join(", ")}?`;
 }
 
-function Saved({ question, flow, onFlow }: { question: Question; flow: Extract<Flow, { step: "saved" }>; onFlow: (f: Flow) => void }) {
+function Saved({ question, flow }: { question: Question; flow: Extract<Flow, { step: "saved" }> }) {
   const rule = flow.confirmed.rule;
   const next = nextStormLine(flow.confirmed.replay, question.case_refs);
   const widenNext = flow.answer.proposal?.widen_next ?? null;
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<unknown>(null);
-
-  const widen = async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      const proposal = await api.widen(rule.id);
-      void invalidateAfterWrite();
-      onFlow({ step: "preview", answer: { ruling: flow.answer.ruling, proposal }, widened: true });
-    } catch (err) {
-      setError(err);
-    } finally {
-      setBusy(false);
-    }
-  };
+  // Asks come from the server as questions; if it raised the widening as one, point at that card.
+  const open = useQuestions("open");
+  const followUp = widenNext ? (open.data ?? []).find((q) => q.id !== question.id && (/widen/.test(q.pattern) || q.title === widenQuestion(widenNext))) : undefined;
 
   return (
     <div className="flex flex-col gap-5" data-testid="saved">
@@ -261,26 +251,12 @@ function Saved({ question, flow, onFlow }: { question: Question; flow: Extract<F
         <ReplaySummary diff={flow.confirmed.replay} className="pl-6 text-[11.5px] text-slate-500" />
       </div>
 
-      {widenNext && !flow.widenDone ? (
-        <div className="rounded-lg bg-card p-4 shadow-[0_0_0_1px_var(--color-cloud-200),inset_3px_0_0_var(--color-held)]">
-          <MicroLabel tone="held">One more question, asked once</MicroLabel>
-          <p className="mt-1.5 text-[15px] font-semibold text-navy-900">{widenQuestion(widenNext)}</p>
-          {error ? <ErrorNote error={error} className="mt-3" /> : null}
-          <div className="mt-3 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => void widen()}
-              disabled={busy}
-              className="inline-flex h-9 items-center gap-2 rounded-lg bg-navy-900 px-3.5 text-[13.5px] font-semibold text-cloud-50 hover:bg-navy-800 disabled:opacity-50"
-            >
-              {busy ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : null}
-              Yes, widen it
-            </button>
-            <button type="button" onClick={() => onFlow({ ...flow, widenDone: true })} className="h-9 rounded-lg px-3.5 text-[13.5px] text-slate-600 shadow-[inset_0_0_0_1px_var(--color-cloud-300)] hover:bg-white">
-              Keep it as it is
-            </button>
-          </div>
-        </div>
+      {followUp ? (
+        <p className="rounded-lg bg-held-wash/60 px-3.5 py-2.5 text-[13px] leading-snug text-held-ink">
+          Asked once more, in its own card: <span className="font-semibold">{followUp.title}</span>
+        </p>
+      ) : widenNext ? (
+        <p className="text-[12.5px] leading-snug text-slate-500">One rung wider is possible in Policies: {widenQuestion(widenNext)}</p>
       ) : null}
 
       <Link to={`/policies#${encodeURIComponent(rule.id)}`} className="inline-flex items-center gap-1 self-start text-[13px] font-medium text-metar-ink hover:underline">

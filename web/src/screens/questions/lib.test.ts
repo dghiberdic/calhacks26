@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Question, ReplayDiff, Rule } from "@/api/types";
-import { caseCount, caseHref, caseLabel, findProposalRule, MASK_RE, nextStormLine, reminderText, routedPhrase, seatPhrase } from "./lib";
+import { caseCount, caseHref, caseLabel, findProposalRule, MASK_RE, nextStormLine, REJECT_RE, reminderText, routedPhrase, seatPhrase } from "./lib";
 
 const q = (over: Partial<Question> = {}): Question => ({
   id: "Q-1",
@@ -66,6 +66,12 @@ describe("question helpers", () => {
     const isha = q({ case_refs: ["EIDW@2024-01-21"], reason_tag: "release-proposal" });
     expect(findProposalRule([rule({ id: "R-X", status: "active" }), rule({ id: "R-REL", origin_example: "EIDW@2024-01-21" })], isha)?.id).toBe("R-REL");
     expect(findProposalRule([rule({ id: "R-X", status: "active" })], isha)).toBeNull();
+  });
+
+  it("knows an option that rejects a release proposal from one that only defers it", () => {
+    expect(REJECT_RE.test("Reject: never release the tail. At M12 keep (ultimate − M12 rate) × entitlement until the six-year limitation.")).toBe(true);
+    expect(REJECT_RE.test("Keep the €3,600 and re-test next quarter.")).toBe(false);
+    expect(REJECT_RE.test("Derecognise the remaining €3,600 now: no new claims in 3 months.")).toBe(false);
   });
 
   it("recognises server PII masks", () => {

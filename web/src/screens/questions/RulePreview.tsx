@@ -18,14 +18,12 @@ export function RulePreview({
   onConfirm,
   confirming,
   error,
-  widened,
 }: {
   answer: AnswerResponse;
   question: Question;
   onConfirm: () => void;
   confirming: boolean;
   error: unknown;
-  widened?: boolean;
 }) {
   const proposal = answer.proposal!;
   const { rule, checks, would_flip: flip } = proposal;
@@ -37,14 +35,15 @@ export function RulePreview({
     <div className="flex flex-col gap-5" data-testid="rule-preview">
       <div>
         <div className="flex flex-wrap items-center gap-2">
-          <MicroLabel>{widened ? "Wider rule preview" : "Rule preview"}</MicroLabel>
+          <MicroLabel>Rule preview</MicroLabel>
           <span className="font-mono text-[12px] font-bold text-navy-900">{ruleRef(rule)}</span>
           <StatusChip tone="outline" dot={false} className="h-5 text-[10.5px]">
             {rule.status}
           </StatusChip>
         </div>
         <p className="mt-1 text-[12.5px] text-slate-500">
-          {TIER_LABEL[rule.tier]} · you ruled <span className="text-navy-900">&ldquo;{answer.ruling.decision}&rdquo;</span>
+          {TIER_LABEL[rule.tier]}
+          {rule.supersedes ? <> · supersedes <span className="font-mono text-[12px]">{rule.supersedes}</span></> : null} · you ruled <span className="text-navy-900">&ldquo;{answer.ruling.decision}&rdquo;</span>
         </p>
         <RuleSentence rule={rule} className="mt-3 text-[15.5px]" />
       </div>
