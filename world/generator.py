@@ -15,6 +15,7 @@ import hashlib
 import random
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
+from functools import lru_cache
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
@@ -123,8 +124,14 @@ def truth_for(latent: str, root_latent: str | None = None, *, spare_within_3h: b
 MetarLoader = Callable[[str, date], list[MetarObs]]
 
 
+@lru_cache(maxsize=8192)
+def _pinned_cached(icao: str, utc_day: date) -> tuple[MetarObs, ...]:
+    return tuple(pinned_day(icao, utc_day) or ())
+
+
 def pinned_loader(icao: str, utc_day: date) -> list[MetarObs]:
-    return pinned_day(icao, utc_day) or []
+    """Pinned obs for one UTC day (parsed once per process; MetarObs are never mutated)."""
+    return list(_pinned_cached(icao, utc_day))
 
 
 # ---------------------------------------------------------------- one day

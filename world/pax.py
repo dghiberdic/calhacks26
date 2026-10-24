@@ -225,7 +225,7 @@ class FlightPax:
             for j in range(size):
                 seat = labels[i + j]
                 cid = f"{f.id}:{seat}"
-                c = Coupon(id=cid, pnr=pnr, pax_ref="PAX-" + sha(f"{self.seed}:{cid}")[:10].upper(),
+                c = Coupon.model_construct(id=cid, pnr=pnr, pax_ref="PAX-" + sha(f"{self.seed}:{cid}")[:10].upper(),
                            flight_id=f.id, fare_cents=fare, taxes_cents=tax, channel=channel, fare_type=fare_type,
                            lead_booker=(j == 0 and size > 1))
                 staff += fare_type == "staff_id90"
@@ -246,7 +246,7 @@ class FlightPax:
         if kind in ("refund", "voucher"):
             by = "crm-bot" if (kind == "refund" and c.channel == "direct") else ("web" if r.random() < 0.7
                                                                                 else "call-centre")
-            return Election(coupon_id=c.id, kind=kind, recorded_by=by)  # type: ignore[arg-type]
+            return Election.model_construct(coupon_id=c.id, kind=kind, recorded_by=by)  # type: ignore[arg-type]
         limit = REDUCTION_LIMIT_MIN[self.band]
         if kind == "reroute_partner":
             delay = r.randint(60, limit) if r.random() < 0.55 else r.randint(limit + 1, limit + 300)
@@ -261,7 +261,7 @@ class FlightPax:
                 delay = r.randint(1000, 3000 if self.band == 600 else 1800)
             by = "occ"
         delay = int(round(delay / 5) * 5)
-        return Election(coupon_id=c.id, kind=kind, new_arrival=f.sched_arr + timedelta(minutes=delay),  # type: ignore[arg-type]
+        return Election.model_construct(coupon_id=c.id, kind=kind, new_arrival=f.sched_arr + timedelta(minutes=delay),  # type: ignore[arg-type]
                         arrival_delay_min=delay, recorded_by=by)  # type: ignore[arg-type]
 
     def _crm(self, c: Coupon, e: Election) -> None:
@@ -330,7 +330,7 @@ class FlightPax:
 
     def _event(self, rid: str, c: Coupon, at: datetime, kind: str, amount: int, actor: str, text: str,
                src_kind: str, tier: int, tags: list[str], signed: str | None = None, source: bool = True) -> CrmEvent:
-        ev = CrmEvent(id=rid, coupon_id=c.id, at=at, kind=kind, amount_cents=amount,  # type: ignore[arg-type]
+        ev = CrmEvent.model_construct(id=rid, coupon_id=c.id, at=at, kind=kind, amount_cents=amount,  # type: ignore[arg-type]
                       signed_acceptance_sha256=signed, actor=actor, text=text)
         self.out.crm.append(ev)
         if source:
@@ -351,10 +351,10 @@ class FlightPax:
         acc_at = datetime.combine(f.sched_dep.date(), datetime.min.time(), UTC) + timedelta(hours=22)
         inv_at = acc_at + timedelta(days=r.randint(18, 30), hours=-10)
         for kind, amt in rows.items():
-            self.out.care.append(CareCost(id=f"CARE-ACC-{f.id}-{kind}", flight_id=f.id, kind=kind,  # type: ignore[arg-type]
+            self.out.care.append(CareCost.model_construct(id=f"CARE-ACC-{f.id}-{kind}", flight_id=f.id, kind=kind,  # type: ignore[arg-type]
                                           amount_cents=amt, vendor=vendors[kind], at=acc_at, invoiced=False))
             inv = int(amt * (0.94 + 0.08 * r.random()))
-            self.out.care.append(CareCost(id=f"CARE-INV-{f.id}-{kind}", flight_id=f.id, kind=kind,  # type: ignore[arg-type]
+            self.out.care.append(CareCost.model_construct(id=f"CARE-INV-{f.id}-{kind}", flight_id=f.id, kind=kind,  # type: ignore[arg-type]
                                           amount_cents=inv, vendor=vendors[kind], at=inv_at, invoiced=True))
 
 
