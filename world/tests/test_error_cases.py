@@ -40,3 +40,31 @@ def test_stress_labels_are_supported_by_input_events_not_engine_outputs():
     assert regime["world"]["claims"][0]["currency_regime"] == "UK261"
     assert regime["expected"]["compensation_cents"] == 25000
     assert regime["world"]["flights"][0]["dest"] == "LHR"
+
+
+def test_knock_on_return_cases_are_out_of_every_window_at_both_ends():
+    """A knock-on return's only link to the storm is the cancelled outbound: the return sector is observed and outside
+    every storm window at its departure and its arrival end (engine.timeline's own definition), while the outbound
+    left inside a Dublin window."""
+    from engine.timeline import position, storm_windows
+    from world.error_cases import build_error_cases
+
+    cases = [c for c in build_error_cases() if c["category"] == "knock_on_return"]
+    assert len(cases) == 10
+    for case in cases:
+        world = World.model_validate(case["world"])
+        flights = {f.id: f for f in world.flights}
+        ret = flights[case["flight_id"]]
+        root = flights[ret.inbound_flight_id]
+        icao = {a.iata: a.icao for a in world.airports}
+
+        def where(t, code, world=world, icao=icao):
+            rows = [o for k, obs in world.metar.items() if k.split("@")[0] == icao[code] for o in obs]
+            return position(t, rows, storm_windows(rows))
+
+        assert (root.origin, root.dest, ret.origin, ret.dest) == ("DUB", "CDG", "CDG", "DUB")
+        assert where(root.sched_dep, "DUB") == "in", case["id"]
+        assert where(ret.sched_dep, "CDG") == "out", case["id"]
+        assert where(ret.sched_arr, "DUB") == "out", case["id"]
+        assert ret.sched_dep >= root.sched_arr and ret.date == ret.sched_dep.date()
+        assert case["expected"]["cause"] == "knock_on"
