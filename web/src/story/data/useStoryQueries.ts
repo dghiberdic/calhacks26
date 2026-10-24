@@ -44,6 +44,7 @@ export function useStoryQueries() {
       chainSource: fromBlame.length ? ("blame" as const) : ("flight-file" as const),
       learned: run.data?.learned ?? [],
       q1,
+      questionsLoaded: !!questions.data,
       rule: ruleFrom(rules.data, q1),
       next: next.data,
       nextName: stormName(nextId),

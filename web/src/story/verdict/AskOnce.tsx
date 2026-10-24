@@ -100,6 +100,8 @@ export function AskOnce() {
                   </p>
                 ) : null}
               </>
+            ) : story.questionsLoaded ? (
+              <p className="mt-5 text-[15px] leading-relaxed text-slate-500">This question is routed to the Claims Lead, and this role doesn&rsquo;t see it. Switch roles in the app to read it.</p>
             ) : (
               <div className="mt-5 flex flex-col gap-2" aria-hidden="true">
                 <span className="h-5 w-11/12 animate-pulse rounded bg-navy-900/[0.06]" />

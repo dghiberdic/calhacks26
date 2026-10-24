@@ -3,6 +3,7 @@ import { Blueprint } from "./aircraft/Blueprint";
 import { Board } from "./board/Board";
 import { ScrollProgress } from "./chrome/ScrollProgress";
 import { SiteNav } from "./chrome/SiteNav";
+import { useStory } from "./data/context";
 import { StoryData } from "./data/StoryData";
 import { Hero } from "./hero/Hero";
 import { Interlude } from "./interlude/Interlude";
@@ -15,6 +16,17 @@ import { Trace } from "./verdict/Trace";
 import { Verdict } from "./verdict/Verdict";
 import { StormWindow } from "./window/StormWindow";
 import "./story.css";
+
+/** If the API can't be reached, say so once, quietly: every number on the page comes from it. */
+function ApiNote() {
+  const { runError } = useStory();
+  if (!runError) return null;
+  return (
+    <p role="status" className="fixed inset-x-0 bottom-4 z-50 mx-auto w-fit max-w-[calc(100vw-32px)] rounded-full bg-navy-900/90 px-4 py-2 text-[13px] text-cloud-300 shadow-lg ring-1 ring-white/10 backdrop-blur">
+      The storm run didn&rsquo;t load, so the numbers are waiting on the StormCheck API.
+    </p>
+  );
+}
 
 /**
  * /story — the immersive scroll story, outside the app shell. Storm Éowyn, Dublin, 24 Jan 2025:
@@ -39,6 +51,7 @@ export default function StoryScreen() {
         <div className="story">
           <SiteNav />
           <ScrollProgress />
+          <ApiNote />
           <main ref={main} id="story-main">
             <Hero />
             <Board />

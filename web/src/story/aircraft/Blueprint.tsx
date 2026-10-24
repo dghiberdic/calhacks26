@@ -133,7 +133,13 @@ export function Blueprint() {
         <div ref={column} className="relative">
           <div className="bp-canvas pointer-events-none absolute inset-0 opacity-0">
             {near ? (
-              <Contained fallback={<img src={asset("ns31-render.webp")} alt="Rendering of EI-NSB on a wet stand at Dublin" className="absolute inset-0 h-full w-full object-contain" />}>
+              <Contained
+                fallback={
+                  <div className="absolute inset-0 grid place-items-center">
+                    <img src={asset("ns31-render.webp")} alt="Rendering of EI-NSB on a wet stand at Dublin" className="aspect-video w-full rounded-xl object-cover shadow-[0_30px_80px_-30px_rgba(0,0,0,0.8)]" />
+                  </div>
+                }
+              >
                 <Suspense fallback={null}>
                   <AircraftScene progress={progress} leak={leak} fallback={asset("ns31-render.webp")} className="absolute inset-0" />
                 </Suspense>
