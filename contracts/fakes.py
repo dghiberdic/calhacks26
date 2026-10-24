@@ -142,6 +142,27 @@ def position(t: datetime, obs: Sequence[MetarObs], windows: Sequence[StormWindow
     return "out", int(min(min(abs(t - w.start), abs(t - w.end)) for w in windows).total_seconds() // 60)
 
 
+def storm_name(world: World, storm_id: str) -> str | None:
+    """'Storm Éowyn' from real_context.storm_name, else meta.storms[<id>].name (as engine/storm.py)."""
+    ctx = (world.real_context or {}).get(storm_id) or {}
+    name = ctx.get("storm_name") or ctx.get("name")
+    if not name:
+        name = str((((world.meta or {}).get("storms") or {}).get(storm_id) or {}).get("name") or "").split(" (")[0]
+    if not name:
+        return None
+    return name if str(name).lower().startswith("storm ") else f"Storm {name}"
+
+
+def others_settled(q: Question, decisions: Sequence[FlightDecision], ents: Sequence[Entitlement]) -> int:
+    """Cases of the run settled automatically while `q` waits: coupons for a coupon-level question, else flights."""
+    held = set(q.holds) | set(q.case_refs)
+    auto = {d.flight_id for d in decisions if d.outcome == "auto"}
+    if q.case_refs and all(":" in r.split("@", 1)[-1] for r in q.case_refs):
+        return sum(1 for e in ents if e.flight_id in auto and e.coupon_id not in held
+                   and e.status not in ("held", "needs_ruling"))
+    return sum(1 for f in auto if f not in held)
+
+
 def _icao(world: World, iata: str) -> str:
     for a in world.airports:
         if a.iata == iata:
@@ -814,9 +835,13 @@ class FakeEngine:
                  "knock_on": 1.0 if cause == "knock_on" else 0.0,
                  "concurrent_causes": 1.0 if cause == "concurrent" else 0.0}
         caps = ["capped:no-precedent"] if cause in ("knock_on", "unknown") and not precedent else []
-        return Confidence(score=_cal.score(self.calibration, "cause", feats), kind="cause",
-                          label="cause-finding confidence", features=feats, caps=caps,
-                          calibration_version=str(self.calibration.get("version", CAL_VERSION_FAKE)))
+        return self._conf("cause", feats, "cause-finding confidence", caps)
+
+    def _conf(self, kind: str, feats: dict[str, float], label: str, caps: list[str] | None = None) -> Confidence:
+        score, contrib, icpt = _cal.explain(self.calibration, kind, feats)
+        return Confidence(score=score, kind=kind, label=label, features=feats, caps=list(caps or []),
+                          calibration_version=str(self.calibration.get("version", CAL_VERSION_FAKE)),
+                          contributions=contrib, intercept=icpt)
 
     # ---------- EngineAPI
     def decide(self, flight_id: str, facts: list[Fact], rules: list[Rule], known_at: datetime,
@@ -989,6 +1014,9 @@ class FakeEngine:
                 decisions[f.id] = d
                 ents[f.id] = self.entitlements(d, w, rules)
         questions = self._questions(w, storm, decisions, ents, known_at)
+        flat = [e for es in ents.values() for e in es]
+        questions = [q.model_copy(update={"others_settled": others_settled(q, list(decisions.values()), flat)})
+                     for q in questions]
         qmap = {ref: q.id for q in questions for ref in q.case_refs}
         for fid, d in list(decisions.items()):
             if fid in qmap:
@@ -1001,7 +1029,8 @@ class FakeEngine:
         counters = {
             "passengers": sum(f.pax for f in cancelled), "cancelled": len(cancelled),
             "operated": len(flights) - len(cancelled),
-            "drafted": sum(1 for fid, es in ents.items() for e in es if e.status in ("owed", "needs_ruling")
+            # payouts drafted = owed coupons on automatic flights; a coupon waiting on a ruling (14C) isn't yet
+            "drafted": sum(1 for fid, es in ents.items() for e in es if e.status == "owed"
                            and e.compensation_cents and decisions[fid].outcome == "auto"),
             "held": sum(f.pax for f in cancelled if decisions[f.id].extraordinary == Extraordinary.NEEDS_LEGAL),
             "questions": len(questions), "people": len({q.routed_to for q in questions}), "repeat_questions": 0,
@@ -1028,7 +1057,8 @@ class FakeEngine:
                         learned=learned, questions=questions, feed=feed,
                         real_context=w.real_context.get(storm, {}),
                         message=None if windows else f"max gust {peak} kt · no storm window",
-                        airports=[a for a in (_airport(w, c) for c in airports) if a is not None])
+                        airports=[a for a in (_airport(w, c) for c in airports) if a is not None],
+                        name=storm_name(w, storm))
 
     def _questions(self, w: World, storm: str, decisions: dict[str, FlightDecision],
                    ents: dict[str, list[Entitlement]], known_at: datetime) -> list[Question]:
@@ -1078,10 +1108,8 @@ class FakeEngine:
                 else "Pay the compensation in cash; the voucher stays as goodwill",
                 options=["Pay €600 cash; the voucher stays as goodwill", "Offset the voucher: pay the difference",
                          "Ask the passenger to sign the acceptance first"],
-                evidence=[], confidence=Confidence(score=_cal.score(self.calibration, "voucher", feats), kind="voucher",
-                                                   label="voucher-offset confidence", features=feats,
-                                                   caps=["capped:sources-disagree"],
-                                                   calibration_version=str(self.calibration.get("version"))),
+                evidence=[], confidence=self._conf("voucher", feats, "voucher-offset confidence",
+                                                   ["capped:sources-disagree"]),
                 reason_tag="sources-disagree", holds=lieu,
                 holds_cents=sum(e.compensation_cents for es in ents.values() for e in es if e.coupon_id in lieu),
                 status="open", remind_at=remind))
@@ -1100,9 +1128,7 @@ class FakeEngine:
                     recommended_option="Reduce to nil now",
                     options=["Reduce to nil now", "Keep the expected tail until the six-year limitation",
                              "Review again at M18"],
-                    evidence=[], confidence=Confidence(score=_cal.score(self.calibration, "release", feats),
-                                                       kind="release", label="release confidence", features=feats,
-                                                       calibration_version=str(self.calibration.get("version"))),
+                    evidence=[], confidence=self._conf("release", feats, "release confidence"),
                     reason_tag="release-proposal", holds=[ob.cohort], holds_cents=ob.balance_cents, status="open",
                     remind_at=remind))
         ops = [d for d in decisions.values() if d.routed_to == Role.OPS]

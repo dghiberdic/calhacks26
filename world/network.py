@@ -210,14 +210,15 @@ def pair_for_dest(dest: str) -> list[Pair]:
 def adhoc_pair(dest: str) -> Pair:
     """A hypothetical Northstar rotation for a desk airport outside the network (judge's choice).
 
-    Narrowbody up to 3,500 km, XLR up to 7,500 km, A330 beyond. Deterministic from the code.
+    Narrowbody up to 3,500 km, XLR up to 7,500 km, A330 beyond. Deterministic from the code. Never flown by a DUB
+    standby spare (EI-NT*, EI-NWE): a spare can't stand in for its own rotation.
     """
     km = distance_km(HUB, dest)
     n = 900 + (sum(ord(c) for c in dest) % 49) * 2
     if km <= 3500:
-        return Pair(f"NS{n}", f"NS{n + 1}", dest, time(9, 30), _block(dest), 45, _block(dest), "EI-NTA",
+        return Pair(f"NS{n}", f"NS{n + 1}", dest, time(9, 30), _block(dest), 45, _block(dest), "EI-NSU",
                     wave="adhoc")
-    tail = "EI-NLA" if km <= 7500 else "EI-NWE"
+    tail = "EI-NLA" if km <= 7500 else "EI-NWD"
     block = int(round((km / 13.5 + 45) / 5) * 5)
     return Pair(f"NS{n}", f"NS{n + 1}", dest, time(12, 15), block, 0, max(60, block - 45), tail, long_haul=True,
                 inbound_std_local=time(19, 0), wave="adhoc")

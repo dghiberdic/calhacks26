@@ -92,7 +92,9 @@ def score(kind: str, features: Mapping[str, float], cal: Mapping[str, Any] | Non
         return Confidence(score=None, kind=kind, label=LABELS[kind], features=feats,
                           caps=list(dict.fromkeys([*(caps or []), "capped:uncalibrated"])),
                           calibration_version=version)
+    contributions = {f: round(float(c) * feats.get(f, 0.0), 4) + 0.0 for f, c in zip(m["features"], m["coef"])}
     return Confidence(score=round(logistic(z), 4), kind=kind, label=LABELS[kind], features=feats,
+                      contributions=contributions, intercept=round(float(m.get("intercept", 0.0)), 4),
                       caps=list(dict.fromkeys(caps or [])), calibration_version=version)
 
 

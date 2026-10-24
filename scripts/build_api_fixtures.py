@@ -36,6 +36,7 @@ from contracts.models import (  # noqa: E402
     Entitlement, Evidence, FlightFile, Role, Ruling, StormRun, StormSummary, TraceEvent, World,
 )
 from contracts.normalize import world_to_facts  # noqa: E402
+from contracts.summary import entitlements_summary  # noqa: E402
 
 UTC = timezone.utc
 API = ROOT / "contracts" / "fixtures" / "api"
@@ -130,6 +131,12 @@ def timeline(w: World, fid: str) -> list[dict[str, Any]]:
                                                                    "15:30–17:30Z",
                       ", ".join(f"{x.number} {x.dest}" for x in sorted(ops, key=lambda x: x.sched_dep)),
                       f"SRC-SCHEDULE-{EOWYN}", 2))
+    if f.date == DAY and f.id not in w.meta["groups"].get("technical", []):
+        for s_ in w.sources:
+            if s_.kind.value == "email" and "warning" in s_.title.lower() and s_.received_at <= f.sched_dep:
+                first = next((ln for ln in (s_.text or "").splitlines() if "RED" in ln.upper()), s_.title)
+                out.append(tl(s_.received_at, "warning", "Weather warning known before deciding", first.strip(),
+                              s_.id, s_.trust_tier))
     for end, t, ap in (("STD", f.sched_dep, f.origin), ("STA", f.sched_arr, f.dest)):
         out.append(tl(t, "schedule", f"{f.number} {end} {t:%H:%M}Z {ap}", "Cancelled", f"SRC-SCHEDULE-{EOWYN}" if
                       f.date <= DAY else f"SRC-SCHEDULE-{HERMINIA}", 2))
@@ -137,19 +144,11 @@ def timeline(w: World, fid: str) -> list[dict[str, Any]]:
 
 
 def summary(stub_summary: dict[str, Any], ents: list[Entitlement], w: World, fid: str) -> dict[str, Any]:
+    """Every documented key (contracts.summary, the same builder as the engine) over the D0a narrative keys."""
     el = {e.coupon_id: e.kind for e in w.elections}
     s = dict(stub_summary)
-    s.update({
-        "coupons": len(ents),
-        "status_counts": dict(sorted(Counter(e.status for e in ents).items())),
-        "elections": dict(sorted(Counter(el[e.coupon_id] for e in ents).items())),
-        "refunds_already_initiated": sum(e.refund_already_initiated for e in ents),
-        "refund_due_cents": sum(e.refund_due_cents for e in ents),
-        "claims_received": sum(1 for c in w.claims if c.coupon_id.startswith(fid + ":") and c.received_at <= KNOWN_AT),
-        "care_due": all(e.care_due for e in ents),
-    })
-    if any(e.compensation_cents for e in ents if e.status in ("owed", "needs_ruling")):
-        s["compensation_cents"] = sum(e.compensation_cents for e in ents if e.status in ("owed", "needs_ruling"))
+    s.update(entitlements_summary(ents, elections=el))
+    s["claims_received"] = sum(1 for c in w.claims if c.coupon_id.startswith(fid + ":") and c.received_at <= KNOWN_AT)
     return s
 
 
@@ -197,7 +196,8 @@ def questions(stub, run: StormRun, w: World) -> list:
                         ev("cohort:", "cohort.last_claim_at", "supports")]
         upd: dict[str, Any] = {"evidence": [e for e in evidence if e is not None]}
         if rq is not None:
-            upd.update(case_refs=rq.case_refs, holds=rq.holds, holds_cents=rq.holds_cents, confidence=rq.confidence)
+            upd.update(case_refs=rq.case_refs, holds=rq.holds, holds_cents=rq.holds_cents, confidence=rq.confidence,
+                       others_settled=rq.others_settled)
         out.append(q.model_copy(update=upd))
     return out
 
@@ -233,6 +233,19 @@ def display(run: StormRun) -> StormRun:
     return run.model_copy(update={"flights": rows, "questions": qs})
 
 
+def cases_settled_by_rule(decisions, ents) -> dict[str, int]:
+    """Rule id → cases settled citing it (once per decision for flight rules, once per coupon otherwise)."""
+    out: dict[str, int] = {}
+    flight_rules = {d.flight_id: set(d.rules_applied) for d in decisions}
+    for d in decisions:
+        for r in set(d.rules_applied):
+            out[r.split("@")[0]] = out.get(r.split("@")[0], 0) + 1
+    for e in ents:
+        for r in set(e.rules_applied) - flight_rules.get(e.flight_id, set()):
+            out[r.split("@")[0]] = out.get(r.split("@")[0], 0) + 1
+    return out
+
+
 def build(out_dir: Path, inj_dir: Path) -> None:
     stub = load_stub()
     stub.OUT = out_dir
@@ -250,6 +263,10 @@ def build(out_dir: Path, inj_dir: Path) -> None:
                                            questions=len(qs), liability_drafted_cents=storm.liability_drafted_cents)])
     for old in out_dir.glob("flight_*.json"):
         old.unlink()
+    all_ents = [e for r in run.flights if r.decision for e in eng.entitlements(r.decision, w, stub.RULES)]
+    cited = cases_settled_by_rule([r.decision for r in run.flights if r.decision], all_ents)
+    stub.dump("rules.json", [r.model_copy(update={"cases_settled_by_storm": {EOWYN: cited[r.id]}})
+                             if r.id in cited else r for r in stub.RULES])
     for row in run.flights:
         d = row.decision
         if d is None:

@@ -34,7 +34,9 @@
     "static_card": false,
     "title": "EU261 Art. 5(3): weather inside the storm window at either end is an extraordinary circumstance",
     "origin_quote": null,
-    "cases_settled_by_storm": {}
+    "cases_settled_by_storm": {
+      "EIDW@2025-01-24": 23
+    }
   },
   {
     "id": "R-MINED-REDUCE",
@@ -69,7 +71,9 @@
     "static_card": false,
     "title": "Take the 50% reroute cut (Art. 7(2)) when the reroute arrives within the band's limit",
     "origin_quote": null,
-    "cases_settled_by_storm": {}
+    "cases_settled_by_storm": {
+      "EIDW@2025-01-24": 14
+    }
   },
   {
     "id": "R-HC-PAYOUT",
@@ -172,7 +176,7 @@
     "times_cited": 0,
     "static_card": true,
     "title": "Reg (EU) 2026/2202 (EU261 revision): in force 22 Oct 2026, applies from 23 Oct 2027",
-    "origin_quote": null,
+    "origin_quote": "Amounts (€250/400/600) and the 3 h threshold unchanged. A carrier relying on extraordinary circumstances names the circumstance and explains the causal link and reasonable measures within 30 days. New claims within nine months. Applies from 23 October 2027: no effect on today's balances.",
     "cases_settled_by_storm": {}
   }
 ]

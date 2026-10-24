@@ -46,8 +46,19 @@
       },
       "caps": [],
       "calibration_version": "cal-plan-fixture",
-      "contributions": {},
-      "intercept": null
+      "contributions": {
+        "in_window_dep": 2.9,
+        "in_window_arr": 0.0,
+        "window_margin_h": 1.6,
+        "aog_before_window": 0.0,
+        "aog_inside_window": 0.0,
+        "root_cause_internal": 0.0,
+        "sources_disagree": 0.0,
+        "precedent_count": 0.3,
+        "knock_on": 0.0,
+        "concurrent_causes": 0.0
+      },
+      "intercept": -0.8
     },
     "reason": "Weather: Dublin inside the storm window at STD 07:30Z.",
     "evidence": [
@@ -84,13 +95,13 @@
     "routed_to": null,
     "question_id": null,
     "known_at": "2025-01-25T06:00:00Z",
-    "commit": "f3f076f1dd1d7929c66d92795cf75822d528c2364fdac4c2e96b3b8cd796c674"
+    "commit": "f9b50a7f62482f54328b43b5b33047ec6156271367a2a023a6b866a2afe86e04"
   },
   "entitlements_summary": {
     "coupons": 188,
-    "distance_km": 1086,
+    "distance_km": 1086.0,
     "band_eur": 250,
-    "band_margin_km": 414,
+    "band_margin_km": 414.0,
     "band_note": "1,086 km · 414 km under the €400 band",
     "status_counts": {
       "no_compensation": 188
@@ -98,14 +109,36 @@
     "compensation_cents": 0,
     "care_due": true,
     "headline": "No compensation; refunds and care still due",
+    "reduced": 0,
+    "refunds_already_initiated": 0,
+    "refund_due_cents": 369600,
+    "voucher_offset_cents": 0,
+    "owed": 0,
+    "needs_ruling": 0,
+    "held": 0,
+    "band_label": "1,086 km · 414 km under the €400 band",
+    "full_entitlement_cents": 0,
+    "drafted_liability_cents": 0,
+    "liability_drafted_cents": 0,
+    "full_entitlement_label": "€0 full Art. 7 entitlement if every passenger claims",
+    "claim_rate": 0.2,
+    "expected_ultimate_claim_rate": 0.2,
+    "claim_rate_label": "20% expected ultimate claim rate (history to M18 + tail judgment)",
+    "statuses": [
+      {
+        "status": "no_compensation",
+        "count": 188,
+        "label": "no compensation; refunds and care still due"
+      }
+    ],
+    "compensation_breakdown": [],
+    "status_line": "No compensation; refunds and care still due",
     "elections": {
       "reaccommodated_own": 145,
       "refund": 26,
       "reroute_partner": 8,
       "voucher": 9
     },
-    "refunds_already_initiated": 0,
-    "refund_due_cents": 369600,
     "claims_received": 0
   },
   "sample_entitlements": [
@@ -152,6 +185,14 @@
   ],
   "journal_preview": [],
   "timeline": [
+    {
+      "at": "2025-01-23T16:00:00Z",
+      "kind": "warning",
+      "label": "Weather warning known before deciding",
+      "text": "Subject: FW: Met Eireann Status RED wind - Dublin",
+      "source_id": "SRC-EMAIL-METEIREANN-FWD-2025-01-23T1600Z",
+      "trust_tier": 3
+    },
     {
       "at": "2025-01-24T02:30:00Z",
       "kind": "window_start",

@@ -11,3 +11,4 @@
 | justin-a | | | J0 | |
 | justin-b | | | J10 | |
 | filip-b2 (books agent) | Sat | F8b postings + F8c invariants / CFO / audit, golden-exact vs expected/ | (queue done) | no |
+| filip-a (F3d finish agent) | Sat 13:00 | F3d judge day: airport-local day, METAR across every needed hour, plants re-simulated (DUB fault, no extras), BOS→DUB context on EU days, `.json.gz` load, CPU-time timing tests | — | no |

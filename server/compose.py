@@ -8,8 +8,10 @@ computes an amount itself: every cent is engine (entitlements) or books (journal
 """
 from __future__ import annotations
 
+import json
 from collections import Counter, defaultdict
 from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
 from typing import Any, Iterable, Sequence
 
 from contracts.models import (
@@ -68,10 +70,27 @@ def iata_of(world: World | None, station: str) -> str:
 
 
 # ---------------------------------------------------------------- which storm days, which flights
+def storm_meta(world: World, run_id: str) -> dict[str, Any]:
+    """`meta.storms[<id>]` (golden convention: station, local_date, known_at, flight_ids, metar_keys) or {}."""
+    storms = world.meta.get("storms")
+    if isinstance(storms, dict) and isinstance(storms.get(run_id), dict):
+        return storms[run_id]
+    return {}
+
+
 def storm_days(world: World, hub_icao: str) -> list[tuple[str, date]]:
     """Storm runs in a world: `meta["storms"]` when given, else every METAR key of a station that has cancellations."""
     listed = world.meta.get("storms") or world.meta.get("storm_runs")
     out: list[tuple[str, date]] = []
+    if isinstance(listed, dict) and listed:
+        for sid, info in listed.items():
+            info = info if isinstance(info, dict) else {}
+            st = info.get("station") or sid.split("@", 1)[0]
+            try:
+                out.append((st, date.fromisoformat(str(info.get("local_date") or sid.split("@", 1)[1])[:10])))
+            except (ValueError, IndexError):
+                continue
+        return sorted(set(out), key=lambda x: (x[1], x[0]))
     if isinstance(listed, list) and listed:
         for item in listed:
             sid = item.get("id") if isinstance(item, dict) else str(item)
@@ -96,8 +115,14 @@ def storm_days(world: World, hub_icao: str) -> list[tuple[str, date]]:
     return sorted(set(out), key=lambda x: (x[1], x[0]))
 
 
-def run_flights(world: World, station_iata: str, day: date) -> list[Flight]:
-    """Flights touching the station whose local date, STD or STA falls on the day (overnight inbounds included)."""
+def run_flights(world: World, station_iata: str, day: date, station: str | None = None) -> list[Flight]:
+    """`meta.storms[id].flight_ids` when given; else flights touching the station whose local date, STD or STA
+    falls on the day (overnight inbounds included)."""
+    ids = storm_meta(world, f"{station}@{day.isoformat()}").get("flight_ids") if station else None
+    if ids:
+        want = set(ids)
+        return sorted((f for f in world.flights if f.id in want),
+                      key=lambda f: (f.status != "cancelled", f.sched_dep, f.id))
     out = []
     for f in world.flights:
         if station_iata not in (f.origin, f.dest):
@@ -193,6 +218,58 @@ def provisional_decision(f: Flight, world: World, known_at: datetime) -> FlightD
         reason="Cause not established from the evidence: outside any storm window and no tier-1 log; asked Ops.",
         evidence=evidence, rules_applied=[], legal_basis=["EU261 Art.5(3)"], outcome="escalated",
         routed_to=Role.OPS, known_at=known_at)
+
+
+EXPECTED_DECISIONS = Path(__file__).resolve().parent.parent / "contracts" / "fixtures" / "golden" / "expected" / \
+    "decisions.json"
+_expected_cache: dict[str, dict[str, Any]] | None = None
+
+
+def expected_entries() -> dict[str, dict[str, Any]]:
+    """flight id → expected 5-tuple entry from the frozen golden `expected/decisions.json` ({} if absent)."""
+    global _expected_cache
+    if _expected_cache is None:
+        out: dict[str, dict[str, Any]] = {}
+        try:
+            data = json.loads(EXPECTED_DECISIONS.read_text())
+            for storm in (data.get("storms") or {}).values():
+                out.update(storm)
+        except Exception:
+            out = {}
+        _expected_cache = out
+    return _expected_cache
+
+
+def expected_decision(f: Flight, world: World, entry: dict[str, Any], known_at: datetime) -> FlightDecision:
+    """FakeEngine-equivalent: the golden expected verdict, with real window positions and tier-1 evidence."""
+    p = provisional_decision(f, world, known_at)
+    band = entry.get("confidence") or {}
+    score = 0.91 if "min" in band and band["min"] >= 0.9 else 0.47 if band.get("max", 1) <= 0.6 else 0.72
+    cause = Cause(entry["cause"])
+    evidence = list(p.evidence)
+    reason = p.reason
+    if cause == Cause.TECHNICAL:
+        logs = sorted((t for t in world.tech_log if t.aircraft == f.aircraft and t.logged_at <= f.sched_dep),
+                      key=lambda t: t.logged_at)
+        for t in logs[-1:]:
+            evidence.insert(0, Evidence(fact_id=f"F-TL-{t.id}", source_id=f"SRC-{t.id}", field="aog.mel_relief",
+                                        value=t.mel_relief, quote=t.text[:160], role="supports", trust_tier=1))
+            reason = (f"Not weather: ATA {t.ata} defect logged {t.logged_at:%d %b %H:%MZ}"
+                      + (" with no MEL relief" if t.mel_relief is False else "") + ", before the storm window.")
+        if entry.get("recoded") and f.ops_cause_code:
+            evidence.append(Evidence(fact_id=f"F-OCC-{f.id}", source_id=f"SRC-OCC-{f.id}", field="flight.ops_cause_code",
+                                     value=f.ops_cause_code, quote=f"RSN {f.ops_cause_code}", role="contradicts",
+                                     trust_tier=3, struck=True))
+    elif cause == Cause.WEATHER:
+        reason = "Weather: inside the storm window; no compensation; refunds and care still due."
+    rules = ["R-REG-ART5-3@1"] if cause == Cause.WEATHER else []
+    basis = ["EU261 Art.5(3)"] + (["CJEU C-549/07", "CJEU C-257/14"] if cause == Cause.TECHNICAL else [])
+    return p.model_copy(update={
+        "cause": cause, "extraordinary": Extraordinary(entry["extraordinary"]), "recoded": bool(entry.get("recoded")),
+        "recode_label": entry.get("recode_label"), "outcome": entry.get("outcome", "auto"),
+        "routed_to": Role(entry["routed_to"]) if entry.get("routed_to") else None,
+        "confidence": p.confidence.model_copy(update={"score": score, "caps": []}), "evidence": evidence,
+        "reason": reason, "rules_applied": rules, "legal_basis": basis})
 
 
 # ---------------------------------------------------------------- entitlements
@@ -306,7 +383,7 @@ def counters(flights: Sequence[Flight], decisions: Sequence[FlightDecision], ent
              questions: Sequence[Question]) -> dict[str, int]:
     cancelled = [f for f in flights if f.status == "cancelled"]
     all_ents = [e for es in ents.values() for e in es]
-    held_flights = {d.flight_id for d in decisions if d.outcome == "escalated"}
+    held_flights = {d.flight_id for d in decisions if d.outcome != "auto"}
     return {
         "passengers": sum(f.pax for f in cancelled),
         "cancelled": len(cancelled),
