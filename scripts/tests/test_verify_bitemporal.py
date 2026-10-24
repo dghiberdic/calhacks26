@@ -74,37 +74,26 @@ def _server_store(tmp_path):
 
 
 def test_documents_must_be_committed_payloads(verify, tmp_path):
-    st = _server_store(tmp_path)
-    s = store()
-    seed(s)
-    d = s.decision(NS31).model_copy(update={"commit": None})
-    ents = list(s.entitlements(flight_id=NS31).values())
-    c = st.commit(kind="decision", actor="agent.engine", at=T_RUN, payload=d, payload_ref=NS31, message="m")
-    st.commit(kind="entitlement", actor="agent.engine", at=T_RUN, payload=ents, payload_ref=NS31, message="m",
-              inputs=[c.hash])
-    st.put("decision", NS31, d.model_copy(update={"commit": c.hash}), T_RUN)
-    st.put("entitlements", NS31, ents, T_RUN)
-    rt = SimpleNamespace(store=st)
-    assert verify.doc_links(rt) == (2, [])
-
-    st.put("decision", NS31, d.model_copy(update={"commit": c.hash, "cause": Cause.WEATHER}), T_RUN)
-    n, bad = verify.doc_links(rt)
-    assert any("differs from the payload" in b for b in bad)
-    st.put("decision", NS31, d.model_copy(update={"commit": "f" * 64}), T_RUN)
-    assert any("no commit in the chain" in b for b in verify.doc_links(rt)[1])
-    st.put("decision", NS31, d.model_copy(update={"commit": c.hash}), T_RUN)
-    st.put("entitlements", NS31, [e.model_copy(update={"compensation_cents": 1}) for e in ents], T_RUN)
-    assert any("entitlements document" in b for b in verify.doc_links(rt)[1])
-
-
-def test_documents_link_to_a_trace_store_too(verify, tmp_path):
+    """The server serves decision/entitlements documents from sc_docs; each must be a payload the trace hashed."""
     st = _server_store(tmp_path)
     s = store()
     seed(s)
     d = s.decision(NS31)                         # carries its trace commit hash
+    ents = list(s.entitlements(flight_id=NS31).values())
+    rt = SimpleNamespace(store=st, trace=s)
     st.put("decision", NS31, d, T_RUN)
-    st.put("entitlements", NS31, list(s.entitlements(flight_id=NS31).values()), T_RUN)
-    assert verify.doc_links(SimpleNamespace(store=st, trace=s)) == (2, [])
+    st.put("entitlements", NS31, list(reversed(ents)), T_RUN)     # document order is presentation only
+    assert verify.doc_links(rt) == (2, [])
+
+    st.put("decision", NS31, d.model_copy(update={"cause": Cause.WEATHER}), T_RUN)
+    assert any("differs from the payload" in b for b in verify.doc_links(rt)[1])
+    st.put("decision", NS31, d.model_copy(update={"commit": "f" * 64}), T_RUN)
+    assert any("no commit in the chain" in b for b in verify.doc_links(rt)[1])
+    st.put("decision", NS31, d.model_copy(update={"commit": s.decision(NS117).commit}), T_RUN)
+    assert any("points at" in b for b in verify.doc_links(rt)[1])
+    st.put("decision", NS31, d, T_RUN)
+    st.put("entitlements", NS31, [e.model_copy(update={"compensation_cents": 1}) for e in ents], T_RUN)
+    assert any("entitlements document" in b for b in verify.doc_links(rt)[1])
 
 
 def test_verify_db_checks_a_trace_file_and_its_anchor(verify, tmp_path, capsys):
@@ -121,12 +110,24 @@ def test_verify_db_checks_a_trace_file_and_its_anchor(verify, tmp_path, capsys):
     assert f"head {a.head[:12]} · {a.count} commits" in out
 
 
-def test_verify_db_on_a_server_store_leaves_it_untouched(verify, tmp_path):
+def test_verify_db_without_a_chain_fails_and_leaves_the_file_untouched(verify, tmp_path):
     import sqlite3
     st = _server_store(tmp_path)
-    st.commit(kind="fact", actor="agent.reader", at=T_RUN, payload={"x": 1}, payload_ref="S-1", message="m")
+    st.put("decision", NS31, {"x": 1}, T_RUN)
     st.close()
     before = {r[0] for r in sqlite3.connect(tmp_path / "server.db").execute("SELECT name FROM sqlite_master")}
-    assert verify.verify_db(tmp_path / "server.db") == 0
+    assert verify.verify_db(tmp_path / "server.db") == 1
     after = {r[0] for r in sqlite3.connect(tmp_path / "server.db").execute("SELECT name FROM sqlite_master")}
     assert before == after
+
+
+def test_verify_db_on_a_shared_server_file(verify, tmp_path):
+    """The server, Books and the trace share one SQLite file: --db verifies the trace's chain inside it."""
+    st = _server_store(tmp_path)
+    st.put("decision", NS31, {"x": 1}, T_RUN)
+    s = TraceStore(tmp_path / "server.db", engine_sha="abc", cal_version="cal-v1")
+    seed(s)
+    a = s.anchor()
+    s.close()
+    st.close()
+    assert verify.verify_db(tmp_path / "server.db", f"{a.head}:{a.count}") == 0

@@ -160,7 +160,10 @@ def doc_links(rt) -> tuple[int, list[str]]:
             hashes = {c.payload_hash for c in commits_for(key, kinds=["entitlement"])}
         else:
             hashes = set()
-        if _hash(body) not in hashes:
+        # the trace commits a flight's coupons sorted by coupon id; the document's order is presentation
+        ordered = sorted(body, key=lambda e: str(e.get("coupon_id"))) if all(isinstance(e, dict) for e in body) \
+            else body
+        if _hash(ordered) not in hashes and _hash(body) not in hashes:
             bad.append(f"entitlements document {key} matches no committed entitlement payload")
     return n, bad
 
@@ -279,20 +282,10 @@ def verify_db(path: Path, expect: str | None = None) -> int:
             print(f"BAD {r}")
         print(f"{v.summary()} · {v.anchor_text()}")
         return 0 if v.ok and v.checked else 1
-    from server.store import Store
-    st = Store(path)
-    n, bad = st.verify_chain()
-    for h in bad:
-        print(f"BAD commit {h}")
-    anchor_bad = False
-    if head:
-        hashes = [c.hash for c in reversed(st.commits(limit=10 ** 9))]
-        anchor_bad = head not in hashes or (count is not None and (count > len(hashes) or hashes[count - 1] != head))
-        if anchor_bad:
-            print(f"BAD anchor: published head {head[:12]} is not where it was (truncated or rewritten)")
-    print(f"{n} commits verified" + (" · chain intact" if not bad else f" · {len(bad)} broken")
-          + f" · head {(st.head() or 'none')[:12]} · {n} commits")
-    return 0 if not bad and n and not anchor_bad else 1
+    # the server keeps its chain in engine.trace's tables; a file without them has no chain to verify (and opening a
+    # TraceStore on it would create the tables, i.e. write to the evidence)
+    print(f"BAD {path}: no engine.trace commit chain in this file")
+    return 1
 
 
 def main(argv: list[str]) -> int:
