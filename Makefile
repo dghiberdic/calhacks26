@@ -1,11 +1,29 @@
 .PHONY: help stub stub-fixtures golden openapi test test-david dev dev-reload web-build web-build-offline demo \
-        demo-offline verify smoke-1 smoke-2 smoke-3 record
+        demo-offline verify smoke-1 smoke-2 smoke-3 record live-llm
 
 PORT ?= 8000
 
+# ---- environment: load .env so every target sees ANTHROPIC_API_KEY, LLM_MODE, ...
+# Reads ./.env, else the main checkout's .env (worktrees live under .claude/worktrees/). Only the names in ENV_VARS
+# are read (the ones in .env.example), and a variable already set in the environment or on the command line wins,
+# so `LLM_MODE=offline make ...` and the tests are never overridden. Values are exported to recipes and never echoed.
+# Not `include`d on purpose: an included `KEY=value` would override the caller's environment.
+ENV_VARS := ANTHROPIC_API_KEY LLM_MODE STORMCHECK_MODE LLM_CAP_USD STORMCHECK_OWNER
+MAIN_GIT_DIR := $(shell git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+ENV_FILE := $(firstword $(wildcard .env) $(if $(MAIN_GIT_DIR),$(wildcard $(abspath $(MAIN_GIT_DIR)/..)/.env)))
+# last `NAME=value` line of ENV_FILE: optional `export `, CR, trailing blanks, a ` # comment` after an unquoted value
+# and surrounding quotes removed
+_env_raw = $(shell sed -n -E "s/^[[:space:]]*(export[[:space:]]+)?$(1)[[:space:]]*=[[:space:]]*//p" "$(ENV_FILE)" \
+  | tail -n 1 | tr -d '\r' | sed -E -e "/^[\"']/!s/[[:space:]]+#.*\$$//" -e "s/[[:space:]]+\$$//" \
+  -e "s/^\"(.*)\"\$$/\1/" -e "s/^'(.*)'\$$/\1/")
+ifneq ($(ENV_FILE),)
+$(foreach v,$(ENV_VARS),$(if $(filter undefined,$(origin $(v))),\
+  $(eval _env.$(v) := $$(call _env_raw,$(v)))$(if $(_env.$(v)),$(eval export $(v) = $$(_env.$(v))))))
+endif
+
 help:
 	@echo "stub | stub-fixtures | golden | openapi | test | test-david | dev | dev-reload | demo | demo-offline |"
-	@echo "verify | smoke-1 | smoke-2 | smoke-3 | record"
+	@echo "verify | smoke-1 | smoke-2 | smoke-3 | record | live-llm"
 
 # ---- contracts
 stub:                       ## contract stub API on :8001 (fixtures in contracts/fixtures/api/)
@@ -65,3 +83,13 @@ smoke-3:                    ## CP3: offline, 8 injections + 20 fuzz, eval, recor
 
 record:                     ## capture every GET route into demo/recorded/api/ (Justin commits it)
 	STORMCHECK_MODE=offline LLM_MODE=offline uv run python scripts/record.py
+
+# ---- real Claude (spends up to LLM_CAP_USD; the recordings it writes under data/cache/demo/ are Filip's to commit)
+live-llm:                   ## real Claude: re-record Reader + Drafter, run the plain-Claude baseline, regenerate the proof (needs ANTHROPIC_API_KEY in .env)
+	+@test -n "$$ANTHROPIC_API_KEY" || { echo "live-llm: ANTHROPIC_API_KEY is empty. Copy .env.example to .env (repo root or the main checkout), set ANTHROPIC_API_KEY=..., and rerun 'make live-llm'." >&2; exit 1; }
+	LLM_MODE=live uv run python -m llm.recordings --live
+	LLM_MODE=live uv run python -m llm.drafter --live
+	LLM_MODE=live uv run python -m eval.baseline --prepare
+	LLM_MODE=live uv run python -m eval.baseline --live
+	LLM_MODE=offline STORMCHECK_MODE=offline uv run python -m eval.run
+	uv run python -m eval.run --from-cache

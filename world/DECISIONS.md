@@ -7,17 +7,78 @@ The team's new world/plant.py implementation owns controlled error and ambiguity
 ## F3d · Judge-day WorldAPI
 
 - `world.api.WorldImpl` supplies the public load/weather/airport/day interfaces. `world.generate.generate_day`
-  is also a module-level entry point discovered by the existing server.
-- Requested weather remains real and unchanged. A missing station/day raises the existing plain `WorldError`.
-  Future days and unknown airports are rejected before simulation; offline runs never need an LLM or network.
-- The selected Dublin route is simulated with the existing deterministic network and passenger generators.
-  Intra-EU requests include a labelled Heathrow control rotation so there is a non-EU-origin voucher counterexample.
-- Explicit simulated no-go faults supply inspectable judge cases even on calm days. Later sectors of the grounded
-  aircraft are cancelled too. These are simulated operational records, not assertions about a real airline.
+  is also a module-level entry point discovered by the existing server. `generate_day_full` returns the World plus
+  its ground truth (`Truth`, the desk's answer key), which never goes into the World.
+- Requested weather remains real and unchanged. Future days and unknown airports are rejected before simulation;
+  offline runs never need an LLM or network.
 - Three EU-origin and one non-EU-origin revenue coupons receive unsigned in-lieu vouchers. Existing signed vouchers
-  are preserved; the fixtures select other coupons rather than deleting evidence of consent.
-- Pins, schema round-trip, source hashes, determinism, scope controls, invalid inputs and the under-two-second pinned
-  Heathrow path are checked through WorldAPI. Live weather retrieval retains the weather client's existing timeout.
+  are preserved; other coupons are selected rather than deleting evidence of consent.
+
+### F3d finish (second pass, 24 Oct)
+
+Filip's first version had the right public shape; the reviewer's list of weaknesses was checked against the code
+and output, and each one was real. Fixed underneath the same API (`WorldImpl`, `generate_day(icao, local_day, seed)`,
+the three `WorldError` codes):
+
+1. **The judge's local day, not Dublin's.** `local_day` is the airport's calendar day (tz from `world/airports.py`).
+   The sectors are every Northstar sector whose airport-side time (STA there for arrivals, STD there for departures)
+   falls inside it. That is the engine's own `storm_flights` rule, so the desk world and the run agree. Boston's
+   10 Jan is NS31@10 Jan (lands 18:10 local) and NS30@10 Jan (leaves 19:10 local = 00:10Z on the 11th), not the
+   previous evening's NS30. A short-haul outbound and its return always travel together. EIDW is Dublin's whole
+   world day, with the same sectors and METAR windows as `generate_world`.
+   Only flights that have landed by now are included; if none has, that is `future_date` ("haven't landed yet").
+2. **METAR for every hour the flights need, at both ends.** Each station is fetched once over its sectors' span
+   ±4 h via `fetch_metar` (pinned → IEM → AWC), across UTC days. Previously only the requested date as a UTC day was
+   fetched, so Boston's evening departure had no weather off the pins. The judge's station and Dublin are required
+   (`no_metar` otherwise, with a plain message); the context station (BOS) is optional; on the hub day,
+   outstations use pins only (35 live requests would be far too slow). `meta.desk.metar` records pinned/retrieved.
+3. **Plants are re-simulated, never edited in.** The old version overwrote flight status and truth after the run,
+   labelled knock-ons 93, and left the original OCC lines in place (EGLL Isha: NS121 sat in two OCC entries; KBOS:
+   NS31 had two AOGs and its truth rewritten as a knock-on). Now a planted fault is a `DayPlan` AOG (with its AMOS,
+   MCC, OCC and spares lines produced by `DaySim`), and the day is simulated again. Tests check one OCC entry per
+   cancelled flight with the flight's code, one AOG write-up, no flying on the grounded aircraft, and truth and
+   coupons that agree.
+4. **The fault is at DUB.** The contradicted code goes on a Dublin departure, observed calm at both ends (reports
+   within ±1 h, no storm conditions, latent severity 0), whose aircraft is at DUB. It is written up 5 h to 90 min
+   before STD, after the aircraft's last arrival in the full network rotation. Candidates whose return is also calm
+   come first; at the hub, non-EU routes come first. If a DUB standby spare would cover it, that spare class is
+   unavailable all day (`meta.desk.planted.spares_unavailable`), so every spares-log line tells one story.
+5. **No extra artificial faults.** One root fault per day. Its rotation supplies the non-EU departure at a non-EU
+   airport (the return knocks on). The only other plants are the EU-airport context case (below), and an honest
+   RSN 41 AOG only when a side has no owed cancellation at all. Calm-day tests check one AOG and one weather-coded
+   OCC entry.
+6. **No invented NS980/981 control rotation.** It was a copy of NS100 on a spare slot, and on LFPG it drew the
+   contradiction away from the judge's route. A non-EU departure *is* needed on EU-airport days for the "asks
+   again" beat (R-CL-1's scope is `flight.departs_eu`), and Justin's Q-d is the same observation. So, as in golden's
+   Herminia mini-day, the real BOS→DUB inbound (NS30) landing in Dublin that day joins as context
+   (`meta.desk.context_flights`, listed in `meta.storms[id].flight_ids`). It gets an honest AOG at BOS typed RSN 41,
+   written up during its turn, unless it is already an owed cancellation. In the 2–3 weeks when US and EU
+   daylight-saving times differ, NS31 lands as NS30 is due out, so the write-up is on arrival.
+   **Caveat for Q-d:** the engine's `run_storm(station=<EU airport>)` selects flights by station, so it won't see
+   the context flight. The server's composed run honours `meta.storms[id].flight_ids` and does.
+7. **`load` reads `.json.gz`** (by gzip magic, not the name). `write_world` writes canonical JSON, or deterministic
+   gzip with no name and mtime 0.
+
+Further calls:
+- **Vouchers go on owed coupons first** (planted-fault passengers first), via `pax.FlightPax.in_lieu`, so the R-CL-1
+  beat has something to settle. **Isha day at EGLL (2024-01-21)** can't have an owed non-EU case: the only Dublin
+  departure observed calm is NS100 at 06:10Z, and both LHR→DUB legs are then inside the storm: NS101 lands at 09:15Z
+  beside 09:30Z G39 at Dublin, and NS121 leaves LHR at 17:25Z in G35 and lands into G44. Stranded sectors whose ends are stormy are truth "weather", the generator's rule (golden NS101).
+  The non-EU voucher therefore sits on a weather cancellation with nothing owed, and a test pins that. For the desk
+  "asks again" beat use **KBOS 2024-01-10** or a calm EGLL day (e.g. 2024-05-15), where it is owed.
+- **The OCC storm day** for the desk is ≥2 distinct clock hours with storm conditions at Dublin or the judge's
+  station within the desk spans. It drives the storm-day batch and spare odds. The name is from `STORM_NAMES` by date.
+- **`DaySim` hooks** (full world byte-identical; `test_committed_answer_key_is_reproducible` passes):
+  - an optional fixed `sectors=` list;
+  - an optional station as a third element of `DayPlan.aog`;
+  - a flight with a planted OCC code is batch-listed only when `plan.batch` says so. Every full-world plan entry on a
+    storm day is already in `plan.batch`, and no random draws move.
+  - Everything else desk-specific lives in `generate.DeskSim` (METAR windows, blocked spares).
+- **`network.adhoc_pair`** (desk-only) no longer flies a DUB standby spare: a spare can't stand in for itself.
+- **Timing tests use `time.process_time()`.** `test_one_day_simulates_fast` is back at its original 1.5 s bound
+  (an earlier commit had loosened it to 5 s wall-clock). The judge-day test is < 2 s CPU with the METAR caches
+  cleared. Measured: EGLL Isha cold ≈0.35 s, warm ≈0.08 s; the EIDW hub day cold ≈1.2 s (bundle parsing), warm
+  ≈0.2 s.
 
 Judgment calls made while implementing, newest last. Each one says what we chose and why.
 
@@ -89,7 +150,11 @@ Judgment calls made while implementing, newest last. Each one says what we chose
    country). The plan's subset is about the demo network; the desk should not reject a real airport.
 4. **EU261 territory (`Airport.eu`)** = EU27 + EEA (IS, LI, NO) + CH, plus the French outermost regions that carry
    their own ISO codes (GP, MQ, GF, RE, YT, MF). Canaries/Madeira/Azores are ES/PT already. The UK, Faroe and
-   Greenland are not EU261 territory.
+   Greenland are not EU261 territory. **Per-airport exclusions** (24 Oct, to agree with `engine/geo.py`): northern
+   Cyprus (Ercan ECN/LCEN, Geçitkale GEC/LCGK; Protocol 10), RAF Akrotiri (AKT/LCRA; Protocol 3) and Svalbard
+   (LYR/ENSB; EEA Protocol 40) are outside, although their country codes (CY, NO) are in. A test checks that
+   `world.airports` and `engine.geo` agree on these and on ordinary airports. None of them is in the network, so the
+   full world and the answer key are unchanged.
 5. **`iata`** falls back to the ICAO code when an airport has no IATA code (the `Airport` model requires a string).
    IATA collisions resolve to the large airport.
 6. **`distance_km`** is the great circle with R = 6371 km on OurAirports coordinates, rounded to 0.1 km so hashes
@@ -198,6 +263,19 @@ Judgment calls made while implementing, newest last. Each one says what we chose
 # F3c answer keys and error inputs — 24 October 2026
 
 `answer_key.py` exports independent train/test labels from latent truth and immutable golden inputs, including NS31's 172 coupons and €99,000 face entitlement. Claim labels reject missing agency authority, expired claims, settled vouchers and duplicate coupon claims; they do not copy amounts claimed into amounts owed.
+
+**Stress corpus `knock_on_return` fix (24 Oct, from the F9 eval).** All 10 cases had the return's STA inside Dublin's
+storm window (Isha 21 Jan: the window runs 09:30Z → 02:30Z on the 22nd; Éowyn: 02:30–15:00Z). So the engine was
+right to call them weather at the arrival end. Now the DUB→CDG outbound leaves at the first storm-condition report
+in operating hours (05–20Z), inside a Dublin window. The CDG→DUB return is the first same-day slot, ≥3 h later,
+that is observed (a report within ±1 h) and at least 1 h outside every window at both ends. Windows use plan §1.2's
+definition, recomputed in `world/` because world may not import the engine. A test checks the result with
+`engine.timeline` itself.
+- Isha's day has no such slot, so the train cases move to the next day that has one: Jocelyn, 23 Jan 2024 (outbound
+  11:00Z, return 14:30Z → 16:30Z, which lands exactly 1 h after the 15:30Z report and 1 h before 17:30Z).
+- Test: Éowyn, outbound 05:00Z, return 14:00Z → 16:00Z.
+- `data/answer_key/stress.json` was regenerated with the F9 runner's own serialisation; exactly those 10 cases changed.
+  `train.json` and `test.json` are untouched.
 
 `error_cases.py` provides a separate 140-case controlled regression corpus (five variants of 14 errors in each split). Weather is real pinned METAR, while flights, people, errors and expected actions are simulated. Ordinary technical scenarios require positive calm observations at both ends; concurrent examples retain actual windy observations. These input variants do not count as independent storms or inflate natural-world accuracy. Assignment/payment events are source documents plus metadata pending a typed settlement-event interface.
 
