@@ -1,11 +1,15 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import type { AircraftProgress } from "./aircraft/AircraftScene";
 import { sideView, topView, hydraulicRoutes, A321NEO } from "@/lib/drawings/aircraft";
 import { NS31 } from "@/data/scenario";
 import { gsap, useGSAP } from "@/components/motion/gsap";
 
 const LINE = "#e8f0fa";
+
+const AircraftScene = dynamic(() => import("./aircraft/AircraftScene").then((m) => m.AircraftScene), { ssr: false });
 
 /**
  * The aircraft as evidence. A cyanotype drawing plots itself, the three hydraulic systems
@@ -17,6 +21,19 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
   const side = useMemo(() => sideView(), []);
   const plan = useMemo(() => topView(), []);
   const hyd = useMemo(() => hydraulicRoutes(), []);
+  const progress = useRef<AircraftProgress>({ sweep: 0, orbit: 0, lines: 1, leak: 0 });
+  const column = useRef<HTMLDivElement>(null);
+  const sideRef = useRef<SVGSVGElement>(null);
+  const [near, setNear] = useState(false);
+
+  // Mount the WebGL scene only when the section is close.
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => e.isIntersecting && setNear(true), { rootMargin: "120% 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   useGSAP(
     () => {
@@ -24,7 +41,7 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         const tl = gsap.timeline({
           defaults: { ease: "plotter" },
-          scrollTrigger: { trigger: root.current, start: "top top", end: "+=130%", scrub: 0.7, pin: true, anticipatePin: 1, refreshPriority: 1 },
+          scrollTrigger: { trigger: root.current, start: "top top", end: "+=260%", scrub: 0.7, pin: true, anticipatePin: 1, refreshPriority: 1 },
         });
         tl.from(".bp-frame", { drawSVG: 0, duration: 0.5, ease: "power1.inOut" })
           .from(".bp-side-outline", { drawSVG: 0, duration: 1.4, stagger: 0.05 }, 0.2)
@@ -43,7 +60,27 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
         if (render) {
           tl.to(".bp-render", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.2, ease: "power2.inOut" }, 4.6).to(".bp-side", { opacity: 0.0, duration: 0.6 }, 5.2);
         }
-        tl.to({}, { duration: 0.4 });
+        // The drawing hands over to the real aircraft: same camera, then it inks in and turns.
+        const centre = () => {
+          const col = column.current;
+          const svg = sideRef.current;
+          if (!col || !svg) return 0;
+          return col.clientHeight / 2 - (svg.getBoundingClientRect().top - col.getBoundingClientRect().top + svg.clientHeight / 2);
+        };
+        const p = progress.current;
+        tl.addLabel("three", 4.9)
+          .to(".bp-plan, .bp-legend, .bp-log", { opacity: 0, duration: 0.5, ease: "power1.out" }, "three")
+          .to(".bp-side", { y: centre, duration: 0.8, ease: "power2.inOut" }, "three")
+          .to(".bp-canvas", { opacity: 1, duration: 0.4, ease: "none" }, "three+=0.7")
+          .to(".bp-side", { opacity: 0, duration: 0.4, ease: "none" }, "three+=1.0")
+          .to(p, { sweep: 1, duration: 2.4, ease: "power1.inOut" }, "three+=1.2")
+          .to(p, { orbit: 1, duration: 2.2, ease: "power2.inOut" }, "three+=1.7")
+          .to(root.current, { backgroundColor: "#0b0e13", duration: 1.8, ease: "none" }, "three+=1.3")
+          .to(".bp-grid", { opacity: 0, duration: 1.2, ease: "none" }, "three+=1.3")
+          .to(p, { lines: 0, duration: 0.6, ease: "none" }, "three+=3.2")
+          .to(p, { leak: 1, duration: 0.3, ease: "none" }, "three+=3.4")
+          .fromTo(".bp-caption-3d", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4 }, "three+=3.5");
+        tl.to({}, { duration: 0.6 });
       });
       gsap.to(".bp-leak-pulse", { scale: 2.4, opacity: 0, transformOrigin: "50% 50%", duration: 1.6, repeat: -1, ease: "power2.out" });
     },
@@ -55,7 +92,7 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
     <div ref={root} className="relative flex min-h-svh flex-col justify-center overflow-hidden bg-cyanotype py-12 text-blueprint-line">
       {/* drafting grid + grain */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.22]"
+        className="bp-grid pointer-events-none absolute inset-0 opacity-[0.22]"
         style={{
           backgroundImage:
             "linear-gradient(to right, rgba(232,240,250,0.16) 1px, transparent 1px), linear-gradient(to bottom, rgba(232,240,250,0.16) 1px, transparent 1px), linear-gradient(to right, rgba(232,240,250,0.07) 1px, transparent 1px), linear-gradient(to bottom, rgba(232,240,250,0.07) 1px, transparent 1px)",
@@ -71,9 +108,12 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
       </svg>
 
       <div className="relative mx-auto grid w-full max-w-[1500px] grid-cols-1 gap-10 px-5 md:px-12 lg:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="relative">
+        <div ref={column} className="relative">
+          <div className="bp-canvas pointer-events-none absolute inset-0 opacity-0">
+            {near && <AircraftScene progress={progress} className="!absolute inset-0" />}
+          </div>
           {/* side elevation */}
-          <svg viewBox="-3 -13.4 53 15.6" className="bp-side w-full" role="img" aria-label="Side elevation of the Airbus A321neo EI-NSA, 44.51 metres long and 11.76 metres tall.">
+          <svg ref={sideRef} viewBox="-3 -13.4 53 15.6" className="bp-side relative w-full" role="img" aria-label="Side elevation of the Airbus A321neo EI-NSA, 44.51 metres long and 11.76 metres tall.">
             <rect className="bp-frame" x="-2.6" y="-13.1" width="52.2" height="15" fill="none" stroke={LINE} strokeOpacity="0.5" strokeWidth="0.04" />
             {side.map((s, i) => (
               <path
@@ -105,7 +145,7 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
           </svg>
 
           {/* plan view with hydraulic systems */}
-          <svg viewBox="-2 -19.4 49 38.8" className="mx-auto mt-4 w-[78%]" role="img" aria-label="Plan view with the three hydraulic systems. The green system's engine-1 pump is marked as the leak.">
+          <svg viewBox="-2 -19.4 49 38.8" className="bp-plan mx-auto mt-4 w-[78%]" role="img" aria-label="Plan view with the three hydraulic systems. The green system's engine-1 pump is marked as the leak.">
             {plan.map((s, i) => (
               <path
                 key={i}
@@ -169,6 +209,9 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
               <p className="bp-log-line">A/C U/S PENDING PART.</p>
             </div>
           </figure>
+          <p className="bp-caption-3d -mt-4 max-w-[34ch] text-[15px] leading-relaxed text-[#bfd3ea] opacity-0">
+            The same aircraft, rendered from the same drawing. It stays in pencil until the evidence agrees, then it inks in.
+          </p>
         </aside>
       </div>
     </div>

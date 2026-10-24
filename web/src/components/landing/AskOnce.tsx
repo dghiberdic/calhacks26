@@ -39,7 +39,7 @@ export function AskOnce() {
             The CRM says Aoife Byrne took a €300 voucher at the gate. Her claim says she never agreed. Offset the voucher against her €600?
           </p>
           <div className="mt-5 space-y-2 rounded-lg bg-chart p-4 font-mono text-[12.5px] leading-relaxed text-graphite">
-            <p>CRM 9 DEC 13:52Z VOUCHER €300 ISSUED GATE B4</p>
+            <p>CRM 9 DEC 20:52Z VOUCHER €300 ISSUED GATE B4 NS31</p>
             <p>EMAIL 11 DEC &ldquo;I NEVER AGREED TO A VOUCHER&rdquo;</p>
           </div>
           <div className="mt-auto flex flex-wrap gap-2 pt-6">

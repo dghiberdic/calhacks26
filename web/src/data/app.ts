@@ -35,14 +35,14 @@ export const QUESTIONS: Question[] = [
     title: "Offset a gate voucher?",
     owner: "claims-lead",
     why: "Voucher disputes on EU-departing flights are yours.",
-    flight: "NS27",
+    flight: "NS31",
     subject: "Aoife Byrne",
     held: 600,
     confidence: 39,
     reason: "sources disagree",
     question: "The CRM says Aoife Byrne took a €300 voucher at the gate. Her claim says she never agreed. Offset the voucher against her €600?",
     evidence: [
-      { source: "CRM, gate agent K. Walsh", when: "9 Dec 13:52Z", text: "VOUCHER €300 ISSUED · GATE B4 · NS27", mono: true },
+      { source: "CRM, gate agent K. Walsh", when: "9 Dec 20:52Z", text: "VOUCHER €300 ISSUED · GATE B4 · NS31", mono: true },
       { source: "Claim email", when: "11 Dec 08:03Z", text: "“I never agreed to a voucher. I was handed a printout and told the flight was gone.”" },
       { source: "Signed acceptance", text: "None on file. Six earlier vouchers this year had one." },
     ],
@@ -159,10 +159,10 @@ export function payouts(): Payout[] {
       const tech = f.verdict === "technical";
       out.push({
         id: `${f.id}-${String(i + 1).padStart(3, "0")}`,
-        name: f.id === "NS27" && i === 41 ? "Aoife Byrne" : name,
+        name: f.id === "NS31" && i === 41 ? "Aoife Byrne" : name,
         flight: f.id,
         amount: tech ? tier(f.km) : 0,
-        status: f.id === "NS27" && i === 41 ? "asked" : tech ? "held" : "not owed",
+        status: f.id === "NS31" && i === 41 ? "asked" : tech ? "held" : "not owed",
         rule: tech ? "R-3 v2" : "R-1 v2",
       });
     }
