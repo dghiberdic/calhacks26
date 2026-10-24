@@ -1,4 +1,4 @@
-# Beyond storms: what survived a four-expert critique (Justin, Sat 24 Oct, ~12:30 PDT)
+# Beyond storms: what survived a four-expert critique (Justin, Sat 24 Oct, ~11:15 PDT)
 
 Nothing here changes a golden number or the 3:00 script. There are five small asks, all after CP2; the rest is pitch, already written into `pitch/QA.md`, `DEVPOST.md` and `/pitch` on PR #3.
 
