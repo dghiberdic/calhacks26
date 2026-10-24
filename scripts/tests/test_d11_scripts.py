@@ -56,6 +56,13 @@ def test_record_writes_every_get_route(client, tmp_path):
     assert all((tmp_path / "rec" / f).is_file() for f in index.values())
 
 
+def test_inject_with_an_impossible_time_is_not_a_500(client):
+    body = {"kind": "tech_log", "flight_id": "NS31@2025-01-24",
+            "text": "24JAN 25:99Z EI-NSB DUB N/S. HYD FLUID ENG 2 LWR COWL. NO MEL RELIEF. A/C AOG."}
+    r = client.post("/api/inject", json=body)
+    assert r.status_code < 500, r.text[:300]
+
+
 def test_fuzz_inputs_are_deterministic_and_varied():
     smoke = load("smoke")
     a, b = smoke.fuzz_inputs(), smoke.fuzz_inputs()

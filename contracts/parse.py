@@ -364,6 +364,32 @@ def parse_disputed(span: str, ref: Any = None) -> bool:
     raise ParseError(f"no agreement statement in {span!r}")
 
 
+def _guard(fn: Callable[..., Any]) -> Callable[..., Any]:
+    """Every parser's contract: return a value or raise ParseError, never anything else. An impossible time or date
+    (`24JAN 25:99Z`, `2025-02-30`), a non-string span or an odd number token becomes ParseError, so verify() can
+    reject the span instead of crashing its caller (a bare ValueError once surfaced as a 500 on /api/inject)."""
+    import functools
+
+    @functools.wraps(fn)
+    def wrapper(span: Any, *args: Any, **kwargs: Any) -> Any:
+        if not isinstance(span, str):
+            raise ParseError(f"span must be text, got {type(span).__name__}")
+        try:
+            return fn(span, *args, **kwargs)
+        except ParseError:
+            raise
+        except (ValueError, OverflowError, TypeError, KeyError, IndexError, AttributeError) as e:
+            raise ParseError(f"unparseable {span[:40]!r}: {e}") from None
+    return wrapper
+
+
+for _name in ("parse_time", "parse_times", "parse_date", "parse_ata", "parse_tail", "parse_flight_number",
+              "parse_iata", "parse_seat", "parse_delay_code", "parse_int", "parse_float", "parse_pct", "parse_money",
+              "parse_eur", "parse_gbp", "parse_minutes", "parse_duration_h", "parse_bool", "parse_mel_relief",
+              "parse_aog", "parse_signed", "parse_disputed"):
+    globals()[_name] = _guard(globals()[_name])
+
+
 PARSERS: dict[str, Callable[..., Any]] = {
     "time": parse_time, "date": parse_date, "ata": parse_ata, "tail": parse_tail, "flight_number": parse_flight_number,
     "iata": parse_iata, "seat": parse_seat, "delay_code": parse_delay_code, "int": parse_int, "float": parse_float,
@@ -422,4 +448,10 @@ def verify(field: str, value: Any, span: str | None, source_text: str | None,
         got = reparse(field, span, ref)
     except ParseError:
         return False, "unparseable_span"
-    return (True, "reparsed") if values_match(got, value) else (False, "value_mismatch")
+    except Exception:  # noqa: BLE001  (defence in depth: a parser bug must reject the span, never crash)
+        return False, "unparseable_span"
+    try:
+        same = values_match(got, value)
+    except Exception:  # noqa: BLE001
+        same = False
+    return (True, "reparsed") if same else (False, "value_mismatch")
