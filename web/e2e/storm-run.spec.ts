@@ -17,6 +17,7 @@ test("a tick opens its flight file", async ({ page }) => {
   await page.goto("/");
   const ns31 = page.locator('g[data-flight="NS31"]');
   await expect(ns31).toHaveAttribute("data-verdict", "notweather", { timeout: 10_000 });
-  await ns31.click({ force: true });
+  // Click the bar itself, without force, so Playwright waits for NS31 to finish sliding out of the window.
+  await ns31.locator("rect").click();
   await expect(page).toHaveURL(/\/flights\/NS31/);
 });

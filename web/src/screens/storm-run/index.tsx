@@ -2,12 +2,14 @@ import { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { ArrowRight } from "lucide-react";
 import { useCfo, useStormRun, useStorms } from "@/api/queries";
-import { mergeFeed, useLiveFeed } from "@/api/stream";
 import { ErrorNote, Panel, Shimmer } from "@/components/kit";
 import { RouteLegend, RouteMap } from "@/components/storm/RouteMap";
+import { airport, iataOf } from "@/lib/airports";
 import { HERO_STORM } from "@/lib/storms";
 import { Hero } from "./Hero";
 import { FeedPanel, LearnsStrip, LiabilityTiles, QuestionsPreview } from "./Sections";
+
+const airportName = (station: string) => airport(iataOf(station))?.name.replace(/ Airport$/, "") ?? station;
 
 /** Storm Run (home): what StormCheck did overnight, and the 1% it asked about. */
 export default function StormRunScreen() {
@@ -16,11 +18,12 @@ export default function StormRunScreen() {
   const stormId = params.stormId ? decodeURIComponent(params.stormId) : (storms.data?.find((s) => s.id === HERO_STORM)?.id ?? storms.data?.[0]?.id);
   const run = useStormRun(stormId);
   const cfo = useCfo();
-  const live = useLiveFeed((s) => s.events);
   const navigate = useNavigate();
   const openFlight = (id: string) => navigate(`/flights/${encodeURIComponent(id)}`);
 
-  const feed = useMemo(() => mergeFeed(run.data?.feed ?? [], live), [run.data?.feed, live]);
+  // The storm's own feed, scoped by the server. The stream refetches it as things happen; the whole live trace
+  // (every storm) belongs on Trace.
+  const feed = useMemo(() => [...(run.data?.feed ?? [])].sort((a, b) => b.seq - a.seq), [run.data?.feed]);
   const recoded = run.data?.flights.find((r) => r.decision?.recoded)?.flight.number ?? null;
 
   if (run.isError || storms.isError) {
@@ -50,18 +53,9 @@ export default function StormRunScreen() {
 
       <LiabilityTiles run={data} cfo={cfo.data} recodedFlight={recoded} />
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        <section className="rounded-xl bg-navy-900 p-4 text-cloud-50 shadow-[0_0_0_1px_var(--color-navy-800)]" aria-label="Routes">
-          <div className="flex items-center justify-between gap-3 px-1">
-            <h2 className="text-[14.5px] font-semibold">Every route leaves {data.station === "EIDW" ? "Dublin" : data.station}</h2>
-            <RouteLegend tone="dark" />
-          </div>
-          <RouteMap run={data} tone="dark" onSelectFlight={openFlight} className="mt-2" />
-        </section>
-        <LearnsStrip run={data} />
-      </div>
+      <LearnsStrip run={data} />
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,6fr)_minmax(0,6fr)]">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
         <Panel
           title="The 1% it asked about"
           actions={
@@ -74,6 +68,17 @@ export default function StormRunScreen() {
         </Panel>
         <FeedPanel events={feed} />
       </div>
+
+      <section className="rounded-2xl bg-navy-900 p-4 text-cloud-50 shadow-[0_0_0_1px_var(--color-navy-800)] md:p-6" aria-label="Routes">
+        <div className="flex flex-wrap items-end justify-between gap-3 px-1">
+          <div>
+            <h2 className="text-[15px] font-semibold">Every route leaves {airportName(data.station)}</h2>
+            <p className="mt-0.5 text-[12.5px] text-cloud-500">Great-circle distance from the hub, the one Art. 7(4) measures. Hover a route for its flights.</p>
+          </div>
+          <RouteLegend tone="dark" />
+        </div>
+        <RouteMap run={data} tone="dark" onSelectFlight={openFlight} className="mt-3" />
+      </section>
     </div>
   );
 }
