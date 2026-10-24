@@ -1,5 +1,7 @@
 # Requests from Justin (web/)
 
+Also see `contracts/requests/justin-expansion.md`: what survived a four-expert critique of expanding beyond storms, with five small asks (all after CP2).
+
 Additive only, per CONTRACTS.md. The UI works without each of these today (fallbacks noted), but every
 fallback is either a static table or a number the UI can't get from the API, which the plan forbids.
 
