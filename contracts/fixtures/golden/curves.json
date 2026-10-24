@@ -1,0 +1,121 @@
+{
+  "version": "curves-v1",
+  "basis": "eur",
+  "source": "simulated Northstar claims history Jul 2023 → Dec 2024 (golden). F3's generator-learned curves replace it.",
+  "curves": [
+    {
+      "segment": "long_haul_gt3500",
+      "basis": "eur",
+      "points": [
+        [
+          1,
+          0.09
+        ],
+        [
+          3,
+          0.17
+        ],
+        [
+          6,
+          0.24
+        ],
+        [
+          12,
+          0.29
+        ],
+        [
+          18,
+          0.32
+        ]
+      ],
+      "n_by_point": [
+        2412,
+        2412,
+        2187,
+        1655,
+        981
+      ],
+      "observed_through_month": 18,
+      "ultimate": 0.35,
+      "tail_factor": 1.0938,
+      "tail_note": "months 18–72 beyond history: documented judgment (Steer 2020 benchmark 18% for cancellations)",
+      "version": "LH-v1"
+    },
+    {
+      "segment": "medium_1500_3500",
+      "basis": "eur",
+      "points": [
+        [
+          1,
+          0.0694
+        ],
+        [
+          3,
+          0.1311
+        ],
+        [
+          6,
+          0.1851
+        ],
+        [
+          12,
+          0.2237
+        ],
+        [
+          18,
+          0.2469
+        ]
+      ],
+      "n_by_point": [
+        2412,
+        2412,
+        2187,
+        1655,
+        981
+      ],
+      "observed_through_month": 18,
+      "ultimate": 0.27,
+      "tail_factor": 1.0936,
+      "tail_note": "months 18–72 beyond history: documented judgment (Steer 2020 benchmark 18% for cancellations)",
+      "version": "MH-v1"
+    },
+    {
+      "segment": "short_le1500",
+      "basis": "eur",
+      "points": [
+        [
+          1,
+          0.0514
+        ],
+        [
+          3,
+          0.0971
+        ],
+        [
+          6,
+          0.1371
+        ],
+        [
+          12,
+          0.1657
+        ],
+        [
+          18,
+          0.1829
+        ]
+      ],
+      "n_by_point": [
+        2412,
+        2412,
+        2187,
+        1655,
+        981
+      ],
+      "observed_through_month": 18,
+      "ultimate": 0.2,
+      "tail_factor": 1.0935,
+      "tail_note": "months 18–72 beyond history: documented judgment (Steer 2020 benchmark 18% for cancellations)",
+      "version": "SH-v1"
+    }
+  ]
+}

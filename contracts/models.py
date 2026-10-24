@@ -20,6 +20,7 @@ class SourceKind(str, Enum):
     METAR = "metar"; SCHEDULE = "schedule"; OCC_LOG = "occ_log"; MCC_LOG = "mcc_log"; TECH_LOG = "tech_log"
     SPARES = "spares"; MANIFEST = "manifest"; PSS = "pss"; CRM = "crm"; BSP = "bsp"; CLAIM = "claim"
     EMAIL = "email"; REGULATION = "regulation"; RULING = "ruling"; MANUFACTURER = "manufacturer"; CHALLENGE = "challenge"
+    FINANCE = "finance"                     # additive (D0b): GL extracts, care accrual sheets, vendor invoices
 
 class Source(BaseModel):
     id: str; kind: SourceKind; title: str
