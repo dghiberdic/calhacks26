@@ -95,11 +95,11 @@ The challenge text is also in `contracts/fixtures/injections/07_challenge_storm_
 **Clicks:**
 1. Let the animation finish. Touch nothing until NS31 is red.
 2. Hover the red NS31 tick.
-3. Move to the NS31 liability tile (€34,650 drafted), then to "172 payouts drafted, pending Claims Lead approval".
+3. Move to the NS31 liability tile (€34,650 drafted), then to the payouts tile. Read the count off the screen: 171 on the real engine, because 14C waits on her ruling.
 
 **Say:**
 > "At 5 a.m., operations coded all 27 'weather'. The METAR says Dublin's storm was over by 15:00, and everyone else flew. NS31's plane broke the night before, with no MEL relief. Not weather. Broken plane. Seventy-one becomes forty-one.
-> €34,650, at a 35% expected ultimate claim rate: not €0, not €99,000. 172 payouts drafted, pending Claims Lead approval."
+> €34,650, at a 35% expected ultimate claim rate: not €0, not €99,000. 172 passengers owed: 171 payouts drafted, pending Claims Lead approval, and 14C waits on her ruling."
 
 **If it breaks:**
 - The animation didn't run: don't reload again. Narrate the end state; it's the same story.
@@ -158,12 +158,12 @@ If a judge asks about the name: Ops sees it masked, and the Drafter never sees i
 
 **Clicks:**
 1. Role switcher → **Legal**.
-2. Questions → the Q2 card: "3 flights", NS113 / NS115 / NS117, `confidence 47% · no precedent`.
+2. Questions → the Q2 card: "3 flights", NS113 / NS115 / NS117, `no precedent`. Read the confidence off the card (the plan's 47% was illustrative; the real server computes its own).
 3. Check that the preselected option matches the ruling. Paste `;q2`, submit, then **Confirm** in the preview.
 4. "3 settled, cited 3×."
 
 **Say:**
-> "Legal. One question, three flights: return legs the storm stranded. 47%, no precedent. The engine decides facts; Legal rules on law."
+> "Legal. One question, three flights: return legs the storm stranded. No precedent. The engine decides facts; Legal rules on law."
 >
 > *[paste, submit, Confirm]*
 >

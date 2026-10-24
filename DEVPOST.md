@@ -41,7 +41,7 @@ Finds what really caused each cancelled flight, drafts every EU261 payout and th
 
 **For the Hyphenate judges**
 - **Seats:** the Passenger Claims Accountant and the Revenue Accountant at Northstar Air, with one step between them: what really caused each cancellation. It drafts every payout and the EU261 compensation liability; the Claims Lead approves every payment.
-- **The moment:** operations coded all 27 cancellations "weather". The tech log shows NS31's plane broke the night before. Not weather. Broken plane: 71 → 41, and 172 payouts drafted, pending Claims Lead approval.
+- **The moment:** operations coded all 27 cancellations "weather". The tech log shows NS31's plane broke the night before. Not weather. Broken plane: 71 → 41: 172 passengers owed, 171 payouts drafted, pending Claims Lead approval.
 - **Live demo:** bring your own airport and date. The Judge's Desk runs on that day's real METAR.
 - **Proof:** real vs simulated is below, with an answer key from ground truth and a plain-Claude baseline.
 - **Video:** {{links.video}} (it opens on the moment).
@@ -67,13 +67,13 @@ Northstar is fictional: an EU-licensed Irish carrier with about €1.1B revenue,
 4. Drafts refunds, payouts and the EU261 compensation liability, a reduction of passenger revenue under IFRS 15.
 5. Asks a person only about the 1% where the evidence disagrees, and asks the right one: the Claims Lead, Legal or the Controller.
 
-**It catches.** Operations coded all 27 cancellations "weather" at 05:12. Real METAR puts Dublin's storm window at 02:30–15:00Z, and 11 Northstar departures flew between 15:30 and 17:30Z. NS31 to Boston was due out at 16:30Z. Its tech log from 21:40Z the night before: a hydraulic pump leak beyond limits, no MEL relief, aircraft on ground. Not weather. Broken plane. StormCheck recodes it 71 → 41 at cause-finding confidence 91%. The full Art. 7 entitlement if every passenger claims is €99,000; StormCheck drafts €34,650 at Northstar's 35% expected ultimate claim rate (history to month 18 plus a tail judgment). 172 payouts drafted, pending Claims Lead approval.
+**It catches.** Operations coded all 27 cancellations "weather" at 05:12. Real METAR puts Dublin's storm window at 02:30–15:00Z, and 11 Northstar departures flew between 15:30 and 17:30Z. NS31 to Boston was due out at 16:30Z. Its tech log from 21:40Z the night before: a hydraulic pump leak beyond limits, no MEL relief, aircraft on ground. Not weather. Broken plane. StormCheck recodes it 71 → 41 at cause-finding confidence 91%. The full Art. 7 entitlement if every passenger claims is €99,000; StormCheck drafts €34,650 at Northstar's 35% expected ultimate claim rate (history to month 18 plus a tail judgment). 172 passengers owed; 171 payouts drafted, pending Claims Lead approval (14C waits on her ruling).
 
 **It defends.** Challenge it with "the storm would have grounded it anyway" and it answers "Decision stands.", citing the METAR, the 11 departures that flew and the fault logged before the storm. A notice claiming a hidden manufacturing defect is different: that's a new legal pattern (C-549/07 ¶26), so it goes to Legal.
 
 **It asks once.** Three questions go to three people:
 - **Claims Lead** (39% · sources disagree): CRM says passenger 14C accepted a €300 service-desk voucher; her claim says she never agreed, and there's no signature. Her ruling ("no signed acceptance, no offset") becomes a scoped rule. On the next storm, Herminia, 31 cases settle with the ruling cited, and the one flight that doesn't depart the EU asks again.
-- **Legal** (47% · no precedent): three return flights the storm stranded, in one question (C-74/19). One ruling settles all three.
+- **Legal** (no precedent): three return flights the storm stranded, in one question (C-74/19). One ruling settles all three.
 - **Controller** (72% · no new claims in 3 months): StormCheck proposed releasing the last €3,600 of a year-old storm's liability. She rejected it: never release the tail. The rejection becomes a rule, and StormCheck asks once whether it should apply to every storm cohort.
 
 **It keeps the books right.** On day 1 it drafts Dr 4090 EU261 compensation (reduction of passenger revenue) / Cr 2140 EU261 compensation liability: €82,146 for the storm. When Legal rules on the knock-on returns, the €47,496 held for them becomes a change in estimate. At the February month-end, claims run ahead of the curve (A/E 1.45), so a Bornhuetter-Ferguson re-estimate drafts a +€3,990 change in estimate, and the 2140 rollforward ties to the ledger at €25,740 = (35% − 9%) × €99,000, with January locked and untouched. The CRM bot's 32 refunds clear to zero, so nobody is refunded twice, and its "weather, no compensation" emails get 32 corrected rights notices. The Drafter saw 0 PII.

@@ -33,7 +33,7 @@ A storm window is a run of METAR observations with gusts ≥35 kt, sustained win
 ## Law
 
 **Isn't "extraordinary circumstances" a legal call? Why did NS113, NS115 and NS117 go to Legal? (C-74/19)**
-Yes, which is why the engine decides facts and Legal rules on law. The engine applies settled law (a technical fault isn't extraordinary; weather inside the window is). The three return flights are a new legal pattern: their outbound legs were cancelled by the storm, so the aircraft never got there, yet both ends were calm at each return's own times, and C-74/19 (TAP) lets a carrier rely on a previous rotation's extraordinary circumstance only with a direct causal link and reasonable measures. So it's one question for three flights (47%, no precedent). Legal ruled them extraordinary only if no aircraft and crew could operate within 3 h of STD and passengers were offered the earliest reroute on any carrier; that's `R-LEG-1@1`, it settled all three, and the €47,496 accrued for them came off as a change in estimate.
+Yes, which is why the engine decides facts and Legal rules on law. The engine applies settled law (a technical fault isn't extraordinary; weather inside the window is). The three return flights are a new legal pattern: their outbound legs were cancelled by the storm, so the aircraft never got there, yet both ends were calm at each return's own times, and C-74/19 (TAP) lets a carrier rely on a previous rotation's extraordinary circumstance only with a direct causal link and reasonable measures. So it's one question for three flights (no precedent; the card shows the confidence). Legal ruled them extraordinary only if no aircraft and crew could operate within 3 h of STD and passengers were offered the earliest reroute on any carrier; that's `R-LEG-1@1`, it settled all three, and the €47,496 accrued for them came off as a change in estimate.
 
 **What if Airbus says the pump batch had a hidden defect? (C-549/07)**
 Wallentin-Hermann ¶26 leaves room for a hidden manufacturing defect, revealed by the manufacturer or an authority, to count as extraordinary. So that challenge is classified as a new legal pattern and routed to Legal at 52%, no precedent; on its own it doesn't change NS31. If Legal rules it extraordinary, the ruling becomes a rule and replay shows exactly what it flips. We checked the FAA-adopted airworthiness directives (EASA's register was offline that day): none covers a defect in the A320-family engine-driven pump itself.
@@ -196,7 +196,7 @@ From `IMPLEMENTATION_PLAN.md` §9.
 | release at M12 | reduce to the expected tail at M12; derecognise at limitation |
 | gate voucher | service-desk voucher |
 | $300 | €300 |
-| held for the Claims Lead (NS31) | 172 payouts drafted, pending Claims Lead approval |
+| held for the Claims Lead (NS31) | 172 passengers owed · 171 payouts drafted, pending Claims Lead approval · 14C waits on her ruling |
 | the AI decides | the engine decides facts; Legal rules on law |
 | real flight records | real Dublin weather, traffic and EU law; simulated logs |
 | restated under the 2027 rules | the 2027 rules apply from 23 Oct 2027; today's balances don't change |
