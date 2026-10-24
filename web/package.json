@@ -8,6 +8,8 @@
     "dev:mock": "vite --mode mock",
     "build": "tsc -b && vite build",
     "build:recorded": "tsc -b && vite build --mode recorded",
+    "build:mock": "tsc -b && vite build --mode mock",
+    "build:vercel": "node scripts/build-vercel.mjs",
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "lint": "oxlint",
