@@ -1,15 +1,48 @@
-import Link from "next/link";
-import { ViewTransition } from "react";
-import { Logo } from "@/components/ui/Logo";
+"use client";
 
-/** Fixed, quiet, and readable on both grounds via difference blending. */
+import Link from "next/link";
+import { useEffect, useState, ViewTransition } from "react";
+import { Logo } from "@/components/ui/Logo";
+import { cn } from "@/lib/cn";
+
+/**
+ * Fixed, quiet, and readable on both grounds via difference blending. It slides away while you
+ * scroll down through the film, so headings never run under it, and comes back on the way up.
+ */
 export function SiteNav() {
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    let last = window.scrollY;
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const y = window.scrollY;
+        if (Math.abs(y - last) < 8) return; // ignore jitter and smooth-scroll settling
+        setHidden(y > last && y > 160);
+        last = y;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
   return (
     <>
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded focus:bg-white focus:px-3 focus:py-2 focus:text-ink">
         Skip to content
       </a>
-      <header className="pointer-events-none fixed inset-x-0 top-0 z-50 flex items-center justify-between px-5 py-5 text-white mix-blend-difference md:px-10">
+      <header
+        className={cn(
+          "pointer-events-none fixed inset-x-0 top-0 z-50 flex items-center justify-between px-5 py-5 text-white mix-blend-difference transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] focus-within:translate-y-0 motion-reduce:transition-none md:px-10",
+          hidden && "-translate-y-full",
+        )}
+      >
         <Link href="/" className="pointer-events-auto flex items-center gap-3" aria-label="StormCheck home">
           <ViewTransition name="brand-mark">
             <Logo className="h-[22px] w-auto" />
