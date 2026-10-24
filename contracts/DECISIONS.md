@@ -100,3 +100,11 @@ Every AOG is logged before the window with no MEL relief, and both ends are calm
 **Isha opening balance** = the books test helper's: entitlement 6,000,000, claimed 1,740,000 (29%), balance 360,000, long haul, `as_of` 2024-10-31T23:59:59Z (books uses it as the last-claim date → 3 quiet months at M12).
 
 **Curves.json** = `{"version","basis","source","curves":[ClaimCurve…]}` (books' loader reads the `curves` key). Medium/short points are the LH shape scaled to their ultimate (4 dp). `n_by_point` is labelled simulated.
+
+## D0b: `expected/` (`scripts/build_expected.py`, frozen)
+- **Written from plan numbers only.** The script imports no engine or books code; the only world input is which NS31 coupon took which election (for the per-coupon `entitlements_NS31.json`). It refuses to overwrite `expected/` without `--force`; `test_expected.py` checks `SHA256SUMS` covers and matches every file, and re-derives every golden number arithmetically from the plan's rates.
+- **Files:** `golden_numbers.json` (CONTRACTS §5 table + counts), `decisions.json` (27 Éowyn + 4 Herminia cancellations: the compared 5-tuple `(cause, extraordinary, recoded, outcome, routed_to)`, `recode_label`, and confidence **bands only**), `questions.json` (Q1–Q3 by pattern, Herminia payoff, challenges), `entitlements_NS31.json`, `journal_NS31.json`, `rollforward_2025-02.json`.
+- **Confidence bands:** `auto` decisions carry `{"min": 0.90}` (the materiality gate needs ≥0.90 to auto-draft); knock-ons and Q1 `{"max": 0.60}`; Q3 0.60–0.90. `plan_confidence` is the plan's illustrative value, never compared exactly.
+- **Herminia** expected decisions: NS106 technical recoded 71 → 41, NS110 and NS30 technical (OCC already coded 41), NS114 weather.
+- **Hints, not contracts:** `scope_features_hint` in the rulings is guidance for D5; only `rule`, `action`, settled/asks-again sets and the € deltas are meant to be asserted.
+- **Rollforward Feb:** only the plan's numbers (Éowyn 3,105,000 → −930,000 → +399,000 → 2,574,000; Isha 360,000 kept under R-CTL-1, unclaimed 6,000,000 − 1,740,000). Jan isn't frozen because where the R-LEG-1 release sits (recode vs change-in-estimate column) is Books' call.
