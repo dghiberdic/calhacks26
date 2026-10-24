@@ -190,16 +190,28 @@ def test_reordering_side_rows_is_detected():
 
 def test_commit_hash_covers_every_commit_field_and_is_checkable_from_the_api():
     from contracts.models import Commit
-    # a new Commit field must be hashed too (and bump trace.SCHEMA): this fails first, before hashes drift silently
-    assert set(trace.HASHED_FIELDS) == set(Commit.model_fields) - {"hash"}
+    assert set(trace.HASHED_FIELDS) <= set(Commit.model_fields) - {"hash"}
     s = seeded()
     for c in s.all_commits():
         d = c.model_dump(mode="json")
-        want = hashlib.sha256(orjson.dumps({k: v for k, v in d.items() if k != "hash"},
-                                           option=orjson.OPT_SORT_KEYS)).hexdigest()
+        core = {k: d[k] for k in trace.HASHED_FIELDS}
+        unset_extras = {k for k in d if k not in core and k != "hash"}
+        assert all(d[k] is None for k in unset_extras)          # e.g. recorded_at: the trace never sets it
+        want = hashlib.sha256(orjson.dumps(core, option=orjson.OPT_SORT_KEYS)).hexdigest()
         assert c.hash == want
     # anyone holding GET /commits can recompute the whole chain, typed commits included
     assert trace.verify_chain(s.all_commits()).ok
+
+
+def test_an_additive_commit_field_is_hashed_once_it_is_set():
+    s = seeded()
+    c = s.all_commits()[3]
+    extras = [k for k in type(c).model_fields if k not in trace.HASHED_FIELDS and k != "hash"]
+    assert "recorded_at" in extras                     # additive (contracts CHANGELOG, Justin #15)
+    k = "recorded_at"
+    assert trace.hash_input(c).keys() == set(trace.HASHED_FIELDS)
+    set_ = c.model_copy(update={k: T_RUN})
+    assert k in trace.hash_input(set_) and trace.commit_hash(set_) != c.hash
 
 
 @pytest.mark.parametrize("col,value", [("message", "Reverted nothing"), ("payload_ref", "NS999@2025-01-24")])

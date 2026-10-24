@@ -4,7 +4,8 @@ Every fact, source, METAR obs, decision, entitlement, rule event, ruling, questi
 call and access denial is a content-hashed ``Commit`` (schema ``trace/2``)::
 
     hash         = sha256(canonical(the Commit without its hash))
-                 = sha256(canonical({kind, parent, payload_hash, payload_ref, inputs, at, actor, message}))
+                 = sha256(canonical({kind, parent, payload_hash, payload_ref, inputs, at, actor, message}
+                                    + any additive Commit field that is set, e.g. recorded_at))
     payload_hash = sha256(canonical(payload))
     canonical(x) = orjson.dumps(x as JSON (pydantic mode="json"), option=OPT_SORT_KEYS)
 
@@ -149,10 +150,21 @@ def payload_hash(payload: Any) -> str:
 model_hash = payload_hash   # CONTRACTS hash of any model, e.g. two ReplayDiffs compared for "same hash"
 
 
-def commit_hash(c: Commit) -> str:
-    """sha256(canonical(every Commit field but ``hash``)): labels (``message``, ``payload_ref``) are evidence too."""
+def hash_input(c: Commit) -> dict[str, Any]:
+    """Every Commit field but ``hash``: the ``HASHED_FIELDS`` always (labels ``message``/``payload_ref`` are evidence
+    too), and any other (additive) field whenever it differs from its default, so a new optional contract field
+    never changes an existing hash yet is covered as soon as it carries a value."""
     d = c.model_dump(mode="json")
-    return sha256_hex(canonical({k: d[k] for k in HASHED_FIELDS}))
+    out = {k: d[k] for k in HASHED_FIELDS}
+    for k, f in Commit.model_fields.items():
+        if k != "hash" and k not in out and d[k] != to_jsonable_python(f.get_default(call_default_factory=True)):
+            out[k] = d[k]
+    return out
+
+
+def commit_hash(c: Commit) -> str:
+    """sha256(canonical(``hash_input(c)``)): recomputable by anyone holding the Commit (``GET /commits``)."""
+    return sha256_hex(canonical(hash_input(c)))
 
 
 def _input_key(i: str) -> tuple[int, str]:
