@@ -13,11 +13,13 @@ const SHOWN_IN_MONEY = /^(full_entitlement|entitlement|compensation|drafted_liab
 /** "NS31@2025-01-24:14C" → "14C". */
 const seat = (couponId: string) => couponId.split(":").slice(1).join(":") || couponId;
 
+/** Flags the row's own reason doesn't already state. */
 function notes(e: Entitlement): string[] {
+  const said = e.reason.toLowerCase();
   const out: string[] = [];
-  if (e.reduction === "art7_2_50pct") out.push("Art. 7(2) 50% reduction");
-  if (e.refund_already_initiated) out.push("refund already initiated, not repeated");
-  if (e.voucher_offset_cents) out.push(`voucher offset`);
+  if (e.reduction === "art7_2_50pct" && !said.includes("7(2)")) out.push("Art. 7(2) 50% reduction");
+  if (e.refund_already_initiated && !said.includes("already initiated")) out.push("refund already initiated, not repeated");
+  if (e.voucher_offset_cents && !said.includes("offset")) out.push("voucher offset");
   return out;
 }
 
