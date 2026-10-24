@@ -15,6 +15,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
     if (prefersReducedMotion()) return;
     const l = new Lenis({ lerp: 0.085, wheelMultiplier: 0.9, smoothWheel: true });
     l.on("scroll", ScrollTrigger.update);
+    if (process.env.NODE_ENV !== "production") Object.assign(window, { lenis: l });
     const tick = (time: number) => l.raf(time * 1000);
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);

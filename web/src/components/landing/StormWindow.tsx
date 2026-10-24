@@ -27,7 +27,7 @@ export function StormWindow({ pinned = true }: { pinned?: boolean }) {
     const gust = line<{ h: number; gust: number }>().x((d) => x(d.h)).y((d) => y(d.gust)).curve(curveMonotoneX)(pts) ?? "";
     const mean = line<{ h: number; kt: number }>().x((d) => x(d.h)).y((d) => y(d.kt)).curve(curveMonotoneX)(pts) ?? "";
     const fill = area<{ h: number; gust: number }>().x((d) => x(d.h)).y0(y(0)).y1((d) => y(d.gust)).curve(curveMonotoneX)(pts) ?? "";
-    const barbs = METAR_HOURLY.filter((m) => m.h % 2 === 0).map((m) => ({ h: m.h, ...windBarb(x(m.h), 40, m.dir, m.kt, 26) }));
+    const barbs = METAR_HOURLY.filter((m) => m.h % 2 === 0).map((m) => ({ h: m.h, ...windBarb(x(m.h), 6, m.dir, m.kt, 22) }));
     return { x, y, gust, mean, fill, barbs };
   }, []);
 
@@ -86,8 +86,8 @@ export function StormWindow({ pinned = true }: { pinned?: boolean }) {
           <rect x={x(ws)} y={M.t - 18} width={x(we) - x(ws)} height={H - M.b - M.t + 18} fill="#8e9aa8" fillOpacity="0.06" />
         </g>
         <g className="sw-window-label">
-          <text x={(x(ws) + x(we)) / 2} y={M.t - 28} textAnchor="middle" className="fill-[#a9b4c0] font-mono text-[13px] tracking-[0.08em]">
-            STORM WINDOW {STORM.windowStart}–{STORM.windowEnd} · FROM METAR
+          <text x={(x(ws) + x(we)) / 2} y={M.t + 2} textAnchor="middle" className="fill-[#cfd8e2] text-[14px]">
+            Storm window {STORM.windowStart}–{STORM.windowEnd}Z, from METAR
           </text>
         </g>
 
@@ -107,8 +107,8 @@ export function StormWindow({ pinned = true }: { pinned?: boolean }) {
               {v}
             </text>
           ))}
-          <text x={M.l - 12} y={M.t - 4} textAnchor="end" className="fill-[#5c6672] font-mono text-[11px]">
-            KT
+          <text x={M.l - 12} y={M.t - 4} textAnchor="end" className="fill-[#5c6672] text-[11px]">
+            kt
           </text>
         </g>
 
@@ -125,14 +125,14 @@ export function StormWindow({ pinned = true }: { pinned?: boolean }) {
         <path className="sw-gust" d={g.gust} fill="none" stroke="#eef1f4" strokeWidth="2.4" strokeLinecap="round" />
 
         <line className="sw-limit" style={{ transformBox: "fill-box" }} x1={M.l} x2={W - M.r} y1={y(STORM.limitKt)} y2={y(STORM.limitKt)} stroke="#e89a00" strokeWidth="1.4" strokeDasharray="6 5" />
-        <text x={W - M.r} y={y(STORM.limitKt) - 8} textAnchor="end" className="fill-[#e89a00] font-mono text-[12px] tracking-[0.06em]">
-          GUST LIMIT {STORM.limitKt} KT
+        <text x={W - M.r} y={y(STORM.limitKt) - 8} textAnchor="end" className="fill-[#e89a00] text-[13px]">
+          Gust limit {STORM.limitKt} kt
         </text>
 
         {/* departures lane */}
         <line x1={M.l} x2={W - M.r} y1={laneY} y2={laneY} stroke="#2a313c" />
-        <text x={M.l} y={laneY + 30} className="fill-[#5c6672] font-mono text-[11px] tracking-[0.08em]">
-          CANCELLED DEPARTURES
+        <text x={M.l} y={laneY + 30} className="fill-[#8e9aa8] text-[13px]">
+          Cancelled departures
         </text>
         {FLIGHTS.filter((f) => f.verdict !== "technical").map((f) => (
           <g key={f.id} className="sw-flight">

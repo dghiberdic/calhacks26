@@ -39,8 +39,8 @@ export function AskOnce() {
             The CRM says Aoife Byrne took a €300 voucher at the gate. Her claim says she never agreed. Offset the voucher against her €600?
           </p>
           <div className="mt-5 space-y-2 rounded-lg bg-chart p-4 font-mono text-[12.5px] leading-relaxed text-graphite">
-            <p>CRM 24 JAN 11:42Z VOUCHER €300 ISSUED GATE B4</p>
-            <p>EMAIL 26 JAN &ldquo;I NEVER AGREED TO A VOUCHER&rdquo;</p>
+            <p>CRM 9 DEC 13:52Z VOUCHER €300 ISSUED GATE B4</p>
+            <p>EMAIL 11 DEC &ldquo;I NEVER AGREED TO A VOUCHER&rdquo;</p>
           </div>
           <div className="mt-auto flex flex-wrap gap-2 pt-6">
             <span className="ao-pick rounded-md border border-ink px-3 py-2 text-[14px] font-medium">No signed acceptance, no offset</span>
@@ -66,7 +66,7 @@ export function AskOnce() {
             <dt className="text-graphite">Scope</dt>
             <dd>Flights departing the EU</dd>
             <dt className="text-graphite">From</dt>
-            <dd>26 Jan 2025</dd>
+            <dd>11 Dec 2025</dd>
             <dt className="text-graphite">Source</dt>
             <dd>Claims Lead ruling, 10:14Z</dd>
             <dt className="text-graphite">Replay</dt>
@@ -77,7 +77,7 @@ export function AskOnce() {
         {/* 3 · the next storm */}
         <article className="ao-card flex flex-col rounded-xl bg-ink p-6 text-chart">
           <header className="flex items-center justify-between text-[14px]">
-            <span className="font-medium">Next storm, 9 Feb</span>
+            <span className="font-medium">Next storm, 27 Jan</span>
             <span className="text-[13px] text-mist">0 questions asked</span>
           </header>
           <div className="mt-5 flex items-baseline gap-3">

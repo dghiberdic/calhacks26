@@ -42,8 +42,8 @@ export const QUESTIONS: Question[] = [
     reason: "sources disagree",
     question: "The CRM says Aoife Byrne took a €300 voucher at the gate. Her claim says she never agreed. Offset the voucher against her €600?",
     evidence: [
-      { source: "CRM, gate agent K. Walsh", when: "24 Jan 11:42Z", text: "VOUCHER €300 ISSUED · GATE B4 · NS27", mono: true },
-      { source: "Claim email", when: "26 Jan 08:03Z", text: "“I never agreed to a voucher. I was handed a printout and told the flight was gone.”" },
+      { source: "CRM, gate agent K. Walsh", when: "9 Dec 13:52Z", text: "VOUCHER €300 ISSUED · GATE B4 · NS27", mono: true },
+      { source: "Claim email", when: "11 Dec 08:03Z", text: "“I never agreed to a voucher. I was handed a printout and told the flight was gone.”" },
       { source: "Signed acceptance", text: "None on file. Six earlier vouchers this year had one." },
     ],
     answers: [
@@ -71,15 +71,15 @@ export const QUESTIONS: Question[] = [
     owner: "legal",
     why: "A cause StormCheck has never seen goes to Legal once.",
     flight: "NS19",
-    subject: "NS19 to Chicago, 25 Jan 07:10Z",
+    subject: "NS19 to Chicago, 10 Dec 07:10Z",
     held: 26400,
     confidence: 22,
     reason: "no precedent",
     question: "NS19 left a day late because its crew timed out flying the storm recovery. Is a crew time-out caused by yesterday’s storm extraordinary?",
     evidence: [
-      { source: "Crew roster", when: "25 Jan 05:40Z", text: "CAPT/FO FDP EXCEEDED · RECOVERY SECTOR NS22 JFK-DUB", mono: true },
-      { source: "Ops log", when: "25 Jan 06:02Z", text: "NO STANDBY CREW AVAILABLE DUB", mono: true },
-      { source: "METAR", when: "25 Jan 06:00Z", text: "EIDW 250600Z 27012KT 9999 FEW030 05/01 Q1009", mono: true },
+      { source: "Crew roster", when: "10 Dec 05:40Z", text: "CAPT/FO FDP EXCEEDED · RECOVERY SECTOR NS22 JFK-DUB", mono: true },
+      { source: "Ops log", when: "10 Dec 06:02Z", text: "NO STANDBY CREW AVAILABLE DUB", mono: true },
+      { source: "METAR", when: "10 Dec 06:00Z", text: "EIDW 100600Z 23015G30KT 210V270 9999 FEW014 09/05 Q1000 NOSIG", mono: true },
     ],
     answers: [
       { id: "not-extra", label: "Not extraordinary.", effect: "Crew planning is the airline’s risk. Pay 176 × €600.", delta: 0, rule: { id: "R-9", version: 1, sentence: "A crew time-out on a later day is not extraordinary, even when the storm caused it.", highlight: "not extraordinary", scope: "All routes", replay: "Changes 2 past decisions." } },
@@ -137,10 +137,10 @@ export type JournalLine = { account: string; dr?: number; cr?: number };
 export type Journal = { id: string; when: string; memo: string; status: "drafted" | "posted" | "held"; source: string; lines: JournalLine[] };
 
 export const JOURNAL: Journal[] = [
-  { id: "JE-2041", when: "24 Jan 09:00Z", memo: "NS31 recoded weather → technical. EU261 exposure at learned claim rate.", status: "held", source: "R-3 v2 · R-6 v4", lines: [{ account: "6410 Passenger compensation", dr: NS31.provision }, { account: "2350 EU261 claims provision", cr: NS31.provision }] },
-  { id: "JE-2040", when: "24 Jan 09:00Z", memo: "Refunds for 13 weather cancellations (never revenue).", status: "drafted", source: "R-1 v2 · Art. 8", lines: [{ account: "2400 Air traffic liability", dr: 1_421_380 }, { account: "2410 Refunds payable", cr: 1_421_380 }] },
-  { id: "JE-2039", when: "24 Jan 09:00Z", memo: "Vouchers accepted instead of cash, with expected breakage.", status: "drafted", source: "R-7 v1", lines: [{ account: "2400 Air traffic liability", dr: 41_700 }, { account: "2420 Voucher liability", cr: 41_700 }] },
-  { id: "JE-2038", when: "24 Jan 09:00Z", memo: "Hotels and meals for stranded passengers, accrued.", status: "drafted", source: "R-8 v1", lines: [{ account: "6420 Passenger care", dr: 57_680 }, { account: "2360 Accrued care costs", cr: 57_680 }] },
+  { id: "JE-2041", when: "10 Dec 09:00Z", memo: "NS31 recoded weather → technical. EU261 exposure at learned claim rate.", status: "held", source: "R-3 v2 · R-6 v4", lines: [{ account: "6410 Passenger compensation", dr: NS31.provision }, { account: "2350 EU261 claims provision", cr: NS31.provision }] },
+  { id: "JE-2040", when: "10 Dec 09:00Z", memo: "Refunds for 13 weather cancellations (never revenue).", status: "drafted", source: "R-1 v2 · Art. 8", lines: [{ account: "2400 Air traffic liability", dr: 1_421_380 }, { account: "2410 Refunds payable", cr: 1_421_380 }] },
+  { id: "JE-2039", when: "10 Dec 09:00Z", memo: "Vouchers accepted instead of cash, with expected breakage.", status: "drafted", source: "R-7 v1", lines: [{ account: "2400 Air traffic liability", dr: 41_700 }, { account: "2420 Voucher liability", cr: 41_700 }] },
+  { id: "JE-2038", when: "10 Dec 09:00Z", memo: "Hotels and meals for stranded passengers, accrued.", status: "drafted", source: "R-8 v1", lines: [{ account: "6420 Passenger care", dr: 57_680 }, { account: "2360 Accrued care costs", cr: 57_680 }] },
 ];
 
 /** Deterministic pseudo-passengers for the payouts table. */
