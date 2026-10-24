@@ -228,8 +228,12 @@ def overlay_facts(world: World, facts: Sequence[Fact], known_at: datetime) -> Wo
 
     Understood: ``flight:<id>`` · ``flight.ops_cause_code`` / ``spare.available_within_h`` /
     ``pax.reroute_earliest_offered`` / ``flight.notified_at``; ``aircraft:<tail>`` · ``aog.logged_at`` (+ optional
-    ``aog.ata_chapter``, ``aog.mel_relief``, ``aog.station``, ``aog.text``, ``aog.rts_est``) becomes a tech-log line.
-    Anything else is evidence only.
+    ``aog.ata_chapter``, ``aog.mel_relief``, ``aog.station``, ``aog.defect_text``/``aog.text``, ``aog.rts_est``,
+    ``aog.aog``) becomes a tech-log line. Anything else is evidence only.
+
+    Facts that only restate the base world (``contracts.normalize.world_to_facts`` output: the same tech-log line,
+    the same spare hours, the same reroute verdict) change nothing, so replaying stored facts over the world is
+    idempotent.
     """
     if not facts:
         return world
@@ -245,26 +249,32 @@ def overlay_facts(world: World, facts: Sequence[Fact], known_at: datetime) -> Wo
         kind, _, ident = subj.partition(":")
         if kind == "flight" and ident in flights:
             fl = flights[ident]
-            if "flight.ops_cause_code" in fields:
+            if "flight.ops_cause_code" in fields and fields["flight.ops_cause_code"].value is not None:
                 fl.ops_cause_code = str(fields["flight.ops_cause_code"].value)
             if "flight.notified_at" in fields and _as_dt(fields["flight.notified_at"].value):
                 fl.notified_at = _as_dt(fields["flight.notified_at"].value)
             if "spare.available_within_h" in fields:
                 f = fields["spare.available_within_h"]
-                w.ops_log.append(OpsLogEntry(id=f"FACT-{f.id}", at=f.recorded_at, kind="spares", flight_ids=[ident],
-                                             text=f"spare available within {float(f.value)} h", author=f.extractor))
+                known = [parse_spare_hours(e.text) for e in w.ops_log
+                         if e.kind == "spares" and ident in e.flight_ids and e.at <= known_at]
+                if isinstance(f.value, int | float) and float(f.value) not in [k for k in known if k is not None]:
+                    w.ops_log.append(OpsLogEntry(id=f"FACT-{f.id}", at=f.recorded_at, kind="spares",
+                                                 flight_ids=[ident],
+                                                 text=f"spare available within {float(f.value)} h",
+                                                 author=f.extractor))
             if "pax.reroute_earliest_offered" in fields:
                 f = fields["pax.reroute_earliest_offered"]
-                txt = "earliest reroute offered" if f.value else "earliest reroute not offered"
-                w.ops_log.append(OpsLogEntry(id=f"FACT-{f.id}", at=f.recorded_at, kind="occ", flight_ids=[ident],
-                                             text=txt, author=f.extractor))
+                if _reroute_offered(w, fl, known_at) != bool(f.value):
+                    txt = "earliest reroute offered" if f.value else "earliest reroute not offered"
+                    w.ops_log.append(OpsLogEntry(id=f"FACT-{f.id}", at=f.recorded_at, kind="occ", flight_ids=[ident],
+                                                 text=txt, author=f.extractor))
         elif kind == "aircraft" and "aog.logged_at" in fields:
             f = fields["aog.logged_at"]
             at = _as_dt(f.value)
-            if at is None:
+            if at is None or any(t.aircraft == ident and t.logged_at == at for t in w.tech_log):
                 continue
             val = {k: v.value for k, v in fields.items()}
-            text = str(val.get("aog.text") or f.span or "")
+            text = str(val.get("aog.defect_text") or val.get("aog.text") or f.span or "")
             w.tech_log.append(TechLogEntry(
                 id=f"FACT-{f.id}", aircraft=ident, logged_at=at, station=str(val.get("aog.station") or "DUB"),
                 ata=str(val.get("aog.ata_chapter") or ""), text=text,

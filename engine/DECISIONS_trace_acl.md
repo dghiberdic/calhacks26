@@ -99,3 +99,86 @@ Judgment calls made while implementing `engine/trace.py` and `engine/acl.py`, on
 - **`record_access_denied(AccessDecision)`** has the message `"<principal> <action> → DENIED · <tag>"`, where the tag is the reason's prefix before `:` ("SoD").
 - **`access_log()`** rebuilds the denial log from those commits.
 - **`record_llm_call(payload, …)`** stores whatever the caller passes (prompt hash, `response.model`, request id, principal, input fact ids). The `llm/` lane owns the payload shape.
+
+## D9 · `engine/acl.py`
+
+**The matrix** (`access_matrix()`, `GET /access/matrix`)
+- **Principals:** all ten `Role` values.
+- **Resources:** `flights`, `ops_logs`, `tech_log`, `sources`, `pii`, `claims`, `case_facts`, `questions`, `journal`, `aggregates`, `rules`, `approve_payout`, `approve_je`, `lock_period`, `desk`, `inject`. These extend the stub fixture's set with `sources`, `questions`, `lock_period`, `desk` and `inject`.
+- **Cells:** `read` / `write` / `approve` / `redacted` / `none`. `redacted` means "may read, with PII masked".
+- **The thread table, cell by cell:**
+  - **Ops:** flights, logs and tech log; sources masked; no PII and no claims.
+  - **Reader:** sources incl. PII, and writes (pseudonymous) case facts.
+  - **Drafter:** no PII; sources and claims masked.
+  - **Claims Lead:** PII and claims (write); approves payouts.
+  - **Legal:** case facts; no PII; sources and claims masked.
+  - **Controller:** aggregates and journals (write); approves JEs and locks periods; no PII, no tech log, no case facts.
+  - **Judge:** read everything masked, plus `desk`/`inject` write.
+- **Rows the thread table doesn't cover:**
+  - CFO reads flights, aggregates, journals and rules.
+  - The engine writes case facts, questions, journals and aggregates, but never PII.
+  - The CRM bot reads flights, PII and claims (it contacts passengers).
+- **The CFO does not approve JEs.** The stub let it, but `books.Books` requires the Controller and raises `SoDViolation` otherwise. The code is the hard control, so the matrix follows Books.
+- **Bare resource ids map by shape:** `SRC-…` → sources, `JE-…` → journal, `R-…` → rules, `Q-…` → questions, a coupon id → case facts, a flight id → flights. `class:id` uses the class. Anything else is an unknown resource and fails closed.
+
+**Decisions and the denial log**
+- **API:**
+  - `check` returns the `AccessDecision` and appends it to `broker.log`.
+  - `can` returns a bool.
+  - `require` raises `AccessDenied` (`code` `sod_violation` for approvals, `forbidden` otherwise).
+  - `read(principal, resource, obj)` = `require(read)` + `redact`.
+  - `can` exists because a pydantic model is always truthy: `if broker.check(...)` would fail open.
+- **Every denial becomes an `access_denied` commit** when the broker holds a `TraceStore`. Reasons read `"<Tag>: <why>"`, and the commit message is `"<principal> <action> → DENIED · <Tag>"`, e.g. `agent.drafter approve_payout → DENIED · SoD`. Tags are `SoD`, `External`, `No PII`, `Least privilege`, `Fail closed`.
+- **Allowed checks are logged in memory only.** Committing every read would bury the chain; the Access tab's log is denials plus whatever the server chooses to show.
+- **Fail closed** on: an unknown principal (any id that isn't a role or `<role>:<slug>`, `None`, `""`), an unknown action, an unknown resource, and a missing clock with no explicit `at`.
+
+**Approvals (hard controls, in this order)**
+1. **Agents never approve:** `SoD: agents never approve payouts`.
+2. **Only a signed internal `Session` approves.** Anything else is `External`, including a bare string like `"claims_lead:maria-murphy"`, a `Source`, a `Claim`, a `CrmEvent`, a `Fact`, a dict, or free text. When the external text matches `approv(e|ed|al…)`, the reason says so ("email text says 'approved'; external parties never satisfy an internal approval").
+   - Reads, by contrast, accept bare role strings, because agents are in-process code that identifies by role.
+   - The server must pass verified Sessions for people.
+3. **Preparer ≠ approver.** `preparer` is passed by the caller.
+4. **The right role:** payouts need the Claims Lead; JEs and period locks need the Controller.
+
+**Redaction** (`redact(principal, obj)`)
+- **Who sees PII unchanged:** principals whose `pii` cell is `read` (Reader, Claims Lead, CRM bot), matching `claims_lead:<name>` sessions too.
+- **Everyone else, including the judge and unknown principals, gets a copy with:**
+  - `Source.text` masked when the source is tagged `pii` or is a claim/email/manifest/PSS/CRM/BSP/challenge document (`sha256` kept, so it stays verifiable);
+  - `Fact.value`/`span` masked when tagged `pii`, and `span` masked when it quotes a registered PII source;
+  - `Evidence.value`/`quote` masked when from a registered PII source;
+  - `Claim.text` and `CrmEvent.text` masked: free text about a passenger can hold a name, which no regex finds;
+  - `Coupon.pnr` masked (`pax_ref` is pseudonymous and kept);
+  - dict keys like `name`/`email`/`phone`/`iban`/`pnr` masked;
+  - e-mail addresses, `+`-prefixed phone numbers and IBANs masked inside every string.
+- **IBAN matches are confirmed by the ISO 13616 mod-97 checksum.** Without it, the spaced form matched OCC flight lists ("NS21 NS41 NS51 NS31"). A test runs the mini world's flights, logs, airports and METAR through redaction and expects them unchanged.
+- **Models are never mutated.** `model_copy(update=…)` is applied only to the fields that change.
+- **`Session.name` and `Airport.name` are left alone:** they are staff and airport names, not passenger PII. Key-based masking applies to free-form dicts only, not to model fields.
+- **The mask is the literal `[redacted:pii]`.** The UI's "view as Ops" mask can match on it.
+
+**LLM contexts and escalation packets**
+- **`context(principal, facts=, items=, purpose=)`** requires `read` on case facts.
+  - For a principal without PII access, personal facts are **withheld entirely** rather than masked: tagged `pii`, or a value or span holding an e-mail, phone number or IBAN.
+  - Items are redacted.
+  - The result carries `withheld_facts`, and the check is logged as action `context` on the purpose (e.g. `rights_notice:NS31@2025-01-24`).
+- **The NS31 test** builds the Drafter context from:
+  - the real `eu261.entitlements` (172 coupons, 9,900,000);
+  - 172 tagged name facts and 5 untagged e-mail facts;
+  - the coupons, CRM events, a claim and the manifest.
+
+  It then asserts `pii_fields(ctx) == []`, 177 withheld, and the € numbers untouched. The Reader context of the same inputs is the positive control.
+- **`packet(recipient, obj)`** redacts an escalation packet (a question with its evidence) for its recipient.
+
+**Session tokens**
+- **Format:** `issue(role, name, secret, *, at)` → `<base64url(canonical Session JSON)>.<64-hex HMAC-SHA256>`. This is the stub's shape, with the full digest rather than 32 hex chars.
+- **`at` is required** (it becomes `issued_at`), because the engine has no clock of its own. The secret is passed in; an empty secret raises on `issue`.
+- **Principals:** `<role>:<name-slug>` for people, the bare role for agents and the judge, as in the stub.
+- **`verify(token, secret)` raises `InvalidToken` on:**
+  - a non-string or malformed token;
+  - a signature that is not 64 hex chars;
+  - an HMAC mismatch (checked with `hmac.compare_digest`);
+  - the wrong secret or an empty secret;
+  - an undecodable or invalid payload;
+  - a principal that doesn't match its role and name.
+- **Role elevation is caught twice:** the edited payload breaks the signature, and the principal check catches a re-signed inconsistent one.
+- **`session_or_judge(token, secret, *, at)`** turns no token or any bad token into the read-only judge (CONTRACTS §0).
+- **No expiry:** the demo runs on one clock. Add a `max_age` against the injected clock if sessions ever need to lapse.
