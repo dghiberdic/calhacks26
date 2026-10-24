@@ -121,10 +121,11 @@ export function Blueprint() {
       aria-label={`${reg ?? "The aircraft"} and its tech log`} data-section="blueprint"
       className="relative flex min-h-svh flex-col justify-center overflow-hidden bg-[var(--story-cyan)] py-12 text-[var(--story-ink)] max-lg:py-6 [@media(max-height:760px)]:py-6"
     >
-      <div className="bp-grid story-grid pointer-events-none absolute inset-0 opacity-[0.22]" aria-hidden="true" />
-      <svg className="bp-grain story-grain pointer-events-none absolute -inset-[6%] h-[112%] w-[112%] opacity-[0.16] mix-blend-overlay" aria-hidden="true">
+      {/* the light table: the drafting grid slides one square diagonally, slowly, forever (motion only) */}
+      <div className="bp-grid story-grid story-grid-drift pointer-events-none absolute -inset-[120px] opacity-[0.22]" aria-hidden="true" />
+      <svg className="bp-grain story-grain pointer-events-none absolute -inset-[6%] h-[112%] w-[112%] opacity-[0.2] mix-blend-overlay" aria-hidden="true">
         <filter id="bp-grain">
-          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" />
+          <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch" />
           <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0" />
         </filter>
         <rect width="100%" height="100%" filter="url(#bp-grain)" />

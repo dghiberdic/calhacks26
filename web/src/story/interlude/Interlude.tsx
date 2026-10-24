@@ -68,7 +68,9 @@ export function Interlude() {
           .fromTo(".il-img", { "--r": "0%" }, { "--r": "175%", duration: 3.2, ease: "power1.inOut" }, 3.0)
           .fromTo(".il-img", { scale: 1.06 }, { scale: 1, duration: 4, ease: "power1.out" }, 3.0)
           .to(".il-lines", { opacity: 0.12, duration: 1.6 }, 4.4)
-          .fromTo(".il-rain", { opacity: 0 }, { opacity: 1, duration: 1.2 }, 4.6)
+          // rain is already falling across the drawing, heavier once the render is in
+          .fromTo(".il-rain", { opacity: 0 }, { opacity: 0.5, duration: 0.8 }, 0.2)
+          .to(".il-rain", { opacity: 1, duration: 1.2 }, 4.6)
           .fromTo(".il-copy > *", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.25, ease: "power3.out" }, 5.4)
           .to({}, { duration: 0.8 });
       });

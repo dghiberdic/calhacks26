@@ -326,13 +326,24 @@ html.lenis body {
 .tr-pulse::before {
   content: "";
   position: absolute;
-  left: -3px;
-  top: -3px;
-  width: 7px;
-  height: 7px;
+  left: -4px;
+  top: -4px;
+  width: 9px;
+  height: 9px;
   border-radius: 999px;
   background: var(--color-metar);
-  box-shadow: 0 0 12px 3px rgb(79 159 224 / 0.45);
+  box-shadow: 0 0 14px 4px rgb(79 159 224 / 0.5);
+}
+/* its trail along the line */
+.tr-pulse::after {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: -64px;
+  width: 3px;
+  height: 60px;
+  border-radius: 3px;
+  background: linear-gradient(to bottom, transparent, rgb(79 159 224 / 0.75));
 }
 @media (prefers-reduced-motion: no-preference) {
   .tr-pulse[data-on="true"] {
@@ -355,6 +366,84 @@ html.lenis body {
   100% {
     transform: translate3d(0, 100%, 0);
     opacity: 0;
+  }
+}
+
+/* The 3D canvas fades out at its edges, so the apron and its reflections never end in a hard line. */
+.bp-canvas {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent), linear-gradient(to bottom, #000 78%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent), linear-gradient(to bottom, #000 78%, transparent);
+  mask-composite: intersect;
+}
+
+/* The cyanotype's grain shifts like film, a few times a second (motion only; compositor transform). */
+@media (prefers-reduced-motion: no-preference) {
+  .story-grain {
+    animation: story-grain 0.66s steps(1) infinite;
+    will-change: transform;
+  }
+}
+@keyframes story-grain {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  25% {
+    transform: translate3d(-2%, 1.5%, 0);
+  }
+  50% {
+    transform: translate3d(1.5%, -2%, 0);
+  }
+  75% {
+    transform: translate3d(-1%, -1%, 0);
+  }
+}
+
+/* Held cases waiting on one answer: a slow wave of light runs through them (motion only). */
+@media (prefers-reduced-motion: no-preference) {
+  .ao-case {
+    animation: ao-wait 3.2s ease-in-out infinite;
+  }
+}
+@keyframes ao-wait {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+/* The closing's ink chart drifts like paper on a desk (motion only). */
+@media (prefers-reduced-motion: no-preference) {
+  .story-ink {
+    animation: story-ink 26s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+}
+@keyframes story-ink {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.02);
+  }
+  to {
+    transform: translate3d(-7%, 2.5%, 0) scale(1.1);
+  }
+}
+
+/* The drafting grid drifts one major square (120 px) diagonally every 40 s: seamless, on the compositor. */
+@media (prefers-reduced-motion: no-preference) {
+  .story-grid-drift {
+    animation: story-grid-drift 40s linear infinite;
+    will-change: transform;
+  }
+}
+@keyframes story-grid-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(120px, 120px, 0);
   }
 }
 
