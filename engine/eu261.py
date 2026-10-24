@@ -25,6 +25,7 @@ from contracts.models import (
     World,
 )
 from engine import dsl
+from engine import rules as rulebook
 from engine.geo import airport, distance_km, route_region
 
 SHORT_KM = 1500.0
@@ -307,13 +308,15 @@ def _one(flight: Flight, view: CouponView, band: Band, dist: float, origin: Airp
             return ent("owed", "EU261 " + ", ".join(articles), reason + [
                 f"signed acceptance of the €{voucher.amount_cents // 100} voucher in lieu: offset €{offset // 100}"],
                 comp=comp, reduction=reduction, offset=offset, applied=applied)
-        hits = dsl.matching(rules, feats, actions=[RuleAction.DENY_OFFSET, RuleAction.ALLOW_OFFSET],
-                            known_at=known_at, flight_date=flight.date)
-        if not hits:
+        res = rulebook.resolve(rules, feats, actions=[RuleAction.DENY_OFFSET, RuleAction.ALLOW_OFFSET],
+                               known_at=known_at, flight_date=flight.date)
+        if res.rule is None:
+            why = (f"conflicting rules {', '.join(dsl.ref(r) for r in res.conflict)}: offset needs a ruling"
+                   if res.conflicted else "offset needs a ruling")
             return ent("needs_ruling", "EU261 " + ", ".join(articles), reason + [
                 f"€{voucher.amount_cents // 100} voucher 'in lieu of compensation' has no signed acceptance "
-                "(Art. 7(3)): offset needs a ruling"], comp=comp, reduction=reduction, applied=applied)
-        rule = hits[0]
+                f"(Art. 7(3)): {why}"], comp=comp, reduction=reduction, applied=applied)
+        rule = res.rule
         applied.append(dsl.ref(rule))
         if rule.action == RuleAction.ALLOW_OFFSET:
             offset = min(voucher.amount_cents, comp)

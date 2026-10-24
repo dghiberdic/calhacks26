@@ -37,7 +37,8 @@ REASON_TAG = {
     "knock_on_return": "no-precedent", "external_event": "no-precedent", "concurrent_causes": "concurrent-causes",
     "window_unknown": "out-of-scope", "weather_code_contradicted": "sources-disagree", "cause_unknown": "out-of-scope",
     "technical_unverified": "out-of-scope", "crew": "out-of-scope", "atc": "out-of-scope",
-    "new_legal_pattern": "new-legal-pattern", "voucher_in_lieu_unsigned": "no-precedent",
+    "new_legal_pattern": "new-legal-pattern", "rule_conflict": "new-legal-pattern",
+    "voucher_in_lieu_unsigned": "no-precedent",
     "cohort_release": "release-proposal",
 }
 
