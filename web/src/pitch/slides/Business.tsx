@@ -58,11 +58,9 @@ export function Business({ data }: { data: PitchData }) {
       <Reveal className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-4">
         <p className="text-[32px] leading-tight text-cloud-200">The job: settle what every passenger is owed after each storm.</p>
         <span className="flex gap-3">
+          <Chip size="sm">€1.1B Irish carrier</Chip>
           <Chip size="sm">
-            <Num>€1.1B</Num>&nbsp;Irish carrier
-          </Chip>
-          <Chip size="sm">
-            <Fig value={pax} />
+            <Fig value={pax} className="font-mono" />
             &nbsp;passengers, one storm
           </Chip>
         </span>

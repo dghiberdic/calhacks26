@@ -69,6 +69,16 @@ test("clicker keys, Home/End and digits jump; a reload stays on the slide", asyn
   await expect(page.getByTestId("slide-architecture")).toBeVisible();
 });
 
+test("a clicker pressed twice before the deck re-renders still moves twice", async ({ page }) => {
+  await page.goto("/pitch/1");
+  await expect(page.getByTestId("slide-business")).toBeVisible();
+  await page.evaluate(() => {
+    for (let i = 0; i < 2; i++) window.dispatchEvent(new KeyboardEvent("keydown", { key: "PageDown", cancelable: true }));
+  });
+  await expect(page).toHaveURL(/\/pitch\/3$/);
+  await expect(page.getByTestId("slide-architecture")).toBeVisible();
+});
+
 test("a click on the right half moves on, the left half goes back", async ({ page }) => {
   await page.goto("/pitch/2");
   await expect(page.getByTestId("slide-judged")).toBeVisible();

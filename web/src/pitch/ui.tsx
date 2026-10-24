@@ -95,10 +95,7 @@ const CHIP: Record<ChipTone, string> = {
   bright: "bg-cloud-50 text-navy-950",
 };
 
-/**
- * Mono kebab-case chip at slide scale: `self-learning`, `needs-review`. Figures inside it go through `Fig`/`Num`
- * (Archivo): B612 Mono sets "," and "." at the left of a full cell, which reads "5, 292".
- */
+/** Mono kebab-case chip at slide scale: `self-learning`, `needs-review`, `5,292 passengers, one storm`. */
 export function Chip({ children, tone = "outline", className, size = "md", wrap }: { children: ReactNode; tone?: ChipTone; className?: string; size?: "sm" | "md"; wrap?: boolean }) {
   return (
     <span
@@ -116,7 +113,7 @@ export function Chip({ children, tone = "outline", className, size = "md", wrap 
   );
 }
 
-/** A number in tabular Archivo, wherever it sits (chips and micro-labels are otherwise mono). */
+/** A number in tabular figures: Archivo in prose, or the surrounding face when given `font-mono`. */
 export function Num({ children, className }: { children: ReactNode; className?: string }) {
   return <span className={cn("figure font-sans", className)}>{children}</span>;
 }

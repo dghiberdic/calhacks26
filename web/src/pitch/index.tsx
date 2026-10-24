@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "motion/react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
@@ -44,15 +44,27 @@ export default function PitchScreen() {
     if (params["*"] !== String(index)) navigate(`/pitch/${index}`, { replace: true });
   }, [index, params, navigate]);
 
-  const go = useCallback((to: number) => {
-    const next = clampSlide(to, TOTAL);
-    if (next !== index) navigate(`/pitch/${next}`, { replace: true });
-  }, [index, navigate]);
+  // Where the deck is headed. `go` moves it at once, so a clicker pressed twice before React re-renders still
+  // moves twice; any other change of URL (load, back/forward) re-syncs it.
+  const target = useRef(index);
+  useLayoutEffect(() => {
+    target.current = index;
+  }, [index]);
+
+  const go = useCallback(
+    (to: number) => {
+      const next = clampSlide(to, TOTAL);
+      if (next === target.current) return;
+      target.current = next;
+      navigate(`/pitch/${next}`, { replace: true });
+    },
+    [navigate],
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented) return;
-      const action = keyToAction(e, index, TOTAL);
+      const action = keyToAction(e, target.current, TOTAL);
       if (!action) return;
       e.preventDefault();
       if (action.type === "go") go(action.to);
@@ -61,7 +73,7 @@ export default function PitchScreen() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [go, index, navigate]);
+  }, [go, navigate]);
 
   useEffect(() => {
     const previous = document.title;
@@ -79,7 +91,7 @@ export default function PitchScreen() {
 
   const onClick = (e: MouseEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement).closest("a, button, [data-deck-ui]")) return;
-    go(clickTarget(e.clientX, window.innerWidth, index));
+    go(clickTarget(e.clientX, window.innerWidth, target.current));
   };
 
   const { Component, label } = SLIDES[index];

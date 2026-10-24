@@ -39,8 +39,7 @@ export function CfoLine({ data }: { data: PitchData }) {
 
       <Reveal className="mt-16 grid grid-cols-2 gap-6 border-t border-white/10 pt-8">
         <div>
-          {/* B612 sets an apostrophe at the left of a full cell ("DOESN' T"), so the mono label avoids one. */}
-          <p className="font-mono text-[17px] uppercase tracking-[0.16em] text-cloud-500">Who does not need it</p>
+          <p className="font-mono text-[17px] uppercase tracking-[0.16em] text-cloud-500">Who doesn&rsquo;t need it</p>
           <p className="mt-3 text-[32px] leading-[1.3] text-cloud-50">A three-route charter that rarely cancels.</p>
         </div>
         <div>
