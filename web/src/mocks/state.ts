@@ -11,6 +11,7 @@ import type {
   JournalEntry,
   LearnedItem,
   Question,
+  ReplayDiff,
   Role,
   Rule,
   RuleProposal,
@@ -20,15 +21,15 @@ import type {
   TimelineMark,
   TraceEvent,
 } from "@/api/types";
-import { bandFor } from "./data/airports";
+import { bandFor, findAirport } from "./data/airports";
 import { baselineJournal, COHORT_ISHA, COHORT_LH, COHORT_MED, COHORT_SHORT } from "./data/books";
-import { baseCounters, CAL, decide, entitlementsSummary, fullEntitlementCents, HERO_FLIGHT, isHeld, isOwed, liabilityCents, sampleEntitlements, stormMoney, voucherCases, voucherSettled, type RuleCtx } from "./data/engine";
+import { baseCounters, CAL, decide, entitlementsSummary, fullEntitlementCents, HERO_FLIGHT, isHeld, isOwed, liabilityCents, sampleEntitlements, stormMoney, voucherCases, voucherSettled, type InjectedAog, type RuleCtx } from "./data/engine";
 import { EOWYN_ID, HERMINIA_ID, type FlightSpec } from "./data/flights";
 import { baselineQuestions, type MockQuestion } from "./data/questions";
 import { baselineRules, byPrecedence, ruleRef } from "./data/rules";
 import * as T from "./data/texts";
 import { addMin, canonical, clone, eur, hashOf, hhmmZ, isoZ, nearestObs, sha256 } from "./data/util";
-import { EOWYN, HERMINIA, mainWindow, scheduleLine, windowLabel, type StormDef } from "./data/world";
+import { EOWYN, HERMINIA, hubOf, mainWindow, scheduleLine, SOURCES, windowLabel, type StormDef } from "./data/world";
 
 export const ENGINE_SHA = "engine@4c1d9e2";
 export const BASELINE_CLOCK = "2025-01-25T09:00:00Z";
@@ -50,7 +51,14 @@ export type MockState = {
   lockedWrites: number;
   accessLog: AccessDecision[];
   meta: Map<string, { known_at: string; commit: string | null }>;
+  /** Tier-1 facts injected through POST /inject that change a decision (an AOG inside the window). */
+  injected: Map<string, InjectedAog>;
+  /** Replay diffs of confirmed proposals, so a repeated confirm answers the same thing. */
+  confirmed: Map<string, ReplayDiff>;
   ids: { je: number; q: number; ruling: number; inject: number; draft: number };
+  /** Bumped whenever a decision's metadata (known_at, commit) changes; part of the memo key. */
+  metaVersion: number;
+  cache: { key: string; memo: Map<string, FlightDecision | null> };
   extRefusals: number;
   monthEnd: Set<string>;
 };
@@ -75,11 +83,19 @@ export function ctxOf(s: MockState): RuleCtx {
   const leg = activeRule(s, "R-LEG-1");
   const cl = activeRule(s, "R-CL-1");
   const min = activeRule(s, "R-MIN-1");
+  const knockOn = leg && (leg.action === "set_extraordinary" || leg.action === "set_not_extraordinary") ? { ref: ruleRef(leg), action: leg.action } : null;
+  const voucher = cl && (cl.action === "deny_offset" || cl.action === "allow_offset") ? { ref: ruleRef(cl), action: cl.action, allDepartures: !("flight.departs_eu" in cl.scope) } : null;
+  const reduction = min ? { ref: ruleRef(min), support: min.support ?? "" } : null;
+  // Decisions are pure in (rules, metadata, injected facts, storms): memoise them per that fingerprint.
+  const key = JSON.stringify([knockOn, voucher, reduction, s.metaVersion, [...s.injected.keys()], s.storms.length]);
+  if (s.cache.key !== key) s.cache = { key, memo: new Map() };
   return {
-    knockOn: leg && (leg.action === "set_extraordinary" || leg.action === "set_not_extraordinary") ? { ref: ruleRef(leg), action: leg.action } : null,
-    voucher: cl && (cl.action === "deny_offset" || cl.action === "allow_offset") ? { ref: ruleRef(cl), action: cl.action, allDepartures: !("flight.departs_eu" in cl.scope) } : null,
-    reduction: min ? { ref: ruleRef(min), support: min.support ?? "" } : null,
+    knockOn,
+    voucher,
+    reduction,
     meta: (id) => s.meta.get(id) ?? { known_at: defaultKnownAt(s, id), commit: null },
+    injected: (id) => s.injected.get(id),
+    memo: s.cache.memo,
   };
 }
 
@@ -138,11 +154,13 @@ export function emit(s: MockState, init: EventInit, stormId: string | null, opts
 /** Record (or re-record) a flight's decision as a commit and remember it for FlightDecision.commit. */
 export function commitDecision(s: MockState, storm: StormDef, spec: FlightSpec, at: string, actor = "agent.engine") {
   s.meta.set(spec.flight.id, { known_at: at, commit: null });
+  s.metaVersion += 1;
   const d = decide(storm, spec, ctxOf(s));
   if (!d) return;
   const inputs = d.evidence.map((e) => `fact:${sha256(e.fact_id).slice(0, 16)}`);
   const c = addCommit(s, "decision", actor, at, { ...d, commit: null }, `decision:${spec.flight.id}`, `${spec.flight.number} ${d.cause} · ${d.extraordinary.replace(/_/g, " ")}${d.recoded ? ` · recoded ${d.recode_label}` : ""}`, inputs);
   s.meta.set(spec.flight.id, { known_at: at, commit: c.hash });
+  s.metaVersion += 1;
 }
 
 // ---------- read views ----------
@@ -251,7 +269,7 @@ function mark(at: string, kind: string, label: string, text: string, source_id?:
   return source_id ? { at, kind, label, text, source_id } : { at, kind, label, text };
 }
 
-function timeline(storm: StormDef, spec: FlightSpec, d: FlightDecision | null): TimelineMark[] {
+function timeline(s: MockState, storm: StormDef, spec: FlightSpec, d: FlightDecision | null): TimelineMark[] {
   const f = spec.flight;
   const w = mainWindow(storm);
   const metarAt = (t: string, label: string) => {
@@ -279,25 +297,34 @@ function timeline(storm: StormDef, spec: FlightSpec, d: FlightDecision | null): 
     );
     return marks;
   }
-  const occText = storm.kind === "herminia" ? T.OCC_HERMINIA : T.OCC_EOWYN;
+  const hub = hubOf(storm);
+  const occAt = String(storm.real_context.occ_at ?? (storm.kind === "herminia" ? "2025-01-26T09:55:00Z" : "2025-01-24T05:12:00Z"));
   if (w) marks.push(mark(w.start, "window", `storm window opens ${hhmmZ(w.start)}`, nearestObs(storm.metar, w.start).raw, `metar:${storm.id}`));
-  if (f.status === "cancelled" && storm.kind !== "desk") marks.push(mark(storm.kind === "herminia" ? "2025-01-26T09:55:00Z" : "2025-01-24T05:12:00Z", "occ", `OCC cancel list · coded ${f.ops_cause_code ?? "—"}`, f.id === "NS30@2025-01-25" ? T.OCC_NS30_HERMINIA : occText, `occ_log:${storm.id}`));
-  const log = storm.techLogs?.[f.id];
+  const log = storm.techLogs[f.id];
+  if (f.status === "cancelled") {
+    if (log?.occ) marks.push(mark(log.occ.at ?? occAt, "occ", `OCC · coded ${f.ops_cause_code ?? "—"}`, log.occ.quote, log.occ.source));
+    else marks.push(mark(occAt, "occ", `OCC cancel list · coded ${f.ops_cause_code ?? "—"}`, storm.occ.text, storm.occ.source));
+  }
   if (log) marks.push(mark(log.logged_at, "tech_log", "AOG · no MEL relief", log.text, log.source));
+  const aog = s.injected.get(f.id);
+  if (aog) marks.push(mark(aog.logged_at, "tech_log", "AOG inside the window (injected) · concurrent causes", aog.span, aog.source_id));
+  const k = storm.knockOn[f.number];
   if (spec.group === "knock_on") {
-    marks.push(mark("2025-01-24T05:40:00Z", "spares", "no spare within 3 h", T.SPARES_KNOCK_ON[f.number], `spares:${storm.id}`));
+    if (k) marks.push(mark(occAt, "spares", "no spare within 3 h", k.spares, `spares:${storm.id}`));
     marks.push(mark(f.sched_dep, "schedule", `STD ${hhmmZ(f.sched_dep)} at ${f.origin} · calm`, scheduleLine(spec), `schedule:${f.id}`));
-    marks.push(metarAt(f.sched_arr, `STA ${hhmmZ(f.sched_arr)} at DUB · calm`));
-    marks.push(mark("2025-01-24T13:30:00Z", "pss", "earliest reroute offered", T.PSS_KNOCK_ON[f.number], `pss:${storm.id}`));
+    if (f.dest === hub) marks.push(metarAt(f.sched_arr, `STA ${hhmmZ(f.sched_arr)} at ${hub} · calm`));
+    else if (f.origin === hub) marks.push(metarAt(f.sched_dep, `STD ${hhmmZ(f.sched_dep)} at ${hub} · calm`));
+    if (k) marks.push(mark(f.sched_dep, "pss", "earliest reroute offered", k.pss, `pss:${storm.id}`));
   } else if (f.status === "operated") {
     marks.push(mark(f.sched_dep, "schedule", `STD ${hhmmZ(f.sched_dep)}`, scheduleLine(spec), `schedule:${f.id}`));
     if (f.actual_dep) marks.push(mark(f.actual_dep, "operated", `operated · off blocks ${hhmmZ(f.actual_dep)}`, `${f.number} ${f.origin}-${f.dest} ATD ${hhmmZ(f.actual_dep)} ATA ${f.actual_arr ? hhmmZ(f.actual_arr) : "—"}`, `schedule:${f.id}`));
-    if (f.origin === "DUB") marks.push(metarAt(f.actual_dep ?? f.sched_dep, "METAR at departure"));
+    if (f.origin === hub) marks.push(metarAt(f.actual_dep ?? f.sched_dep, "METAR at departure"));
+    else if (f.dest === hub) marks.push(metarAt(f.actual_arr ?? f.sched_arr, "METAR at arrival"));
   } else {
-    const atArr = f.dest === "DUB" && f.origin !== "DUB";
+    const atArr = f.dest === hub && f.origin !== hub;
     const t = atArr ? f.sched_arr : f.sched_dep;
     marks.push(mark(f.sched_dep, "schedule", `STD ${hhmmZ(f.sched_dep)}${atArr ? ` · STA ${hhmmZ(f.sched_arr)}` : ""}`, scheduleLine(spec), `schedule:${f.id}`));
-    if (atArr ? f.dest === "DUB" : f.origin === "DUB") marks.push(metarAt(t, `METAR at ${atArr ? "STA" : "STD"} ${hhmmZ(t)}`));
+    if (atArr || f.origin === hub) marks.push(metarAt(t, `METAR at ${atArr ? "STA" : "STD"} ${hhmmZ(t)}`));
   }
   if (w) marks.push(mark(w.end, "window", `storm window closes ${hhmmZ(w.end)}`, nearestObs(storm.metar, w.end).raw, `metar:${storm.id}`));
   return marks.sort((a, b) => Date.parse(String(a.at)) - Date.parse(String(b.at)));
@@ -309,6 +336,7 @@ function explanation(storm: StormDef, spec: FlightSpec, d: FlightDecision, s: Mo
   const w = mainWindow(storm);
   const win = windowLabel(w);
   const band = bandFor(f.origin, f.dest);
+  const hubName = findAirport(storm.station)?.name ?? storm.station;
   let text: string;
   if (f.status === "operated") {
     text = `${f.number} operated (off blocks ${f.actual_dep ? hhmmZ(f.actual_dep) : hhmmZ(f.sched_dep)}), so there is no cancellation to settle and nothing is owed under Art. 5.`;
@@ -318,15 +346,17 @@ function explanation(storm: StormDef, spec: FlightSpec, d: FlightDecision, s: Mo
     const atArr = spec.group !== "outbound_weather";
     const t = atArr ? f.sched_arr : f.sched_dep;
     const o = nearestObs(storm.metar, t);
-    text = `${f.number} was due to ${atArr ? "land in" : "leave"} Dublin at ${hhmmZ(t)}, inside the storm window (${win}; ${o.raw.split(" ").slice(1, 3).join(" ")}). The storm is an extraordinary circumstance (EU261 Art. 5(3)), so there is no compensation; refunds and care are still due. Distance ${band.label}.`;
+    text = `${f.number} was due to ${atArr ? "land in" : "leave"} ${hubName} at ${hhmmZ(t)}, inside the storm window (${win}; ${o.raw.split(" ").slice(1, 3).join(" ")}). The storm is an extraordinary circumstance (EU261 Art. 5(3)), so there is no compensation; refunds and care are still due. Distance ${band.label}.`;
   } else if (d.cause === "knock_on") {
     const outbound = f.outbound_pair_id?.split("@")[0] ?? "the outbound";
     text = isHeld(d)
-      ? `${f.number} never had an aircraft: ${outbound} was cancelled by the storm, so ${f.aircraft} never reached ${f.origin}. At ${f.number}'s STD (${hhmmZ(f.sched_dep)}) ${f.origin} was calm, and at its STA (${hhmmZ(f.sched_arr)}) Dublin was outside the window. Whether a storm-cancelled rotation makes the return extraordinary is a legal question (CJEU C-74/19), so it is with Legal: one question covers NS113, NS115 and NS117.`
+      ? `${f.number} never had an aircraft: ${outbound} was cancelled by the storm, so ${f.aircraft} never reached ${f.origin}. At ${f.number}'s STD (${hhmmZ(f.sched_dep)}) ${f.origin} was calm, and at its ${f.dest === hubOf(storm) ? `STA (${hhmmZ(f.sched_arr)}) ${hubName}` : `STD ${hubName}`} was outside the window. Whether a storm-cancelled rotation makes the return extraordinary is a legal question (CJEU C-74/19), so it is with Legal: one question covers every return of this pattern.`
       : `${f.number} is settled by ${d.rules_applied[0]}: a storm-cancelled rotation, no aircraft and crew within 3 h of STD, and the earliest reroute offered on any carrier. ${d.extraordinary === "extraordinary" ? "No compensation; refunds and care still due." : "Compensation is owed."}`;
   } else {
-    const log = storm.techLogs?.[f.id];
-    text = `${f.number} is technical, not weather: ${f.aircraft} was AOG from ${log ? hhmmZ(log.logged_at) : "before the window"} with no MEL relief (tech log), and the flight was out of the storm window at both ends${d.window_margin_min ? ` (${d.window_margin_min} min clear)` : ""}. ${d.recoded ? `OCC's code ${d.recode_label?.split(" ")[0]} is recoded to 41. ` : ""}Compensation is owed: ${band.label}.`;
+    const log = storm.techLogs[f.id];
+    text = d.cause === "concurrent"
+      ? `${f.number} has two candidate causes: the storm window (${win}) and an AOG logged inside it. Concurrent causes are a legal question, so Legal decides; until then the case is held and nothing is paid or released.`
+      : `${f.number} is technical, not weather: ${f.aircraft} was AOG from ${log ? hhmmZ(log.logged_at) : "before the window"} with no MEL relief (tech log), and the flight was out of the storm window at both ends${d.window_margin_min ? ` (${d.window_margin_min} min clear)` : ""}. ${d.recoded ? `OCC's code ${d.recode_label?.split(" ")[0]} is recoded to 41. ` : ""}Compensation is owed: ${band.label}.`;
   }
   return { id: `DRAFT-explain:${f.id}`, kind: "explanation", text, numbers_verified: true, llm_commit: f.id === HERO_FLIGHT ? (s.commits.find((c) => c.kind === "llm_call" && c.payload_ref === `explain:${f.id}`)?.hash ?? null) : null, template_fallback: f.id !== HERO_FLIGHT };
 }
@@ -346,7 +376,7 @@ const OPERATED_DECISION = (s: MockState, storm: StormDef, spec: FlightSpec): Fli
     window_margin_min: null,
     confidence: { score: null, kind: "cause", label: "cause-finding confidence", features: {}, caps: [], calibration_version: CAL },
     reason: "operated: no cancellation, nothing to decide",
-    evidence: f.origin === "DUB" ? [{ fact_id: `F:flight:${f.id}:flight.actual_dep`, source_id: `schedule:${f.id}`, field: "flight.actual_dep", value: f.actual_dep, quote: scheduleLine(spec), role: "context", trust_tier: 2, struck: false }, { fact_id: `F:EIDW:${f.actual_dep}:metar`, source_id: `metar:${storm.id}`, field: "metar.at_departure", value: null, quote: nearestObs(storm.metar, f.actual_dep ?? f.sched_dep).raw, role: "context", trust_tier: 1, struck: false }] : [],
+    evidence: f.origin === hubOf(storm) ? [{ fact_id: `F:flight:${f.id}:flight.actual_dep`, source_id: `schedule:${f.id}`, field: "flight.actual_dep", value: f.actual_dep, quote: scheduleLine(spec), role: "context", trust_tier: 2, struck: false }, { fact_id: `F:EIDW:${f.actual_dep}:metar`, source_id: `metar:${storm.id}`, field: "metar.at_departure", value: null, quote: nearestObs(storm.metar, f.actual_dep ?? f.sched_dep).raw, role: "context", trust_tier: 1, struck: false }] : [],
     rules_applied: [],
     legal_basis: [],
     outcome: "auto",
@@ -374,7 +404,7 @@ export function flightFile(s: MockState, flightId: string, role: Role): FlightFi
       .filter((e) => e.source_decision_id === flightId && e.event_date === spec.flight.sched_dep.slice(0, 10))
       .sort((a, b) => Number(b.kind === "compensation_estimate") - Number(a.kind === "compensation_estimate") || a.id.localeCompare(b.id))
       .map((e) => clone(e)),
-    timeline: timeline(storm, spec, decide(storm, spec, ctx)),
+    timeline: timeline(s, storm, spec, decide(storm, spec, ctx)),
     handoff: flightId === HERO_FLIGHT ? { refunds_already_initiated: 32, not_repeated: true, rights_notices_drafted: 32, drafter_pii_seen: 0, bot_email_said: "weather, no compensation", clearing_account: "2125", clearing_balance_cents: 0, names_merged: "in code, after drafting" } : null,
     explanation: explanation(storm, spec, d, s),
   };
@@ -400,6 +430,15 @@ export function cohortEntitlement(s: MockState, cohort: string): number {
 }
 
 // ---------- baseline ----------
+const BASELINE_ACCESS: AccessDecision[] = [
+  { at: "2025-01-24T06:02:00Z", principal: "agent.crm_bot", action: "initiate_refund", resource: "coupons:NS31@2025-01-24", allowed: true, reason: "CRM bot may initiate refunds on direct-sold coupons; Books clears them through 2125" },
+  { at: "2025-01-25T05:59:03Z", principal: "agent.reader", action: "read", resource: "tech_log:EI-NSB@2025-01-23", allowed: true, reason: "Reader reads sources incl. PII and emits pseudonymous facts" },
+  { at: "2025-01-25T05:59:22Z", principal: "agent.drafter", action: "read", resource: "coupons:NS31@2025-01-24", allowed: true, reason: "redacted: the Drafter sees no PII · names merged in code after drafting" },
+  { at: "2025-01-25T07:02:40Z", principal: "ops", action: "read", resource: "claims:CLM-2025-0131", allowed: true, reason: "redacted: Ops sees flights and causes, no passenger data" },
+  { at: "2025-01-25T07:30:00Z", principal: "legal", action: "read", resource: "coupons:NS31@2025-01-24:14C", allowed: true, reason: "redacted: Legal gets case facts without PII" },
+  { at: "2025-01-25T08:12:00Z", principal: "claims_lead", action: "read", resource: "claims:CLM-2025-0131", allowed: true, reason: "the Claims Lead sees PII for claims" },
+];
+
 function createBaseline(): MockState {
   const s: MockState = {
     knownAt: BASELINE_CLOCK,
@@ -415,9 +454,13 @@ function createBaseline(): MockState {
     journal: baselineJournal(),
     locked: ["2025-01"],
     lockedWrites: 0,
-    accessLog: [],
+    accessLog: BASELINE_ACCESS.map((a) => ({ ...a })),
     meta: new Map(),
+    injected: new Map(),
+    confirmed: new Map(),
     ids: { je: 300, q: 6, ruling: 1, inject: 1, draft: 1 },
+    metaVersion: 0,
+    cache: { key: "", memo: new Map() },
     extRefusals: 0,
     monthEnd: new Set(["2025-02"]),
   };
@@ -427,6 +470,27 @@ function createBaseline(): MockState {
   const learn = (at: string, summary: string, ref: string) => emit(s, { at, kind: "rule", actor: "agent.engine", summary, ref, chip: "LEARNED" }, EOWYN_ID, { silent: true });
   learn("2025-01-20T09:00:00Z", "Learned from 18 months of claims: takes the 50% reroute cut on long-haul partner reroutes · 41 of 42", "R-MIN-1@1");
   learn("2025-01-20T09:00:05Z", "Learned the claim curves: 35% of owed long-haul passengers claim (history to M18 + tail judgment) · 27% medium · 20% short", "LH-v1");
+  for (const r of s.rules) addCommit(s, "rule_event", "agent.engine", "2025-01-20T09:00:10Z", r, `rule:${ruleRef(r)}`, `${ruleRef(r)} recorded · ${r.status}`);
+  const herminiaSource = (id: string) => /2025-01-26|@2025-01-25/.test(id);
+  const factCommits = (filter: (id: string) => boolean) => {
+    for (const src of [...SOURCES].filter((x) => filter(x.id)).sort((a, b) => a.received_at.localeCompare(b.received_at))) {
+      addCommit(s, "fact", src.kind === "metar" ? "parser:iem@1" : src.trust_tier === 1 ? "agent.reader" : "normalize@1", src.received_at, { source_id: src.id, sha256: src.sha256 }, `fact:${src.id}`, `${src.title} · sha256 ${src.sha256.slice(0, 12)}`);
+      if (src.kind === "tech_log") addCommit(s, "llm_call", "agent.reader", src.received_at, { source_id: src.id, prompt: "reader-v1", model: "claude-opus-5-5" }, `llm:reader:${src.id}`, "Reader extracted the AOG facts · every span verbatim · values re-parsed", [`source:${src.id}`, "prompt:reader-v1"]);
+    }
+  };
+  const entitlementCommits = (storm: StormDef, at: string) => {
+    const ctx = ctxOf(s);
+    for (const spec of storm.flights) {
+      const d = decide(storm, spec, ctx);
+      if (!d) continue;
+      const full = fullEntitlementCents(spec, d, ctx);
+      addCommit(s, "entitlement", "agent.engine", at, { flight: spec.flight.id, full_entitlement_cents: full, liability_cents: liabilityCents(spec, d, ctx) }, `entitlement:${spec.flight.id}`, `${spec.flight.number} · ${spec.flight.pax} entitlements · ${full ? eur(full) : "no compensation"}`, [`decision:${s.meta.get(spec.flight.id)?.commit ?? ""}`]);
+    }
+  };
+  const jeCommits = (filter: (e: JournalEntry) => boolean) => {
+    for (const entry of s.journal.filter(filter).sort((a, b) => a.event_date.localeCompare(b.event_date) || a.id.localeCompare(b.id))) addCommit(s, "journal_event", entry.preparer, `${entry.event_date}T23:00:00Z`, entry, `je:${entry.id}`, `${entry.id} · ${entry.memo.split(" · ")[0]}`);
+  };
+  factCommits((id) => !herminiaSource(id));
 
   // Storm Éowyn, the morning after
   const e = (at: string, init: Omit<EventInit, "at">) => emit(s, { at, ...init }, EOWYN_ID, { silent: true });
@@ -434,6 +498,8 @@ function createBaseline(): MockState {
   e("2025-01-25T05:59:02Z", { kind: "fact", actor: "agent.reader", summary: "Read the OCC cancel list (05:12Z): 27 cancellations coded 71/72", ref: `occ_log:${EOWYN_ID}`, chip: "INFO" });
   emit(s, { at: "2025-01-25T05:59:03Z", kind: "llm_call", actor: "agent.reader", summary: "Read the AMOS tech log for EI-NSB: AOG 23 Jan 21:40Z, no MEL relief · 3 facts verified, 0 dropped", ref: "tech_log:EI-NSB@2025-01-23", chip: "INFO" }, EOWYN_ID, { silent: true, inputs: ["source:tech_log:EI-NSB@2025-01-23", "prompt:reader-v1"] });
   for (const spec of eowyn.flights) commitDecision(s, eowyn, spec, "2025-01-25T06:00:00Z");
+  entitlementCommits(eowyn, "2025-01-25T05:59:14Z");
+  jeCommits((e) => e.event_date === "2025-01-24");
   e("2025-01-25T05:59:10Z", { kind: "decision", actor: "agent.engine", summary: "13 outbound flights inside the DUB window · weather · no compensation; refunds and care still due", ref: EOWYN_ID, chip: "APPLIED" });
   e("2025-01-25T05:59:11Z", { kind: "decision", actor: "agent.engine", summary: "6 return sectors landed inside the DUB window · weather · no compensation; refunds and care still due", ref: EOWYN_ID, chip: "APPLIED" });
   e("2025-01-25T05:59:12Z", { kind: "decision", actor: "agent.engine", summary: "4 overnight inbounds confirmed as destination weather (72)", ref: EOWYN_ID, chip: "APPLIED" });
@@ -455,11 +521,14 @@ function createBaseline(): MockState {
   // Storm Herminia, the morning after (its voucher cases wait on Q-1's pattern)
   const h = (at: string, init: Omit<EventInit, "at">) => emit(s, { at, ...init }, HERMINIA_ID, { silent: true });
   h("2025-01-27T05:59:01Z", { kind: "fact", actor: "parser:iem@1", summary: `Read ${herminia.metar.length} real METAR obs at EIDW · storm window ${windowLabel(mainWindow(herminia))}, peak gust ${mainWindow(herminia)?.peak_gust_kt} kt`, ref: `metar:${HERMINIA_ID}`, chip: "INFO" });
+  factCommits(herminiaSource);
   for (const spec of herminia.flights) commitDecision(s, herminia, spec, "2025-01-27T06:00:00Z");
+  entitlementCommits(herminia, "2025-01-27T05:59:14Z");
   h("2025-01-27T05:59:10Z", { kind: "decision", actor: "agent.engine", summary: "3 flights inside the DUB window · weather · no compensation; refunds and care still due", ref: HERMINIA_ID, chip: "APPLIED" });
   h("2025-01-27T05:59:15Z", { kind: "decision", actor: "agent.engine", summary: "NS112 recoded 71 → 41 · 178 payouts drafted", ref: "NS112@2025-01-26", chip: "DRAFTED", amount_cents: 1_922_400 });
   h("2025-01-27T05:59:16Z", { kind: "decision", actor: "agent.engine", summary: "NS30 BOS→DUB technical (41, as coded) · 168 payouts drafted", ref: "NS30@2025-01-25", chip: "DRAFTED", amount_cents: 3_528_000 });
   h("2025-01-27T05:59:20Z", { kind: "entitlement", actor: "agent.engine", summary: "32 unsigned in-lieu vouchers held · same pattern as Q-1, waiting on the Claims Lead", ref: HERMINIA_ID, chip: "HELD", amount_cents: 1_300_000 });
+  jeCommits((e) => e.event_date !== "2025-01-24");
   return s;
 }
 
