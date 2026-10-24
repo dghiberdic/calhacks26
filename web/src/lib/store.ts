@@ -14,6 +14,8 @@ type State = {
   openWhy: (t: WhyTarget | null) => void;
   palette: boolean;
   setPalette: (v: boolean) => void;
+  run: boolean;
+  setRun: (v: boolean) => void;
   answered: Record<string, string>; // question id → answer id
   answer: (q: string, a: string) => void;
   rules: Rule[];
@@ -29,6 +31,8 @@ export const useApp = create<State>((set) => ({
   openWhy: (why) => set({ why }),
   palette: false,
   setPalette: (palette) => set({ palette }),
+  run: false,
+  setRun: (run) => set({ run }),
   answered: {},
   answer: (q, a) =>
     set((s) => {

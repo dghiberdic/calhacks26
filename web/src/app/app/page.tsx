@@ -14,7 +14,7 @@ import { cn } from "@/lib/cn";
 type Filter = "all" | "owed" | "weather";
 
 export default function Overview() {
-  const { openSheet, answered } = useApp();
+  const { openSheet, answered, setRun } = useApp();
   const [filter, setFilter] = useState<Filter>("all");
   const [hover, setHover] = useState<string | null>(null);
   const t = totals();
@@ -39,6 +39,9 @@ export default function Overview() {
             Ops cancelled {t.cancelled} departures and coded every one as weather. StormCheck re-checked each against METAR and the aircraft&rsquo;s logs.
           </p>
         </div>
+        <button type="button" onClick={() => setRun(true)} className="rounded-lg bg-white px-3.5 py-2 text-[14px] shadow-[0_0_0_1px_#e2e2dc] transition-shadow hover:shadow-[0_0_0_1px_#b9b9b2]">
+          Replay the 09:00Z run
+        </button>
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">

@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Logo } from "@/components/ui/Logo";
 import { Kbd } from "./ui";
 import { FlightSheet } from "./FlightSheet";
 import { WhyDrawer } from "./WhyDrawer";
 import { CommandPalette } from "./CommandPalette";
+import { AgentRun } from "./AgentRun";
 import { useApp } from "@/lib/store";
 import { QUESTIONS, ROLES } from "@/data/app";
 import { cn } from "@/lib/cn";
@@ -142,7 +143,7 @@ function StormSwitcher() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  const { setPalette, answered, role } = useApp();
+  const { setPalette, answered, role, run, setRun } = useApp();
   const open = QUESTIONS.filter((q) => !answered[q.id]).length;
   const mine = QUESTIONS.filter((q) => !answered[q.id] && q.owner === role).length;
 
@@ -158,6 +159,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [setPalette]);
 
   const desk = path.startsWith("/app/desk");
+  const closeRun = useCallback(() => setRun(false), [setRun]);
   return (
     <div className={cn("flex min-h-svh flex-col bg-chart text-ink", desk && "bg-[#eef2f8]")}>
       <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-[#e6e6e0] bg-chart/90 px-4 backdrop-blur-md md:gap-5 md:px-5">
@@ -181,13 +183,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </span>
         </button>
         <div className="ml-auto flex items-center gap-4">
-          <span className="hidden items-center gap-2 text-[14px] text-settled-ink lg:flex" title="StormCheck re-checks every 15 minutes">
+          <button
+            type="button"
+            onClick={() => setRun(true)}
+            className="hidden items-center gap-2 rounded-full px-2.5 py-1.5 text-[14px] text-settled-ink transition-colors hover:bg-settled-wash lg:flex"
+            title="See what StormCheck did at 09:00Z"
+          >
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-settled opacity-40" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-settled" />
             </span>
             Re-checked <span className="font-mono">09:00Z</span>
-          </span>
+          </button>
           <RoleSwitcher />
         </div>
       </header>
@@ -245,6 +252,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <FlightSheet />
       <WhyDrawer />
       <CommandPalette />
+      <AgentRun open={run} onClose={closeRun} />
     </div>
   );
 }
