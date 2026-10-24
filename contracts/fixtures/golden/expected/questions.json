@@ -1,0 +1,167 @@
+{
+  "_about": "Expected escalations (plan §1.4). Match by pattern, not by question id. One question per (pattern, storm). Confidence by band; plan_confidence is the plan's illustrative value.",
+  "storms": {
+    "EIDW@2025-01-24": [
+      {
+        "key": "Q1",
+        "pattern": "voucher_in_lieu_unsigned",
+        "routed_to": "claims_lead",
+        "reason_tag": "sources-disagree",
+        "case_refs": [
+          "NS31@2025-01-24:14C"
+        ],
+        "confidence_kind": "voucher",
+        "confidence": {
+          "max": 0.6
+        },
+        "plan_confidence": 0.39,
+        "holds": [
+          "NS31@2025-01-24:14C"
+        ],
+        "holds_cents": 60000,
+        "recommended_option_contains": "€600"
+      },
+      {
+        "key": "Q2",
+        "pattern": "knock_on_return",
+        "routed_to": "legal",
+        "reason_tag": "no-precedent",
+        "case_refs": [
+          "NS113@2025-01-24",
+          "NS115@2025-01-24",
+          "NS117@2025-01-24"
+        ],
+        "confidence_kind": "cause",
+        "confidence": {
+          "max": 0.6
+        },
+        "plan_confidence": 0.47,
+        "holds": [
+          "NS113@2025-01-24",
+          "NS115@2025-01-24",
+          "NS117@2025-01-24"
+        ],
+        "holds_cents": 4749600
+      },
+      {
+        "key": "Q3",
+        "pattern": "cohort_release",
+        "routed_to": "controller",
+        "reason_tag": "release-proposal",
+        "case_refs": [
+          "EIDW@2024-01-21"
+        ],
+        "confidence_kind": "release",
+        "confidence": {
+          "min": 0.6,
+          "max": 0.9
+        },
+        "plan_confidence": 0.72,
+        "holds": [
+          "EIDW@2024-01-21"
+        ],
+        "holds_cents": 360000,
+        "trigger": "Isha cohort at M12 (2025-01 month end); a release proposal"
+      }
+    ]
+  },
+  "rulings": {
+    "Q1": {
+      "rule": "R-CL-1@1",
+      "author_role": "claims_lead",
+      "action": "deny_offset",
+      "scope_features_hint": [
+        "voucher.in_lieu",
+        "voucher.signed",
+        "flight.departs_eu"
+      ],
+      "decision": "No signed acceptance, no offset: pay €600 cash; the voucher stays as goodwill.",
+      "herminia_settled": [
+        "NS106@2025-01-26:12D",
+        "NS106@2025-01-26:15C",
+        "NS106@2025-01-26:16A",
+        "NS106@2025-01-26:16F",
+        "NS106@2025-01-26:19B",
+        "NS106@2025-01-26:20D",
+        "NS106@2025-01-26:21C",
+        "NS106@2025-01-26:23D",
+        "NS106@2025-01-26:24F",
+        "NS106@2025-01-26:25E",
+        "NS106@2025-01-26:26C",
+        "NS106@2025-01-26:28F",
+        "NS106@2025-01-26:30A",
+        "NS106@2025-01-26:3E",
+        "NS106@2025-01-26:6B",
+        "NS106@2025-01-26:7D",
+        "NS106@2025-01-26:8C",
+        "NS110@2025-01-26:16B",
+        "NS110@2025-01-26:16F",
+        "NS110@2025-01-26:20D",
+        "NS110@2025-01-26:25B",
+        "NS110@2025-01-26:25E",
+        "NS110@2025-01-26:27B",
+        "NS110@2025-01-26:27F",
+        "NS110@2025-01-26:28F",
+        "NS110@2025-01-26:2C",
+        "NS110@2025-01-26:3E",
+        "NS110@2025-01-26:6B",
+        "NS110@2025-01-26:7B",
+        "NS110@2025-01-26:8F",
+        "NS110@2025-01-26:9C"
+      ],
+      "herminia_asks_again": {
+        "pattern": "voucher_in_lieu_unsigned",
+        "routed_to": "claims_lead",
+        "case_refs": [
+          "NS30@2025-01-25:23F"
+        ]
+      },
+      "times_cited_after_herminia": 31
+    },
+    "Q2": {
+      "rule": "R-LEG-1@1",
+      "author_role": "legal",
+      "action": "set_extraordinary",
+      "scope_features_hint": [
+        "flight.is_return_sector",
+        "rotation.prev_cancelled",
+        "spare.available_within_h",
+        "pax.reroute_earliest_offered"
+      ],
+      "settles": [
+        "NS113@2025-01-24",
+        "NS115@2025-01-24",
+        "NS117@2025-01-24"
+      ],
+      "times_cited": 3,
+      "delta_cents": -4749600,
+      "liability_after_cents": 3465000
+    },
+    "Q3": {
+      "rule": "R-CTL-1@1",
+      "author_role": "controller",
+      "ruling_kind": "rejection",
+      "action": "keep_tail",
+      "keeps_cents": 360000,
+      "widen_next": "all storm cohorts"
+    }
+  },
+  "challenges": {
+    "storm_anyway": {
+      "text": "The storm would have grounded it anyway",
+      "classification": "assertion",
+      "decision_stands": true
+    },
+    "hidden_defect": {
+      "text": "Airbus operator notice: hidden defect in this EDP batch",
+      "classification": "new_legal_pattern",
+      "decision_stands": true,
+      "routed_to": "legal",
+      "confidence": {
+        "max": 0.6
+      },
+      "plan_confidence": 0.52
+    }
+  },
+  "repeat_questions": 0
+}

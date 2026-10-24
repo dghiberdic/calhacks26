@@ -78,3 +78,69 @@ Judgment calls made while implementing, newest last. Each one says what we chose
 7. **`band_eur`/`band_margin_km`** (Art. 7(1)) live here too, because the generator's answer key needs the true
    entitlement without importing the engine: ≤1500 km €250; intra-EU >1500 km or 1500–3500 km €400; else €600.
    Exactly 1500 km is €250.
+
+## F3a · Network, days, latent causes
+
+1. **Network** (`world/network.py`): 35 routes from DUB (29 EU/UK, 6 North America), 82 sectors a day. The morning
+   wave reuses the plan's numbers, times and tails (NS100–NS118, return times as in §1.2); the afternoon wave is the
+   plan's 11 "everyone else flew" departures (NS120–NS140); a midday wave adds 14 more pairs; long haul is NS20/21 JFK,
+   NS30/31 BOS (A321XLR), NS40/41 ORD, NS50/51 YYZ, NS60/61 EWR (XLR), NS70/71 IAD. Tails: EI-NS* narrowbodies (incl.
+   the golden XLRs EI-NSB/EI-NSN), EI-NW* A330s (as in the stub), EI-NLA spare XLR, EI-NT* DUB standby spares.
+   A test checks every tail's rotation is location-consistent with ≥30 min turns, in winter and summer time.
+2. **Times.** DUB departures are fixed in Dublin local time (so summer days shift by an hour in UTC); returns leave
+   the outstation `turn` minutes after the outbound's STA; long-haul inbounds leave North America at a fixed origin
+   local time the evening before. A flight's `date` (and id) is its local departure date at the origin, so the
+   overnight inbounds of world day D are `NS20@D-1` (as in CONTRACTS).
+3. **World days.** 26 storm days recomputed from the pinned EIDW METAR (plan §5 rule) + 40 background days (28 learn,
+   12 score), ranked by sha256 with a fixed salt independent of the generator seed so pinned outstation METAR always
+   covers them. Background days skip storm days and 2025-01-23..27 (golden).
+4. **Outstation METAR** for all 66 world days is pinned (`uv run python -m world.pin_metar network`): one multi-station
+   IEM request per contiguous run, UTC day D for every station plus D-1 for North America, as sparse
+   `<ICAO>_world_2023-07_2025-07.csv.gz` bundles (1.9 MB). The F1 loader reads them unchanged. This also gives the
+   engine real (calm) outstation METAR for LIS/FCO/MUC on Éowyn day, which engine D1 asked for.
+   In the world, outstation obs are trimmed to ±3 h around that station's sectors; EIDW keeps D-1 18:00Z → D+1 06:00Z.
+   Keys are `<ICAO>@<world day>` (the mini-world convention).
+5. **Latent causes** (`world/causes.py`), drawn with an RNG keyed by (seed, flight id), so a flight comes out the
+   same whichever days are generated:
+   - weather: per-sector cancellation probability from the real METAR within ±45 min of STD (origin) and STA (dest):
+     G35–39 0.08, G40–44 0.2, G45–49 0.42, G50–54 0.75, G55+ 0.92; sustained ≥30/35 kt 0.45/0.7; fog, FZ, SN, GR, TS
+     smaller. These are not the engine's window thresholds, so window edges are genuinely uncertain.
+   - internal AOG (1.2 % per tail-day; half the night before at DUB like NS31, half after an arrival), external hits
+     (bird 0.15 %/sector, lightning 1.2 % on storm days), crew (0.15 %, 0.6 % after 13Z on storm days), ATC strike
+     days (5 % of calm days; FR/ES/IT/PT/CH routes cancel at 30 %).
+   - rotation: the aircraft is not at the origin (or is >3 h late). A spare at DUB takes over the rotation; a spare
+     ferried ex-DUB rescues an outstation sector if it departs ≤3 h late (the flight then operates delayed). A
+     cancelled return whose aircraft is stranded ferries home empty once both ends drop below 0.25 severity.
+     A stranded sector whose own ends still show storm conditions is truth **weather**, not knock-on (golden: NS101's
+     STA is in the DUB window); a stranded sector calm at both ends is **knock_on** (the C-74/19 pattern).
+6. **Truth (the law as Northstar's Legal rules it):** weather, ATC, bird/lightning → extraordinary; internal AOG and
+   crew → not; **concurrent** (aircraft AOG while the storm would also cancel) → not extraordinary, expected route
+   Legal; **knock-on** with an extraordinary root → extraordinary iff no spare within 3 h AND the earliest reroute was
+   offered (R-LEG-1, plan §1.2), expected route Legal; knock-on with an internal root → not extraordinary.
+7. **OCC.** Storm days get one batch "CNL LIST → NETLINE, RSN 71" (INBD long haul RSN 72) about 70 min before the
+   first weather cancellation (not before 04:00Z). It includes every weather/concurrent cancellation, their knock-ons,
+   and 80 % of other cancellations already known at batch time: that is how a technical cancellation gets miscoded 71
+   (NS31). Other cancellations get single OCC lines with the root's code (41/51/64/67/82/93; 30 % of AOGs on a windy
+   day are typed 71). `notified_at` is the IROPS SMS time.
+
+## F0 · Golden embed
+
+1. **Golden days are not simulated.** `generate_world` skips every `meta.storms[*].local_date` of golden
+   (2025-01-24 Éowyn, 2025-01-26 Herminia mini-day) and splices golden in verbatim (`world/golden.py::embed`).
+   The Herminia day therefore has only golden's 8 flights. Generating the rest of that day around it would collide
+   with golden's own narrative (e.g. its spares line "EI-NSW covering NS100/NS102").
+2. **Byte-for-byte check.** `golden_slice(world)` filters every list by golden's ids (preserving golden's order) and
+   takes `meta["golden"]`, golden's metar keys and real_context. Its canonical hash equals golden's (test), and
+   `meta.golden_hash` records it. `embed` raises on any id collision.
+3. **Shared keys: golden wins.** Airports are identical (same OurAirports coordinates). `meta.distances_km` merges, and
+   golden's rounded plan distances win for its routes (DUB–BCN 1,486 → "14 km under"). The generator's other routes
+   keep 0.1 km great-circle values.
+4. **History and opening balances:** golden's 42 reroute-reduction cases ("41 of 42") and the Isha cohort are used
+   as is. Generated history never re-mines the same policy, so the headline support stays "41 of 42".
+5. **Golden ground truth** comes from golden's own `meta.groups` (the plan §1.2 truth table), never from the engine:
+   weather groups → weather/extraordinary; knock-on → knock_on, extraordinary under R-LEG-1, expected route Legal;
+   NS31 and Herminia's h_technical → technical/not extraordinary. NS31@24JAN and NS106@26JAN (coded 71, AOG in the
+   tech log) are tagged `miscoded_technical`.
+6. **Id and source conventions follow golden:** `TECHLOG-<tail>-<stamp>`, `MCC-<stamp>-<tail>`, `OCC-<stamp>[-<number>]`,
+   `SPARES-<stamp>-<number>`, sources `SRC-<record id>`, METAR sources `SRC-METAR-<ICAO>@<day>` holding IEM CSV text,
+   tech-log sources holding the AMOS export block. Fleet types follow golden's `meta.fleet`.
