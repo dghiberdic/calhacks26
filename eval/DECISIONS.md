@@ -21,3 +21,13 @@ World F3d and answer-key export are implemented. F3c has explicit error-input co
 The held-out figures explicitly separate curated golden cancellations from generated cancellations (which include controlled plants). Including the golden story or controlled plants must never be presented as independent market validation. On integrating upstream 61db69d, the shared generator's planner replaced the local experimental ambiguity draw: it supplies feature-invisible crew faults, unrecorded AOGs and their knock-ons, with unchanged real weather and latent labels. Legacy 2017/18 flights exercise limitation handling but are excluded from 2023–25 cause calibration and test metrics. No upstream acceptance test was weakened during integration.
 
 The exact cause-and-extraordinary accuracy compares the initial output to final latent truth. An unresolved `needs_legal` output counts as a non-match even when routing it to Legal is the correct workflow; the number combines abstentions and misclassifications. It must not be presented as an autonomous error rate.
+
+## PR #6 merge into main: proof regenerated on the merged tree (integration agent)
+
+- Main changed four files after Filip's 61db69d base: `contracts/normalize.py`, `engine/case.py`, `engine/cause.py` and `engine/questions.py`, which add the evidence links. All four are hashed in `cache/manifest.json`, so `eval.run --from-cache` refused to run on the merged tree ("Input hash mismatch").
+- We re-ran `LLM_MODE=offline STORMCHECK_MODE=offline python -m eval.run` (full, not cached) on the merged tree. Then we re-ran `--from-cache` so NUMBERS.md comes out in the canonical form. The two runs order the `world_diagnostics` dict differently.
+- Results:
+  - Every scored row, calibration row, fitted model and answer-key file is byte-identical, and so is every metric in `proof.json` and `NUMBERS.md`.
+  - The only change is the three-run canonical replay hash, from `df4e925b…` to `4006d5c9…`. It is still identical across all three runs and still €34,650 × 3.
+  - On Filip's own tree, `replay_three` still gives `df4e925b…`. So the change comes from the new decision content on main, not from nondeterminism.
+- Nothing was hand-edited. The regenerated `results.json`, `manifest.json`, `proof.json` and `NUMBERS.md` are committed.

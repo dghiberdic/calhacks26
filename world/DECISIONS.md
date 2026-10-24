@@ -248,3 +248,12 @@ Judgment calls made while implementing, newest last. Each one says what we chose
 6. **History:** the embedded world keeps golden's 48 history cases ("41 of 42"). A golden-free world gets
    `generated_history`: 42 reroute-reduction cases from learn-split coupons (41 applied, 1 goodwill exception) and
    6 cause rulings.
+
+## PR #6 merge into main (integration agent)
+
+1. **Filip's own resolution was merged as is.** He integrated F3c himself (a56be38) before we merged. `world/answer_key.py`, its tests and the compact `train/test/curves_train.json` are F3c's, byte for byte. His F3d (`generate.py`, `api.py`, `desk_cases.py`) and the `error_cases.py` stress corpus with `stress.json` come in unchanged. A full eval re-run on the merged tree rebuilt all four key files byte-identical.
+2. **His first key format (unplanted, `build_answer_key`) was not revived.** He dropped it himself. It also had no planted cases, so F3c's ≥5-per-type acceptance tests would fail on it.
+3. **His rule-based claim-validity recomputation was cross-checked against the F3c key and not restored.** Over the full seed-0 world, 6,214 of 6,261 claims agree. Two kinds of disagreement, 47 claims in all:
+   - **22 claims, F3c key right.** These are lead-booker PNR-scope claims. The rule ignores `pnr_scope`, so it pays the lead booker for one coupon only (e.g. CLM-NS167-23B-2023-09-07T0746Z: rule €400, key €1,200 covering 23B/23C/23D). It then wrongly accepts the members' later claims (e.g. CLM-NS167-23C-2023-09-27T1734Z: rule €400, key duplicate €0).
+   - **25 claims, no money disagreement.** These are claims on coupons settled in kind by a signed voucher. The key labels them valid with €0 due; the rule labels them invalid with €0. Only the label differs.
+   The cross-check found no case where the key is wrong, so it stays out.

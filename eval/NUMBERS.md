@@ -19,7 +19,7 @@ Run without `--from-cache` to regenerate the world and execute the real engine o
 
 ## Control replay and accounting phase
 
-Three independent real Engine + TraceStore + Books runs produced **€34,650 × 3**, with identical canonical decision/accounting hashes: `df4e925b38df62898ad052386de07c353e9552363fd72155df2871166ab18e67`.
+Three independent real Engine + TraceStore + Books runs produced **€34,650 × 3**, with identical canonical decision/accounting hashes: `4006d5c9a106053e99a5da5237e799af50d68db40a8ea16f20b87c96b33a4bd9`.
 Before the simulated Legal ruling the estimate is **€82,146**, including held knock-ons. €34,650 is the estimate **after** that ruling; it must not be described as the whole storm's initial estimate.
 The replay supplied the historical Art. 7(2) reduction policy explicitly. It does not benchmark automatic policy mining or LLM rule drafting.
 After confirmed Q1/Q2/Q3 rulings, repeated questions: 0. The EU-departure voucher rule settled 31 new coupons; the non-EU departure still produced 1 question. Out-of-scope automatic applications: 0. The Controller replay kept the €3,600 Isha tail; an unconfirmed proposal to widen its scope was not activated.
