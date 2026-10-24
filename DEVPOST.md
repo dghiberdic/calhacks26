@@ -125,10 +125,27 @@ Three of us built it overnight, each running two Claude Code agents in parallel 
 
 ## What's next for StormCheck
 
-- Real feeds behind the `ErpAdapter` interface: Amadeus Altéa or Navitaire, NetLine, AMOS, Accelya, the claims tool and the payment provider. The output stays the same: case recommendations and parked journals.
-- Calibration on a real carrier's labelled history, in place of synthetic labels.
-- Regulation (EU) 2026/2202 as engine logic before it applies on 23 Oct 2027. Today it's a static card.
-- The same pattern for other event-driven liabilities: any company whose liabilities are triggered by an event and depend on what caused it.
+The same seat, more causes. We put every candidate through a critique by an EU261 lawyer, an airline revenue-accounting director with a Big-4 audit partner, an OCC/MRO lead, and a judge with a seed investor. This is what survived, in order:
+
+- **Arrival delays of three hours or more**, compensated like cancellations (C-402/07 Sturgeon), with arrival counted when the doors open (C-452/13). It's the same cause question and the same entry (IFRIC 2019 covers delays). The differences: the extraordinary part of a delay is deducted before the three-hour test (C-315/15), and delays get their own claim curve.
+- **Causes beyond weather** as new evidence feeds, each settled once by Legal:
+  - ATC, proven per flight by its slot message
+  - third-party strikes vs the airline's own (C-28/20)
+  - bird strikes (C-315/15)
+- **Regime packs** on the same dated rules:
+  - UK261 (the DUB–LHR overlap is already paid once)
+  - Canada's APPR for Canadian flights
+  - US refunds
+  - Regulation (EU) 2026/2202 before it applies on 23 Oct 2027: 30-day reasoned answers, which the weather defence already drafts, and a nine-month claim window that shortens the tail for new cohorts
+- **Real feeds** behind the `ErpAdapter` interface: Amadeus Altéa or Navitaire, NetLine, AMOS, Accelya, the claims tool and the payment provider. The output stays the same: case recommendations and parked journals.
+- **Calibration** on a real carrier's labelled history, in place of synthetic labels.
+
+What we cut after the critique:
+- **Baggage:** a different seat, where the cause barely matters.
+- **Recoveries from suppliers:** warranties exclude consequential loss.
+- **Per-tail reliability forecasts:** a technical fault is already owed.
+- **Live flight-tracking data:** it shows no gate times and no causes.
+- **Parametric weather cover:** it pays without asking the cause, which is our whole point.
 
 ## Built with
 

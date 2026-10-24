@@ -43,8 +43,10 @@ export function CfoLine({ data }: { data: PitchData }) {
           <p className="mt-3 text-[32px] leading-[1.3] text-cloud-50">A three-route charter that rarely cancels.</p>
         </div>
         <div>
-          <p className="font-mono text-[17px] uppercase tracking-[0.16em] text-cloud-500">Where it generalizes</p>
-          <p className="mt-3 text-[28px] leading-[1.35] text-cloud-200">Any company whose liabilities are triggered by an event and depend on what caused it.</p>
+          <p className="font-mono text-[17px] uppercase tracking-[0.16em] text-cloud-500">Where it goes next</p>
+          <p className="mt-3 text-[28px] leading-[1.35] text-cloud-200">
+            The same seat, more causes: three-hour delays, strikes and ATC as new evidence feeds; UK261, Canada and the 2027 EU261 rules as dated rule packs.
+          </p>
         </div>
       </Reveal>
     </SlideFrame>

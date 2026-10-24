@@ -17,6 +17,16 @@ There was nothing to swap in. The spares log shows no long-range tail at Dublin:
 **"The storm would have grounded it anyway."**
 That's the challenge in the demo, and the answer is "Decision stands." NS31 was due out at 16:30Z, the window computed from METAR closed at 15:00Z, gusts were 25 kt or less from 16:00Z, and 11 Northstar departures operated between 15:30 and 17:30Z. The replacement pump's ETA (25 Jan, 14:00Z, via CDG) was quoted at 22:15Z on the 23rd, before the storm, so "the storm delayed the part" doesn't hold either. A challenge is a tier-4 fact: it can route a case to a person, but it can't flip a decision.
 
+**"Other airlines flew during your storm window."**
+Some did. Dublin never closed: Eurocontrol counted 179 departures that day against roughly 300 on a normal day, and the press reported departures during the red warning. So StormCheck never argues "Dublin was shut". It argues each flight on its own evidence. Every weather flight file carries a prepared Art. 5(3) defence:
+- the METAR at that flight's STD, inside the computed window
+- how long until the window closed (the "why not wait?" question)
+- what OCC knew before the 05:12 decision
+- the evidence against us
+- the refunds and care still owed
+
+Open NS108 to see it. When a case is close, it goes to Legal; a draft reply goes nowhere without the Claims Lead.
+
 **How do you decide a flight was "in the storm"?**
 A storm window is a run of METAR observations with gusts ≥35 kt, sustained wind ≥30 kt, visibility under 0.5 SM, or snow, freezing, thunderstorm or hail codes, with gaps under 2 h merged. It's computed from the data, never hard-coded, and checked at both ends of each flight: departure at STD, arrival at STA. No observation within 60 minutes gives `unknown`, which goes to Ops below 0.6 confidence; a fault inside the window is concurrent causes, which goes to Legal. The thresholds are a stated definition, not a learned one, so they can be argued with; we'd expect a carrier to set them from its own operating limits.
 
@@ -26,16 +36,24 @@ A storm window is a run of METAR observations with gusts ≥35 kt, sustained win
 Yes, which is why the engine decides facts and Legal rules on law. The engine applies settled law (a technical fault isn't extraordinary; weather inside the window is). The three return flights are a new legal pattern: their outbound legs were cancelled by the storm, so the aircraft never got there, yet both ends were calm at each return's own times, and C-74/19 (TAP) lets a carrier rely on a previous rotation's extraordinary circumstance only with a direct causal link and reasonable measures. So it's one question for three flights (47%, no precedent). Legal ruled them extraordinary only if no aircraft and crew could operate within 3 h of STD and passengers were offered the earliest reroute on any carrier; that's `R-LEG-1@1`, it settled all three, and the €47,496 accrued for them came off as a change in estimate.
 
 **What if Airbus says the pump batch had a hidden defect? (C-549/07)**
-Wallentin-Hermann ¶26 leaves room for a hidden manufacturing defect, revealed by the manufacturer or an authority, to count as extraordinary. So that challenge is classified as a new legal pattern and routed to Legal at 52%, no precedent; on its own it doesn't change NS31. If Legal rules it extraordinary, the ruling becomes a rule and replay shows exactly what it flips.
+Wallentin-Hermann ¶26 leaves room for a hidden manufacturing defect, revealed by the manufacturer or an authority, to count as extraordinary. So that challenge is classified as a new legal pattern and routed to Legal at 52%, no precedent; on its own it doesn't change NS31. If Legal rules it extraordinary, the ruling becomes a rule and replay shows exactly what it flips. We checked the FAA-adopted airworthiness directives (EASA's register was offline that day): none covers a defect in the A320-family engine-driven pump itself.
+- The one EDP case-drain AD (EASA 2026-0074) is for the A350.
+- AD 2021-0177 concerns pylon rods on Pratt & Whitney-powered neos, not the pump.
+
+An AD would be evidence either way. Whether something is a hidden defect stays a question of law.
 
 **Doesn't the new EU261 reform change this? (Reg (EU) 2026/2202)**
-Not for these flights. Regulation (EU) 2026/2202 is in force from 22 Oct 2026 but applies from 23 Oct 2027, so a January 2025 cancellation stays under Regulation 261/2004. In StormCheck it's a static, future-dated card in Policies with no engine logic yet. Rules carry a valid-from date, so when it applies, older flights keep the law they were cancelled under.
+Not for these flights, and not for today's balances. Regulation (EU) 2026/2202 applies from 23 Oct 2027, so a January 2025 cancellation stays under Regulation 261/2004, and a future law changes no existing balance. The amounts (€250/400/600) and the three-hour threshold are unchanged. Two changes matter for this seat:
+- A carrier relying on extraordinary circumstances must name the circumstance and explain the causal link and the reasonable measures within 30 days. The prepared defence on each weather flight is that answer, drafted.
+- New claims must be made within nine months, which shortens the claim-curve tail for cohorts from 23 Oct 2027.
+
+In StormCheck it's a dated card in Policies with no engine logic yet. Rules carry a valid-from date, so older flights keep the law they were cancelled under.
 
 **Why pay 14C €600 cash when she took a €300 voucher? And why does BOS→DUB ask again?**
 Art. 7(3) allows compensation in vouchers only with the passenger's signed agreement. CRM says she accepted, her claim says she didn't, and there's no signature hash, so it goes to the Claims Lead at 39%, sources disagree. The ruling ("No signed acceptance, no offset") pays €600 cash and keeps the €300 voucher as goodwill; on the next storm, Herminia, 31 unsigned cases on EU departures settle on it. BOS→DUB asks again because "leaving the EU" came from the case, not from her words, so the rule doesn't stretch to a flight that departs Boston. Widen removes one constraint per yes, and only if she says yes.
 
 **Why keep the Isha tail instead of releasing it?**
-Claims keep coming for years, and in Ireland the limitation period is six years (C-139/11 Moré leaves it to national law). The engine proposed releasing Storm Isha's remaining €3,600 at 72%, because no claims had arrived for three months. The Controller rejected it: reduce to the expected tail at M12; derecognise at limitation. That rejection is `R-CTL-1@1`, and StormCheck asks once whether it covers all storm cohorts.
+Claims keep coming for years. The limitation period is national law and depends on where the passenger sues (C-139/11 Moré; Rehder C-204/08): six years in Ireland, three from year-end in Germany. So the tail is held to the longest period that could apply. The engine proposed releasing Storm Isha's remaining €3,600 at 72%, because no claims had arrived for three months. The Controller rejected it: reduce to the expected tail at M12; derecognise at limitation. That rejection is `R-CTL-1@1`, and StormCheck asks once whether it covers all storm cohorts.
 
 ## Accounting
 
@@ -96,6 +114,57 @@ A three-route charter that rarely cancels. It's for carriers like Northstar, wit
 **How would it plug into a real airline?**
 It sits on top of what airlines already run: Amadeus Altéa or Navitaire for PNRs, coupons and reaccommodation; NetLine for cancellation messages and delay codes; AMOS for the tech log, MEL and AOG orders; Accelya for revenue accounting (BSP and SIS); plus the claims tool and the payment provider. It writes only case recommendations and parked SAP journals. In the demo those systems are simulated feeds behind an `ErpAdapter` interface; we haven't connected a real one.
 
+## Beyond storms (what's next)
+
+These come out of a four-expert critique: a passenger-rights lawyer, an airline revenue-accounting director with a Big-4 audit partner, an OCC/MRO operations lead, and a judge with a seed investor. Only what survived is here, and none of it is built yet, except the weather defence and the regime overlap rules.
+
+**Only cancellations? What about long delays?**
+That's next, on the same seat. Arrival delays of three hours or more are compensated like cancellations (C-402/07 Sturgeon), with arrival counted when the doors open (C-452/13). The cause question is the same, and so is the entry: IFRIC's 2019 decision covers delays and cancellations, so it stays variable consideration reducing revenue. Two things change:
+- When a delay has two causes, the extraordinary part is deducted before the three-hour test (C-315/15 Pešková).
+- Delays need their own claim curve.
+
+**Strikes, ATC, bird strikes?**
+Each is a new evidence feed plus one Legal ruling, and the law is settled enough to start (crib below). For ATC the proof is per flight: the slot message for that aircraft, not the strike calendar. Today those causes go to a person; nothing is decided by keyword.
+
+**UK261, Canada, the US?**
+Rules are dated and scoped, so regimes are rule packs, not forks.
+- **UK261** already appears in the demo. Scenario 08 is a £520 UK261 claim on DUB–LHR, answered under EU261 and paid once.
+- **Canada's APPR** covers flights to, from or within Canada (our DUB–YYZ, not DUB–BOS). It bars a second payment once another regime has paid.
+- **The US** gives automatic refunds for cancellations and significant changes, not compensation (14 CFR 260). The compensation proposal was withdrawn in November 2025.
+
+Where several regimes apply, compensation is not paid twice.
+
+**So who pays? Can you recover from Airbus, the MRO or the handler?**
+Art. 13 preserves the airline's right of redress but doesn't create one. Mostly there is nothing to recover:
+- Supplier warranties normally exclude consequential loss.
+- The IATA standard ground handling agreement waives most delay claims.
+- If a hidden-defect argument wins, nothing was owed in the first place.
+
+A recovery is never netted against the liability, and it isn't recognised until virtually certain (IAS 37.33). Where a contract does allocate the cost, such as a wet lease, the same evidence file is the claim.
+
+**Codeshare and wet lease?**
+The operating carrier owes under EU261; the lessor in a wet lease isn't the operating carrier (C-532/17 Wirth). Partner reroutes already go through FIM to the interline payable (2160).
+
+**Baggage?**
+Deliberately out. Under the Montreal Convention, proven damage is paid up to 1,519 SDR (2024 limits) and the cause barely matters, so it's a different seat on a different system.
+
+**Is the estimate any good? (ISA 540)**
+The auditor's first question is the retrospective review: for each past storm, the day-1 estimate against what was paid plus what remains. Proof shows liability against actual on the scored storms. On simulated history that validates the pipeline, not the world, and we say so.
+
+**Causes and the law (crib)**
+
+| Cause | Extraordinary? | What still has to be shown for this flight |
+|---|---|---|
+| Weather incompatible with safe operation | Can be (Art. 5(3), recital 14) | the weather at this flight's time, and reasonable measures; refunds and care still due (C-12/11 McDonagh) |
+| Technical fault | No (C-549/07, C-257/14) | n/a, unless it's a hidden manufacturing defect revealed by the manufacturer or an authority (C-549/07 ¶26) |
+| Strike by the airline's own staff | No (C-28/20) | n/a |
+| ATC decision or ATC strike | Can be | the slot message or flow regulation that hit this aircraft, and reasonable measures |
+| Bird strike | Can be (C-315/15) | that the delay came from the strike; the extraordinary part is deducted before the 3 h test |
+| Object on the runway | Can be (C-501/17) | reasonable measures |
+| Airport fuel-system failure | Can be (C-308/21) | that it isn't attributable to the carrier |
+| Unruly passenger, previous rotation | Can be (C-74/19) | a direct causal link and reasonable measures |
+| A crew member's sudden illness | No (C-156/22) | n/a |
+
 ## Security and controls
 
 **Can it approve its own work?**
@@ -130,3 +199,9 @@ From `IMPLEMENTATION_PLAN.md` §9.
 | held for the Claims Lead (NS31) | 172 payouts drafted, pending Claims Lead approval |
 | the AI decides | the engine decides facts; Legal rules on law |
 | real flight records | real Dublin weather, traffic and EU law; simulated logs |
+| restated under the 2027 rules | the 2027 rules apply from 23 Oct 2027; today's balances don't change |
+| highest entitlement | where several regimes apply, compensation is not paid twice |
+| recoverable €, recovery receivable | right of redress (Art. 13); not recognised until virtually certain |
+| extraordinary means no liability | no compensation; refunds and care still due |
+| Dublin was shut | each flight is argued on its own weather; 179 departures still ran |
+| legally compliant | drafted for a person to approve |
