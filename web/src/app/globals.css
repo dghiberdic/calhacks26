@@ -1,0 +1,218 @@
+@import "tailwindcss";
+
+/*
+  StormCheck tokens
+  Two grounds (storm night / morning chart paper), ink, cyanotype for blueprints.
+  Colour only ever means a verdict: weather = grey, owed = vermilion, review = amber,
+  settled = green. Interactive = front blue.
+*/
+@theme {
+  --color-night: #0b0e13;
+  --color-night-2: #121821;
+  --color-night-3: #1a212c;
+  --color-ink: #121417;
+  --color-graphite: #5a6068;
+  --color-mist: #8e9aa8;
+  --color-haze: #a9b4c0;
+  --color-chart: #f4f4f1;
+  --color-paper: #fbfbf9;
+  --color-fog: #ecece7;
+  --color-rule: #deded8;
+  --color-rule-2: #c9c9c2;
+  --color-cyanotype: #133a63;
+  --color-cyanotype-2: #0e2d4d;
+  --color-blueprint-line: #e8f0fa;
+
+  --color-weather: #7c8794;
+  --color-weather-ink: #5a6574;
+  --color-weather-wash: #e9ebee;
+  --color-owed: #e04a2f;
+  --color-owed-ink: #c2381f;
+  --color-owed-wash: #fbe6e1;
+  --color-review: #e89a00;
+  --color-review-ink: #8a5a00;
+  --color-review-wash: #fcefd2;
+  --color-settled: #2f7d5b;
+  --color-settled-ink: #22603f;
+  --color-settled-wash: #dfefe7;
+  --color-front: #2b59c3;
+  --color-front-wash: #e6ecfa;
+
+  --color-hyd-green: #5fd08a;
+  --color-hyd-blue: #8fc8ff;
+  --color-hyd-yellow: #f5c542;
+
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-b612-mono), ui-monospace, "SF Mono", monospace;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
+  --ease-plotter: cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+:root {
+  color-scheme: light;
+  --ground: var(--color-chart);
+  --fg: var(--color-ink);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--ground);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01" on, "cv11" on;
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+@layer utilities {
+  /* Wide livery-style display type: Archivo's width axis does the work. */
+  .display {
+    font-stretch: 118%;
+    font-weight: 620;
+    letter-spacing: -0.035em;
+    line-height: 0.95;
+  }
+  .display-tight {
+    font-stretch: 112%;
+    font-weight: 620;
+    letter-spacing: -0.02em;
+  }
+  .label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .hairline {
+    border-color: var(--color-rule);
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}
+
+::selection {
+  background: var(--color-front);
+  color: white;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-front);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Split-flap (Solari) cells ─────────────────────────────────────────── */
+.flap-cell {
+  position: relative;
+  display: inline-block;
+  width: 0.72em;
+  height: 1.32em;
+  border-radius: 0.09em;
+  background: linear-gradient(180deg, #1b212b 0%, #161b23 49.5%, #12161d 50.5%, #171c24 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 0 rgba(0, 0, 0, 0.6);
+  font-family: var(--font-mono);
+  color: #eef1f4;
+  perspective: 4em;
+}
+.flap-half {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  backface-visibility: hidden;
+}
+.flap-half > span {
+  display: block;
+  height: 1.32em;
+  line-height: 1.32em;
+  text-align: center;
+}
+.flap-top,
+.flap-leaf-front {
+  top: 0;
+  border-radius: 0.09em 0.09em 0 0;
+}
+.flap-bottom,
+.flap-leaf-back {
+  bottom: 0;
+  border-radius: 0 0 0.09em 0.09em;
+}
+.flap-bottom > span,
+.flap-leaf-back > span {
+  transform: translateY(-50%);
+}
+.flap-leaf-front {
+  background: #1b212b;
+  transform-origin: 50% 100%;
+  animation-name: flap-down-front;
+  animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  animation-fill-mode: forwards;
+}
+.flap-leaf-back {
+  background: #12161d;
+  transform-origin: 50% 0%;
+  transform: rotateX(90deg);
+  animation-name: flap-down-back;
+  animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
+  animation-fill-mode: forwards;
+}
+.flap-axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% - 0.5px);
+  height: 1px;
+  background: rgba(0, 0, 0, 0.75);
+}
+@keyframes flap-down-front {
+  from { transform: rotateX(0deg); }
+  to { transform: rotateX(-90deg); }
+}
+@keyframes flap-down-back {
+  from { transform: rotateX(90deg); }
+  to { transform: rotateX(0deg); }
+}
+.flap-dim .flap-cell {
+  color: #5c6672;
+}
+.flap-alert .flap-cell {
+  color: #ff7a5c;
+}
