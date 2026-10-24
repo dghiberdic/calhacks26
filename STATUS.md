@@ -6,5 +6,5 @@
 | david-b | | | D0a | |
 | filip-a | | | F1 | |
 | filip-b | | | F8a | |
-| justin-a | 06:37 | J0, J0b mock world (every route), J1 Storm Run, J2 Flight File, J3 Questions | switch to the stub (gen:api, CP1) | waiting on stub (CP0a); everything runs on the mock world meanwhile; PR #3 from the fork |
-| justin-b | 06:37 | J4 Policies, J5 Trace, J6 Close, J7 Desk, J8 Proof, J9 recorder + recorded mode, J10 docs, J11 /pitch; 43 e2e incl. the 3:00 demo clicked through | /story on Éowyn; record at CP3 | recording needs the server; asks 1–19 in contracts/requests/justin.md |
+| justin-a | 10:53 | CP0a: the app runs against the stub (gen:api + compile-time contract check; 43/46 e2e on the stub, 3 skip by design, the 3:00 demo passes) | the real server (D10a) | requests 20–21 (person-prepared draft for SoD; PII names to mask) in contracts/requests/justin.md |
+| justin-b | 10:53 | J4–J11 done; /story; 46/46 e2e on the mock world | record at CP3; expansion proposal (critique round running) | — |
