@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BlameStep, Commit, FlightRow, Question, Rule, StormRun } from "@/api/types";
-import { REDACTED, blameTarget, chainOrder, findPiiRecord, isPiiField, splitPii, suggestTargets, compareFrameworkRef, denialTag, evidenceTarget, isTab, orderPrincipals, principalLabel, principalRole, receiptText, ruleRefIn, shortHash, stepKind } from "./model";
+import { REDACTED, blameTarget, chainOrder, eventRef, findPiiRecord, isPiiField, splitPii, suggestTargets, compareFrameworkRef, denialTag, evidenceTarget, isTab, orderPrincipals, principalLabel, principalRole, receiptText, ruleRefIn, shortHash, stepKind } from "./model";
 
 const commit = (over: Partial<Commit> = {}): Commit => ({
   hash: "9f2c41ab77de0c55aa13",
@@ -15,7 +15,8 @@ const commit = (over: Partial<Commit> = {}): Commit => ({
 });
 
 describe("tabs and hashes", () => {
-  it("accepts only the four tabs", () => {
+  it("accepts only the trace tabs", () => {
+    expect(isTab("live")).toBe(true);
     expect(isTab("blame")).toBe(true);
     expect(isTab("nope")).toBe(false);
     expect(isTab(null)).toBe(false);
@@ -24,6 +25,20 @@ describe("tabs and hashes", () => {
     expect(shortHash("9f2c41ab77de0c55")).toBe("9f2c41a");
     expect(shortHash("sha256:9f2c41ab77", 8)).toBe("9f2c41ab");
     expect(shortHash(null)).toBe("");
+  });
+});
+
+describe("event refs", () => {
+  it("links each ref to where it lives", () => {
+    expect(eventRef("NS31@2025-01-24")).toEqual({ to: "/flights/NS31%402025-01-24", label: "NS31" });
+    expect(eventRef("NS31@2025-01-24:14C")).toEqual({ to: "/flights/NS31%402025-01-24", label: "NS31 · 14C" });
+    expect(eventRef("EIDW@2025-01-26")).toEqual({ to: "/run/EIDW%402025-01-26", label: "Storm Herminia" });
+    expect(eventRef("R-MIN-1@1")?.to).toBe("/policies#R-MIN-1");
+    expect(eventRef("REG-C549-TECHNICAL@1")?.to).toBe("/policies#REG-C549-TECHNICAL");
+    expect(eventRef("JE-000101")?.to).toBe("/close");
+    expect(eventRef("Q-1")?.to).toBe("/questions");
+    expect(eventRef("tech_log:EI-NSB@2025-01-23")).toEqual({ to: null, label: "tech_log:EI-NSB@2025-01-23" });
+    expect(eventRef(null)).toBeNull();
   });
 });
 

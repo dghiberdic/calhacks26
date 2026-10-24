@@ -1,12 +1,27 @@
 import type { AccessCell, AccessMatrix, BlameStep, Commit, CommitKind, Question, Role, Rule, StormRun } from "@/api/types";
 import { ROLE_LABEL, shortId } from "@/lib/format";
+import { stormName } from "@/lib/storms";
 
 // ---------- tabs ----------
-export const TABS = ["commits", "blame", "access", "controls"] as const;
+export const TABS = ["live", "commits", "blame", "access", "controls"] as const;
 export type TraceTab = (typeof TABS)[number];
 export const isTab = (v: string | null | undefined): v is TraceTab => !!v && (TABS as readonly string[]).includes(v);
 
-export const TAB_LABEL: Record<TraceTab, string> = { commits: "Commits", blame: "Blame", access: "Access", controls: "Controls" };
+export const TAB_LABEL: Record<TraceTab, string> = { live: "Live", commits: "Commits", blame: "Blame", access: "Access", controls: "Controls" };
+
+// ---------- event refs ----------
+/** Where an event's `ref` lives in the app: a flight or coupon, a storm, a rule, a journal, a question. */
+export function eventRef(ref: string | null | undefined): { to: string | null; label: string } | null {
+  if (!ref) return null;
+  const flight = ref.match(/^([A-Z]{2}\d{1,4}@\d{4}-\d{2}-\d{2})(?::([0-9A-Z]+))?$/);
+  if (flight) return { to: `/flights/${encodeURIComponent(flight[1])}`, label: shortId(ref) };
+  if (/^[A-Z]{4}@\d{4}-\d{2}-\d{2}$/.test(ref)) return { to: `/run/${encodeURIComponent(ref)}`, label: stormName(ref) ?? ref };
+  const rule = ref.match(/^((?:R|REG|HC)-[A-Z0-9-]+?)(?:@\d+)?$/);
+  if (rule) return { to: `/policies#${encodeURIComponent(rule[1])}`, label: ref };
+  if (/^JE-\d+/.test(ref)) return { to: "/close", label: ref };
+  if (/^Q-\d+$/.test(ref)) return { to: "/questions", label: ref };
+  return { to: null, label: ref };
+}
 
 // ---------- hashes ----------
 /** A git-style prefix of a sha256 commit hash. */

@@ -2,8 +2,16 @@ import { expect, test } from "@playwright/test";
 
 // J5 · Trace: commits, blame, access and controls, each deep-linkable with ?tab=.
 
-test("commits read like git log, including llm_call commits", async ({ page }) => {
+test("Trace opens on the whole live trace", async ({ page }) => {
   await page.goto("/trace");
+  await expect(page.getByRole("tab", { name: "Live" })).toHaveAttribute("aria-selected", "true");
+  const list = page.getByRole("list", { name: "Trace events, newest first" });
+  await expect(list.getByRole("listitem").first()).toBeVisible();
+  await expect(list).toContainText("DENIED");
+});
+
+test("commits read like git log, including llm_call commits", async ({ page }) => {
+  await page.goto("/trace?tab=commits");
   await expect(page.getByRole("tab", { name: "Commits" })).toHaveAttribute("aria-selected", "true");
   const list = page.getByRole("list", { name: "Commits, newest first" });
   await expect(list.locator("li[data-hash]").first()).toBeVisible();

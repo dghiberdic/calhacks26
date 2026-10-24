@@ -1,10 +1,10 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
 import { setTransport } from "@/api/client";
-import type { AccessDecision, AccessMatrix, Blame, Commit, ControlMapping } from "@/api/types";
+import type { AccessDecision, AccessMatrix, Blame, Commit, ControlMapping, TraceEvent } from "@/api/types";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import TraceScreen from ".";
 
@@ -36,6 +36,11 @@ const CONTROLS: ControlMapping[] = [
   { control: "ACL broker", framework_ref: "CC6.1", implemented_by: "server/acl.py", evidence_endpoint: "/api/access/matrix" },
 ];
 
+const EVENTS: TraceEvent[] = [
+  { seq: 1, at: "2025-01-25T05:59:15Z", kind: "decision", actor: "agent.engine", summary: "NS31 recoded 71 → 41 · 172 payouts drafted", ref: "NS31@2025-01-24", chip: "DRAFTED", amount_cents: 3_465_000 },
+  { seq: 2, at: "2025-01-25T06:41:12Z", kind: "access_denied", actor: "agent.drafter", summary: "agent.drafter approve_payout → DENIED · SoD", ref: "NS31@2025-01-24", chip: "DENIED", amount_cents: null },
+];
+
 /** Q-1 as the API serves it to the Judge: the passenger's name already replaced by the broker. */
 const Q1_AS_JUDGE = {
   id: "Q-1",
@@ -56,6 +61,7 @@ beforeAll(() => {
     if (path === "/access/log") return json(LOG);
     if (path === "/controls") return json(CONTROLS);
     if (path.startsWith("/questions")) return json([Q1_AS_JUDGE]);
+    if (path.startsWith("/trace")) return json(EVENTS);
     if (path === "/storms" || path === "/rules") return json([]);
     return json({ error: { code: "not_found", message: "Not here." } }, 404);
   });
@@ -76,8 +82,19 @@ function renderAt(url: string) {
 }
 
 describe("Trace screen", () => {
-  it("lists commits newest first with their kind, and filters by kind", async () => {
+  it("opens on the whole live trace, newest first, with chips and linked refs", async () => {
     renderAt("/trace");
+    const list = await screen.findByRole("list", { name: "Trace events, newest first" });
+    const rows = within(list).getAllByRole("listitem");
+    expect(rows[0]).toHaveTextContent("agent.drafter approve_payout → DENIED · SoD");
+    expect(rows[0]).toHaveTextContent("DENIED");
+    expect(within(rows[1]).getByRole("link", { name: "NS31" })).toHaveAttribute("href", "/flights/NS31%402025-01-24");
+    await userEvent.click(screen.getByRole("button", { name: "drafted 1" }));
+    await waitFor(() => expect(within(list).getAllByRole("listitem")).toHaveLength(1));
+  });
+
+  it("lists commits newest first with their kind, and filters by kind", async () => {
+    renderAt("/trace?tab=commits");
     const list = await screen.findByRole("list", { name: "Commits, newest first" });
     const rows = within(list).getAllByRole("button", { expanded: false });
     expect(rows[0]).toHaveTextContent("c3ccccc");

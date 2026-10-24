@@ -69,3 +69,22 @@ export function CopyButton({ text, label, what, className }: { text: string; lab
     </button>
   );
 }
+
+/** A filter toggle with its count: "llm_call 3". */
+export function FilterChip({ active, onClick, label, n, className }: { active: boolean; onClick: () => void; label: string; n: number; className?: string }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={cn(
+        "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2 font-mono text-[11.5px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-metar-ink",
+        active ? "bg-navy-900 text-cloud-50" : "bg-white text-slate-600 shadow-[inset_0_0_0_1px_var(--color-cloud-200)] hover:bg-cloud-50",
+        className,
+      )}
+    >
+      {label}{" "}
+      <span className={cn("tabular", active ? "text-cloud-400" : "text-slate-400")}>{n}</span>
+    </button>
+  );
+}

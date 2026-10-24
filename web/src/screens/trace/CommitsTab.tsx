@@ -10,7 +10,7 @@ import { Empty, ErrorNote, Shimmer } from "@/components/kit";
 import { longDate, zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { KIND_ORDER, blameTarget, chainOrder, shortHash } from "./model";
-import { Principal } from "./parts";
+import { FilterChip, Principal } from "./parts";
 
 const PAGE = 100;
 
@@ -87,9 +87,9 @@ export function CommitsTab() {
     <div>
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div role="group" aria-label="Filter by kind" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 md:flex-wrap md:overflow-visible md:pb-0">
-          <KindButton active={kind === "all"} onClick={() => setKind("all")} label="all" n={sorted.length} />
+          <FilterChip active={kind === "all"} onClick={() => setKind("all")} label="all" n={sorted.length} />
           {counts.map(([k, n]) => (
-            <KindButton key={k} active={kind === k} onClick={() => setKind(kind === k ? "all" : k)} label={k} n={n} />
+            <FilterChip key={k} active={kind === k} onClick={() => setKind(kind === k ? "all" : k)} label={k} n={n} />
           ))}
         </div>
         <label className="relative flex h-9 w-full items-center md:w-[260px]">
@@ -146,22 +146,6 @@ export function CommitsTab() {
   );
 }
 
-function KindButton({ active, onClick, label, n }: { active: boolean; onClick: () => void; label: string; n: number }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={cn(
-        "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2 font-mono text-[11.5px] transition-colors",
-        active ? "bg-navy-900 text-cloud-50" : "bg-white text-slate-600 shadow-[inset_0_0_0_1px_var(--color-cloud-200)] hover:bg-cloud-50",
-      )}
-    >
-      {label}{" "}
-      <span className={cn("tabular", active ? "text-cloud-400" : "text-slate-400")}>{n}</span>
-    </button>
-  );
-}
 
 /** Node shapes carry the kind without colour: ● commit · ○ llm_call · ■ access_denied. */
 function Node({ kind }: { kind: CommitKind }) {
