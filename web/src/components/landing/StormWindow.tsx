@@ -40,7 +40,7 @@ export function StormWindow({ pinned = true }: { pinned?: boolean }) {
       const tl = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: pinned
-          ? { trigger: root.current, start: "top top", end: "+=180%", scrub: 0.6, pin: true, anticipatePin: 1 }
+          ? { trigger: root.current, start: "top top", end: "+=150%", scrub: 0.6, pin: true, anticipatePin: 1, refreshPriority: 2 }
           : { trigger: root.current, start: "top 65%", toggleActions: "play none none reverse" },
       });
       tl.from(".sw-axis", { opacity: 0, duration: 0.3 })

@@ -16,6 +16,7 @@ export function registerGsap() {
   CustomEase.create("plotter", "M0,0 C0.18,0.02 0.22,0.62 0.48,0.82 0.68,0.97 0.84,1 1,1");
   CustomEase.create("settle", "M0,0 C0.12,0.6 0.24,1.02 0.44,1.01 0.62,1 0.8,1 1,1");
   gsap.defaults({ ease: "power3.out", duration: 0.9 });
+  if (process.env.NODE_ENV !== "production") Object.assign(window, { gsap, ScrollTrigger });
   registered = true;
 }
 

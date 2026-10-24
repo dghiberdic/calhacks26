@@ -192,7 +192,27 @@ export function StormMap({ date = "2025-01-24", frameH = 12 }: { date?: string; 
     };
   }, [storm, sat, chart, date]);
 
-  // Choreography
+  // Scroll choreography exists from first paint so pin spacing is stable before data lands.
+  useGSAP(
+    () => {
+      const s = gsap.timeline({
+        scrollTrigger: { trigger: root.current, start: "top top", end: "+=140%", scrub: 0.8, pin: true, anticipatePin: 1, refreshPriority: 3 },
+      });
+      s.to(state.current, { reveal: 1, duration: 1, ease: "none" }, 0)
+        .to(state.current, { particles: 0.3, duration: 0.5 }, 0.1)
+        .to(".hm-lines", { opacity: 0.35, duration: 0.6 }, 0.2)
+        .to(".hm-copy", { opacity: 0, y: -30, duration: 0.4 }, 0)
+        .from(".hm-credit", { opacity: 0, y: 10, duration: 0.3 }, 0.55)
+        .to(view.current, { cx: -38 * K, cy: -47, w: 96 * K, duration: 1, ease: "power2.inOut" }, 0.9)
+        .from(".hm-arc", { drawSVG: 0, duration: 0.8, stagger: 0.05, ease: "power2.inOut" }, 1.1)
+        .from(".hm-arc-label", { opacity: 0, duration: 0.3, stagger: 0.05 }, 1.5)
+        .to(state.current, { particles: 0.18, duration: 0.6 }, 1.2)
+        .to({}, { duration: 0.3 });
+    },
+    { scope: root },
+  );
+
+  // Intro plot once the chart exists.
   useGSAP(
     () => {
       if (!chart) return;
@@ -205,20 +225,6 @@ export function StormMap({ date = "2025-01-24", frameH = 12 }: { date?: string; 
         .from(".hm-high", { opacity: 0, duration: 0.6 }, 1.8)
         .to(state.current, { particles: 1, duration: 1.6, ease: "power1.inOut" }, 1.6)
         .from(".hm-dub", { opacity: 0, scale: 0, transformOrigin: "center", duration: 0.5, ease: "back.out(3)" }, 2.2);
-
-      const s = gsap.timeline({
-        scrollTrigger: { trigger: root.current, start: "top top", end: "+=140%", scrub: 0.8, pin: true, anticipatePin: 1 },
-      });
-      s.to(state.current, { reveal: 1, duration: 1, ease: "none" }, 0)
-        .to(state.current, { particles: 0.3, duration: 0.5 }, 0.1)
-        .to(".hm-lines", { opacity: 0.35, duration: 0.6 }, 0.2)
-        .to(".hm-copy", { opacity: 0, y: -30, duration: 0.4 }, 0)
-        .from(".hm-credit", { opacity: 0, y: 10, duration: 0.3 }, 0.55)
-        .to(view.current, { cx: -38 * K, cy: -47, w: 96 * K, duration: 1, ease: "power2.inOut" }, 0.9)
-        .from(".hm-arc", { drawSVG: 0, duration: 0.8, stagger: 0.05, ease: "power2.inOut" }, 1.1)
-        .from(".hm-arc-label", { opacity: 0, duration: 0.3, stagger: 0.05 }, 1.5)
-        .to(state.current, { particles: 0.18, duration: 0.6 }, 1.2)
-        .to({}, { duration: 0.3 });
     },
     { scope: root, dependencies: [chart] },
   );
