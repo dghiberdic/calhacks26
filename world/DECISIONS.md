@@ -264,6 +264,19 @@ Judgment calls made while implementing, newest last. Each one says what we chose
 
 `answer_key.py` exports independent train/test labels from latent truth and immutable golden inputs, including NS31's 172 coupons and €99,000 face entitlement. Claim labels reject missing agency authority, expired claims, settled vouchers and duplicate coupon claims; they do not copy amounts claimed into amounts owed.
 
+**Stress corpus `knock_on_return` fix (24 Oct, from the F9 eval).** All 10 cases had the return's STA inside Dublin's
+storm window (Isha 21 Jan: the window runs 09:30Z → 02:30Z on the 22nd; Éowyn: 02:30–15:00Z). So the engine was
+right to call them weather at the arrival end. Now the DUB→CDG outbound leaves at the first storm-condition report
+in operating hours (05–20Z), inside a Dublin window. The CDG→DUB return is the first same-day slot, ≥3 h later,
+that is observed (a report within ±1 h) and at least 1 h outside every window at both ends. Windows use plan §1.2's
+definition, recomputed in `world/` because world may not import the engine. A test checks the result with
+`engine.timeline` itself.
+- Isha's day has no such slot, so the train cases move to the next day that has one: Jocelyn, 23 Jan 2024 (outbound
+  11:00Z, return 14:30Z → 16:30Z, which lands exactly 1 h after the 15:30Z report and 1 h before 17:30Z).
+- Test: Éowyn, outbound 05:00Z, return 14:00Z → 16:00Z.
+- `data/answer_key/stress.json` was regenerated with the F9 runner's own serialisation; exactly those 10 cases changed.
+  `train.json` and `test.json` are untouched.
+
 `error_cases.py` provides a separate 140-case controlled regression corpus (five variants of 14 errors in each split). Weather is real pinned METAR, while flights, people, errors and expected actions are simulated. Ordinary technical scenarios require positive calm observations at both ends; concurrent examples retain actual windy observations. These input variants do not count as independent storms or inflate natural-world accuracy. Assignment/payment events are source documents plus metadata pending a typed settlement-event interface.
 
 ## F3c · Planted errors, answer key, history
