@@ -24,6 +24,38 @@ const COLOR: Record<VerdictKind, string> = {
 };
 const RANK: Record<VerdictKind, number> = { notweather: 4, held: 3, weather: 2, operated: 1, pending: 0 };
 
+type Box = { x0: number; y0: number; x1: number; y1: number };
+type Label = { x: number; y: number; anchor: "start" | "middle" | "end" };
+const overlaps = (a: Box, b: Box) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
+const CHAR_W = 6.2; // Geist Mono at 10px
+
+/**
+ * Greedy label placement: the most serious verdicts and the farthest airports pick first (right, left, above,
+ * below their dot); a label that fits nowhere is left to the hover card, so the Europe cluster stays legible.
+ */
+function placeLabels(points: { code: string; x: number; y: number }[], hub: [number, number], obstacles: Box[], W: number, H: number) {
+  const placed = [...obstacles, ...points.map((p) => ({ x0: p.x - 3, y0: p.y - 3, x1: p.x + 3, y1: p.y + 3 }))];
+  const out = new Map<string, Label>();
+  for (const p of points) {
+    const w = p.code.length * CHAR_W;
+    const candidates: (Label & { box: Box; dir: [number, number] })[] = [
+      { x: p.x + 6, y: p.y + 3.5, anchor: "start", dir: [1, 0], box: { x0: p.x + 5, y0: p.y - 5.5, x1: p.x + 7 + w, y1: p.y + 5.5 } },
+      { x: p.x - 6, y: p.y + 3.5, anchor: "end", dir: [-1, 0], box: { x0: p.x - 7 - w, y0: p.y - 5.5, x1: p.x - 5, y1: p.y + 5.5 } },
+      { x: p.x, y: p.y - 7, anchor: "middle", dir: [0, -1], box: { x0: p.x - w / 2 - 1, y0: p.y - 16.5, x1: p.x + w / 2 + 1, y1: p.y - 5 } },
+      { x: p.x, y: p.y + 14, anchor: "middle", dir: [0, 1], box: { x0: p.x - w / 2 - 1, y0: p.y + 5, x1: p.x + w / 2 + 1, y1: p.y + 16.5 } },
+    ];
+    // Away from the hub first: the route's own line runs towards it.
+    const len = Math.hypot(hub[0] - p.x, hub[1] - p.y) || 1;
+    const toHub = [(hub[0] - p.x) / len, (hub[1] - p.y) / len];
+    candidates.sort((a, b) => a.dir[0] * toHub[0] + a.dir[1] * toHub[1] - (b.dir[0] * toHub[0] + b.dir[1] * toHub[1]));
+    const fit = candidates.find((c) => c.box.x0 > 2 && c.box.x1 < W - 2 && c.box.y0 > 2 && c.box.y1 < H - 2 && !placed.some((b) => overlaps(b, c.box)));
+    if (!fit) continue;
+    placed.push(fit.box);
+    out.set(p.code, { x: fit.x, y: fit.y, anchor: fit.anchor });
+  }
+  return out;
+}
+
 type Props = { run: StormRun; compact?: boolean; tone?: "dark" | "light"; className?: string; animate?: boolean; onSelectFlight?: (flightId: string) => void };
 
 /**
@@ -53,7 +85,7 @@ export function RouteMap({ run, compact, tone = "dark", className, animate = tru
     return [...by.values()].filter((r) => airport(r.code)).sort((a, b) => RANK[a.verdict] - RANK[b.verdict]);
   }, [facts]);
 
-  const H = compact ? 240 : Math.round(Math.min(420, Math.max(300, width * 0.62)));
+  const H = compact ? 240 : Math.round(Math.min(480, Math.max(300, width < 720 ? width * 0.7 : width * 0.42)));
   const W = Math.max(width, 280);
 
   const { path, project, graticule } = useMemo(() => {
@@ -75,6 +107,20 @@ export function RouteMap({ run, compact, tone = "dark", className, animate = tru
   const [hx, hy] = project(hub.lon, hub.lat);
   const land = path(LAND) ?? "";
   const dark = tone === "dark";
+  const hubLabel: Box = { x0: hx - 11, y0: hy - 19, x1: hx + 12 + hub.iata.length * 6.8, y1: hy + 11 };
+  const labels = placeLabels(
+    [...routes]
+      .map((r) => {
+        const a = airport(r.code)!;
+        const [x, y] = project(a.lon, a.lat);
+        return { code: r.code, x, y, rank: RANK[r.verdict], far: Math.hypot(x - hx, y - hy) };
+      })
+      .sort((a, b) => b.rank - a.rank || b.far - a.far),
+    [hx, hy],
+    [hubLabel],
+    W,
+    H,
+  );
 
   return (
     <div ref={ref} className={cn("relative w-full", className)}>
@@ -103,9 +149,19 @@ export function RouteMap({ run, compact, tone = "dark", className, animate = tru
               />
               {strong ? <circle cx={ax} cy={ay} r={9} fill="var(--color-notweather)" opacity={0.18} /> : null}
               <circle cx={ax} cy={ay} r={strong ? 3.6 : 2.6} fill={COLOR[r.verdict]} />
-              <text x={ax + 6} y={ay + 3.5} fontSize={10} className="font-mono" fill={strong ? "var(--color-notweather)" : dark ? "var(--color-cloud-400)" : "var(--color-slate-500)"} fontWeight={strong ? 700 : 400}>
-                {r.code}
-              </text>
+              {labels.get(r.code) || active ? (
+                <text
+                  x={labels.get(r.code)?.x ?? ax + 6}
+                  y={labels.get(r.code)?.y ?? ay + 3.5}
+                  textAnchor={labels.get(r.code)?.anchor ?? "start"}
+                  fontSize={10}
+                  className="font-mono"
+                  fill={strong ? "var(--color-notweather)" : active ? (dark ? "#eef2f7" : "var(--color-navy-900)") : dark ? "var(--color-cloud-400)" : "var(--color-slate-500)"}
+                  fontWeight={strong || active ? 700 : 400}
+                >
+                  {r.code}
+                </text>
+              ) : null}
               {/* generous hit target */}
               <line x1={hx} y1={hy} x2={ax} y2={ay} stroke="transparent" strokeWidth={12} />
             </g>
