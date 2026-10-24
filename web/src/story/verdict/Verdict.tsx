@@ -1,11 +1,11 @@
-import { useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { curveMonotoneX, line } from "d3-shape";
 import type { ClaimCurve, LearnedItem } from "@/api/types";
 import { JournalCard } from "@/components/journal";
 import { count, eur, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useStory } from "../data/context";
-import { gsap, MEDIA, PLOTTED, UNPLOTTED, useGSAP } from "../motion/gsap";
+import { gsap, MEDIA, PLOTTED, prefersReducedMotion, UNPLOTTED, useGSAP } from "../motion/gsap";
 import { RollingNumber } from "../motion/RollingNumber";
 import { Pending } from "../ui";
 
@@ -17,16 +17,65 @@ function Curve({ curve }: { curve: ClaimCurve }) {
     const top = Math.max(curve.ultimate, ...pts.map((p) => p[1])) * 1.15;
     const x = (m: number) => 10 + (m / last) * 280;
     const y = (r: number) => 112 - (r / top) * 100;
-    return { d: line<[number, number]>().x((p) => x(p[0])).y((p) => y(p[1])).curve(curveMonotoneX)(pts) ?? "", x, y, last, pts };
+    return { d: line<[number, number]>().x((p) => x(p[0])).y((p) => y(p[1])).curve(curveMonotoneX)(pts) ?? "", x, y, last, pts, top };
   }, [curve]);
+  const pathRef = useRef<SVGPathElement>(null);
+  const rider = useRef<SVGGElement>(null);
+  // Claims arriving month by month: a reading rides the curve from the storm to the last month, then again.
+  useEffect(() => {
+    const path = pathRef.current;
+    const el = rider.current;
+    if (!path || !el || prefersReducedMotion()) return;
+    const total = path.getTotalLength();
+    const dot = el.querySelector("circle");
+    const label = el.querySelector("text");
+    const RIDE = 6500;
+    const HOLD = 1600;
+    let raf = 0;
+    let t0 = performance.now();
+    let shown = "";
+    const loop = (now: number) => {
+      raf = requestAnimationFrame(loop);
+      const t = Math.min(1, ((now - t0) % (RIDE + HOLD)) / RIDE);
+      const e = 1 - Math.pow(1 - t, 1.6);
+      const p = path.getPointAtLength(e * total);
+      dot?.setAttribute("cx", p.x.toFixed(2));
+      dot?.setAttribute("cy", p.y.toFixed(2));
+      const month = ((p.x - 10) / 280) * g.last;
+      const rate = ((112 - p.y) / 100) * g.top;
+      const text = `${month < 0.5 ? "storm" : `M${Math.round(month)}`} · ${pct(rate)}`;
+      if (label && text !== shown) {
+        label.textContent = text;
+        shown = text;
+      }
+      label?.setAttribute("x", Math.min(262, p.x + 6).toFixed(2));
+      label?.setAttribute("y", (p.y - 7).toFixed(2));
+    };
+    const io = new IntersectionObserver(([e]) => {
+      cancelAnimationFrame(raf);
+      if (e.isIntersecting) {
+        t0 = performance.now();
+        raf = requestAnimationFrame(loop);
+      }
+    });
+    io.observe(path);
+    return () => {
+      cancelAnimationFrame(raf);
+      io.disconnect();
+    };
+  }, [g]);
   return (
     <svg viewBox="0 0 300 130" className="w-full overflow-visible" role="img" aria-label={`Expected claims rise toward the ${pct(curve.ultimate)} expected ultimate claim rate (curve ${curve.version}).`}>
       <line x1="10" x2="290" y1="112" y2="112" stroke="#c8d0db" />
       <line x1="10" x2="290" y1={g.y(curve.ultimate)} y2={g.y(curve.ultimate)} stroke="#2565a3" strokeDasharray="3 4" strokeOpacity="0.7" />
-      <path className="vd-curve-line" d={g.d} fill="none" stroke="#0d1524" strokeWidth="2" {...PLOTTED} />
+      <path ref={pathRef} className="vd-curve-line" d={g.d} fill="none" stroke="#0d1524" strokeWidth="2" {...PLOTTED} />
       {g.pts.slice(1).map(([m, r]) => (
         <circle key={m} cx={g.x(m)} cy={g.y(r)} r="2.4" fill="#0d1524" />
       ))}
+      <g ref={rider} aria-hidden="true" className="motion-reduce:hidden">
+        <circle r="3.4" fill="#2565a3" stroke="#fff" strokeWidth="1.2" cx="10" cy="112" />
+        <text className="tabular fill-metar-ink font-mono text-[6.5px]" x="16" y="105" />
+      </g>
       <text x="290" y={g.y(curve.ultimate) - 6} textAnchor="end" className="tabular fill-metar-ink text-[7.5px]">
         ultimate {pct(curve.ultimate)}
       </text>
@@ -107,9 +156,9 @@ export function Verdict() {
 
   const big = "display-tight text-[clamp(40px,4.6vw,76px)] leading-none";
   return (
-    <section ref={root} aria-label="The verdict" data-section="verdict" className="bg-cloud-50 px-5 py-28 text-navy-900 md:px-16 md:py-36">
+    <section ref={root} aria-label={`The verdict on ${f?.number ?? "the flight"}`} data-section="verdict" className="bg-cloud-50 px-5 py-28 text-navy-900 md:px-16 md:py-36">
       <div className="mx-auto max-w-[1280px]">
-        <h2 className="display vd-reveal text-[clamp(46px,7.2vw,124px)]">
+        <h2 className="text-balance display vd-reveal text-[clamp(46px,7.2vw,124px)]">
           Not weather.
           <br />
           <span className="text-notweather-ink">Broken plane.</span>
@@ -128,15 +177,15 @@ export function Verdict() {
         </p>
 
         <div className="vd-bridge mt-20 grid grid-cols-1 items-start gap-x-12 gap-y-14 md:mt-28 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.15fr)_minmax(0,1.3fr)]">
-          <Figure label="Not" struck caption="Cash basis: nothing until a claim is paid.">
+          <Figure label="Cash basis" struck caption="Nothing until a claim is paid.">
             <span className={big}>{m.cash !== null ? eur(m.cash) : <Pending ch={3} tone="light" />}</span>
           </Figure>
           <Figure
-            label="Not"
+            label="Full Art. 7 entitlement"
             struck
             caption={
               <>
-                Full Art. 7 entitlement if every passenger claims
+                If every passenger claims
                 {f && m.band ? (
                   <>
                     : <span className="figure">{count(f.pax)}</span> passengers at <span className="figure">€{m.band}</span>
@@ -191,7 +240,7 @@ export function Verdict() {
           <figure className="vd-reveal vd-curve flex min-w-0 flex-col justify-between gap-6">
             {story.curve ? <Curve curve={story.curve} /> : story.curveMissing ? <Learned items={story.learned} /> : <div className="aspect-[300/130] w-full animate-pulse rounded-lg bg-navy-900/5" aria-hidden="true" />}
             <figcaption className="text-[14px] leading-relaxed text-slate-500">
-              Claims arrive for years. Northstar&rsquo;s own history sets the rate{story.curve ? ` (curve ${story.curve.version})` : ""}, and the liability is trued up against it every month-end.
+              Claims keep arriving for years. Northstar&rsquo;s own claims history sets the rate{story.curve ? ` (curve ${story.curve.version})` : ""}, and the liability is trued up against it at every month-end.
             </figcaption>
           </figure>
         </div>

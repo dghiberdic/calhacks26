@@ -1,7 +1,7 @@
 /* oxlint-disable react/immutability -- three.js objects (uniforms, the camera, the fans) are mutated per frame by design. */
-import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, Environment, Lightformer, useGLTF } from "@react-three/drei";
+import { ContactShadows, Environment, Lightformer, PerformanceMonitor, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { asset } from "../data/assets";
 
@@ -9,7 +9,8 @@ import { asset } from "../data/assets";
  * EI-NSB in real time. Each surface is either blueprint (white edges on cyanotype) or ink (the PBR
  * livery), split by a sweep plane that travels nose → tail. The camera starts as a near-orthographic
  * port elevation that matches the SVG drawing, then dollies and walks around the nose to the
- * starboard side, where the engine-2 pump is leaking.
+ * starboard side, where the engine-2 pump is leaking. Once it gets there the aircraft stands on a wet
+ * apron, the camera keeps drifting a little, the fans windmill and the pump drips.
  *
  * Model space (Blender export): x = metres aft of the nose, y = up, z = port (+) / starboard (−).
  */
@@ -29,6 +30,10 @@ const AZ_END = -(Math.PI - 0.8);
 type Uniforms = { uSweep: { value: number }; uLines: { value: number } };
 
 function patchInk(mat: THREE.Material, u: Uniforms) {
+  // the blueprint edges lie exactly on these surfaces: push the surfaces back so the lines never z-fight
+  mat.polygonOffset = true;
+  mat.polygonOffsetFactor = 1;
+  mat.polygonOffsetUnits = 1;
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uSweep = u.uSweep;
     shader.vertexShader = shader.vertexShader
@@ -68,6 +73,9 @@ function Model({ progress }: { progress: RefObject<AircraftProgress> }) {
     const ghostMat = new THREE.ShaderMaterial({
       transparent: true,
       depthWrite: true,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
       uniforms: { uSweep: uniforms.uSweep, uLines: uniforms.uLines },
       vertexShader: /* glsl */ `
         varying vec3 vW; varying vec3 vN;
@@ -155,7 +163,7 @@ function Model({ progress }: { progress: RefObject<AircraftProgress> }) {
 function CameraRig({ progress }: { progress: RefObject<AircraftProgress> }) {
   const { camera, size } = useThree();
   const target = useMemo(() => new THREE.Vector3(), []);
-  useFrame(() => {
+  useFrame((state) => {
     const cam = camera as THREE.PerspectiveCamera;
     const o = progress.current?.orbit ?? 0;
     const e = o * o * (3 - 2 * o);
@@ -170,8 +178,11 @@ function CameraRig({ progress }: { progress: RefObject<AircraftProgress> }) {
     const fit = Math.max(1, 1.05 / aspect);
     const halfW = THREE.MathUtils.lerp(halfW0, 72 * fit * halfTan(30) * aspect, e);
     const dist = halfW / (halfTan(fov) * aspect);
-    const az = THREE.MathUtils.lerp(0, AZ_END, e);
-    const el = THREE.MathUtils.lerp(0, 0.17, e);
+    // at the end of the walk-around the camera keeps breathing: a slow sway and a slight rise and fall
+    const t = state.clock.elapsedTime;
+    const idle = e * e * e;
+    const az = THREE.MathUtils.lerp(0, AZ_END, e) + idle * 0.055 * Math.sin(t * 0.21);
+    const el = THREE.MathUtils.lerp(0, 0.17, e) + idle * 0.016 * Math.sin(t * 0.13 + 1.2);
     target.set(THREE.MathUtils.lerp(23.5, 21, e), THREE.MathUtils.lerp(5.6, 3.6, e), THREE.MathUtils.lerp(0, -2.5, e));
     cam.fov = fov;
     cam.near = 0.5;
@@ -181,6 +192,82 @@ function CameraRig({ progress }: { progress: RefObject<AircraftProgress> }) {
     cam.updateProjectionMatrix();
   }, -1);
   return null;
+}
+
+/** A soft-edged disc: the apron fades into the night instead of ending. */
+function radialAlpha() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 256;
+  const g = c.getContext("2d")!;
+  const grad = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+  grad.addColorStop(0, "#fff");
+  grad.addColorStop(0.3, "#d0d0d0");
+  grad.addColorStop(0.7, "#3a3a3a");
+  grad.addColorStop(1, "#000");
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 256, 256);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.NoColorSpace;
+  return t;
+}
+
+const DRIP_TOP = LEAK_AT.y - 0.12;
+const DRIPS = 3;
+const DRIP_EVERY = 1.35;
+
+/**
+ * The wet apron under the aircraft once it is inked: dark, glossy, catching the environment's light. Under
+ * the engine-2 pump, Skydrol (violet) drips onto a slowly spreading puddle. Both fade in with the leak label.
+ */
+function Apron({ progress }: { progress: RefObject<AircraftProgress> }) {
+  const alpha = useMemo(() => radialAlpha(), []);
+  const ground = useRef<THREE.MeshStandardMaterial>(null);
+  const puddle = useRef<THREE.Mesh>(null);
+  const puddleMat = useRef<THREE.MeshStandardMaterial>(null);
+  const drops = useRef<(THREE.Mesh | null)[]>([]);
+  const born = useRef(-1);
+  useFrame((state) => {
+    const p = progress.current;
+    if (!p) return;
+    const wet = 1 - p.lines;
+    if (ground.current) ground.current.opacity = 0.95 * wet;
+    const t = state.clock.elapsedTime;
+    if (p.leak > 0.01 && born.current < 0) born.current = t;
+    if (p.leak <= 0.01) born.current = -1;
+    const since = born.current < 0 ? 0 : t - born.current;
+    if (puddle.current && puddleMat.current) {
+      const r = 0.25 + 0.95 * (1 - Math.exp(-since / 9));
+      puddle.current.scale.set(r * 1.25, r, 1);
+      puddleMat.current.opacity = 0.9 * p.leak;
+    }
+    drops.current.forEach((d, i) => {
+      if (!d) return;
+      const phase = (t + i * (DRIP_EVERY / DRIPS)) % DRIP_EVERY;
+      const y = DRIP_TOP - 4.9 * phase * phase; // free fall
+      d.visible = p.leak > 0.5 && y > 0.02;
+      d.position.y = Math.max(0.02, y);
+      const s = phase < 0.08 ? phase / 0.08 : 1; // a drop forms before it falls
+      d.scale.setScalar(s);
+    });
+  });
+  return (
+    <group>
+      <mesh rotation-x={-Math.PI / 2} position={[21, 0, -3]} renderOrder={0}>
+        <circleGeometry args={[34, 96]} />
+        <meshStandardMaterial ref={ground} color="#0a111e" roughness={0.42} metalness={0} envMapIntensity={0.6} alphaMap={alpha} transparent opacity={0} depthWrite={false} />
+      </mesh>
+      <mesh ref={puddle} rotation-x={-Math.PI / 2} position={[LEAK_AT.x + 0.2, 0.015, LEAK_AT.z]} renderOrder={1}>
+        <circleGeometry args={[1, 48]} />
+        <meshStandardMaterial ref={puddleMat} color="#2a1840" roughness={0.04} metalness={0} envMapIntensity={1.6} transparent opacity={0} depthWrite={false} />
+      </mesh>
+      {Array.from({ length: DRIPS }, (_, i) => (
+        <mesh key={i} ref={(m) => void (drops.current[i] = m)} position={[LEAK_AT.x, DRIP_TOP, LEAK_AT.z + 0.15]} visible={false}>
+          <sphereGeometry args={[0.055, 12, 10]} />
+          <meshStandardMaterial color="#6d4fa0" roughness={0.05} metalness={0} emissive="#24163a" />
+        </mesh>
+      ))}
+    </group>
+  );
 }
 
 /** Pins the DOM label to the engine-2 pump: projected through the camera each frame. */
@@ -228,7 +315,7 @@ function Warmup() {
 
 /**
  * With frameloop="demand", a frame is drawn only while the canvas is on screen and not faded out: every
- * frame while the scroll moves the scene, and a few a second otherwise, for the windmilling fans.
+ * frame while the scroll moves the scene or the camera idles at the end, every other frame for the fans.
  */
 function Pump({ wrap, progress }: { wrap: RefObject<HTMLDivElement | null>; progress: RefObject<AircraftProgress> }) {
   const invalidate = useThree((s) => s.invalidate);
@@ -246,7 +333,8 @@ function Pump({ wrap, progress }: { wrap: RefObject<HTMLDivElement | null>; prog
       const p = progress.current;
       if (!onScreen || !p || p.show <= 0.001) return;
       const key = `${p.sweep}|${p.orbit}|${p.lines}|${p.leak}|${p.show}`;
-      if (key !== last || ++idle % 4 === 0) invalidate();
+      // moving with the scroll, or idling at the end (camera sway, drips): every frame; the fans alone: every other
+      if (key !== last || p.orbit > 0.95 || ++idle % 2 === 0) invalidate();
       if (key !== last) idle = 0;
       last = key;
     };
@@ -262,12 +350,14 @@ function Pump({ wrap, progress }: { wrap: RefObject<HTMLDivElement | null>; prog
 export default function AircraftScene({ progress, leak, fallback, className }: { progress: RefObject<AircraftProgress>; leak: { title: string; detail: string }; fallback: string; className?: string }) {
   const wrap = useRef<HTMLDivElement>(null);
   const label = useRef<HTMLDivElement>(null);
+  // full retina (2×) unless the GPU can't hold the frame rate, then step down
+  const [dpr, setDpr] = useState(2);
   return (
     <div ref={wrap} className={className}>
       <Canvas
         frameloop="demand"
-        dpr={[1, 1.75]}
-        gl={{ antialias: true, alpha: true, powerPreference: "high-performance", toneMapping: THREE.ACESFilmicToneMapping, outputColorSpace: THREE.SRGBColorSpace }}
+        dpr={[1, dpr]}
+        gl={{ antialias: true, alpha: true, powerPreference: "high-performance", toneMapping: THREE.AgXToneMapping, toneMappingExposure: 1.05, outputColorSpace: THREE.SRGBColorSpace }}
         camera={{ fov: 4, position: [23.5, 5.6, 700], near: 0.5, far: 1000 }}
         shadows={false}
         fallback={<img src={fallback} alt="Rendering of EI-NSB on a wet stand at Dublin" className="h-full w-full object-contain" />}
@@ -281,11 +371,13 @@ export default function AircraftScene({ progress, leak, fallback, className }: {
           <Lightformer form="rect" intensity={0.8} position={[40, 4, 20]} rotation-y={2.2} scale={[30, 8, 1]} color="#ffd9c2" />
           <Lightformer form="circle" intensity={3} position={[10, 30, 10]} scale={8} color="#ffffff" />
         </Environment>
+        <PerformanceMonitor onDecline={() => setDpr((d) => Math.max(1, d - 0.5))} />
         <Suspense fallback={null}>
           <Model progress={progress} />
+          <Apron progress={progress} />
           <Leak progress={progress} label={label} />
           {/* the aircraft never moves, so its shadow is drawn once */}
-          <ContactShadows frames={1} position={[22, 0.01, 0]} scale={[70, 50]} far={10} blur={2.4} opacity={0.55} resolution={512} color="#000000" />
+          <ContactShadows frames={1} position={[21, 0.01, -3]} scale={[84, 80]} far={10} blur={2.6} opacity={0.55} resolution={1024} color="#000000" />
           <Warmup />
         </Suspense>
         <CameraRig progress={progress} />

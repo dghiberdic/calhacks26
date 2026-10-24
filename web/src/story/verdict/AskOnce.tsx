@@ -31,6 +31,9 @@ export function AskOnce() {
   const cited = next?.counters.rules_cited;
   const waiting = next?.counters.needs_ruling;
   const askedAgain = next?.questions[0] ?? null;
+  const c = story.run?.counters;
+  // "No signed acceptance, no offset: pay €600 cash; …" → the ruling's own words before the colon
+  const shortOption = q ? (q.recommended_option.split(":")[0] ?? q.recommended_option).replace(/\.$/, "") : "";
 
   useGSAP(
     () => {
@@ -44,12 +47,14 @@ export function AskOnce() {
   );
 
   return (
-    <section ref={root} aria-label="Asks once" data-section="ask" className="bg-cloud-50 px-5 py-28 text-navy-900 md:px-16 md:py-36">
+    <section ref={root} aria-label="One question for the Claims Lead" data-section="ask" className="bg-cloud-50 px-5 py-28 text-navy-900 md:px-16 md:py-36">
       <div className="mx-auto max-w-[1280px]">
         <div className="ao-head">
-          <h2 className="display max-w-[14ch] text-[clamp(42px,5.8vw,100px)]">Asks once. Never twice.</h2>
+          <h2 className="text-balance display max-w-[16ch] text-[clamp(42px,5.8vw,100px)]">
+            {c ? count(c.questions) : <Pending ch={1} tone="light" />} {c?.questions === 1 ? "question" : "questions"} for {c ? count(c.passengers) : <Pending ch={5} tone="light" />} passengers.
+          </h2>
           <p className="mt-6 max-w-[50ch] text-[16.5px] leading-relaxed text-slate-600 md:text-[19px]">
-            When the evidence disagrees, StormCheck asks the right person one question, with the evidence attached. The answer becomes a rule with a scope and a version.
+            When sources disagree, StormCheck sends one question to the person who can rule on it, with the evidence attached. Their answer becomes a rule with a scope and a version.
           </p>
         </div>
 
@@ -95,8 +100,14 @@ export function AskOnce() {
                   ))}
                 </div>
                 {q.holds_cents ? (
-                  <p className="mt-3 text-[13px] text-held-ink">
-                    Holds <Money cents={q.holds_cents} /> until answered · {q.case_refs.map(shortId).join(", ")}
+                  <p className="mt-3 flex items-center gap-2 text-[13px] text-held-ink">
+                    <span className="relative inline-flex size-2 shrink-0" aria-hidden="true">
+                      <span className="absolute inset-0 rounded-full bg-held opacity-60 motion-safe:animate-ping" />
+                      <span className="relative inline-flex size-2 rounded-full bg-held" />
+                    </span>
+                    <span>
+                      Holds <Money cents={q.holds_cents} /> until answered · {q.case_refs.map(shortId).join(", ")}
+                    </span>
                   </p>
                 ) : null}
               </>
@@ -143,7 +154,7 @@ export function AskOnce() {
             ) : q ? (
               <>
                 <p className="mt-5 text-[16px] leading-relaxed">
-                  The Claims Lead picks <strong className="font-semibold">{q.recommended_option.replace(/\.$/, "")}</strong>, in their own words. StormCheck drafts the rule from those words, checks it, and replays it before it goes live.
+                  If the Claims Lead answers <strong className="font-semibold">&ldquo;{shortOption}&rdquo;</strong>, StormCheck drafts a rule from that wording, checks it and replays it before it goes live.
                 </p>
                 <p className="mt-auto pt-6 text-[13px] text-slate-500">{q.recommends}</p>
               </>
@@ -183,14 +194,29 @@ export function AskOnce() {
                 )}
               </span>
             </div>
+            {/* one mark per case, from the API count: waiting on the answer (a slow wave runs through them), or settled */}
+            {next ? (
+              <div className="mt-6 flex max-w-[22rem] flex-wrap gap-[5px]" aria-hidden="true">
+                {Array.from({ length: Math.min(64, rule ? (cited ?? 0) : (waiting ?? 0)) }, (_, i) => (
+                  <span key={i} className={cn("ao-case size-[7px] rounded-[2px]", rule ? "bg-cloud-200" : "bg-held/80")} style={{ animationDelay: `${(i % 16) * 90 + Math.floor(i / 16) * 140}ms` }} />
+                ))}
+              </div>
+            ) : null}
             {rule && askedAgain ? (
               <p className="mt-6 text-[14px] leading-relaxed text-cloud-300">
                 <span className="figure text-cloud-50">{count(next?.questions.length ?? 1)}</span> asked again, outside the ruling&rsquo;s scope: {askedAgain.title}
               </p>
             ) : !rule && next ? (
-              <p className="mt-6 text-[14px] leading-relaxed text-cloud-300">The same unsigned service-desk vouchers. Once the Claims Lead answers, the ones in the ruling&rsquo;s scope settle on their own; the rest ask again.</p>
+              <p className="mt-6 text-[14px] leading-relaxed text-cloud-300">
+                {story.nextName?.replace("Storm ", "") ?? "The next storm"}&rsquo;s cancellations came with more unsigned service-desk vouchers. Once the Claims Lead answers, the ones inside the ruling&rsquo;s scope settle without a new question; the rest are asked again.
+              </p>
             ) : null}
-            <p className="mt-auto pt-8 font-mono text-[12px] text-cloud-500">↻ a ruling applies only where its scope holds</p>
+            <p className="mt-auto flex items-center gap-2 pt-8 font-mono text-[12px] text-cloud-500">
+              <span className="inline-block motion-safe:animate-[spin_7s_linear_infinite]" aria-hidden="true">
+                ↻
+              </span>
+              a ruling applies only where its scope holds
+            </p>
           </article>
         </div>
       </div>

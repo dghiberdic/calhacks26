@@ -31,21 +31,14 @@ export function RollingNumber({ text, className, delay = 0, start = "top 85%" }:
   return (
     <span ref={root} className={cn("figure inline-flex overflow-hidden leading-[1.12em]", className)}>
       <span className="sr-only">{text}</span>
+      {/* drums and separators are drawn by CSS (story.css), so the page's text reads the number once */}
       {Array.from(text).map((c, i) =>
         /\d/.test(c) ? (
           <span key={i} aria-hidden="true" className="relative inline-block h-[1.12em] overflow-hidden">
-            <span className="rn-drum flex flex-col" data-d={c}>
-              {Array.from({ length: 10 }, (_, k) => (
-                <span key={k} className="block h-[1.12em] leading-[1.12em]">
-                  {k}
-                </span>
-              ))}
-            </span>
+            <span className="rn-drum block leading-[1.12em]" data-d={c} />
           </span>
         ) : (
-          <span key={i} aria-hidden="true" className="inline-block h-[1.12em] whitespace-pre leading-[1.12em]">
-            {c}
-          </span>
+          <span key={i} aria-hidden="true" className="rn-glyph inline-block h-[1.12em] whitespace-pre leading-[1.12em]" data-c={c} />
         ),
       )}
     </span>

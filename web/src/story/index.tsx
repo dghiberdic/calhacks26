@@ -39,7 +39,7 @@ export default function StoryScreen() {
   useAutoRefresh(main);
   useEffect(() => {
     const title = document.title;
-    document.title = "StormCheck · Every storm leaves a bill";
+    document.title = "Storm Éowyn, 24 Jan 2025 · StormCheck";
     return () => {
       document.title = title;
     };

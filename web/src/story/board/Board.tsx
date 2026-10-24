@@ -17,6 +17,10 @@ function after(row: BoardRow, entitlementCents: number | null) {
   return { code: wx, owed: "" };
 }
 
+/** The re-check's pace down the board: it reaches a row every SCAN_ROW ms (board-scan in story.css matches). */
+const SCAN_LEAD = 120;
+const SCAN_ROW = 90;
+
 // n cells are 0.8n − 0.08 em wide (0.72em cells, 0.08em gaps): 5 → 3.92, 3 → 2.32, 9 → 7.12, 7 → 5.52.
 const COLS = "grid grid-cols-[3.92em_3.92em_2.32em_5.52em_5.52em] gap-x-[0.6em] md:grid-cols-[3.92em_3.92em_7.12em_5.52em_5.52em] md:gap-x-[0.9em]";
 
@@ -25,7 +29,9 @@ function FlapBoard({ title, rows, phase, entitlement, side }: { title: string; r
   return (
     <div className="w-fit min-w-0">
       <p className="micro mb-3 px-1 text-cloud-300">{title}</p>
-      <div className="rounded-lg bg-[#0a1220] p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05),0_30px_60px_-30px_rgba(0,0,0,0.8)] md:p-4">
+      <div className="relative overflow-hidden rounded-lg bg-[#0a1220] p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05),0_30px_60px_-30px_rgba(0,0,0,0.8)] md:p-4">
+        {/* the hall's light moving across the flaps (motion only) */}
+        <span className="board-sheen" aria-hidden="true" />
         <div className={cn(COLS, "mb-2 px-1 text-[0.6em] uppercase tracking-[0.06em] text-cloud-500")} aria-hidden="true">
           <span>{side === "dep" ? "STD" : "STA"}</span>
           <span>Flight</span>
@@ -33,7 +39,9 @@ function FlapBoard({ title, rows, phase, entitlement, side }: { title: string; r
           <span>Code</span>
           <span>Art. 7</span>
         </div>
-        <div className="flex flex-col gap-[0.3em]">
+        <div className="relative flex flex-col gap-[0.3em]">
+          {/* the re-check runs down the board line by line; each row flips as it passes */}
+          <span className="board-scan" data-run={phase === "checked" && rows.length > 0 ? "true" : undefined} style={{ ["--rows" as string]: placeholders.length }} aria-hidden="true" />
           {placeholders.map((row, i) => {
             const coded = row ? (row.coded ? `WX ${row.coded}` : "WX") : "";
             const shown = phase !== "blank" && row ? row : null;
@@ -42,9 +50,11 @@ function FlapBoard({ title, rows, phase, entitlement, side }: { title: string; r
             return (
               <div
                 key={row?.id ?? i}
-                className={cn("flap-row items-center rounded-[3px] px-1 py-[0.08em] transition-colors duration-700", COLS, checked && row?.verdict === "notweather" && "bg-notweather/[0.14]")}
+                className={cn("flap-row items-center rounded-[3px] px-1 py-[0.08em] transition-colors delay-[var(--d)] duration-700", COLS, checked && row?.verdict === "notweather" && "bg-notweather/[0.14]")}
                 data-tone={checked ? row?.verdict : undefined}
                 data-flight={row?.number}
+                // the row takes its colour when the re-check line reaches it
+                style={{ ["--d" as string]: `${SCAN_LEAD + i * SCAN_ROW}ms` }}
               >
                 <FlapText text={shown?.time ?? ""} width={5} delay={d} />
                 <FlapText text={shown?.number ?? ""} width={5} delay={d + 50} />
@@ -54,8 +64,8 @@ function FlapBoard({ title, rows, phase, entitlement, side }: { title: string; r
                 <span className="hidden md:flex">
                   <FlapText text={shown?.city ?? ""} width={9} delay={d + 100} />
                 </span>
-                <FlapText text={checked ? checked.code : shown ? coded : ""} width={7} delay={checked ? 120 + (i % 7) * 40 : d + 160} />
-                <FlapText text={checked?.owed ?? ""} width={7} delay={checked ? 380 : d + 200} />
+                <FlapText text={checked ? checked.code : shown ? coded : ""} width={7} delay={checked ? SCAN_LEAD + i * SCAN_ROW : d + 160} />
+                <FlapText text={checked?.owed ?? ""} width={7} delay={checked ? SCAN_LEAD + 160 + i * SCAN_ROW : d + 200} />
               </div>
             );
           })}
@@ -98,13 +108,13 @@ export function Board() {
   );
 
   return (
-    <section ref={root} aria-label="The cancellations, as coded" data-section="board" className="relative bg-navy-950 px-5 pb-28 pt-32 md:px-16 md:pb-36 md:pt-40">
+    <section ref={root} aria-label="The cancel list, as coded" data-section="board" className="relative bg-navy-950 px-5 pb-28 pt-32 md:px-16 md:pb-36 md:pt-40">
       <div className="board-head mx-auto max-w-[1180px]">
-        <h2 className="display max-w-[15ch] text-[clamp(38px,5.4vw,88px)] text-cloud-50">
-          All {cancelled !== undefined ? count(cancelled) : <Pending ch={2} />} coded weather.
+        <h2 className="text-balance display max-w-[15ch] text-[clamp(38px,5.4vw,88px)] text-cloud-50">
+          OCC coded all {cancelled !== undefined ? count(cancelled) : <Pending ch={2} />} as weather.
         </h2>
         <p className="mt-6 max-w-[46ch] text-[16.5px] leading-relaxed text-cloud-400 md:text-[19px]">
-          OCC&rsquo;s cancel list{occAt ? ` at ${occAt}` : ""} gave every flight the same reason. StormCheck checks each one against the airport&rsquo;s weather and the aircraft&rsquo;s own logs.
+          Operations control (OCC) sent the cancel list{occAt ? ` at ${occAt}` : ""} with the same reason on every line. StormCheck checks each flight against Dublin&rsquo;s METAR and the aircraft&rsquo;s own logs.
         </p>
       </div>
 
