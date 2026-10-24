@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { axisMax, headline, injectionSummary, orderedKinds, rangeIncludes, readRuns, ratioText, splitText } from "./model";
+import { axisMax, headline, placeLabels, runLabel, injectionSummary, orderedKinds, rangeIncludes, readRuns, ratioText, splitText } from "./model";
 
 const baseline = { model: "claude-opus-5-5", runs: 3, liability_eur: [41580, 99000, 27720], cause_accuracy: [0.74, 0.81, 0.69], hash_identical: false };
 const stormcheck = { runs: 3, liability_eur: [34650, 34650, 34650], hash_identical: true, hash: "9f2c41d07be35a18" };
@@ -41,6 +41,21 @@ describe("runs", () => {
     expect(axisMax([41580, 99000, 27720, 34650])).toBe(100000);
     expect(axisMax([34650])).toBe(40000);
     expect(axisMax([])).toBe(1);
+  });
+});
+
+describe("run labels", () => {
+  it("names a run that landed exactly on the cash basis or the full entitlement", () => {
+    const anchors = { cashCents: 0, fullCents: 9_900_000 };
+    expect(runLabel(0, anchors)).toBe("€0 · cash basis");
+    expect(runLabel(99000, anchors)).toBe("€99,000 · full entitlement");
+    expect(runLabel(41580, anchors)).toBe("€41,580");
+    expect(runLabel(41580, null)).toBe("€41,580");
+  });
+  it("drops a label below its dot only when it would overlap the one before", () => {
+    // x positions in px, label widths in px, anchored inside a 600px axis
+    expect(placeLabels([{ x: 0, w: 90 }, { x: 250, w: 50 }, { x: 600, w: 150 }], 600)).toEqual(["above", "above", "above"]);
+    expect(placeLabels([{ x: 100, w: 60 }, { x: 130, w: 60 }, { x: 160, w: 60 }], 600)).toEqual(["above", "below", "above"]);
   });
 });
 

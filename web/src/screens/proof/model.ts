@@ -42,6 +42,36 @@ export function headline(baseline: Runs, sc: Runs) {
   };
 }
 
+/** "€0 · cash basis" / "€99,000 · full entitlement" when a run lands exactly on one of the bridge's ends. */
+export function runLabel(valueEur: number, anchors: { cashCents: number; fullCents: number } | null) {
+  const cents = Math.round(valueEur * 100);
+  if (anchors && cents === anchors.cashCents) return `${euros(valueEur)} · cash basis`;
+  if (anchors && cents === anchors.fullCents) return `${euros(valueEur)} · full entitlement`;
+  return euros(valueEur);
+}
+
+/** Where a label sits on an axis of width `iw`: start-anchored at the left edge, end-anchored at the right, centred between. */
+export function labelSpan(x: number, w: number, iw: number): [number, number] {
+  if (x < 24) return [x - 7, x - 7 + w];
+  if (x > iw - 24) return [x + 7 - w, x + 7];
+  return [x - w / 2, x + w / 2];
+}
+
+/** Above the dot when it fits, else below, else whichever row has more room. Input in x order. */
+export function placeLabels(items: { x: number; w: number }[], iw: number): ("above" | "below")[] {
+  const out: ("above" | "below")[] = [];
+  let endAbove = -Infinity;
+  let endBelow = -Infinity;
+  for (const it of items) {
+    const [a, b] = labelSpan(it.x, it.w, iw);
+    const row = a >= endAbove + 8 ? "above" : a >= endBelow + 8 ? "below" : endAbove <= endBelow ? "above" : "below";
+    out.push(row);
+    if (row === "above") endAbove = b;
+    else endBelow = b;
+  }
+  return out;
+}
+
 /** A round axis end above every value: 1, 2, 2.5, 4, 5 or 10 × a power of ten. */
 export function axisMax(values: number[]) {
   const top = Math.max(0, ...values);

@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { scaleLinear } from "d3-scale";
+import { useCfo } from "@/api/queries";
 import type { EvalReport } from "@/api/types";
 import { useWidth } from "@/components/storm/useWidth";
 import { pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { axisMax, euros, headline, readRuns, type Runs } from "./model";
+import { axisMax, euros, headline, placeLabels, readRuns, runLabel, type Runs } from "./model";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -17,6 +18,9 @@ export function RunsHero({ report }: { report: EvalReport }) {
   const base = readRuns(report.baseline);
   const sc = readRuns(report.stormcheck_runs);
   const h = headline(base, sc);
+  // The bridge's two ends, to name a run that landed exactly on one of them.
+  const cfo = useCfo();
+  const anchors = cfo.data ? { cashCents: cfo.data.cash_basis_cents, fullCents: cfo.data.full_entitlement_cents } : null;
   return (
     <section aria-labelledby="proof-headline" className="relative overflow-hidden rounded-2xl bg-navy-900 text-cloud-50 shadow-[0_20px_60px_-20px_rgba(8,13,23,0.55)]">
       <div aria-hidden="true" className="pointer-events-none absolute -left-40 -top-48 size-[560px] rounded-full bg-[radial-gradient(closest-side,rgba(200,208,219,0.08),transparent)]" />
@@ -26,7 +30,7 @@ export function RunsHero({ report }: { report: EvalReport }) {
           <span className="block text-balance text-cloud-500">{h.baseline}</span> <span className="mt-1 block text-cloud-50">{h.stormcheck}</span>
         </h2>
       </div>
-      {base.values.length || sc.values.length ? <RunsPlot base={base} sc={sc} /> : <div className="h-6" />}
+      {base.values.length || sc.values.length ? <RunsPlot base={base} sc={sc} anchors={anchors} /> : <div className="h-6" />}
       <div className="relative grid grid-cols-[minmax(0,1fr)] gap-px border-t border-white/[0.07] bg-white/[0.07] sm:grid-cols-2">
         <RunFacts title="Plain Claude" runs={base} note={base.model ? `${base.model} on the raw documents` : "the model on the raw documents"} />
         <RunFacts title="StormCheck" runs={sc} note="Reader facts, then the deterministic engine" strong />
@@ -59,7 +63,7 @@ function RunFacts({ title, runs, note, strong }: { title: string; runs: Runs; no
 }
 
 /** Both sets of runs on one € axis, from €0. */
-function RunsPlot({ base, sc }: { base: Runs; sc: Runs }) {
+function RunsPlot({ base, sc, anchors }: { base: Runs; sc: Runs; anchors: { cashCents: number; fullCents: number } | null }) {
   const [ref, width] = useWidth<HTMLDivElement>(900);
   const reduce = useReducedMotion();
   const [hover, setHover] = useState<string | null>(null);
@@ -75,12 +79,11 @@ function RunsPlot({ base, sc }: { base: Runs; sc: Runs }) {
   const H = axisY + 34;
   const scX = sc.values.length ? x(sc.values[0]) : null;
 
-  // Baseline value labels: above the dot, unless that would collide with the previous one.
-  const order = base.values.map((v, i) => ({ v, i, x: x(v) })).sort((a, b) => a.x - b.x);
-  const below = new Set<number>();
-  order.forEach((o, k) => {
-    if (k > 0 && o.x - order[k - 1].x < 78 && !below.has(order[k - 1].i)) below.add(o.i);
-  });
+  // Baseline value labels, named when they land on the bridge's ends; above the dot unless that collides.
+  const labels = base.values.map((v) => runLabel(v, anchors));
+  const order = base.values.map((v, i) => ({ i, x: x(v), w: labels[i].length * 6.6 })).sort((a, b) => a.x - b.x);
+  const rows = placeLabels(order, iw);
+  const below = new Set(order.filter((_, k) => rows[k] === "below").map((o) => o.i));
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => t * max);
 
   return (
@@ -92,10 +95,10 @@ function RunsPlot({ base, sc }: { base: Runs; sc: Runs }) {
           {[laneA, laneB].map((y) => (
             <line key={y} x1={0} x2={iw} y1={y} y2={y} stroke="rgba(255,255,255,0.08)" />
           ))}
-          <text x={narrow ? 0 : -16} y={narrow ? laneA - 44 : laneA} dy="0.32em" textAnchor={narrow ? "start" : "end"} className="fill-cloud-300 text-[13px] font-semibold">
+          <text x={narrow ? 0 : -24} y={narrow ? laneA - 44 : laneA} dy="0.32em" textAnchor={narrow ? "start" : "end"} className="fill-cloud-300 text-[13px] font-semibold">
             Plain Claude
           </text>
-          <text x={narrow ? 0 : -16} y={narrow ? laneB - 40 : laneB} dy="0.32em" textAnchor={narrow ? "start" : "end"} className="fill-cloud-50 text-[13px] font-semibold">
+          <text x={narrow ? 0 : -24} y={narrow ? laneB - 40 : laneB} dy="0.32em" textAnchor={narrow ? "start" : "end"} className="fill-cloud-50 text-[13px] font-semibold">
             StormCheck
           </text>
 
@@ -127,7 +130,7 @@ function RunsPlot({ base, sc }: { base: Runs; sc: Runs }) {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.4, delay: 1.2 + i * 0.12 }}
                 >
-                  {euros(v)}
+                  {labels[i]}
                 </motion.text>
                 <circle cx={cx} cy={laneA} r={14} fill="transparent" />
                 {hover === key ? (
