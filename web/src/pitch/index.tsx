@@ -77,7 +77,7 @@ export default function PitchScreen() {
 
   useEffect(() => {
     const previous = document.title;
-    document.title = `${SLIDES[index].label} · StormCheck pitch`;
+    document.title = `Pitch · ${index + 1}/${TOTAL} · StormCheck`;
     return () => {
       document.title = previous;
     };

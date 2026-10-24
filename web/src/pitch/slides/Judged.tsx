@@ -4,7 +4,10 @@ import { payoutsDrafted, type PitchData } from "../data";
 import { Bullets, Fig, GrammarCards, Reveal, SlideFrame, type GrammarCard } from "../ui";
 import { StormStrip } from "./StormStrip";
 
-/** THREAD_JUSTIN J11 slide 2: the airline against the four questions. Wow gets a bright outline, not a meaning colour. */
+/**
+ * THREAD_JUSTIN J11 slide 2: the airline against the four questions (the tags are the judges' own words).
+ * Wow gets a bright outline, not a meaning colour.
+ */
 export function Judged({ data }: { data: PitchData }) {
   const { run } = data;
   const cards: GrammarCard[] = [
@@ -12,19 +15,19 @@ export function Judged({ data }: { data: PitchData }) {
       title: "Real.",
       tag: "real-enough",
       lead: <>{REAL_CARD}.</>,
-      details: <Bullets items={["Cause codes that lie", "Answer key: every passenger checked"]} />,
+      details: <Bullets items={["A 5 a.m. cancel list, all coded weather", "Answer key: every passenger checked"]} />,
     },
     {
       title: "Hireable.",
       tag: "would-you-hire-it",
       lead: <>One role: disruption liability. Drafts it, never pays it.</>,
-      details: <Bullets items={["Asks the Claims Lead, not the CFO", "Every euro traces to a log line"]} />,
+      details: <Bullets items={["Each question goes to the person who owns it", "Every euro traces to a log line"]} />,
     },
     {
       title: "New.",
       tag: "something-new",
-      lead: <>The cancellation&rsquo;s real cause, not another invoice bot.</>,
-      details: <Bullets items={["Passengers feel it every storm", "Rules that differ route to route"]} />,
+      lead: <>Works out what each cancellation costs from what really caused it.</>,
+      details: <Bullets items={["Storm window checked at both ends of a flight", "Rules that differ route to route"]} />,
     },
     {
       title: "Wow.",
@@ -48,7 +51,7 @@ export function Judged({ data }: { data: PitchData }) {
   ];
 
   return (
-    <SlideFrame eyebrow="example · judged">
+    <SlideFrame eyebrow="judged">
       <Reveal className="mt-10">
         <h2 className="display text-[108px] text-cloud-50">The airline, judged.</h2>
       </Reveal>

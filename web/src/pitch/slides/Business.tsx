@@ -1,9 +1,10 @@
 import type { LearnedItem, Question } from "@/api/types";
 import { count, eur, pct, ROLE_INITIALS, routedTo } from "@/lib/format";
+import { CARD_TAGS } from "../copy";
 import { learnedFacts, passengers, voucherQuestion, type PitchData } from "../data";
 import { Bullets, Chip, Fig, GrammarCards, Initials, LoopLine, Num, Reveal, SlideFrame, type GrammarCard } from "../ui";
 
-/** THREAD_JUSTIN J11 slide 1, Hyphenate's `example · the-business` in our colours. Escalates is the highlight. */
+/** THREAD_JUSTIN J11 slide 1, in Hyphenate's four-card grammar and our colours. Escalates is the highlight. */
 export function Business({ data }: { data: PitchData }) {
   const { run } = data;
   const q = voucherQuestion(run);
@@ -12,19 +13,19 @@ export function Business({ data }: { data: PitchData }) {
   const cards: GrammarCard[] = [
     {
       title: "Learns.",
-      tag: "self-learning",
-      lead: <>Reads the airline&rsquo;s own ops logs, claims and payouts to learn who&rsquo;s owed what.</>,
+      tag: CARD_TAGS.learns,
+      lead: <>Before its first storm, it reads the airline&rsquo;s past ops logs, claims and payouts.</>,
       details: <Learned items={run?.learned} />,
     },
     {
       title: "Runs.",
-      tag: "ai-automated",
-      lead: <>The morning after a storm, it sets each flight&rsquo;s real cause and drafts every refund, payout and the liability.</>,
+      tag: CARD_TAGS.runs,
+      lead: <>By morning it has found what caused each cancellation and drafted every refund, payout and the liability.</>,
       details: (
         <Bullets
           items={[
             <>
-              <Fig value={pax} className="text-cloud-50" /> passengers sorted overnight
+              <Fig value={pax} className="text-cloud-50" /> passengers checked against EU261
             </>,
             "Liability draft ready for the Controller",
           ]}
@@ -33,22 +34,22 @@ export function Business({ data }: { data: PitchData }) {
     },
     {
       title: "Escalates.",
-      tag: "needs-review",
+      tag: CARD_TAGS.escalates,
       highlight: "held",
       lead: <>CRM says a passenger took a service-desk voucher instead of cash. Her claim says she never agreed.</>,
       details: <Escalation q={q} loading={!run} />,
     },
     {
       title: "Improves.",
-      tag: "new-policy",
+      tag: CARD_TAGS.improves,
       lead: <>Claims Lead: &ldquo;No signed acceptance, no offset.&rdquo;</>,
-      details: <Bullets items={["Saved as policy for every flight leaving the EU", "Never asked again"]} />,
+      details: <Bullets items={["Applies to every flight leaving the EU", "Never asked again"]} />,
     },
   ];
 
   return (
     <SlideFrame
-      eyebrow="example · the-business"
+      eyebrow="the business"
       // No API count says "voucher cases settled by this ruling" (rules_cited mixes every rule), so no number here.
       footer={<LoopLine>Next storm: cases like hers settle on their own, ruling cited.</LoopLine>}
     >
