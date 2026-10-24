@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ViewTransition } from "react";
 import { Logo } from "@/components/ui/Logo";
 
 /** Fixed, quiet, and readable on both grounds via difference blending. */
@@ -10,7 +11,9 @@ export function SiteNav() {
       </a>
       <header className="pointer-events-none fixed inset-x-0 top-0 z-50 flex items-center justify-between px-5 py-5 text-white mix-blend-difference md:px-10">
         <Link href="/" className="pointer-events-auto flex items-center gap-3" aria-label="StormCheck home">
-          <Logo className="h-[22px] w-auto" />
+          <ViewTransition name="brand-mark">
+            <Logo className="h-[22px] w-auto" />
+          </ViewTransition>
           <span className="text-[18px] font-semibold tracking-[-0.01em] [font-stretch:112%]">StormCheck</span>
         </Link>
         <nav className="pointer-events-auto flex items-center gap-6 text-[15px]">

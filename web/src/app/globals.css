@@ -226,3 +226,21 @@ html.lenis body {
 @keyframes ink-in {
   to { stroke-dashoffset: 0; }
 }
+
+/* Route changes: a short crossfade; the brand mark morphs between landing and app */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 380ms;
+  animation-timing-function: var(--ease-out-quart);
+}
+::view-transition-group(brand-mark) {
+  animation-duration: 520ms;
+  animation-timing-function: var(--ease-out-expo);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

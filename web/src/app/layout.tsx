@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, B612_Mono } from "next/font/google";
+import { ViewTransition } from "react";
 import "./globals.css";
 
 const archivo = Archivo({
@@ -32,7 +33,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${archivo.variable} ${b612Mono.variable} antialiased`}>
-      <body>{children}</body>
+      <body>
+        <ViewTransition>{children}</ViewTransition>
+      </body>
     </html>
   );
 }

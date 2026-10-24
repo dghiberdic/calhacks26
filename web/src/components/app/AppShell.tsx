@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, ViewTransition } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Logo } from "@/components/ui/Logo";
 import { Kbd } from "./ui";
@@ -165,7 +165,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className={cn("flex min-h-svh flex-col bg-chart text-ink", desk && "bg-[#eef2f8]")}>
       <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-[#e6e6e0] bg-chart/90 px-4 backdrop-blur-md md:gap-5 md:px-5">
         <Link href="/" className="flex w-auto items-center gap-2.5 md:w-[196px]" aria-label="StormCheck home">
-          <Logo className="h-[18px] w-auto" />
+          <ViewTransition name="brand-mark">
+            <Logo className="h-[18px] w-auto" />
+          </ViewTransition>
           <span className="hidden text-[16px] font-semibold tracking-[-0.01em] [font-stretch:112%] sm:inline">StormCheck</span>
         </Link>
         <StormSwitcher />
