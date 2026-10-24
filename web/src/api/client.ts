@@ -182,6 +182,8 @@ export const api = {
   desk: (icao: string, date: string) => post<StormRun>("/desk", { icao, date }),
   inject: (body: InjectRequest) => post<InjectResponse>("/inject", body),
   clock: (knownAt: string) => post<{ known_at: string }>("/clock", { known_at: knownAt }),
+  /** Additive (contracts/requests/justin.md #2): the current known-at; absent on a server without it. */
+  clockNow: () => get<{ known_at: string }>("/clock"),
   reset: () => post<{ ok: boolean }>("/reset"),
 };
 

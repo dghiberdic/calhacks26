@@ -91,6 +91,7 @@ function ResetButton() {
         setBusy(true);
         try {
           await api.reset();
+          useClock.getState().setKnownAt(null);
           await invalidateAfterWrite();
           toast("Demo reset to the baseline");
         } catch (e) {
