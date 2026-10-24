@@ -77,6 +77,10 @@ export function DayResult({ run }: { run: StormRun }) {
   const place = airportByIcao(run.station);
   const rc = (run.real_context ?? {}) as Record<string, unknown>;
   const name = typeof rc.name === "string" && rc.name ? rc.name : stormName(runKey(run));
+  // Say where the weather came from, and never call generated observations real.
+  const mockMetar = run.metar.some((o) => /\bRMK MOCK\b/.test(o.raw));
+  const metarSource = typeof rc.metar_source === "string" ? rc.metar_source : null;
+  const metarLabel = mockMetar ? "mock METAR" : metarSource && /real|iem|awc|pinned/i.test(metarSource) ? "real METAR" : "METAR";
   const recoded = run.flights.filter((r) => r.decision?.recoded);
   const hub = place?.iata ?? iataOf(run.station);
   const routes = new Set(run.flights.map((r) => (r.flight.origin === hub ? r.flight.dest : r.flight.origin)));
@@ -129,8 +133,8 @@ export function DayResult({ run }: { run: StormRun }) {
               </h2>
             )}
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <StatusChip tone="metar" className={WINDOW_CHIP}>
-                real METAR · {count(run.metar.length)} obs
+              <StatusChip tone="metar" className={WINDOW_CHIP} title={metarSource ?? undefined}>
+                {metarLabel} · {count(run.metar.length)} obs
               </StatusChip>
               {run.windows.map((w, i) => (
                 <StatusChip key={i} tone="metar" dot={false} className={WINDOW_CHIP} title={w.definition}>
