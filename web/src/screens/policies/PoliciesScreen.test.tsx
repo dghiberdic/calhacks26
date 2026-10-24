@@ -97,7 +97,9 @@ describe("Policies screen", () => {
     const dialog = await screen.findByRole("dialog");
     expect(dialog).toHaveTextContent("Locked periods are never rewritten.");
     await userEvent.click(within(dialog).getByRole("button", { name: "Revert and replay" }));
-    expect(await within(dialog).findByText(/flips 1 · Δ \(€300\) · Jan 2025 locked, untouched/)).toBeInTheDocument();
+    // The summary sets its figures in their own spans, so match the paragraph's whole text.
+    const summary = (_: string, el: Element | null) => el?.tagName === "P" && /flips 1 · Δ \(€300\) · Jan 2025 locked, untouched/.test(el.textContent ?? "");
+    expect(await within(dialog).findByText(summary)).toBeInTheDocument();
   });
 
   it("offers no widen or revert on regulation or hard controls", async () => {

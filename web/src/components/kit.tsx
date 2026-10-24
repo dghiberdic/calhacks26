@@ -41,11 +41,13 @@ export function ScoreBar({ score, className }: { score: number | null; className
 }
 
 // ---------- people ----------
-export function RoleAvatar({ role, size = "md", className }: { role: Role; size?: "sm" | "md"; className?: string }) {
+/** Initials for a seat. `decorative` when the seat's name is written next to it, so screen readers say it once. */
+export function RoleAvatar({ role, size = "md", className, decorative }: { role: Role; size?: "sm" | "md"; className?: string; decorative?: boolean }) {
   const agent = role.startsWith("agent.");
   return (
     <span
-      title={ROLE_LABEL[role]}
+      title={decorative ? undefined : ROLE_LABEL[role]}
+      aria-hidden={decorative || undefined}
       className={cn(
         "inline-flex shrink-0 items-center justify-center rounded-full font-mono font-bold",
         size === "sm" ? "size-5 text-[8.5px]" : "size-7 text-[10px]",
@@ -62,7 +64,7 @@ export function RoleAvatar({ role, size = "md", className }: { role: Role; size?
 export function RoutedTo({ role, holdsCents, className }: { role: Role; holdsCents?: Cents | null; className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-2 text-[13px] text-slate-600", className)}>
-      <RoleAvatar role={role} size="sm" />
+      <RoleAvatar role={role} size="sm" decorative />
       <span>{routedTo(role)}</span>
       {holdsCents ? (
         <span className="text-held-ink">
