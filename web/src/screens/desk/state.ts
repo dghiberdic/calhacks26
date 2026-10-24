@@ -110,11 +110,14 @@ type DeskStore = DayState & {
   setDate: (date: string | null, text: string) => void;
   clearProblem: () => void;
   runDay: (icao: string, date: string, airport?: AirportChoice["airport"]) => Promise<void>;
+  /** Stop waiting for a slow run; its answer, if it comes, is ignored. */
+  stopDay: () => void;
   setKind: (kind: InjectKind) => void;
   setDraft: (kind: InjectKind, text: string) => void;
   resetDraft: (kind: InjectKind) => void;
   setFlightId: (id: string) => void;
   runInject: (req: InjectRequest, scenarioId?: string | null) => Promise<void>;
+  stopInject: () => void;
 };
 
 const templates = () => Object.fromEntries(KINDS.map((k) => [k.kind, k.template])) as Record<InjectKind, string>;
@@ -149,10 +152,14 @@ export const useDesk = create<DeskStore>((set, get) => ({
     }
   },
 
+  stopDay: () => set((s) => ({ pending: null, token: s.token + 1 })),
+
   setKind: (kind) => set((s) => ({ inject: { ...s.inject, kind, problem: null } })),
   setDraft: (kind, text) => set((s) => ({ inject: { ...s.inject, drafts: { ...s.inject.drafts, [kind]: text }, problem: null } })),
   resetDraft: (kind) => set((s) => ({ inject: { ...s.inject, drafts: { ...s.inject.drafts, [kind]: templates()[kind] } } })),
   setFlightId: (flightId) => set((s) => ({ inject: { ...s.inject, flightId } })),
+
+  stopInject: () => set((s) => ({ inject: { ...s.inject, pending: null } })),
 
   async runInject(request, scenarioId = null) {
     set((s) => ({

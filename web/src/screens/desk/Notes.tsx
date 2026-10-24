@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { AlertCircle, WifiOff } from "lucide-react";
 import { type DeskProblem, useSteps } from "./state";
@@ -18,6 +18,7 @@ export function FormNote({
   everyMs,
   hint,
   onRetry,
+  onCancel,
   testId,
 }: {
   problem: DeskProblem | null;
@@ -27,6 +28,8 @@ export function FormNote({
   everyMs?: number;
   hint: ReactNode;
   onRetry?: () => void;
+  /** Offered once a request has run unusually long: stop waiting (a late answer is ignored). */
+  onCancel?: () => void;
   testId: string;
 }) {
   return (
@@ -55,7 +58,7 @@ export function FormNote({
           ) : null}
         </motion.div>
       ) : busy ? (
-        <StepLine key={`busy-${busyKey}`} steps={steps} everyMs={everyMs} testId={`${testId}-progress`} />
+        <StepLine key={`busy-${busyKey}`} steps={steps} everyMs={everyMs} onCancel={onCancel} testId={`${testId}-progress`} />
       ) : (
         <motion.p key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }} className="px-1 text-[12.5px] leading-relaxed text-slate-500">
           {hint}
@@ -65,9 +68,16 @@ export function FormNote({
   );
 }
 
-function StepLine({ steps, everyMs, testId }: { steps: Step[]; everyMs?: number; testId: string }) {
+const SLOW_MS = 15_000;
+
+function StepLine({ steps, everyMs, onCancel, testId }: { steps: Step[]; everyMs?: number; onCancel?: () => void; testId: string }) {
   const step = useSteps(steps.length, everyMs);
   const current = steps[step];
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setSlow(true), SLOW_MS);
+    return () => window.clearTimeout(t);
+  }, []);
   return (
     <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }} className="flex flex-wrap items-center gap-x-2 gap-y-1 px-1 text-[13.5px] text-navy-900" data-testid={testId}>
       <span className="relative flex size-2" aria-hidden="true">
@@ -79,7 +89,12 @@ function StepLine({ steps, everyMs, testId }: { steps: Step[]; everyMs?: number;
           {current.text}…
         </motion.span>
       </AnimatePresence>
-      <span className="font-mono text-[11.5px] text-slate-400">{current.sub}</span>
+      <span className="font-mono text-[11.5px] text-slate-400">{slow ? "still working · this source can be slow" : current.sub}</span>
+      {slow && onCancel ? (
+        <button type="button" onClick={onCancel} className="text-[12.5px] font-medium text-metar-ink hover:underline">
+          Stop waiting
+        </button>
+      ) : null}
     </motion.p>
   );
 }

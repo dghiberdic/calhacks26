@@ -132,7 +132,7 @@ export function DayForm() {
 
       {/* One line under the inputs: what they mean, what the server is doing, or what went wrong. */}
       <div id="desk-day-note" className="mt-3 min-h-[22px]" aria-live="polite">
-        <FormNote problem={problem} busy={busy} busyKey={s.token} steps={steps} hint={hint} onRetry={() => run()} testId="desk" />
+        <FormNote problem={problem} busy={busy} busyKey={s.token} steps={steps} hint={hint} onRetry={() => run()} onCancel={s.stopDay} testId="desk" />
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-cloud-100 pt-3">

@@ -32,7 +32,7 @@ test("Dublin on 24 Jan 2025 renders a run", async ({ page }) => {
 
 test("a future date shows the plain 422 message next to the inputs, and the form still works", async ({ page }) => {
   await page.goto("/desk");
-  await runDay(page, "lhr", "1 Jan 2099");
+  await runDay(page, "dub", "1 Jan 2099");
 
   const problem = page.getByTestId("desk-error");
   await expect(problem).toBeVisible({ timeout: 15_000 });
@@ -47,7 +47,7 @@ test("a future date shows the plain 422 message next to the inputs, and the form
 
   // Fix the date and run again from the same form.
   const field = page.getByLabel("Local date");
-  await field.fill("21 Jan 2024");
+  await field.fill("24 Jan 2025");
   await field.press("Enter");
   await expect(page.getByTestId("desk-run-result")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId("desk-error")).toHaveCount(0);

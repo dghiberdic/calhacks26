@@ -324,6 +324,7 @@ function Editor() {
           everyMs={1100}
           hint={<>The Reader has no tools and can&rsquo;t approve anything. If it can&rsquo;t answer in time, a labelled regex fallback reads the line.</>}
           onRetry={submit}
+          onCancel={useDesk.getState().stopInject}
           testId="inject"
         />
       </div>
