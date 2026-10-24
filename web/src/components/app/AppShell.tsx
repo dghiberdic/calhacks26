@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, ViewTransition } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState, ViewTransition } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Logo } from "@/components/ui/Logo";
 import { Kbd } from "./ui";
@@ -11,6 +11,7 @@ import { WhyDrawer } from "./WhyDrawer";
 import { CommandPalette } from "./CommandPalette";
 import { AgentRun } from "./AgentRun";
 import { LetterDrawer } from "./LetterDrawer";
+import { DemoGuide } from "./DemoGuide";
 import { useApp } from "@/lib/store";
 import { QUESTIONS, ROLES } from "@/data/app";
 import { cn } from "@/lib/cn";
@@ -257,6 +258,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <CommandPalette />
       <AgentRun open={run} onClose={closeRun} />
       <LetterDrawer />
+      <Suspense fallback={null}>
+        <DemoGuide />
+      </Suspense>
     </div>
   );
 }

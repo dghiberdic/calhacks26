@@ -16,6 +16,7 @@ npm run dev        # http://localhost:3000
 | `/app/inbox` | Escalations as handoff packets → answers become versioned rules |
 | `/app/payouts`, `/app/ledger`, `/app/rules` | Payout review, provision + journal, versioned rules |
 | `/app/desk` | Judge's desk: any ICAO station + date, live METAR, verdict and euros move as you edit the tech log |
+| `/app?demo` or press **G** | Presenter's demo guide: the 3-minute path, each step performs its action |
 | `/api/metar` | `?station=EIDW&date=2025-12-09&limit=40` live METAR from the IEM archive + computed storm windows |
 
 ## Data (all real unless marked)
