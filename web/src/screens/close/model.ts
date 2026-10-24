@@ -121,7 +121,21 @@ export const SEGMENTS: { id: CurveSegment; name: string; band: string }[] = [
 ];
 
 export const isSegment = (s: string | null | undefined): s is CurveSegment => SEGMENTS.some((x) => x.id === s);
+
+/** "EIDW@2025-01-24:medium_1500_3500" → station, date and the segment the cohort is split by (if any). */
+export function cohortParts(cohort: string) {
+  const [base, suffix] = cohort.split(":");
+  const [station, rest = ""] = base.split("@");
+  return { base, station, date: rest.slice(0, 10), segment: isSegment(suffix) ? suffix : null };
+}
 export const segmentName = (s: string) => SEGMENTS.find((x) => x.id === s)?.name ?? s.replace(/_/g, " ");
+
+/** "Storm Éowyn · medium haul" / "Storm Isha" / the id when the storm has no name. */
+export function cohortName(cohort: string, segment?: string | null, name: (base: string) => string | null = () => null) {
+  const p = cohortParts(cohort);
+  const seg = p.segment ?? segment ?? null;
+  return `${name(p.base) ?? p.base}${seg ? ` · ${segmentName(seg).toLowerCase()}` : ""}`;
+}
 
 // ---------- periods ----------
 

@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { count, eur, periodLabel } from "@/lib/format";
 import { stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
-import { liabilityChange } from "./model";
+import { cohortName, liabilityChange } from "./model";
 import { Denied } from "./ui";
 
 const METHOD: Record<string, string> = { bf: "Bornhuetter-Ferguson", expected_loss: "Expected loss", chain_ladder: "Chain ladder" };
@@ -104,9 +104,15 @@ export function CloseRail({
             </motion.p>
           )}
         </AnimatePresence>
-        {canAct && !locked && !result ? (
-          <Button onClick={() => void runMonthEnd()} disabled={busy !== null} className="mt-3 h-9 w-full rounded-lg bg-navy-900 text-[13.5px] font-semibold text-cloud-50 hover:bg-navy-800" data-testid="month-end">
-            {busy === "month-end" ? "Running month-end…" : `Run ${label} month-end`}
+        {canAct && !locked ? (
+          <Button
+            variant={result ? "outline" : "default"}
+            onClick={() => void runMonthEnd()}
+            disabled={busy !== null}
+            className={cn("mt-3 h-9 w-full rounded-lg text-[13.5px]", result ? "" : "bg-navy-900 font-semibold text-cloud-50 hover:bg-navy-800")}
+            data-testid="month-end"
+          >
+            {busy === "month-end" ? "Running month-end…" : result ? `Run ${label} month-end again` : `Run ${label} month-end`}
           </Button>
         ) : null}
         {error?.action === "month-end" ? <Denied error={error.error} className="mt-2.5" /> : null}
@@ -134,10 +140,7 @@ export function CloseRail({
 
       {!canAct ? <p className="mx-5 mt-3 text-[12.5px] text-slate-400">The Controller runs month-end and locks periods.</p> : null}
 
-      {/* invariants */}
-      <div className="mt-4 flex-1 border-t border-cloud-100 px-5 pb-4 pt-4">
-        <Invariants />
-      </div>
+      <div className="pb-4" />
 
       <Dialog open={confirm} onOpenChange={(o) => busy === null && setConfirm(o)}>
         <DialogContent className="sm:max-w-[420px]">
@@ -189,7 +192,7 @@ function MonthEndResult({ res }: { res: MonthEndResponse }) {
         ) : null}
         {cohortRow ? (
           <li>
-            {stormName(cohortRow.cohort) ?? cohortRow.cohort} closes at {eur(cohortRow.closing_cents)}
+            {cohortName(cohortRow.cohort, est?.cohort === cohortRow.cohort ? est.segment : null, stormName)} closes at {eur(cohortRow.closing_cents)}
           </li>
         ) : null}
         {res.rollforward ? (
@@ -207,43 +210,46 @@ function MonthEndResult({ res }: { res: MonthEndResponse }) {
   );
 }
 
-/** The close checklist. ok uses the one green; a failure is said plainly, with its detail, in ink. */
-function Invariants() {
+/** The close checklist, checked on every read. ok uses the one green; a failure is said plainly, with its detail, in ink. */
+export function InvariantsPanel() {
   const q = useInvariants();
   const items = q.data ?? [];
   const failing = items.filter((i) => !i.ok).length;
   return (
-    <div>
-      <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-[13.5px] font-semibold text-navy-900">Invariants</h3>
-        {q.data && items.length ? (
-          <span className={cn("font-mono text-[11.5px]", failing ? "text-navy-900" : "text-slate-400")}>{failing ? `${count(failing)} of ${count(items.length)} failing` : `${count(items.length)} of ${count(items.length)} hold`}</span>
-        ) : null}
+    <section aria-labelledby="invariants-title" className="rounded-xl bg-card px-5 pb-3 pt-4 shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04)]">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <div>
+          <MicroLabel>Invariants · checked on every read</MicroLabel>
+          <h2 id="invariants-title" className="mt-1 text-[15.5px] font-semibold text-navy-900">
+            {q.data && items.length ? (failing ? `${count(failing)} of ${count(items.length)} failing` : `All ${count(items.length)} hold`) : "Invariants"}
+          </h2>
+        </div>
+        <p className="text-[12.5px] text-slate-500">The books are re-checked from the journal each time this page reads them.</p>
       </div>
       {q.isError ? (
-        <ErrorNote error={q.error} onRetry={() => void q.refetch()} className="mt-2" />
+        <ErrorNote error={q.error} onRetry={() => void q.refetch()} className="mt-3 mb-1" />
       ) : !q.data ? (
-        <div className="mt-2 flex flex-col gap-2">
-          <Shimmer className="h-5" />
-          <Shimmer className="h-5" />
-          <Shimmer className="h-5" />
+        <div className="mt-3 grid gap-2 pb-2 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }, (_, i) => (
+            <Shimmer key={i} className="h-9" />
+          ))}
         </div>
       ) : !items.length ? (
-        <Empty title="No checks reported" className="mt-2 py-6" />
+        <Empty title="No checks reported" className="mt-3 mb-1 py-6" />
       ) : (
-        <ul className="mt-2 flex flex-col" data-testid="invariants">
+        <ul className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-x-8 sm:grid-cols-2 xl:grid-cols-3" data-testid="invariants">
           {[...items].sort((a, b) => Number(a.ok) - Number(b.ok)).map((inv) => (
             <InvariantRow key={inv.id} inv={inv} />
           ))}
         </ul>
       )}
-    </div>
+    </section>
   );
 }
 
 function InvariantRow({ inv }: { inv: InvariantResult }) {
   return (
-    <li className="grid grid-cols-[18px_minmax(0,1fr)] gap-2 border-t border-cloud-100 py-2 first:border-t-0">
+    <li className="grid grid-cols-[18px_minmax(0,1fr)] gap-2 border-t border-cloud-100 py-2.5" title={inv.id}>
       {inv.ok ? (
         <span className="mt-0.5 inline-flex size-4 items-center justify-center rounded-full bg-tie-wash" aria-label="holds">
           <Check className="size-2.5 text-tie-ink" strokeWidth={3} />

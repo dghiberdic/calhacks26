@@ -15,7 +15,7 @@ import { ClaimCurveChart, type CohortActual } from "./curve";
 import { JournalDrafts } from "./drafts";
 import { EstimateCardView } from "./estimate";
 import { isSegment, journalTies, lockedPeriods, rollforwardCsv, rollforwardTotals, SEGMENTS } from "./model";
-import { CloseRail } from "./rail";
+import { CloseRail, InvariantsPanel } from "./rail";
 import { FootingNotes, RollforwardTable } from "./rollforward";
 import { SectionHead, Segmented } from "./ui";
 
@@ -128,7 +128,7 @@ export default function CloseScreen() {
               <Empty title={`No 2140 movements in ${periodLabel(period)}`}>Nothing was drafted to the EU261 compensation liability in this period.</Empty>
             ) : (
               <>
-                <RollforwardTable rf={rf.data} highlight={justRan ? "change_in_estimate_cents" : null} ties={ties} />
+                <RollforwardTable rf={rf.data} highlight={justRan ? "change_in_estimate_cents" : null} ties={ties} segments={est ? { [est.cohort]: est.segment } : undefined} />
                 <FootingNotes rf={rf.data} />
               </>
             )}
@@ -150,6 +150,8 @@ export default function CloseScreen() {
           pendingDrafts={(journal.data ?? []).filter((e) => e.status === "draft").length}
         />
       </div>
+
+      <InvariantsPanel />
 
       <div className="grid grid-cols-[minmax(0,1fr)] items-stretch gap-3 xl:grid-cols-2">
         {estimate.isError ? (

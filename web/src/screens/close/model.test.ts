@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Commit, JournalEntry, MonthEndResponse, Rollforward, RollforwardRow, TraceEvent } from "@/api/types";
-import { bridgeScale, footRow, journalTies, liabilityChange, lockedPeriods, monthBounds, movementCents, preparerRole, rollforwardCsv, rollforwardTotals } from "./model";
+import { bridgeScale, cohortParts, footRow, journalTies, liabilityChange, lockedPeriods, monthBounds, movementCents, preparerRole, rollforwardCsv, rollforwardTotals } from "./model";
 
 const row = (over: Partial<RollforwardRow> = {}): RollforwardRow => ({
   cohort: "EIDW@2025-01-24",
@@ -103,6 +103,14 @@ describe("periods", () => {
     const commits = [{ hash: "a", parent: null, kind: "period_lock", at: "2025-03-01T00:00:00Z", actor: "controller", payload_hash: "b", payload_ref: "period:2024-12", message: "lock" }] as Commit[];
     expect([...lockedPeriods(events, commits, ["2025-02"])].sort()).toEqual(["2024-12", "2025-01", "2025-02"]);
     expect(lockedPeriods(undefined, undefined, []).size).toBe(0);
+  });
+});
+
+describe("cohort ids", () => {
+  it("reads station, date and an optional segment suffix", () => {
+    expect(cohortParts("EIDW@2025-01-24")).toEqual({ base: "EIDW@2025-01-24", station: "EIDW", date: "2025-01-24", segment: null });
+    expect(cohortParts("EIDW@2025-01-24:medium_1500_3500")).toEqual({ base: "EIDW@2025-01-24", station: "EIDW", date: "2025-01-24", segment: "medium_1500_3500" });
+    expect(cohortParts("odd")).toEqual({ base: "odd", station: "odd", date: "", segment: null });
   });
 });
 
