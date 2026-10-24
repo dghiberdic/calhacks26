@@ -1,14 +1,27 @@
 // The two real storm days as data: METAR (real), windows (computed from that METAR with the contract's
 // definition, never hard-coded), Northstar's flights, the raw sources every quote comes from, and the
 // real-world context the plan cites. The engine-like logic that turns this into decisions is in engine.ts.
+// Desk-generated days (desk.ts) build the same StormDef shape and register their own sources.
 import type { Evidence, MetarObs, Source, StormWindow } from "@/api/types";
+import { findAirport } from "./airports";
 import { EOWYN_METAR, HERMINIA_METAR } from "./metar";
 import { EOWYN_FLIGHTS, EOWYN_ID, HERMINIA_FLIGHTS, HERMINIA_ID, type FlightSpec } from "./flights";
 import * as T from "./texts";
 import { hhmmZ, nearestObs, stormWindows } from "./util";
 
-export type TechLogRef = { source: string; text: string; logged_at: string; ata: string; span: string };
+export type TechLogRef = {
+  source: string;
+  text: string;
+  logged_at: string;
+  ata: string;
+  span: string;
+  /** One-line reason override (e.g. a rotation from a technical AOG). */
+  reason?: string;
+  /** The OCC line for this flight when it isn't the storm's batch (e.g. NS30 coded 41). */
+  occ?: { source: string; quote: string; at?: string };
+};
 export type VoucherCase = { coupon_id: string; flight_id: string; departs_eu: boolean; amount_cents: number; source_id: string };
+export type KnockOnText = { spares: string; pss: string; hours: number };
 
 export type StormDef = {
   id: string;
@@ -22,23 +35,27 @@ export type StormDef = {
   /** Set for days with no storm window, e.g. "max gust 18 kt · no storm window". */
   message: string | null;
   kind: "eowyn" | "herminia" | "desk";
+  /** The OCC batch for the day and its verbatim code spans. */
+  occ: { source: string; text: string; span71: string; span72: string };
   /** AMOS tech-log lines behind each technical decision, by flight id. */
   techLogs: Record<string, TechLogRef>;
+  /** Spares and PSS lines behind each knock-on return, by flight number. */
+  knockOn: Record<string, KnockOnText>;
   /** Unsigned in-lieu voucher cases (the Q1 pattern); Éowyn and Herminia use the defaults in engine.ts. */
   vouchers?: VoucherCase[];
 };
 
-function def(id: string, name: string, date: string, metar: MetarObs[], flights: FlightSpec[], real_context: Record<string, unknown>, kind: StormDef["kind"], techLogs: Record<string, TechLogRef>): StormDef {
-  return { id, name, station: "EIDW", date, metar, windows: stormWindows(metar, "EIDW"), flights, real_context, message: null, kind, techLogs };
-}
+export const hubOf = (storm: Pick<StormDef, "station">) => findAirport(storm.station)?.iata ?? "DUB";
 
-export const EOWYN: StormDef = def(
-  EOWYN_ID,
-  "Storm Éowyn",
-  "2025-01-24",
-  EOWYN_METAR,
-  EOWYN_FLIGHTS,
-  {
+export const EOWYN: StormDef = {
+  id: EOWYN_ID,
+  name: "Storm Éowyn",
+  station: "EIDW",
+  date: "2025-01-24",
+  metar: EOWYN_METAR,
+  windows: stormWindows(EOWYN_METAR, "EIDW"),
+  flights: EOWYN_FLIGHTS,
+  real_context: {
     name: "Storm Éowyn",
     eurocontrol_departures: 179,
     normal_departures: "~292–316",
@@ -48,17 +65,46 @@ export const EOWYN: StormDef = def(
     orange_warning: "until 16:00",
     metar_source: "IEM asos.py (real)",
   },
-  "eowyn",
-  { "NS31@2025-01-24": { source: "tech_log:EI-NSB@2025-01-23", text: T.TECHLOG_NS31, logged_at: "2025-01-23T21:40:00Z", ata: "2913", span: "EXT LEAK EDP CASE DRAIN PORT, EXCEEDS AMM LIMIT" } },
-);
+  message: null,
+  kind: "eowyn",
+  occ: { source: `occ_log:${EOWYN_ID}`, text: T.OCC_EOWYN, span71: T.OCC_EOWYN_71, span72: T.OCC_EOWYN_72 },
+  techLogs: { "NS31@2025-01-24": { source: "tech_log:EI-NSB@2025-01-23", text: T.TECHLOG_NS31, logged_at: "2025-01-23T21:40:00Z", ata: "2913", span: "EXT LEAK EDP CASE DRAIN PORT, EXCEEDS AMM LIMIT" } },
+  knockOn: {
+    NS113: { spares: T.SPARES_KNOCK_ON.NS113, pss: T.PSS_KNOCK_ON.NS113, hours: 5.75 },
+    NS115: { spares: T.SPARES_KNOCK_ON.NS115, pss: T.PSS_KNOCK_ON.NS115, hours: 5.33 },
+    NS117: { spares: T.SPARES_KNOCK_ON.NS117, pss: T.PSS_KNOCK_ON.NS117, hours: 4.33 },
+  },
+};
 
-export const HERMINIA: StormDef = def(HERMINIA_ID, "Storm Herminia", "2025-01-26", HERMINIA_METAR, HERMINIA_FLIGHTS, { name: "Storm Herminia", metar_source: "IEM asos.py (real)" }, "herminia", {
-  "NS112@2025-01-26": { source: "tech_log:EI-NSJ@2025-01-26", text: T.TECHLOG_NS112_HERMINIA, logged_at: "2025-01-26T08:40:00Z", ata: "3611", span: "ENG 1 BLEED DUCT CLAMP FAILED, HOT AIR LEAK PYLON AREA" },
-  "NS30@2025-01-25": { source: "tech_log:EI-NSN@2025-01-25", text: T.TECHLOG_NS30_HERMINIA, logged_at: "2025-01-25T22:05:00Z", ata: "3242", span: "BRK 3 WEAR PIN FLUSH. BRAKE CHANGE REQD." },
-});
+export const HERMINIA: StormDef = {
+  id: HERMINIA_ID,
+  name: "Storm Herminia",
+  station: "EIDW",
+  date: "2025-01-26",
+  metar: HERMINIA_METAR,
+  windows: stormWindows(HERMINIA_METAR, "EIDW"),
+  flights: HERMINIA_FLIGHTS,
+  real_context: { name: "Storm Herminia", metar_source: "IEM asos.py (real)" },
+  message: null,
+  kind: "herminia",
+  occ: { source: `occ_log:${HERMINIA_ID}`, text: T.OCC_HERMINIA, span71: T.OCC_HERMINIA_71, span72: T.OCC_HERMINIA_71 },
+  techLogs: {
+    "NS112@2025-01-26": { source: "tech_log:EI-NSJ@2025-01-26", text: T.TECHLOG_NS112_HERMINIA, logged_at: "2025-01-26T08:40:00Z", ata: "3611", span: "ENG 1 BLEED DUCT CLAMP FAILED, HOT AIR LEAK PYLON AREA" },
+    "NS30@2025-01-25": {
+      source: "tech_log:EI-NSN@2025-01-25",
+      text: T.TECHLOG_NS30_HERMINIA,
+      logged_at: "2025-01-25T22:05:00Z",
+      ata: "3242",
+      span: "BRK 3 WEAR PIN FLUSH. BRAKE CHANGE REQD.",
+      reason: "fault logged at BOS, coded 41",
+      occ: { source: "occ_log:NS30@2025-01-25", quote: T.OCC_NS30_HERMINIA, at: "2025-01-25T22:30:00Z" },
+    },
+  },
+  knockOn: {},
+};
 
 /** The main window: the longest one (Éowyn also has a minor 23:30–00:30Z window). */
-export function mainWindow(storm: StormDef): StormWindow | null {
+export function mainWindow(storm: Pick<StormDef, "windows">): StormWindow | null {
   return storm.windows.reduce<StormWindow | null>((best, w) => (!best || Date.parse(w.end) - Date.parse(w.start) > Date.parse(best.end) - Date.parse(best.start) ? w : best), null);
 }
 
@@ -87,6 +133,11 @@ export const SOURCES: Source[] = [
 
 const SOURCE_BY_ID = new Map(SOURCES.map((s) => [s.id, s]));
 export const sourceById = (id: string) => SOURCE_BY_ID.get(id);
+/** Desk days and injections add their own sources (deterministic texts, so re-registering is harmless). */
+export function registerSource(src: Source) {
+  SOURCE_BY_ID.set(src.id, src);
+  return src;
+}
 
 /** One schedule line per flight (tier 2), e.g. "NS31 24JAN DUB 1630 BOS 2345 A321XLR EI-NSB 172". */
 export function scheduleLine(spec: FlightSpec): string {
@@ -105,10 +156,10 @@ export function ev(source_id: string, field: string, value: unknown, quote: stri
   return { fact_id: `F:${subject ?? source_id}:${field}`, source_id, field, value, quote, role, trust_tier: tier, struck };
 }
 
-/** METAR evidence for time `t` at EIDW: the nearest real observation, quoted raw. */
+/** METAR evidence for time `t` at the storm's station: the nearest observation, quoted raw. */
 export function metarEv(storm: StormDef, t: string, field: string, value: unknown, role: Evidence["role"] = "supports"): Evidence {
   const o = nearestObs(storm.metar, t);
-  return { ...ev(`metar:${storm.id}`, field, value, o.raw, role, false, `EIDW@${o.valid.slice(0, 16)}Z`), trust_tier: 1 };
+  return { ...ev(`metar:${storm.id}`, field, value, o.raw, role, false, `${storm.station}@${o.valid.slice(0, 16)}Z`), trust_tier: 1 };
 }
 
 export function scheduleEv(spec: FlightSpec, role: Evidence["role"] = "context"): Evidence {
