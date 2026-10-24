@@ -5,7 +5,7 @@ import { COAST_NEAR, GRATICULE } from "@/data/geo/coast";
 import { AIRPORTS, K, greatCircle, pathOf, toMap, type View } from "@/lib/geo";
 import { FLIGHTS, OPERATED, STORM, metarAt } from "@/data/scenario";
 import { gsap, ScrollTrigger, useGSAP, prefersReducedMotion } from "@/components/motion/gsap";
-import { SatelliteLayer } from "./SatelliteLayer";
+import type { SatelliteLayer } from "./SatelliteLayer";
 import { WindParticles, type WindGrid } from "./WindParticles";
 import { buildIsobars, type StormJSON, type Isobar } from "./synoptic";
 
@@ -37,6 +37,10 @@ const DUB = toMap(AIRPORTS.DUB.lon, AIRPORTS.DUB.lat);
 const VIEW_START: View = { cx: -9.5 * K, cy: -53.2, w: 30 * K };
 const VIEW_END: View = { cx: -7.6 * K, cy: -53.55, w: 13 * K };
 
+// three.js is ~180 KB gzipped, so it downloads alongside the storm data rather than before first paint.
+let satModule: Promise<typeof import("./SatelliteLayer")> | null = null;
+const loadSat = () => (satModule ??= import("./SatelliteLayer"));
+
 /** Storm Bram, 9 Dec 2025, from orbit: scroll runs the clock from 07:00Z to 21:30Z. */
 export function StormDay() {
   const root = useRef<HTMLDivElement>(null);
@@ -55,6 +59,7 @@ export function StormDay() {
 
   useEffect(() => {
     let alive = true;
+    loadSat().catch(() => {});
     Promise.all([fetch(`${BASE}/storm-2025-12-09.json`).then((r) => r.json()), fetch(`${BASE}/frames.json`).then((r) => r.json())]).then(([s, f]) => {
       if (!alive) return;
       setStorm(s);
@@ -113,19 +118,9 @@ export function StormDay() {
   useEffect(() => {
     if (!storm || !frames || !glRef.current || !pRef.current || !root.current || !hoursReady) return;
     const fb = frames.bbox;
+    // Created once three.js has arrived; until then the line map and particles run on their own.
     let sat: SatelliteLayer | null = null;
-    try {
-      sat = new SatelliteLayer({
-        canvas: glRef.current,
-        image: `${BASE}/${frames.frames[0].file}`,
-        satBox: [fb.lonMin * K, -fb.latMax, fb.lonMax * K, -fb.latMin],
-        origin: DUB,
-      });
-    } catch {
-      // No WebGL (old projector, locked-down browser): the real 12:00Z frame stands in, the HUD still runs.
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-off fallback when the GPU context fails
-      setNoGL(true);
-    }
+    let disposed = false;
     const h0data = hoursRef.current[0];
     const grid: WindGrid = { nx: storm.nx, ny: storm.ny, lonMin: storm.bbox.lonMin, latMax: storm.bbox.latMax, step: storm.step, u: h0data.u.slice(), v: h0data.v.slice() };
     const wind = new WindParticles(pRef.current, grid, window.innerWidth < 768 ? 1100 : 2400);
@@ -142,6 +137,20 @@ export function StormDay() {
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(el);
+    loadSat()
+      .then(({ SatelliteLayer }) => {
+        if (disposed || !glRef.current) return;
+        sat = new SatelliteLayer({
+          canvas: glRef.current,
+          image: `${BASE}/${frames.frames[0].file}`,
+          satBox: [fb.lonMin * K, -fb.latMax, fb.lonMax * K, -fb.latMin],
+          origin: DUB,
+        });
+        sat.setSize(W, H);
+        sat.ready.then(() => ScrollTrigger.refresh()).catch(() => {});
+      })
+      // No WebGL (old projector, locked-down browser) or the chunk failed: the real 12:00Z frame stands in, the HUD still runs.
+      .catch(() => !disposed && setNoGL(true));
     let visible = true;
     const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
     io.observe(el);
@@ -234,8 +243,8 @@ export function StormDay() {
       }
     };
     gsap.ticker.add(tick);
-    sat?.ready.then(() => ScrollTrigger.refresh()).catch(() => {});
     return () => {
+      disposed = true;
       gsap.ticker.remove(tick);
       ro.disconnect();
       io.disconnect();

@@ -3,7 +3,7 @@
 
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, Environment, Html, Lightformer, useGLTF } from "@react-three/drei";
+import { ContactShadows, Environment, Lightformer, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 /**
@@ -146,6 +146,7 @@ function Model({ progress }: { progress: React.RefObject<AircraftProgress> }) {
 function CameraRig({ progress }: { progress: React.RefObject<AircraftProgress> }) {
   const { camera, size } = useThree();
   const target = useMemo(() => new THREE.Vector3(), []);
+  // priority -1: the camera moves before anything projects through it this frame
   useFrame(() => {
     const cam = camera as THREE.PerspectiveCamera;
     const o = progress.current?.orbit ?? 0;
@@ -153,12 +154,16 @@ function CameraRig({ progress }: { progress: React.RefObject<AircraftProgress> }
     // start: telephoto far away on the port side, framing x∈[-3, 50] like the SVG viewBox
     const aspect = size.width / size.height;
     const startFov = 4;
-    const halfW = 26.5;
-    const startDist = halfW / (Math.tan(THREE.MathUtils.degToRad(startFov / 2)) * aspect);
+    const halfW0 = 26.5;
+    const startDist = halfW0 / (Math.tan(THREE.MathUtils.degToRad(startFov / 2)) * aspect);
     const fov = THREE.MathUtils.lerp(startFov, 30, e);
     const az = THREE.MathUtils.lerp(0, -0.72, e); // swing toward the nose
     const el = THREE.MathUtils.lerp(0.0, 0.16, e);
-    const dist = THREE.MathUtils.lerp(startDist, 80, e);
+    // Dolly zoom: the framed width eases from the drawing's to the 3/4 view's while the lens widens,
+    // so the aircraft holds its size and only the perspective changes.
+    const halfTan = (fovDeg: number) => Math.tan(THREE.MathUtils.degToRad(fovDeg / 2));
+    const halfW = THREE.MathUtils.lerp(halfW0, 80 * halfTan(30) * aspect, e);
+    const dist = halfW / (halfTan(fov) * aspect);
     target.set(THREE.MathUtils.lerp(23.5, 22.5, e), THREE.MathUtils.lerp(5.6, 4.2, e), THREE.MathUtils.lerp(0, -2, e));
     cam.fov = fov;
     cam.near = 0.5;
@@ -166,26 +171,24 @@ function CameraRig({ progress }: { progress: React.RefObject<AircraftProgress> }
     cam.position.set(target.x + Math.sin(az) * dist * Math.cos(el), target.y + Math.sin(el) * dist, Math.cos(az) * dist * Math.cos(el));
     cam.lookAt(target);
     cam.updateProjectionMatrix();
-  });
+  }, -1);
   return null;
 }
 
-function Leak({ progress }: { progress: React.RefObject<AircraftProgress> }) {
-  const ref = useRef<HTMLDivElement>(null);
+const LEAK_AT = new THREE.Vector3(17.6, 1.6, 6.9);
+
+/** Pins the DOM label to the engine-1 pump: projected through the camera each frame. */
+function Leak({ progress, label }: { progress: React.RefObject<AircraftProgress>; label: React.RefObject<HTMLDivElement | null> }) {
+  const { camera, size } = useThree();
+  const v = useMemo(() => new THREE.Vector3(), []);
   useFrame(() => {
-    if (ref.current) ref.current.style.opacity = String(progress.current?.leak ?? 0);
+    const el = label.current;
+    if (!el) return;
+    v.copy(LEAK_AT).project(camera);
+    el.style.transform = `translate(${((v.x + 1) / 2) * size.width}px, ${((1 - v.y) / 2) * size.height}px) translate(-6px, -50%)`;
+    el.style.opacity = String(progress.current?.leak ?? 0);
   });
-  return (
-    <Html position={[17.6, 1.6, 6.9]} center zIndexRange={[20, 0]}>
-      <div ref={ref} className="pointer-events-none flex items-center gap-2 whitespace-nowrap opacity-0">
-        <span className="relative flex h-3 w-3">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#ff7a5c] opacity-60" />
-          <span className="relative inline-flex h-3 w-3 rounded-full bg-[#ff7a5c]" />
-        </span>
-        <span className="rounded bg-[#1d1210]/85 px-2 py-1 font-mono text-[11px] text-[#ffb3a1]">ENG 1 EDP · LEAK 07:55Z</span>
-      </div>
-    </Html>
-  );
+  return null;
 }
 
 /** With frameloop="demand", a frame is drawn only while the canvas is on screen and not faded out. */
@@ -213,6 +216,7 @@ function Pump({ wrap, progress }: { wrap: React.RefObject<HTMLDivElement | null>
 
 export function AircraftScene({ progress, className }: { progress: React.RefObject<AircraftProgress>; className?: string }) {
   const wrap = useRef<HTMLDivElement>(null);
+  const label = useRef<HTMLDivElement>(null);
   useEffect(() => {
     useGLTF.preload("/renders/a321.glb");
   }, []);
@@ -240,13 +244,20 @@ export function AircraftScene({ progress, className }: { progress: React.RefObje
         </Environment>
         <Suspense fallback={null}>
           <Model progress={progress} />
-          <Leak progress={progress} />
+          <Leak progress={progress} label={label} />
           {/* the aircraft never moves, so its shadow is drawn once */}
           <ContactShadows frames={1} position={[22, 0.01, 0]} scale={[70, 50]} far={10} blur={2.4} opacity={0.55} resolution={512} color="#000000" />
         </Suspense>
         <CameraRig progress={progress} />
         <Pump wrap={wrap} progress={progress} />
       </Canvas>
+      <div ref={label} className="pointer-events-none absolute left-0 top-0 flex items-center gap-2 whitespace-nowrap opacity-0" aria-hidden="true">
+        <span className="relative flex h-3 w-3">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#ff7a5c] opacity-60" />
+          <span className="relative inline-flex h-3 w-3 rounded-full bg-[#ff7a5c]" />
+        </span>
+        <span className="rounded bg-[#1d1210]/85 px-2 py-1 font-mono text-[11px] text-[#ffb3a1]">ENG 1 EDP · LEAK 07:55Z</span>
+      </div>
     </div>
   );
 }
