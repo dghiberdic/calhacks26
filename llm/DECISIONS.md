@@ -237,3 +237,41 @@ only need loosening where the live model picks a different span that is still ve
 3. **Prefix allowlist for tails.** `contracts.parse.parse_tail` accepts any `XX-XXXXX`, so "EX-TLS" (ex-Toulouse)
    parses as a tail. The Reader adds a nationality-prefix allowlist locally; `normalize` may want the same.
 
+## `llm/common.py`
+- **Shared helpers for the other LLM roles.** F6 (Drafter) now belongs to another agent, so the helpers it may need
+  live here, owned by this lane:
+  - the `SpanStr` / `SpanBool` / `SpanInt` / `SpanFloat` structured-output pairs;
+  - `verify_span(field, value, span, text, ref)`, which is `contracts.parse.verify` on whitespace-normalised span and
+    text;
+  - `span_in` and `norm_ws`.
+- The Reader imports its span models from here, so a challenge fact quoted by the Drafter is held to the same
+  standard as a Reader fact.
+
+## F7 (stretch): `llm/personas.py`
+- **Interpretation.** THREAD_FILIP gives only the title, "LLM personas for unattended runs". In an unattended run
+  (eval over many storm days, a demo autopilot) nobody answers the questions StormCheck routes to people. A
+  `PersonaBench` stands in for the Claims Lead, Legal and the Controller. Each persona reads a routed `Question`,
+  picks one of its `options`, and writes a one- or two-sentence ruling. The result is a `PersonaRuling` wrapping the
+  `AnswerRequest` body for `POST /questions/{id}/answer`, plus `kind`, the principal and the LLM record.
+- **Guard rails.** A persona is a simulated person, not an agent with powers:
+  - it answers only questions routed to its own role;
+  - it picks only a listed option, and anything else falls back to the scripted policy;
+  - it has no approve, pay, release or lock method;
+  - its principal is `persona:<role>` and every ruling is `simulated=True`;
+  - `is_persona(principal)` lets the server's ACL refuse a persona for journal or payout approval, and record the
+    ruling as simulated rather than as the human.
+- **Off by default.** Personas run only when `STORMCHECK_PERSONAS=1`.
+- **Rejections.** `kind = "rejection"` when a release proposal (`reason_tag = release-proposal`) is answered with any
+  option other than the recommended release. That is the Q3 path that produces R-CTL-1.
+- **Scripted policy (offline or unavailable).** It is chosen per `question.pattern` and uses the plan's scripted
+  rulings word for word, so the rule a persona ruling produces is grounded in the same text as the demo's (§1.2–1.4):
+  - Q1: pay cash; the voucher stays as goodwill;
+  - Q2: extraordinary only if no aircraft within 3 h of STD and the earliest reroute was offered (C-74/19);
+  - Q3: never release the tail.
+  - Any other pattern takes the recommended option, labelled "simulated … persona accepted the recommendation".
+- **The call.** Role `persona`, effort `medium`, structured output `PersonaAnswer{option, ruling}`. The principal is
+  `persona:<role>` and the input fact ids are the question's evidence ids.
+- **Recordings.** Q-1, Q-2 and Q-3 from `contracts/fixtures/api/questions.json` are recorded. They are hand-written
+  and use the plan's ruling texts. When the real server's question text differs, the call is a cache miss: live in
+  `cache` mode, scripted offline.
+
