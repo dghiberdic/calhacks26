@@ -48,10 +48,10 @@ function FlapBoard({ title, rows, phase, entitlement, side }: { title: string; r
               >
                 <FlapText text={shown?.time ?? ""} width={5} delay={d} />
                 <FlapText text={shown?.number ?? ""} width={5} delay={d + 50} />
-                <span className="md:hidden">
+                <span className="flex md:hidden">
                   <FlapText text={shown?.iata ?? ""} width={3} delay={d + 100} />
                 </span>
-                <span className="hidden md:inline">
+                <span className="hidden md:flex">
                   <FlapText text={shown?.city ?? ""} width={9} delay={d + 100} />
                 </span>
                 <FlapText text={checked ? checked.code : shown ? coded : ""} width={7} delay={checked ? 120 + (i % 7) * 40 : d + 160} />
@@ -122,7 +122,7 @@ export function Board() {
         </span>
         <span className={cn("flex items-center gap-2 transition-opacity duration-700", phase === "checked" ? "opacity-100" : "opacity-0")}>
           <span className="size-2 rounded-full bg-held" aria-hidden="true" />
-          LEGAL · {held ? `${count(held)} knock-on returns` : "knock-on returns"}, one question to Legal
+          LEGAL · {held ? `${count(held)} knock-on returns` : "knock-on returns"}, held for one ruling
         </span>
         <span className={cn("flex items-center gap-2 transition-opacity duration-700", phase === "checked" ? "opacity-100" : "opacity-0")}>
           <span className="size-2 rounded-full bg-notweather" aria-hidden="true" />

@@ -37,7 +37,7 @@ const u = (n: number) => `calc(var(--u) * ${n}px)`;
  */
 export function Hero() {
   const story = useStory();
-  const root = useRef<HTMLDivElement>(null);
+  const root = useRef<HTMLElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const glRef = useRef<HTMLCanvasElement>(null);
   const windRef = useRef<HTMLCanvasElement>(null);
@@ -47,14 +47,14 @@ export function Hero() {
   const chart = useMemo(() => buildChart(era5), []);
   const station = story.run?.station ?? story.stormId.split("@")[0];
   const hub = airport(station);
-  const hubPt = hub ? toMap(hub.lon, hub.lat) : toMap(-6.27, 53.42);
+  const hubPt = hub ? toMap(hub.lon, hub.lat) : null;
   const ends = useMemo(() => routeEnds(story.run), [story.run]);
   const arcs = useMemo(() => (hub ? ends.map((e) => ({ ...e, d: pathOf(greatCircle(hub, e)), pt: toMap(e.lon, e.lat) })) : []), [ends, hub]);
   const frameAt = `${era5.date}T${String(era5.frame.h).padStart(2, "0")}:00:00Z`;
   const obs = nearestObs(story.run?.metar, frameAt);
   const counters = story.run?.counters;
   // Client-only route: decide the arcs' first frame here so they never flash in drawn, then vanish.
-  const still = prefersReducedMotion();
+  const staticArcs = prefersReducedMotion();
 
   // Render loop: satellite + wind + the SVG view box, all driven by refs (no React render per frame).
   useLayoutEffect(() => {
@@ -230,24 +230,26 @@ export function Hero() {
         ))}
         <g fill="none">
           {arcs.map((a) => (
-            <path key={a.iata} className="hero-arc" d={a.d} stroke="#f4f6f9" strokeOpacity={0.85} style={{ strokeWidth: u(1.3) }} {...PLOTTED} strokeDashoffset={still ? 0 : 1.01} />
+            <path key={a.iata} className="hero-arc" d={a.d} stroke="#f4f6f9" strokeOpacity={0.85} style={{ strokeWidth: u(1.3) }} {...PLOTTED} strokeDashoffset={staticArcs ? 0 : 1.01} />
           ))}
         </g>
         {arcs.map((a) => (
-          <g key={a.iata} className="hero-arc-label" transform={`translate(${a.pt[0]} ${a.pt[1]})`} style={{ opacity: still ? 1 : 0 }}>
+          <g key={a.iata} className="hero-arc-label" transform={`translate(${a.pt[0]} ${a.pt[1]})`} style={{ opacity: staticArcs ? 1 : 0 }}>
             <circle fill="#f4f6f9" style={{ r: u(2.6) } as CSSProperties} />
             <text fill="#dfe4eb" className="font-mono" style={{ fontSize: u(11.5), transform: `translate(${u(7)}, ${u(-7)})`, paintOrder: "stroke", stroke: "rgba(8,13,23,0.85)", strokeWidth: u(3.5), strokeLinejoin: "round" }}>
               {a.iata}
             </text>
           </g>
         ))}
-        <g className="hero-hub" transform={`translate(${hubPt[0]} ${hubPt[1]})`}>
-          <circle fill="#4f9fe0" style={{ r: u(4.5) } as CSSProperties} />
-          <circle fill="none" stroke="#4f9fe0" strokeOpacity={0.6} style={{ r: u(11), strokeWidth: u(1) } as CSSProperties} />
-          <text fill="#f4f6f9" className="font-mono" style={{ fontSize: u(12.5), transform: `translate(${u(15)}, ${u(4)})` }}>
-            {station}
-          </text>
-        </g>
+        {hubPt ? (
+          <g className="hero-hub" transform={`translate(${hubPt[0]} ${hubPt[1]})`}>
+            <circle fill="#4f9fe0" style={{ r: u(4.5) } as CSSProperties} />
+            <circle fill="none" stroke="#4f9fe0" strokeOpacity={0.6} style={{ r: u(11), strokeWidth: u(1) } as CSSProperties} />
+            <text fill="#f4f6f9" className="font-mono" style={{ fontSize: u(12.5), transform: `translate(${u(15)}, ${u(4)})` }}>
+              {station}
+            </text>
+          </g>
+        ) : null}
       </svg>
       <canvas ref={windRef} className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" />
 

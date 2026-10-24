@@ -66,7 +66,7 @@ export function StormWindow() {
   const hub = run?.station;
   const hubIata = run ? iataOf(run.station) : null;
   const inside = run?.flights.filter((r) => r.flight.status === "cancelled" && r.flight.origin === hubIata && r.decision?.in_window_dep === "in").length;
-  const operated = run?.flights.filter((r) => r.flight.status === "operated") ?? [];
+  const operated = run?.flights.filter((r) => r.flight.status === "operated" && r.flight.origin === hubIata) ?? [];
   const opFirst = operated.length ? operated.reduce((a, b) => (ms(b.flight.sched_dep) < ms(a.flight.sched_dep) ? b : a)) : null;
   const opLast = operated.length ? operated.reduce((a, b) => (ms(b.flight.sched_dep) > ms(a.flight.sched_dep) ? b : a)) : null;
   const margin = focus?.decision?.window_margin_min ?? (win && focus ? Math.round((ms(focus.flight.sched_dep) - ms(win.end)) / 60_000) : null);
