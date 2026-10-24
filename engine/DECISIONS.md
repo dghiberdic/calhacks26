@@ -252,3 +252,13 @@ The checks themselves are code in `controls.py`:
 - The widened rule is re-checked with the original ruling's words and the confirmer's role.
 - `widen_next` names the next case key, or None. Widening a rule with no case keys is a `validation` error.
 - R-LEG-1's `rotation.prev_cause` is grounded by "storm" in Legal's text, so it is a literal, not `case:`, and R-LEG-1 cannot be widened. That differs from the stub's canned card.
+
+## Evidence sources and fact ids (fix, david-b)
+
+- **Bug: window evidence cited the wrong METAR file.** With no needle, `find_source` returned the first METAR source in the world, so NS31's `storm.window` cited `SRC-METAR-EDDF@2025-01-26` (Frankfurt, Herminia day). Now a needle-less lookup only considers sources named like the fallback (`SRC-METAR-EIDW` → `SRC-METAR-EIDW@<day>`). The new `on=` argument then ranks them: first the source whose text holds the `YYYY-MM-DD HH:MM` stamp, then the one whose id carries the date, then the one whose text mentions the date. `_window_ev` passes `w.start` and `_metar_ev` passes `o.valid`. The METAR raw line stays the needle for obs, and `test_evidence_links.py` asserts that every quote sits in its cited source and that the source's station is the quote's station.
+- **Evidence fact ids are the `contracts.normalize` ids**, using the public builders `nz.metar_fact_id`, `flight_fact_id`, `techlog_fact_id`, `ops_fact_id`, `crm_fact_id`, `claim_fact_id` and `cohort_fact_id`. The trace can now link a decision to the normalize facts it cites (`F:TECHLOG-EI-NSB-2025-01-23T2140Z:aog.mel_relief`, `F:METAR-EIDW-20250124T1630Z:metar.gust_kt`, `F:NS31@2025-01-24:flight.ops_cause_code`, …).
+  - Engine-derived evidence keeps its own ids, because no normalize fact exists for it: `storm.window`, `rotation.*`, `flight.operated_after_window`, `cohort.months_since_last_claim`.
+  - The server's workaround (committing each cited Evidence as its own Fact) still works and can be dropped once it records normalize facts.
+- **A METAR citation without a gust now cites `metar.sknt`** (the value is the sustained wind). Before, it cited `metar.gust_kt` with the sustained value, which has no matching fact.
+- Claim and cohort evidence now name their real documents: `SRC-<claim id>`, and the finance source that holds the cohort line, replacing `SRC-CLAIM-…` and `SRC-OB-…`. CRM evidence names `SRC-<event id>`.
+- Checked on golden after the change: `expected/` acceptance passes, `make verify` reports 414 commits with replay identical, and `make smoke-1` passes 12/12.

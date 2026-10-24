@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from contracts.models import Cause, Evidence, Extraordinary, MetarObs, Role, SourceKind, StormWindow
+from contracts import normalize as nz
 from engine.case import FlightCase, find_source
 from engine.timeline import EndPosition
 
@@ -79,8 +80,9 @@ def _nearest(obs: list[MetarObs], t: datetime) -> MetarObs | None:
     return min(obs, key=lambda o: (abs(o.valid - t), o.valid), default=None)
 
 
-def metar_fact_id(o: MetarObs) -> str:
-    return f"F-METAR-{o.station}-{o.valid:%Y%m%dT%H%MZ}"
+def metar_fact_id(o: MetarObs, field: str = "metar.gust_kt") -> str:
+    """The contracts.normalize id of this obs' fact, so the citation links to the recorded METAR fact."""
+    return nz.metar_fact_id(o, field)
 
 
 def window_fact_id(w: StormWindow) -> str:
@@ -88,14 +90,15 @@ def window_fact_id(w: StormWindow) -> str:
 
 
 def _metar_ev(case: FlightCase, o: MetarObs, role: str) -> Evidence:
-    sid, tier = find_source(case, SourceKind.METAR, o.raw, f"SRC-METAR-{o.station}")
-    gust = o.gust if o.gust is not None else o.sknt
-    return Evidence(fact_id=metar_fact_id(o), source_id=sid, field="metar.gust_kt", value=gust, quote=o.raw,
+    sid, tier = find_source(case, SourceKind.METAR, o.raw, f"SRC-METAR-{o.station}", on=o.valid)
+    # cite the gust when the obs reports one, else the sustained wind (each is its own normalize fact)
+    field, value = ("metar.gust_kt", o.gust) if o.gust is not None else ("metar.sknt", o.sknt)
+    return Evidence(fact_id=metar_fact_id(o, field), source_id=sid, field=field, value=value, quote=o.raw,
                     role=role, trust_tier=tier)
 
 
 def _window_ev(case: FlightCase, w: StormWindow) -> Evidence:
-    sid, tier = find_source(case, SourceKind.METAR, None, f"SRC-METAR-{w.station}")
+    sid, tier = find_source(case, SourceKind.METAR, None, f"SRC-METAR-{w.station}", on=w.start)
     return Evidence(fact_id=window_fact_id(w), source_id=sid, field="storm.window",
                     value={"start": w.start.isoformat().replace("+00:00", "Z"),
                            "end": w.end.isoformat().replace("+00:00", "Z"), "peak_gust_kt": w.peak_gust_kt},
@@ -122,7 +125,8 @@ def _occ_ev(case: FlightCase, role: str, struck: bool = False) -> Evidence | Non
         quote = m[0] if m else None
     sid, tier = find_source(case, SourceKind.OCC_LOG, (text or "")[:40] or None,
                             f"SRC-OCC-{case.occ.id}" if case.occ else "SRC-OCC")
-    return Evidence(fact_id=f"F-OCC-{case.flight.number}-code", source_id=sid, field="flight.ops_cause_code",
+    return Evidence(fact_id=nz.flight_fact_id(case.flight.id, "flight.ops_cause_code"), source_id=sid,
+                    field="flight.ops_cause_code",
                     value=code, quote=quote, role=role, trust_tier=tier, struck=struck)
 
 
@@ -132,17 +136,16 @@ def _aog_ev(case: FlightCase) -> list[Evidence]:
         return []
     t = a.entry
     sid, tier = find_source(case, SourceKind.TECH_LOG, t.text[:60] or None, f"SRC-TECHLOG-{t.id}")
-    base = f"F-TL-{t.aircraft}-{t.logged_at:%Y%m%dT%H%MZ}"
     mel_q = _clause(t.text, "MEL") or _clause(t.text, "AOG")
     kw = [k for k in ("LEAK", "FAIL", "FAULT", "INOP", "BIRD", "LIGHTNING", "HAIL", "FOD", "CRACK") if k in t.text]
     ata_q = next((c for k in kw if (c := _clause(t.text, k))), None)
     head = re.match(r"^\s*(\d{2}[A-Z]{3}\s+\d{2}:\d{2}Z\s+\S+(?:\s+[A-Z]{3})?)", t.text)
     ev = [
-        Evidence(fact_id=f"{base}-aog", source_id=sid, field="aog.mel_relief", value=t.mel_relief, quote=mel_q,
-                 role="supports", trust_tier=tier),
-        Evidence(fact_id=f"{base}-ata", source_id=sid, field="aog.ata_chapter", value=t.ata, quote=ata_q,
-                 role="supports", trust_tier=tier),
-        Evidence(fact_id=f"{base}-logged", source_id=sid, field="aog.logged_at",
+        Evidence(fact_id=nz.techlog_fact_id(t.id, "aog.mel_relief"), source_id=sid, field="aog.mel_relief",
+                 value=t.mel_relief, quote=mel_q, role="supports", trust_tier=tier),
+        Evidence(fact_id=nz.techlog_fact_id(t.id, "aog.ata_chapter"), source_id=sid, field="aog.ata_chapter",
+                 value=t.ata, quote=ata_q, role="supports", trust_tier=tier),
+        Evidence(fact_id=nz.techlog_fact_id(t.id, "aog.logged_at"), source_id=sid, field="aog.logged_at",
                  value=t.logged_at.isoformat().replace("+00:00", "Z"), quote=head.group(1) if head else None,
                  role="supports", trust_tier=tier),
     ]
@@ -150,7 +153,8 @@ def _aog_ev(case: FlightCase) -> list[Evidence]:
         eta = re.search(r"ETA\s+(\d{2}:\d{2}Z)", m.text)
         msid, mtier = find_source(case, SourceKind.MCC_LOG, m.text[:40], f"SRC-MCC-{m.id}")
         q = re.search(r"[^;:]*ETA\s+\d{2}:\d{2}Z", m.text)
-        ev.append(Evidence(fact_id=f"F-MCC-{m.id}", source_id=msid, field="mcc.part_eta",
+        ev.append(Evidence(fact_id=nz.ops_fact_id(m.id, case.flight.id, "mcc.part_eta"), source_id=msid,
+                           field="mcc.part_eta",
                            value=eta.group(1) if eta else None, quote=q.group(0).strip() if q else m.text,
                            role="supports", trust_tier=mtier))
     return ev
@@ -160,7 +164,8 @@ def _spares_ev(case: FlightCase) -> list[Evidence]:
     out = []
     for e in case.spares:
         sid, tier = find_source(case, SourceKind.SPARES, e.text[:40], f"SRC-SPARES-{e.id}")
-        out.append(Evidence(fact_id=f"F-SPARES-{e.id}", source_id=sid, field="spare.available_within_h",
+        out.append(Evidence(fact_id=nz.ops_fact_id(e.id, case.flight.id, "spare.available_within_h"),
+                            source_id=sid, field="spare.available_within_h",
                             value=case.spare_within_h, quote=e.text, role="supports", trust_tier=tier))
     return out
 
