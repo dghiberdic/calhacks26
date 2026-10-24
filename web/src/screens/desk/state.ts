@@ -31,6 +31,38 @@ async function snapshot(ids: string[], timeoutMs: number): Promise<Record<string
   return out;
 }
 
+/**
+ * Answers are trusted for their values, not their completeness: a list the server leaves out becomes an
+ * empty list here, so neither this screen nor the shared timeline can trip on it.
+ */
+const arr = <T,>(x: T[] | null | undefined): T[] => (Array.isArray(x) ? x : []);
+
+export function normaliseRun(run: StormRun): StormRun {
+  return {
+    ...run,
+    windows: arr(run.windows),
+    metar: arr(run.metar),
+    flights: arr(run.flights).filter((r) => r && r.flight),
+    counters: run.counters ?? {},
+    learned: arr(run.learned),
+    questions: arr(run.questions),
+    feed: arr(run.feed),
+    real_context: run.real_context ?? {},
+  };
+}
+
+export function normaliseInject(res: InjectResponse, request: InjectRequest): InjectResponse {
+  const source = res.source ?? { id: "src:unknown", kind: request.kind, title: "", text: request.text, sha256: "", received_at: "", trust_tier: 4 };
+  return {
+    ...res,
+    source: { ...source, sha256: source.sha256 ?? "", acl_tags: arr(source.acl_tags) },
+    facts: arr(res.facts),
+    events: arr(res.events),
+    affected: arr(res.affected),
+    dropped_unverifiable: Number.isFinite(res.dropped_unverifiable) ? res.dropped_unverifiable : 0,
+  };
+}
+
 /** A failed request said plainly, and which input it's about (so that field is marked). */
 export type DeskProblem = { message: string; code: string; field?: "airport" | "date"; network?: boolean };
 
@@ -107,7 +139,7 @@ export const useDesk = create<DeskStore>((set, get) => ({
     const token = get().token + 1;
     set({ pending: { icao, date }, problem: null, token });
     try {
-      const run = await api.desk(icao, date);
+      const run = normaliseRun(await api.desk(icao, date));
       if (get().token !== token) return; // a newer run started
       set({ run, ranFor: { icao, date, airport }, pending: null });
       void invalidateAfterWrite();
@@ -139,7 +171,7 @@ export const useDesk = create<DeskStore>((set, get) => ({
       const before = target ? await snapshot([target], 1200) : {};
       if (get().inject.pending !== request) return;
       const startSeq = useLiveFeed.getState().lastSeq;
-      const response = await api.inject(request);
+      const response = normaliseInject(await api.inject(request), request);
       if (get().inject.pending !== request) return;
       set((s) => ({ inject: { ...s.inject, pending: null, result: { request, response, startSeq, scenarioId, before, after: null } } }));
       void invalidateAfterWrite();

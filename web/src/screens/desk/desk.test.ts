@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import { AIRPORTS, airportLabel, resolveAirport, searchAirports } from "./airports";
 import { addMonths, dayLabel, monthGrid, parseDate, todayIn, utcOffsetLabel } from "./dates";
 import { findSpan, placeSpans, segment } from "./spans";
+import { ApiError } from "@/api/client";
+import type { InjectResponse, StormRun } from "@/api/types";
+import { flightOf, normaliseInject, normaliseRun, problemOf } from "./state";
 
 describe("airport search", () => {
   it("has no duplicate codes", () => {
@@ -118,5 +121,32 @@ describe("spans", () => {
       [" CASE DRAIN PORT", [1]],
     ]);
     expect(segs.map((s) => s.text).join("")).toBe(text);
+  });
+});
+
+describe("answers at the boundary", () => {
+  it("maps each 422 to the input it is about, and a lost connection to a retry", () => {
+    expect(problemOf(new ApiError(422, "future_date", "That day hasn't happened yet."))).toMatchObject({ field: "date", message: "That day hasn't happened yet." });
+    expect(problemOf(new ApiError(422, "no_metar", "No METAR."))).toMatchObject({ field: "date" });
+    expect(problemOf(new ApiError(422, "unknown_airport", "Unknown."))).toMatchObject({ field: "airport" });
+    expect(problemOf(new ApiError(0, "network", "Can't reach the StormCheck server."))).toMatchObject({ network: true });
+    expect(problemOf(new Error("boom")).message).not.toMatch(/boom/);
+  });
+  it("fills lists the server leaves out", () => {
+    const run = normaliseRun({ id: "EGLL@2024-01-21", station: "EGLL", date: "2024-01-21", entitlement_cents: 0, liability_drafted_cents: 0 } as unknown as StormRun);
+    expect(run.windows).toEqual([]);
+    expect(run.flights).toEqual([]);
+    expect(run.counters).toEqual({});
+    const res = normaliseInject({ source: { id: "s", kind: "email", title: "t", sha256: "x", received_at: "", trust_tier: 4 } } as unknown as InjectResponse, { kind: "email", text: "hi" });
+    expect(res.facts).toEqual([]);
+    expect(res.events).toEqual([]);
+    expect(res.affected).toEqual([]);
+    expect(res.dropped_unverifiable).toBe(0);
+  });
+  it("finds the flight in any affected id", () => {
+    expect(flightOf("NS31@2025-01-24:14C")).toBe("NS31@2025-01-24");
+    expect(flightOf("NS100@2025-01-24")).toBe("NS100@2025-01-24");
+    expect(flightOf("EIDW@2025-01-24")).toBeNull();
+    expect(flightOf("Q-6")).toBeNull();
   });
 });
