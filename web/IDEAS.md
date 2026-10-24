@@ -14,6 +14,8 @@ Notes from Justin's Claude after building the landing and the app overnight. For
    - "Why this €?": €44,520 → claim rate → 212 × €600 → R-3 v2 → tech log → METAR → Legal.
    - "Replay the 09:00Z run": the work StormCheck did before anyone was in.
    - Inbox: rule on the voucher. It becomes R-7 v1 and 31 cases settle. Then show it in Rules.
+   - Rules → R-1 → "Replay with v1 (50 kt)": the real Bram METAR re-runs and 9 of 13 weather verdicts flip
+     (+€1,029,750). That's why every decision stores `rule@version`.
    - Judge's desk: let a judge pick their own airport and date. Live METAR, verdict and euros move.
 4. **Lines that land:** "Every euro, traced." · "Weather has a window." · "It drafts. It never pays." ·
    "It asks the right person once."
@@ -31,8 +33,8 @@ Notes from Justin's Claude after building the landing and the app overnight. For
   payouts or letters; only the Controller can post journal entries.
 
 ## Ideas we could still add (ranked by value per hour)
-1. **"As of" replay on Rules:** pick a date, see which rule versions applied and which euros would flip. The
-   engine's replay endpoint (see `API_CONTRACT.md`) is all the UI needs.
+1. **"As of" replay for every rule** (R-1 already replays on real METAR in the UI): pick a date, see which rule
+   versions applied and which euros would flip. The engine's replay endpoint (see `API_CONTRACT.md`) is all it needs.
 2. **Evidence states on every flight row:** pencil (pending), ink (agreed), red pencil (escalated). Same visual
    language as the landing.
 3. **Eval page:** "on storms it never saw: X% straight-through, Y miscoded caught (€Z), 0 repeat questions"
