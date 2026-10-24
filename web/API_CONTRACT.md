@@ -55,6 +55,18 @@ The "Why this €?" receipt, top (amount) to bottom (who ruled):
 ```
 Optional: `?asOf=<iso>` replays with the rule versions known then (powers a "before R-7" toggle).
 
+## GET `/api/payouts?storm=bram-2025-12-09&flight=NS31&status=held&cursor=…`
+Sorted for work (asked → held → drafted → not owed), 50 per page:
+```json
+{ "items": [{ "id": "NS31-042", "name": "Aoife Byrne", "flight": "NS31", "amount": 600,
+              "status": "asked", "rule": "R-3@2" }],
+  "counts": { "all": 2910, "held": 211, "asked": 1, "notOwed": 2698 }, "next": "…" }
+```
+`id` must be stable: the auditor's link carries it (`/app/payouts?flight=NS31&why=NS31-042`, or
+`/app?why=provision&flight=NS31` for the provision), never a name.
+`POST /api/payouts/approve` `{ "ids": [...] | "all-held", "by": "claims-lead" }` → `{ "queued": 211 }`.
+It queues for Payments; no money moves.
+
 ## GET `/api/questions` → POST `/api/questions/:id/answer`
 ```json
 { "id": "Q-12", "title": "Offset a gate voucher?", "owner": "claims-lead",
