@@ -13,6 +13,7 @@ const Close = lazy(() => import("@/screens/close"));
 const Desk = lazy(() => import("@/screens/desk"));
 const Proof = lazy(() => import("@/screens/proof"));
 const Pitch = lazy(() => import("@/pitch"));
+const Story = lazy(() => import("@/story"));
 
 const screen = (node: ReactNode) => <Suspense fallback={<Loading />}>{node}</Suspense>;
 
@@ -34,4 +35,6 @@ export const router = createBrowserRouter([
     ],
   },
   { path: "pitch/*", element: <Suspense fallback={null}>{<Pitch />}</Suspense> },
+  // The immersive scroll story (outside the app shell), for the Devpost link and the video.
+  { path: "story", element: <Suspense fallback={null}>{<Story />}</Suspense> },
 ]);
