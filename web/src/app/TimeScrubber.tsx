@@ -3,7 +3,7 @@ import { Clock3 } from "lucide-react";
 import { toast } from "sonner";
 import { create } from "zustand";
 import { ApiError, api } from "@/api/client";
-import { invalidateAfterWrite } from "@/api/queries";
+import { invalidateAfterWrite, qk, queryClient, useServerClock } from "@/api/queries";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { zuluDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -17,12 +17,15 @@ export const MOMENTS: { at: string; label: string; note: string }[] = [
   { at: "2025-02-28T23:59:00Z", label: "February month-end", note: "Bornhuetter-Ferguson true-up" },
 ];
 
-type ClockState = { knownAt: string | null; setKnownAt: (at: string) => void };
+type ClockState = { knownAt: string | null; setKnownAt: (at: string | null) => void };
+/** What this tab last set, for servers without GET /clock; the server's answer wins when there is one. */
 export const useClock = create<ClockState>((set) => ({ knownAt: null, setKnownAt: (knownAt) => set({ knownAt }) }));
 
 /** POST /api/clock. One injected clock drives every decision, so this is the whole time machine. */
 export function TimeScrubber({ className }: { className?: string }) {
-  const { knownAt, setKnownAt } = useClock();
+  const { knownAt: local, setKnownAt } = useClock();
+  const server = useServerClock();
+  const knownAt = server.data?.known_at ?? local;
   const [open, setOpen] = useState(false);
   const [custom, setCustom] = useState("");
   const [busy, setBusy] = useState(false);
@@ -32,6 +35,7 @@ export function TimeScrubber({ className }: { className?: string }) {
     try {
       const res = await api.clock(at);
       setKnownAt(res.known_at);
+      queryClient.setQueryData(qk.clock, res);
       await invalidateAfterWrite();
       toast(`Known at ${zuluDay(res.known_at)}`, { description: "Every screen now shows what StormCheck knew then." });
       setOpen(false);
