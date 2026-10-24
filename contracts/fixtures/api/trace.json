@@ -1,0 +1,162 @@
+[
+  {
+    "seq": 1,
+    "at": "2025-01-25T06:00:00Z",
+    "kind": "info",
+    "actor": "agent.engine",
+    "summary": "Read 60 METAR obs at EIDW (IEM) · storm window 02:30–15:00Z · peak gust 56 kt",
+    "ref": "EIDW@2025-01-24",
+    "chip": "INFO",
+    "amount_cents": null
+  },
+  {
+    "seq": 2,
+    "at": "2025-01-25T06:00:02Z",
+    "kind": "fact",
+    "actor": "agent.reader",
+    "summary": "Read OCC cancel list 05:12Z · 27 cancellations coded weather (RSN 71/72)",
+    "ref": "SRC-OCC-2025-01-24T0512Z",
+    "chip": "INFO",
+    "amount_cents": null
+  },
+  {
+    "seq": 3,
+    "at": "2025-01-25T06:00:04Z",
+    "kind": "llm_call",
+    "actor": "agent.reader",
+    "summary": "Reader extracted 4 facts from tech log EI-NSB · spans verified · 0 dropped",
+    "ref": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+    "chip": "INFO",
+    "amount_cents": null
+  },
+  {
+    "seq": 4,
+    "at": "2025-01-25T06:00:06Z",
+    "kind": "decision",
+    "actor": "agent.engine",
+    "summary": "23 flights confirmed weather · no compensation; refunds and care still due",
+    "ref": "EIDW@2025-01-24",
+    "chip": "APPLIED",
+    "amount_cents": null
+  },
+  {
+    "seq": 5,
+    "at": "2025-01-25T06:00:08Z",
+    "kind": "decision",
+    "actor": "agent.engine",
+    "summary": "NS31 recoded 71 → 41 · 172 payouts drafted",
+    "ref": "NS31@2025-01-24",
+    "chip": "APPLIED",
+    "amount_cents": null
+  },
+  {
+    "seq": 6,
+    "at": "2025-01-25T06:00:10Z",
+    "kind": "rule",
+    "actor": "agent.engine",
+    "summary": "Cited R-MINED-REDUCE@1 (41 of 42) · 14 partner reroutes reduced 50%",
+    "ref": "R-MINED-REDUCE@1",
+    "chip": "CITED",
+    "amount_cents": null
+  },
+  {
+    "seq": 7,
+    "at": "2025-01-25T06:00:12Z",
+    "kind": "entitlement",
+    "actor": "agent.engine",
+    "summary": "NS31 entitlements drafted · €99,000 full Art. 7 entitlement · pending Claims Lead approval",
+    "ref": "NS31@2025-01-24",
+    "chip": "DRAFTED",
+    "amount_cents": 9900000
+  },
+  {
+    "seq": 8,
+    "at": "2025-01-25T06:00:14Z",
+    "kind": "journal",
+    "actor": "agent.books",
+    "summary": "Drafted Dr 4090 / Cr 2140 €34,650 for NS31 · 35% expected ultimate claim rate",
+    "ref": "JE-000101",
+    "chip": "DRAFTED",
+    "amount_cents": 3465000
+  },
+  {
+    "seq": 9,
+    "at": "2025-01-25T06:00:16Z",
+    "kind": "info",
+    "actor": "agent.engine",
+    "summary": "CRM bot already initiated 32 NS31 refunds · not repeated · 2125 nets to 0",
+    "ref": "NS31@2025-01-24",
+    "chip": "INFO",
+    "amount_cents": 1632000
+  },
+  {
+    "seq": 10,
+    "at": "2025-01-25T06:00:18Z",
+    "kind": "llm_call",
+    "actor": "agent.drafter",
+    "summary": "Drafted 32 corrected rights notices (Art. 14(2)) · Drafter saw 0 PII · names merged in code",
+    "ref": "NS31@2025-01-24",
+    "chip": "DRAFTED",
+    "amount_cents": null
+  },
+  {
+    "seq": 11,
+    "at": "2025-01-25T06:00:20Z",
+    "kind": "access_denied",
+    "actor": "agent.drafter",
+    "summary": "agent.drafter approve_payout → DENIED · SoD",
+    "ref": "NS31@2025-01-24",
+    "chip": "DENIED",
+    "amount_cents": null
+  },
+  {
+    "seq": 12,
+    "at": "2025-01-25T06:00:22Z",
+    "kind": "question",
+    "actor": "agent.engine",
+    "summary": "Asked Legal: NS113 / NS115 / NS117 knock-on returns · confidence 47% · no precedent",
+    "ref": "Q-2",
+    "chip": "ASKED",
+    "amount_cents": 4749600
+  },
+  {
+    "seq": 13,
+    "at": "2025-01-25T06:00:24Z",
+    "kind": "journal",
+    "actor": "agent.books",
+    "summary": "Held €47,496 for 3 knock-on returns (IFRS 15.56 constraint, segment rates)",
+    "ref": "Q-2",
+    "chip": "HELD",
+    "amount_cents": 4749600
+  },
+  {
+    "seq": 14,
+    "at": "2025-01-25T06:00:26Z",
+    "kind": "question",
+    "actor": "agent.engine",
+    "summary": "Asked Claims Lead: 14C service-desk voucher in lieu, unsigned · confidence 39% · sources disagree",
+    "ref": "Q-1",
+    "chip": "ASKED",
+    "amount_cents": 60000
+  },
+  {
+    "seq": 15,
+    "at": "2025-01-25T06:00:28Z",
+    "kind": "question",
+    "actor": "agent.engine",
+    "summary": "Asked Controller: reduce the Storm Isha cohort at M12? · confidence 72% · release proposal",
+    "ref": "Q-3",
+    "chip": "ASKED",
+    "amount_cents": 360000
+  },
+  {
+    "seq": 16,
+    "at": "2025-01-25T06:00:30Z",
+    "kind": "journal",
+    "actor": "agent.books",
+    "summary": "Drafted care accrual €227,000 for the night of 24 Jan · care is owed even when extraordinary",
+    "ref": "JE-000120",
+    "chip": "DRAFTED",
+    "amount_cents": 22700000
+  }
+]

@@ -1,0 +1,123 @@
+{
+  "split": {
+    "learn": "2023-07..2024-12",
+    "score": "2025-01..2025-06"
+  },
+  "n_storms": 9,
+  "n_passengers": 48210,
+  "straight_through_pct": 0.986,
+  "miscodes_caught": 7,
+  "miscodes_total": 7,
+  "miscodes_eur_cents": 41258000,
+  "false_holds": 2,
+  "repeat_questions": 0,
+  "out_of_scope_auto": 0,
+  "liability_vs_actual": {
+    "M3": 0.97,
+    "M6": 1.02
+  },
+  "calibration": {
+    "cause": [
+      {
+        "lo": 0.0,
+        "hi": 0.6,
+        "n": 31.0,
+        "accuracy": 0.48,
+        "wilson_lo": 0.4,
+        "wilson_hi": 0.54
+      },
+      {
+        "lo": 0.6,
+        "hi": 0.9,
+        "n": 54.0,
+        "accuracy": 0.81,
+        "wilson_lo": 0.73,
+        "wilson_hi": 0.87
+      },
+      {
+        "lo": 0.9,
+        "hi": 1.0,
+        "n": 412.0,
+        "accuracy": 0.97,
+        "wilson_lo": 0.89,
+        "wilson_hi": 1.0
+      }
+    ],
+    "voucher": [
+      {
+        "lo": 0.0,
+        "hi": 0.6,
+        "n": 12.0,
+        "accuracy": 0.42,
+        "wilson_lo": 0.34,
+        "wilson_hi": 0.48
+      },
+      {
+        "lo": 0.6,
+        "hi": 0.9,
+        "n": 9.0,
+        "accuracy": 0.78,
+        "wilson_lo": 0.7,
+        "wilson_hi": 0.84
+      },
+      {
+        "lo": 0.9,
+        "hi": 1.0,
+        "n": 40.0,
+        "accuracy": 0.95,
+        "wilson_lo": 0.87,
+        "wilson_hi": 1.0
+      }
+    ]
+  },
+  "coverage_at_90": {
+    "cause": 0.83,
+    "voucher": 0.66
+  },
+  "baseline": {
+    "model": "claude-opus-5-5",
+    "runs": 3,
+    "liability_eur": [
+      51975,
+      99000,
+      29700
+    ],
+    "cause_accuracy": [
+      0.81,
+      0.74,
+      0.78
+    ],
+    "hash_identical": false
+  },
+  "stormcheck_runs": {
+    "runs": 3,
+    "liability_eur": [
+      34650,
+      34650,
+      34650
+    ],
+    "hash_identical": true
+  },
+  "injections": {
+    "total": 8,
+    "blocked_or_escalated": 8,
+    "fuzz": 20,
+    "fuzz_500s": 0
+  },
+  "real_vs_simulated": {
+    "real": [
+      "EIDW METAR (IEM)",
+      "Eurocontrol airport traffic",
+      "OurAirports distances",
+      "EU261 + CJEU case law"
+    ],
+    "simulated": [
+      "Northstar schedule",
+      "OCC/MCC/tech logs",
+      "PSS coupons",
+      "CRM",
+      "claims"
+    ]
+  },
+  "label": "calibrated on synthetic labels; validates the pipeline, not the world"
+}

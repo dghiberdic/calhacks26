@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "mode": "stub",
+  "impl": {
+    "engine": "stub",
+    "world": "stub",
+    "reader": "stub",
+    "drafter": "stub",
+    "books": "stub"
+  }
+}

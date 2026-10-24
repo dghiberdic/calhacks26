@@ -1,0 +1,32 @@
+[
+  {
+    "control": "ACL broker for people and agents",
+    "framework_ref": "CC6.1",
+    "implemented_by": "engine/acl.py broker.read",
+    "evidence_endpoint": "/api/access/matrix"
+  },
+  {
+    "control": "Least privilege and segregation of duties (preparer ≠ approver)",
+    "framework_ref": "CC6.3",
+    "implemented_by": "engine/controls.py + books SoD",
+    "evidence_endpoint": "/api/access/log"
+  },
+  {
+    "control": "Denials are logged as commits and trace events",
+    "framework_ref": "CC7.2",
+    "implemented_by": "engine/trace.py access_denied commits",
+    "evidence_endpoint": "/api/access/log"
+  },
+  {
+    "control": "Versioned rules, replayed before confirm",
+    "framework_ref": "CC8.1",
+    "implemented_by": "engine/lifecycle.py + engine/trace.py replay",
+    "evidence_endpoint": "/api/rules"
+  },
+  {
+    "control": "Processing-integrity invariants (balances, ties to GL, 2125 = 0)",
+    "framework_ref": "PI1",
+    "implemented_by": "books invariants",
+    "evidence_endpoint": "/api/books/invariants"
+  }
+]

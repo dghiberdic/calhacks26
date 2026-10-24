@@ -1,0 +1,19 @@
+{
+  "cohort": "EIDW@2025-01-24",
+  "segment": "long_haul_gt3500",
+  "pax": 172,
+  "entitlement_cents": 9900000,
+  "curve_version": "LH-v1",
+  "months_developed": 1,
+  "expected_loss_cents": 2175000,
+  "bf_cents": 2574000,
+  "chain_ladder_cents": 3726667,
+  "selected": "bf",
+  "actual_vs_expected": 1.448,
+  "credibility_z": 0.31,
+  "sensitivity_5pp_cents": 495000,
+  "constraint_note": "IFRS 15.56: constrained to the amount highly probable not to reverse. BF selected: one month of development has low credibility (z = 0.31); tail M18–72 is documented judgment vs. the Steer 2020 18% benchmark.",
+  "ias8_class": "change_in_estimate",
+  "preparer": "agent.books",
+  "approver": null
+}

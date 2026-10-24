@@ -1,0 +1,156 @@
+{
+  "target": "JE-000101:2",
+  "steps": [
+    {
+      "commit": {
+        "hash": "115df2b54499d75c8a6be6479c61924dc1a1427f4ae996b9f6994d47a5557818",
+        "parent": "645f9c0991dc32ee589c9bddb271a6502668700613fabed014a2645ca4f49734",
+        "kind": "journal_event",
+        "at": "2025-01-25T06:00:14Z",
+        "actor": "agent.books",
+        "payload_hash": "681cd14156fc755141cbcf205177770f58a600c901ce242028261aff3fb9326d",
+        "payload_ref": "JE-000101",
+        "inputs": [
+          "645f9c0991dc32ee589c9bddb271a6502668700613fabed014a2645ca4f49734",
+          "engine@debeb44",
+          "cal@cal-v1"
+        ],
+        "message": "JE-000101 drafted · Dr 4090 / Cr 2140 €34,650"
+      },
+      "label": "JE-000101:2 · Cr 2140 EU261 compensation liability €34,650 · drafted, pending approval",
+      "quote": null
+    },
+    {
+      "commit": {
+        "hash": "645f9c0991dc32ee589c9bddb271a6502668700613fabed014a2645ca4f49734",
+        "parent": "5bca0b867ef16f48483a9f978e4b5acd5db47d7e77df9629a09d63e43bd70b6f",
+        "kind": "entitlement",
+        "at": "2025-01-25T06:00:12Z",
+        "actor": "agent.engine",
+        "payload_hash": "39676dd8aeae5d5ba2d525625e0424fb9912560e335a496cd204391f85f7d3d5",
+        "payload_ref": "NS31@2025-01-24",
+        "inputs": [
+          "5bca0b867ef16f48483a9f978e4b5acd5db47d7e77df9629a09d63e43bd70b6f",
+          "b91554d7d174a342a575efd21b64607eccd332db804e84536ef409d749fba55f",
+          "engine@debeb44",
+          "cal@cal-v1"
+        ],
+        "message": "NS31 · 172 entitlements · €99,000 full Art. 7 entitlement"
+      },
+      "label": "NS31 entitlement · 158 × €600 + 14 × €300 = €99,000 × 35% expected ultimate claim rate",
+      "quote": null
+    },
+    {
+      "commit": {
+        "hash": "b91554d7d174a342a575efd21b64607eccd332db804e84536ef409d749fba55f",
+        "parent": null,
+        "kind": "rule_event",
+        "at": "2025-01-20T00:00:00Z",
+        "actor": "agent.engine",
+        "payload_hash": "f73a73f25299fbf5f1078a7f411d789e0f1dba74b990f98aefd3e961aa526106",
+        "payload_ref": "R-MINED-REDUCE@1",
+        "inputs": [
+          "engine@debeb44",
+          "cal@cal-v1"
+        ],
+        "message": "mined R-MINED-REDUCE@1 from history (41 of 42) · active"
+      },
+      "label": "R-MINED-REDUCE@1 · 50% reroute cut on 14 partner reroutes · 41 of 42",
+      "quote": null
+    },
+    {
+      "commit": {
+        "hash": "5bca0b867ef16f48483a9f978e4b5acd5db47d7e77df9629a09d63e43bd70b6f",
+        "parent": "88f25bea4f6b5eb60253ed243f1f26677a96c73a9f4496266a09a46889be34f0",
+        "kind": "decision",
+        "at": "2025-01-25T06:00:08Z",
+        "actor": "agent.engine",
+        "payload_hash": "065a9d5fe9fbfa5f60f3d9da7bb8fdada3dd3b5670f9d4d82a4b00ca14264af7",
+        "payload_ref": "NS31@2025-01-24",
+        "inputs": [
+          "b1f60e71426081b55a24d24cd165caf7686e9d390d2137b4541269be4eed32eb",
+          "5ace9920e0a10afc711c0e7903d666a1150b2bfff36ddff563af9527551ad0d7",
+          "88f25bea4f6b5eb60253ed243f1f26677a96c73a9f4496266a09a46889be34f0",
+          "engine@debeb44",
+          "cal@cal-v1"
+        ],
+        "message": "NS31 technical · not extraordinary · recoded 71 → 41 · 0.91"
+      },
+      "label": "Decision · technical · not extraordinary · recoded 71 → 41 · cause-finding confidence 91%",
+      "quote": null
+    },
+    {
+      "commit": {
+        "hash": "88f25bea4f6b5eb60253ed243f1f26677a96c73a9f4496266a09a46889be34f0",
+        "parent": "25a743be4f4f6c92a7370aa09e0f2a1fbd9a4855c51bb35cc3d9f2b30144c57e",
+        "kind": "fact",
+        "at": "2025-01-25T06:00:05Z",
+        "actor": "agent.reader",
+        "payload_hash": "9b890264dc72da1959d6955120c6d225a4043ce8dd4ab6b325dd8b04061c42fa",
+        "payload_ref": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+        "inputs": [
+          "25a743be4f4f6c92a7370aa09e0f2a1fbd9a4855c51bb35cc3d9f2b30144c57e",
+          "engine@debeb44",
+          "cal@cal-v1"
+        ],
+        "message": "tech log EI-NSB 23 Jan 21:40Z · AOG · no MEL relief"
+      },
+      "label": "Fact · tech log EI-NSB 23 Jan 21:40Z (tier 1)",
+      "quote": "EXT LEAK EDP CASE DRAIN PORT, EXCEEDS AMM LIMIT. EDP RPLCMT REQD. NO MEL RELIEF. A/C AOG."
+    },
+    {
+      "commit": {
+        "hash": "25a743be4f4f6c92a7370aa09e0f2a1fbd9a4855c51bb35cc3d9f2b30144c57e",
+        "parent": "5ace9920e0a10afc711c0e7903d666a1150b2bfff36ddff563af9527551ad0d7",
+        "kind": "llm_call",
+        "at": "2025-01-25T06:00:04Z",
+        "actor": "agent.reader",
+        "payload_hash": "5dd88403a4ecf2bf457788c8389b29c465c82e951065186f71ebf2fa0ac09720",
+        "payload_ref": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+        "inputs": [
+          "engine@debeb44",
+          "cal@cal-v1"
+        ],
+        "message": "Reader · claude-opus-5-5 · tech log EI-NSB · 4 facts, spans verified"
+      },
+      "label": "Reader call · span verified, value re-parsed by contracts/parse.py",
+      "quote": "23JAN 21:40Z EI-NSB DUB"
+    },
+    {
+      "commit": {
+        "hash": "5ace9920e0a10afc711c0e7903d666a1150b2bfff36ddff563af9527551ad0d7",
+        "parent": "b1f60e71426081b55a24d24cd165caf7686e9d390d2137b4541269be4eed32eb",
+        "kind": "fact",
+        "at": "2025-01-25T06:00:00Z",
+        "actor": "agent.reader",
+        "payload_hash": "ed96d38202dad8c1456bf0c83c54126c501ace3f98ee6fbe2a7825c2e9ac63ef",
+        "payload_ref": "SRC-OCC-2025-01-24T0512Z",
+        "inputs": [
+          "engine@debeb44",
+          "cal@cal-v1"
+        ],
+        "message": "OCC cancel list 05:12Z · 27 flights"
+      },
+      "label": "Fact · OCC code 71 (tier 3) · struck: tech log wins",
+      "quote": "RSN 71"
+    },
+    {
+      "commit": {
+        "hash": "b1f60e71426081b55a24d24cd165caf7686e9d390d2137b4541269be4eed32eb",
+        "parent": "b91554d7d174a342a575efd21b64607eccd332db804e84536ef409d749fba55f",
+        "kind": "fact",
+        "at": "2025-01-25T06:00:00Z",
+        "actor": "agent.engine",
+        "payload_hash": "2591166f341b1043d0099406e3383e5170f8bab2938b325946593aace3043762",
+        "payload_ref": "SRC-METAR-EIDW-2025-01-23_25",
+        "inputs": [
+          "engine@debeb44",
+          "cal@cal-v1"
+        ],
+        "message": "60 METAR obs EIDW 2025-01-23T18:00Z..2025-01-24T23:30Z (IEM)"
+      },
+      "label": "METAR obs at STD 16:30Z · window closed 15:00Z",
+      "quote": "EIDW 241630Z 23011G22KT 190V270 9999 -RA FEW012 SCT020 BKN050 05/00 Q0990 NOSIG"
+    }
+  ]
+}

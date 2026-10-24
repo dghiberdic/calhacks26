@@ -1,0 +1,69 @@
+{
+  "je": {
+    "id": "JE-000101",
+    "event_date": "2025-01-24",
+    "period": "2025-01",
+    "memo": "NS31 EU261 compensation liability: 35% expected ultimate claim rate × €99,000 full Art. 7 entitlement",
+    "lines": [
+      {
+        "account": "4090",
+        "account_name": "EU261 compensation (reduction of passenger revenue)",
+        "dr_cents": 3465000,
+        "cr_cents": 0,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      },
+      {
+        "account": "2140",
+        "account_name": "EU261 compensation liability (estimated)",
+        "dr_cents": 0,
+        "cr_cents": 3465000,
+        "dims": {
+          "storm": "EIDW@2025-01-24",
+          "flight": "NS31@2025-01-24",
+          "segment": "long_haul_gt3500",
+          "cohort": "EIDW@2025-01-24"
+        }
+      }
+    ],
+    "kind": "compensation_estimate",
+    "ias8_class": "none",
+    "reverses": null,
+    "estimate_ref": "EST-EIDW@2025-01-24-LH",
+    "source_decision_id": "NS31@2025-01-24",
+    "status": "draft",
+    "preparer": "agent.books",
+    "approver": null,
+    "built_from": 9,
+    "ties_to": [
+      "2140"
+    ]
+  },
+  "register": [
+    {
+      "obligation_id": "OBL-NS31@2025-01-24-comp",
+      "kind": "compensation",
+      "coupons": 172,
+      "entitlement_cents": 9900000,
+      "expected_ultimate_claim_rate": 0.35,
+      "liability_cents": 3465000,
+      "status": "drafted"
+    }
+  ],
+  "decision_commits": [
+    "5bca0b867ef16f48483a9f978e4b5acd5db47d7e77df9629a09d63e43bd70b6f",
+    "645f9c0991dc32ee589c9bddb271a6502668700613fabed014a2645ca4f49734",
+    "115df2b54499d75c8a6be6479c61924dc1a1427f4ae996b9f6994d47a5557818"
+  ],
+  "sources": [
+    "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+    "SRC-MCC-2025-01-23T2215Z",
+    "SRC-OCC-2025-01-24T0512Z",
+    "SRC-METAR-EIDW-2025-01-23_25"
+  ],
+  "blame_target": "JE-000101:2"
+}

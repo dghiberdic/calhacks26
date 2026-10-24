@@ -1,0 +1,166 @@
+[
+  {
+    "id": "R-REG-ART5-3",
+    "version": 1,
+    "kind": "cause",
+    "scope": {},
+    "condition": {
+      "any": [
+        {
+          "f": "flight.in_window_dep",
+          "op": "eq",
+          "v": "in"
+        },
+        {
+          "f": "flight.in_window_arr",
+          "op": "eq",
+          "v": "in"
+        }
+      ]
+    },
+    "action": "set_extraordinary",
+    "action_arg": null,
+    "tier": "regulation",
+    "authority_required": "legal",
+    "origin_ruling_id": null,
+    "origin_example": null,
+    "grounding": {},
+    "support": null,
+    "valid_from": "2005-02-17T00:00:00Z",
+    "recorded_at": "2025-01-20T00:00:00Z",
+    "status": "active",
+    "supersedes": null,
+    "times_cited": 23,
+    "static_card": false,
+    "title": "EU261 Art. 5(3): weather inside the storm window at either end is an extraordinary circumstance"
+  },
+  {
+    "id": "R-MINED-REDUCE",
+    "version": 1,
+    "kind": "mined_policy",
+    "scope": {},
+    "condition": {
+      "all": [
+        {
+          "f": "pax.election",
+          "op": "in",
+          "v": [
+            "reroute_partner",
+            "reaccommodated_own"
+          ]
+        }
+      ]
+    },
+    "action": "apply_7_2_reduction",
+    "action_arg": null,
+    "tier": "mined",
+    "authority_required": "claims_lead",
+    "origin_ruling_id": null,
+    "origin_example": "history_cases 2023-07..2024-12 (42 reroute-reduction decisions)",
+    "grounding": {},
+    "support": "41 of 42",
+    "valid_from": "2025-01-20T00:00:00Z",
+    "recorded_at": "2025-01-20T00:00:00Z",
+    "status": "active",
+    "supersedes": null,
+    "times_cited": 14,
+    "static_card": false,
+    "title": "Take the 50% reroute cut (Art. 7(2)) when the reroute arrives within the band's limit"
+  },
+  {
+    "id": "R-HC-PAYOUT",
+    "version": 1,
+    "kind": "routing",
+    "scope": {},
+    "condition": {
+      "all": []
+    },
+    "action": "route_to",
+    "action_arg": "claims_lead",
+    "tier": "hard_control",
+    "authority_required": "claims_lead",
+    "origin_ruling_id": null,
+    "origin_example": null,
+    "grounding": {},
+    "support": null,
+    "valid_from": null,
+    "recorded_at": "2025-01-20T00:00:00Z",
+    "status": "active",
+    "supersedes": null,
+    "times_cited": 1,
+    "static_card": false,
+    "title": "Payouts need Claims Lead approval"
+  },
+  {
+    "id": "R-HC-MATERIALITY",
+    "version": 1,
+    "kind": "routing",
+    "scope": {},
+    "condition": {
+      "all": []
+    },
+    "action": "route_to",
+    "action_arg": "claims_lead",
+    "tier": "hard_control",
+    "authority_required": "controller",
+    "origin_ruling_id": null,
+    "origin_example": null,
+    "grounding": {},
+    "support": null,
+    "valid_from": null,
+    "recorded_at": "2025-01-20T00:00:00Z",
+    "status": "active",
+    "supersedes": null,
+    "times_cited": 27,
+    "static_card": false,
+    "title": "Auto-draft only if per-flight liability < €50k and confidence ≥ 0.90"
+  },
+  {
+    "id": "R-HC-SOD",
+    "version": 1,
+    "kind": "routing",
+    "scope": {},
+    "condition": {
+      "all": []
+    },
+    "action": "route_to",
+    "action_arg": "controller",
+    "tier": "hard_control",
+    "authority_required": "controller",
+    "origin_ruling_id": null,
+    "origin_example": null,
+    "grounding": {},
+    "support": null,
+    "valid_from": null,
+    "recorded_at": "2025-01-20T00:00:00Z",
+    "status": "active",
+    "supersedes": null,
+    "times_cited": 1,
+    "static_card": false,
+    "title": "Preparer ≠ approver; external parties never satisfy an internal approval"
+  },
+  {
+    "id": "R-REG-2026-2202",
+    "version": 1,
+    "kind": "regime",
+    "scope": {},
+    "condition": {
+      "all": []
+    },
+    "action": "route_to",
+    "action_arg": "legal",
+    "tier": "regulation",
+    "authority_required": "legal",
+    "origin_ruling_id": null,
+    "origin_example": null,
+    "grounding": {},
+    "support": null,
+    "valid_from": "2027-10-23T00:00:00Z",
+    "recorded_at": "2026-10-22T00:00:00Z",
+    "status": "active",
+    "supersedes": null,
+    "times_cited": 0,
+    "static_card": true,
+    "title": "Reg (EU) 2026/2202 (EU261 revision): in force 22 Oct 2026, applies from 23 Oct 2027"
+  }
+]

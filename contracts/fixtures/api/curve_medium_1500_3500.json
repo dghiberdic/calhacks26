@@ -1,0 +1,38 @@
+{
+  "segment": "medium_1500_3500",
+  "basis": "eur",
+  "points": [
+    [
+      1,
+      0.069
+    ],
+    [
+      3,
+      0.131
+    ],
+    [
+      6,
+      0.185
+    ],
+    [
+      12,
+      0.224
+    ],
+    [
+      18,
+      0.247
+    ]
+  ],
+  "n_by_point": [
+    2412,
+    2412,
+    2187,
+    1655,
+    981
+  ],
+  "observed_through_month": 18,
+  "ultimate": 0.27,
+  "tail_factor": 1.0931,
+  "tail_note": "months 18–72 beyond history: documented judgment (Steer 2020 benchmark 18% for cancellations)",
+  "version": "MH-v1"
+}

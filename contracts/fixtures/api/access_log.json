@@ -1,0 +1,42 @@
+[
+  {
+    "at": "2025-01-25T06:00:20Z",
+    "principal": "agent.drafter",
+    "action": "approve_payout",
+    "resource": "NS31@2025-01-24",
+    "allowed": false,
+    "reason": "SoD: agents never approve payouts"
+  },
+  {
+    "at": "2025-01-25T06:00:18Z",
+    "principal": "agent.drafter",
+    "action": "read",
+    "resource": "pii:NS31@2025-01-24",
+    "allowed": false,
+    "reason": "Drafter sees no PII; names are merged in code after drafting"
+  },
+  {
+    "at": "2025-01-25T06:00:03Z",
+    "principal": "agent.reader",
+    "action": "read",
+    "resource": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+    "allowed": true,
+    "reason": "Reader may read sources incl. PII"
+  },
+  {
+    "at": "2025-01-25T06:00:30Z",
+    "principal": "ops",
+    "action": "read",
+    "resource": "claims:NS31@2025-01-24:14C",
+    "allowed": false,
+    "reason": "Ops sees flights and logs, no PII"
+  },
+  {
+    "at": "2025-01-25T06:00:31Z",
+    "principal": "claims_lead",
+    "action": "read",
+    "resource": "claims:NS31@2025-01-24:14C",
+    "allowed": true,
+    "reason": "Claims Lead sees PII for claims"
+  }
+]
