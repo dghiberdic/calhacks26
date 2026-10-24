@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router";
 import { motion, useReducedMotion } from "motion/react";
 import { Loader2 } from "lucide-react";
@@ -53,34 +53,38 @@ export default function DeskScreen() {
   );
 }
 
-/** `/desk?icao=EGLL&date=2024-01-21` fills the form (it doesn't run: the person presses Enter). */
+/**
+ * `/desk?icao=EGLL&date=2024-01-21` fills the form on arrival (it doesn't run: the person presses
+ * Enter). After each run the URL names that day, so it can be shared; a run that was already on
+ * screen when the page opened never overwrites the link someone followed.
+ */
 function usePrefillFromUrl() {
   const [params, setParams] = useSearchParams();
-  const ranFor = useDesk((s) => s.ranFor);
+  const ranAt = useDesk((s) => s.ranFor?.at);
+  const synced = useRef(ranAt);
 
   useEffect(() => {
     const s = useDesk.getState();
-    if (s.airport || s.run) return;
     const icao = params.get("icao")?.toUpperCase();
     const date = params.get("date");
-    if (icao && ICAO_SHAPE.test(icao)) {
+    if (icao && ICAO_SHAPE.test(icao) && icao !== s.airport?.icao) {
       const choice = { icao, airport: airportByIcao(icao) };
       s.setAirport(choice, choiceLabel(choice));
     }
-    if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    if (date && /^\d{4}-\d{2}-\d{2}$/.test(date) && date !== s.date) {
       const { y, m, d } = parts(date);
       if (isValidDate(y, m, d)) s.setDate(date, editLabel(date));
     }
-    // Only on arrival.
+    // Arrival only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // A finished run is shareable: the URL says which day it was.
   useEffect(() => {
-    if (!ranFor) return;
-    if (params.get("icao") === ranFor.icao && params.get("date") === ranFor.date) return;
-    setParams({ icao: ranFor.icao, date: ranFor.date }, { replace: true });
-  }, [ranFor, params, setParams]);
+    if (!ranAt || ranAt === synced.current) return;
+    synced.current = ranAt;
+    const ranFor = useDesk.getState().ranFor;
+    if (ranFor) setParams({ icao: ranFor.icao, date: ranFor.date }, { replace: true });
+  }, [ranAt, setParams]);
 }
 
 /** Over the dimmed last run: which day is on its way. */
