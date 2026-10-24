@@ -56,3 +56,25 @@ Judgment calls made while implementing, newest last. Each one says what we chose
     **`unknown_airport`** from `fetch_metar` is only a format check (4 characters); `world/airports.py` does the real lookup.
 14. **Pinned size** is about 1.1 MB in total. The EIDW 24-month bundle is 0.55 MB gzipped. Gzip is written with
     `mtime=0`, so re-running the pin script gives byte-identical files.
+
+## F2 · Airports, EU flag, timezones, distances
+
+1. **Pinned subset.** `data/pinned/airports.csv` (≈250 kB, 2,375 rows) is built by `uv run python -m world.pin_airports`
+   from OurAirports `airports.csv`: `large_airport` + `medium_airport`, continent EU or NA, **plus** EU261-territory
+   countries on other continents (the Canaries are continent AF in OurAirports; Cyprus is AS). Only rows with a
+   4-letter ICAO-style code are kept (`icao_code`, then `gps_code`, then `ident`). Sorted by ICAO; re-runs are
+   byte-identical.
+2. **Timezones** come from `airportsdata` by ICAO, then IATA, then the nearest airportsdata station in the same
+   country (a handful of small medium airports). Stored in the CSV so runtime needs no lookup for the subset.
+3. **Codes outside the subset** (e.g. a judge types `RJTT`) fall back to `airportsdata` at runtime (lat/lon/tz/
+   country). The plan's subset is about the demo network; the desk should not reject a real airport.
+4. **EU261 territory (`Airport.eu`)** = EU27 + EEA (IS, LI, NO) + CH, plus the French outermost regions that carry
+   their own ISO codes (GP, MQ, GF, RE, YT, MF). Canaries/Madeira/Azores are ES/PT already. The UK, Faroe and
+   Greenland are not EU261 territory.
+5. **`iata`** falls back to the ICAO code when an airport has no IATA code (the `Airport` model requires a string).
+   IATA collisions resolve to the large airport.
+6. **`distance_km`** is the great circle with R = 6371 km on OurAirports coordinates, rounded to 0.1 km so hashes
+   are stable. All 14 plan §1.1 distances match within 0.6 km.
+7. **`band_eur`/`band_margin_km`** (Art. 7(1)) live here too, because the generator's answer key needs the true
+   entitlement without importing the engine: ≤1500 km €250; intra-EU >1500 km or 1500–3500 km €400; else €600.
+   Exactly 1500 km is €250.
