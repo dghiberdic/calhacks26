@@ -238,7 +238,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <main id="main" className="min-w-0 flex-1 px-4 pb-16 pt-6 md:px-7">
-          {children}
+          {/* App pages cross-fade into each other; the landing has no such wrapper (see the root layout). */}
+          <ViewTransition>{children}</ViewTransition>
         </main>
       </div>
 

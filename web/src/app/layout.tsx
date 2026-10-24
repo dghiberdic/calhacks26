@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, B612_Mono } from "next/font/google";
-import { ViewTransition } from "react";
 import "./globals.css";
 
 const archivo = Archivo({
@@ -34,7 +33,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${archivo.variable} ${b612Mono.variable} antialiased`}>
       <body>
-        <ViewTransition>{children}</ViewTransition>
+        {/* No page-wide <ViewTransition>: it turned every Suspense reveal (the lazy 3D scene, mid-scroll)
+            into a full-page snapshot cross-fade. Navigation still cross-fades via the shared brand mark. */}
+        {children}
       </body>
     </html>
   );

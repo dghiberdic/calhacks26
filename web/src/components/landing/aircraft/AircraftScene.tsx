@@ -185,7 +185,12 @@ function Leak({ progress, label }: { progress: React.RefObject<AircraftProgress>
     const el = label.current;
     if (!el) return;
     v.copy(LEAK_AT).project(camera);
-    el.style.transform = `translate(${((v.x + 1) / 2) * size.width}px, ${((1 - v.y) / 2) * size.height}px) translate(-6px, -50%)`;
+    const px = ((v.x + 1) / 2) * size.width;
+    const py = ((1 - v.y) / 2) * size.height;
+    // Reads to the right of the pump unless that runs off the canvas (phones); then it flips to the left.
+    const flip = px + el.offsetWidth > size.width - 8;
+    el.style.flexDirection = flip ? "row-reverse" : "row";
+    el.style.transform = `translate(${flip ? px - el.offsetWidth + 6 : px - 6}px, ${py}px) translate(0, -50%)`;
     el.style.opacity = String(progress.current?.leak ?? 0);
   });
   return null;

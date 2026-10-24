@@ -37,7 +37,8 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
+      mm.add({ motion: "(prefers-reduced-motion: no-preference)", narrow: "(max-width: 1023px)" }, (ctx) => {
+        if (!ctx.conditions?.motion) return;
         const tl = gsap.timeline({
           defaults: { ease: "plotter" },
           // invalidateOnRefresh: centre() is measured again after a resize
@@ -80,6 +81,12 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
           .to(p, { leak: 1, duration: 0.3, ease: "none" }, "three+=3.4")
           .fromTo(".bp-caption-3d", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4 }, "three+=3.5");
         tl.to({}, { duration: 0.6 });
+        if (ctx.conditions?.narrow) {
+          // One slot on a phone: the copy gives way to the log, returns with the 3D, then to the caption.
+          tl.to(".bp-copy", { opacity: 0, duration: 0.3 }, 3.8)
+            .to(".bp-copy", { opacity: 1, duration: 0.4 }, "three+=0.4")
+            .to(".bp-copy", { opacity: 0, duration: 0.3 }, "three+=3.2");
+        }
       });
       gsap.to(".bp-leak-pulse", { scale: 2.4, opacity: 0, transformOrigin: "50% 50%", duration: 1.6, repeat: -1, ease: "power2.out" });
     },
@@ -87,7 +94,7 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
   );
 
   return (
-    <div ref={root} className="relative flex min-h-svh flex-col justify-center overflow-hidden bg-cyanotype py-12 text-blueprint-line">
+    <div ref={root} className="relative flex min-h-svh flex-col justify-center overflow-hidden bg-cyanotype py-12 text-blueprint-line max-lg:py-6">
       {/* drafting grid + grain */}
       <div
         className="bp-grid pointer-events-none absolute inset-0 opacity-[0.22]"
@@ -105,7 +112,7 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
         <rect width="100%" height="100%" filter="url(#bp-grain)" />
       </svg>
 
-      <div className="relative mx-auto grid w-full max-w-[1500px] grid-cols-1 gap-10 px-5 md:px-12 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="relative mx-auto grid w-full max-w-[1500px] grid-cols-1 gap-10 px-5 max-lg:gap-6 md:px-12 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div ref={column} className="relative">
           <div className="bp-canvas pointer-events-none absolute inset-0 opacity-0">
             {near && <AircraftScene progress={progress} className="!absolute inset-0" />}
@@ -135,7 +142,7 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
           </svg>
 
           {/* plan view with hydraulic systems */}
-          <svg viewBox="-2 -19.4 49 38.8" className="bp-plan mx-auto mt-4 w-[78%]" role="img" aria-label="Plan view with the three hydraulic systems. The green system's engine-1 pump is marked as the leak.">
+          <svg viewBox="-2 -19.4 49 38.8" className="bp-plan mx-auto mt-4 w-[78%] max-lg:max-h-[26svh]" role="img" aria-label="Plan view with the three hydraulic systems. The green system's engine-1 pump is marked as the leak.">
             <g transform={`scale(${TOP_VIEW.mpp}) translate(${-TOP_VIEW.noseX} ${-TOP_VIEW.centreY})`}>
               {TOP_LINES.map((d, i) => (
                 <path key={i} className="bp-plan-outline" d={d} fill="none" stroke={LINE} strokeOpacity={0.9} strokeWidth={2.6} strokeLinejoin="round" />
@@ -161,40 +168,43 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
         <aside className="flex flex-col justify-center gap-8">
           <div>
             <h2 className="display text-[clamp(40px,4.4vw,72px)] text-white">Grounded at 07:55.</h2>
-            <p className="mt-5 max-w-[34ch] text-[17px] leading-relaxed text-[#bfd3ea]">
-              NS31&rsquo;s aircraft lost green-system hydraulic fluid at the engine&nbsp;1 pump at 07:55, five and a half hours before the storm reached Dublin. A technical fault isn&rsquo;t weather.
-            </p>
-          </div>
-          <div className="bp-legend flex gap-5 text-[13px] text-[#bfd3ea]">
-            <span className="flex items-center gap-2">
-              <span className="h-[3px] w-5 rounded-full bg-hyd-green" />
-              Green
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="h-[3px] w-5 rounded-full bg-hyd-blue" />
-              Blue
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="h-[3px] w-5 rounded-full bg-hyd-yellow" />
-              Yellow
-            </span>
-          </div>
-          <figure className="bp-log rounded-md border border-[#e8f0fa]/25 bg-[#0e2d4d]/80 p-5 backdrop-blur-sm">
-            <figcaption className="mb-3 flex justify-between text-[13px] text-[#bfd3ea]">
-              <span>Technical log, {NS31.flight.reg}</span>
-              <span className="font-mono">ATA {NS31.techLog.ata}</span>
-            </figcaption>
-            <div className="font-mono text-[14px] leading-[1.7] text-white">
-              <p className="bp-log-line text-[#ff9a80]">{NS31.techLog.time}Z</p>
-              <p className="bp-log-line">HYD G RSVR LO LVL.</p>
-              <p className="bp-log-line">LEAK FOUND AT ENG 1 EDP</p>
-              <p className="bp-log-line">CASE DRAIN LINE.</p>
-              <p className="bp-log-line">A/C U/S PENDING PART.</p>
+            {/* On a phone the copy, the log and the caption share one slot and take turns, so the pinned section fits. */}
+            <div className="mt-5 flex flex-col gap-8 max-lg:motion-safe:grid max-lg:motion-safe:gap-0">
+              <p className="bp-copy max-w-[34ch] text-[17px] leading-relaxed text-[#bfd3ea] max-lg:motion-safe:[grid-area:1/1]">
+                NS31&rsquo;s aircraft lost green-system hydraulic fluid at the engine&nbsp;1 pump at 07:55, five and a half hours before the storm reached Dublin. A technical fault isn&rsquo;t weather.
+              </p>
+              <div className="bp-legend flex gap-5 text-[13px] text-[#bfd3ea] max-lg:motion-safe:hidden">
+                <span className="flex items-center gap-2">
+                  <span className="h-[3px] w-5 rounded-full bg-hyd-green" />
+                  Green
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="h-[3px] w-5 rounded-full bg-hyd-blue" />
+                  Blue
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="h-[3px] w-5 rounded-full bg-hyd-yellow" />
+                  Yellow
+                </span>
+              </div>
+              <figure className="bp-log rounded-md border border-[#e8f0fa]/25 bg-[#0e2d4d]/80 p-5 backdrop-blur-sm max-lg:motion-safe:[grid-area:1/1] max-lg:motion-safe:self-start">
+                <figcaption className="mb-3 flex justify-between text-[13px] text-[#bfd3ea]">
+                  <span>Technical log, {NS31.flight.reg}</span>
+                  <span className="font-mono">ATA {NS31.techLog.ata}</span>
+                </figcaption>
+                <div className="font-mono text-[14px] leading-[1.7] text-white">
+                  <p className="bp-log-line text-[#ff9a80]">{NS31.techLog.time}Z</p>
+                  <p className="bp-log-line">HYD G RSVR LO LVL.</p>
+                  <p className="bp-log-line">LEAK FOUND AT ENG 1 EDP</p>
+                  <p className="bp-log-line">CASE DRAIN LINE.</p>
+                  <p className="bp-log-line">A/C U/S PENDING PART.</p>
+                </div>
+              </figure>
+              <p className="bp-caption-3d -mt-4 max-w-[34ch] text-[15px] leading-relaxed text-[#bfd3ea] opacity-0 max-lg:motion-safe:mt-0 max-lg:motion-safe:[grid-area:1/1]">
+                The same aircraft, rendered from the same drawing. It stays in pencil until the evidence agrees, then it inks in.
+              </p>
             </div>
-          </figure>
-          <p className="bp-caption-3d -mt-4 max-w-[34ch] text-[15px] leading-relaxed text-[#bfd3ea] opacity-0">
-            The same aircraft, rendered from the same drawing. It stays in pencil until the evidence agrees, then it inks in.
-          </p>
+          </div>
         </aside>
       </div>
     </div>
