@@ -66,7 +66,8 @@ export function apiMode(): ApiMode {
       /* ignore */
     }
   }
-  const fromEnv = import.meta.env.VITE_API_MODE as string | undefined;
+  // `vite --mode mock|recorded` picks the transport by itself: the repo ignores .env.* files, so a mode file can't carry it.
+  const fromEnv = (import.meta.env.VITE_API_MODE as string | undefined) ?? import.meta.env.MODE;
   return valid(fromEnv) ? fromEnv : "http";
 }
 
