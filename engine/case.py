@@ -320,14 +320,31 @@ def stations_for(world: World, known_at: datetime | None) -> _StationCache:
     return _StationCache(world, known_at)
 
 
-def find_source(case: FlightCase, kind: SourceKind, needle: str | None, fallback: str) -> tuple[str, int]:
-    """(source id, trust tier) of the source of ``kind`` whose text contains ``needle``."""
-    for s in case.sources.values():
-        if s.kind == kind and s.text and needle and needle in s.text:
-            return s.id, s.trust_tier
-    for s in case.sources.values():
-        if s.kind == kind and needle is None:
-            return s.id, s.trust_tier
+def find_source(case: FlightCase, kind: SourceKind, needle: str | None, fallback: str,
+                on: datetime | None = None) -> tuple[str, int]:
+    """(source id, trust tier) of the source of ``kind`` whose text contains ``needle``.
+
+    With no needle, only sources named like ``fallback`` qualify (``SRC-METAR-EIDW`` matches
+    ``SRC-METAR-EIDW@<day>``, never another station's file), and ``on`` picks the one that covers that moment:
+    its text holds the ``YYYY-MM-DD HH:MM`` stamp, else its id carries the date, else its text mentions the date.
+    """
+    if needle:
+        for s in case.sources.values():
+            if s.kind == kind and s.text and needle in s.text:
+                return s.id, s.trust_tier
+    else:
+        cands = [s for s in case.sources.values()
+                 if s.kind == kind and (s.id == fallback or s.id.startswith(fallback + "@"))]
+        if cands:
+            def rank(s: Any) -> tuple[bool, bool, bool, str]:
+                if on is None:
+                    return (False, False, False, s.id)
+                text = s.text or ""
+                day = on.strftime("%Y-%m-%d")
+                return (on.strftime("%Y-%m-%d %H:%M") not in text, not s.id.endswith("@" + day), day not in text,
+                        s.id)
+            best = min(cands, key=rank)
+            return best.id, best.trust_tier
     default_tier = {SourceKind.TECH_LOG: 1, SourceKind.MCC_LOG: 1, SourceKind.METAR: 1, SourceKind.SPARES: 2,
                     SourceKind.SCHEDULE: 2, SourceKind.OCC_LOG: 3}.get(kind, 4)
     return fallback, default_tier
