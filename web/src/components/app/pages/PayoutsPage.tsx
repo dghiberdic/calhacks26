@@ -205,7 +205,45 @@ export function PayoutsPage() {
 
         {role === "ops" && <p className="border-y border-[#f0f0eb] bg-chart px-5 py-2 text-[13px] text-graphite">Names hidden for Ops (GDPR).</p>}
 
-        <div className="overflow-x-auto" data-lenis-prevent-horizontal>
+        {/* Phones: who, what they're owed and where it stands, without a sideways table. */}
+        <ul className="md:hidden" aria-label="Payouts">
+          {pageRows.map((p) => {
+            const rs = rowStatus(p);
+            const name = role === "ops" ? pseudonym(p) : p.name;
+            const owed = rs === "held" || rs === "approved" || rs === "asked";
+            return (
+              <li key={p.id} className={cn("flex items-start justify-between gap-3 border-t border-[#f0f0eb] px-5 py-3", rs === "approved" && "bg-[#eef6f1]")}>
+                <span className="min-w-0">
+                  <span className="block text-[14.5px]">{name}</span>
+                  <span className="mt-0.5 block text-[12.5px] text-graphite">
+                    <span className="font-mono">{p.flight}</span> · {p.rule}
+                  </span>
+                  {owed && (
+                    <span className="mt-1.5 flex gap-4 text-[13px]">
+                      {role !== "ops" && (
+                        <button type="button" onClick={() => openLetter({ name, flight: p.flight, amount: p.amount || 600 })} className="text-front underline-offset-4 hover:underline">
+                          Letter
+                        </button>
+                      )}
+                      <button type="button" onClick={() => openWhy({ kind: "payout", id: p.id, flight: p.flight, passenger: name, amount: p.amount || 600 })} className="text-front underline-offset-4 hover:underline">
+                        Why?
+                      </button>
+                    </span>
+                  )}
+                </span>
+                <span className="flex shrink-0 flex-col items-end gap-1">
+                  {rs === "held" && <Chip kind="technical">Held</Chip>}
+                  {rs === "asked" && <Chip kind="asked" />}
+                  {rs === "not owed" && <Chip kind="weather">Not owed</Chip>}
+                  {rs === "approved" && <Chip kind="settled">Approved</Chip>}
+                  {rs === "not owed" ? <Money value={0} className="text-[14px] text-graphite" /> : <Money value={p.amount} className="text-[14px] text-owed-ink" />}
+                </span>
+              </li>
+            );
+          })}
+          {pageRows.length === 0 && <li className="px-5 py-10 text-center text-[14px] text-graphite">No payouts match this filter.</li>}
+        </ul>
+        <div className="hidden overflow-x-auto md:block" data-lenis-prevent-horizontal>
           <table className="w-full min-w-[720px] border-collapse text-[14px]">
             <thead>
               <tr className="text-left text-[13px] text-graphite">
