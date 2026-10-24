@@ -295,7 +295,7 @@ function Record({ family }: { family: RuleFamily }) {
               <span className={cn("block break-words text-slate-600", stormName(rule.origin_example) ? "text-[13px]" : "font-mono text-[11.5px]")}>{stormName(rule.origin_example) ?? rule.origin_example}</span>
             )
           ) : null}
-          {rule.origin_ruling_id ? <span className="mt-0.5 block font-mono text-[11px] text-slate-400">ruling {rule.origin_ruling_id}</span> : null}
+          {rule.origin_ruling_id ? <span className="mt-0.5 block whitespace-nowrap font-mono text-[11px] text-slate-400">ruling {rule.origin_ruling_id}</span> : null}
         </Item>
       ) : null}
     </dl>
