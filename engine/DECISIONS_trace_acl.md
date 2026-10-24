@@ -133,6 +133,11 @@ Judgment calls made while implementing `engine/trace.py` and `engine/acl.py`, on
 - **Fail closed** on: an unknown principal (any id that isn't a role or `<role>:<slug>`, `None`, `""`), an unknown action, an unknown resource, and a missing clock with no explicit `at`.
 
 **Approvals (hard controls, in this order)**
+0. **Simulated personas never approve** (`persona:<role>`, F7 `llm/personas.py`). The reason is `External: persona:claims_lead is a simulated persona; personas never approve, pay, lock a period or satisfy an internal approval`, and the denial commit reads `persona:claims_lead approve_payout → DENIED · External`.
+   - **Detected by id prefix, not by importing `llm`:** `engine.controls.PERSONA_PREFIX` / `is_persona`. A test pins it to `llm.personas`, and the match is case-insensitive.
+   - **Whatever it carries:** a persona holding a `Session` (even a forged Claims Lead one) is still unauthenticated. Its role comes from its id (`persona:legal` → legal), never from the session.
+   - **The same rule in `controls.check_approval`:** `R-HC-EXTERNAL` for every journal kind. `controls.check_answer` lets a persona answer only as its own role.
+   - **Everything else:** personas get their own row (`PERSONA_ROW`). They read logs and case facts redacted, answer questions, and read rules. They don't write rules: confirming a proposal is a person's act; the persona only proposes through its answer. They see no PII (an LLM, like the Drafter). They are not in the displayed matrix, because they are principals of an unattended run, not of the business.
 1. **Agents never approve:** `SoD: agents never approve payouts`.
 2. **Only a signed internal `Session` approves.** Anything else is `External`, including a bare string like `"claims_lead:maria-murphy"`, a `Source`, a `Claim`, a `CrmEvent`, a `Fact`, a dict, or free text. When the external text matches `approv(e|ed|al…)`, the reason says so ("email text says 'approved'; external parties never satisfy an internal approval").
    - Reads, by contrast, accept bare role strings, because agents are in-process code that identifies by role.

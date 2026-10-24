@@ -1,0 +1,1169 @@
+{
+ "about": "Drafter demo scenarios (plan §1.2–1.4). Inputs are copied from the golden fixtures; responses are HAND-WRITTEN (no ANTHROPIC_API_KEY was available) and recorded through the real prompt builders by `uv run python -m llm.drafter` into <sha256>.json cache files next to this one. See llm/DECISIONS_drafter.md.",
+ "objects": {
+  "ns31_decision": {
+   "flight_id": "NS31@2025-01-24",
+   "cause": "technical",
+   "extraordinary": "not_extraordinary",
+   "ops_cause_code": "71",
+   "recoded": true,
+   "recode_label": "71 → 41",
+   "in_window_dep": "out",
+   "in_window_arr": "out",
+   "window_margin_min": 90,
+   "confidence": {
+    "score": 0.91,
+    "kind": "cause",
+    "label": "cause-finding confidence",
+    "features": {
+     "in_window_dep": 0.0,
+     "in_window_arr": 0.0,
+     "window_margin_h": 1.5,
+     "aog_before_window": 1.0,
+     "aog_inside_window": 0.0,
+     "root_cause_internal": 1.0,
+     "sources_disagree": 0.0,
+     "precedent_count": 3.0,
+     "knock_on": 0.0
+    },
+    "caps": [],
+    "calibration_version": "cal-v1"
+   },
+   "reason": "Not weather: EDP leak logged 23 Jan 21:40Z with no MEL relief, before the storm; DUB window closed 15:00Z, 90 min before STD.",
+   "evidence": [
+    {
+     "fact_id": "F-TL-EI-NSB-aog",
+     "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+     "field": "aog.mel_relief",
+     "value": false,
+     "quote": "NO MEL RELIEF. A/C AOG.",
+     "role": "supports",
+     "trust_tier": 1,
+     "struck": false
+    },
+    {
+     "fact_id": "F-TL-EI-NSB-ata",
+     "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+     "field": "aog.ata_chapter",
+     "value": "2913",
+     "quote": "EXT LEAK EDP CASE DRAIN PORT, EXCEEDS AMM LIMIT",
+     "role": "supports",
+     "trust_tier": 1,
+     "struck": false
+    },
+    {
+     "fact_id": "F-TL-EI-NSB-logged",
+     "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+     "field": "aog.logged_at",
+     "value": "2025-01-23T21:40:00Z",
+     "quote": "23JAN 21:40Z EI-NSB DUB",
+     "role": "supports",
+     "trust_tier": 1,
+     "struck": false
+    },
+    {
+     "fact_id": "F-MCC-EI-NSB-eta",
+     "source_id": "SRC-MCC-2025-01-23T2215Z",
+     "field": "mcc.part_eta",
+     "value": "2025-01-25T14:00:00Z",
+     "quote": "POOL UNIT EX-TLS VIA CDG 25JAN ETA 14:00Z",
+     "role": "supports",
+     "trust_tier": 1,
+     "struck": false
+    },
+    {
+     "fact_id": "F-METAR-EIDW-20250124T1630Z",
+     "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+     "field": "metar.gust_kt",
+     "value": 22,
+     "quote": "EIDW 241630Z 23011G22KT 190V270 9999 -RA FEW012 SCT020 BKN050 05/00 Q0990 NOSIG",
+     "role": "supports",
+     "trust_tier": 1,
+     "struck": false
+    },
+    {
+     "fact_id": "F-WINDOW-EIDW@2025-01-24",
+     "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+     "field": "storm.window",
+     "value": {
+      "start": "2025-01-24T02:30:00Z",
+      "end": "2025-01-24T15:00:00Z",
+      "peak_gust_kt": 56
+     },
+     "quote": null,
+     "role": "context",
+     "trust_tier": 1,
+     "struck": false
+    },
+    {
+     "fact_id": "F-OCC-NS31-code",
+     "source_id": "SRC-OCC-2025-01-24T0512Z",
+     "field": "flight.ops_cause_code",
+     "value": "71",
+     "quote": "CNL LIST → NETLINE, RSN 71",
+     "role": "contradicts",
+     "trust_tier": 3,
+     "struck": true
+    }
+   ],
+   "rules_applied": [],
+   "legal_basis": [
+    "EU261 Art.5(3)",
+    "CJEU C-549/07",
+    "CJEU C-257/14"
+   ],
+   "outcome": "auto",
+   "routed_to": null,
+   "question_id": null,
+   "known_at": "2025-01-25T06:00:00Z"
+  },
+  "ns31_cited": [
+   {
+    "fact_id": "F-TL-EI-NSB-aog",
+    "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+    "field": "aog.mel_relief",
+    "value": false,
+    "quote": "NO MEL RELIEF. A/C AOG.",
+    "role": "supports",
+    "trust_tier": 1,
+    "struck": false
+   },
+   {
+    "fact_id": "F-TL-EI-NSB-ata",
+    "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+    "field": "aog.ata_chapter",
+    "value": "2913",
+    "quote": "EXT LEAK EDP CASE DRAIN PORT, EXCEEDS AMM LIMIT",
+    "role": "supports",
+    "trust_tier": 1,
+    "struck": false
+   },
+   {
+    "fact_id": "F-TL-EI-NSB-logged",
+    "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+    "field": "aog.logged_at",
+    "value": "2025-01-23T21:40:00Z",
+    "quote": "23JAN 21:40Z EI-NSB DUB",
+    "role": "supports",
+    "trust_tier": 1,
+    "struck": false
+   },
+   {
+    "fact_id": "F-MCC-EI-NSB-eta",
+    "source_id": "SRC-MCC-2025-01-23T2215Z",
+    "field": "mcc.part_eta",
+    "value": "2025-01-25T14:00:00Z",
+    "quote": "POOL UNIT EX-TLS VIA CDG 25JAN ETA 14:00Z",
+    "role": "supports",
+    "trust_tier": 1,
+    "struck": false
+   },
+   {
+    "fact_id": "F-METAR-EIDW-20250124T1630Z",
+    "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+    "field": "metar.gust_kt",
+    "value": 22,
+    "quote": "EIDW 241630Z 23011G22KT 190V270 9999 -RA FEW012 SCT020 BKN050 05/00 Q0990 NOSIG",
+    "role": "supports",
+    "trust_tier": 1,
+    "struck": false
+   },
+   {
+    "fact_id": "F-WINDOW-EIDW@2025-01-24",
+    "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+    "field": "storm.window",
+    "value": {
+     "start": "2025-01-24T02:30:00Z",
+     "end": "2025-01-24T15:00:00Z",
+     "peak_gust_kt": 56
+    },
+    "quote": null,
+    "role": "context",
+    "trust_tier": 1,
+    "struck": false
+   },
+   {
+    "fact_id": "F-OPS-DUB-20250124T1500Z-operated",
+    "source_id": "SRC-SCHEDULE-DUB",
+    "field": "flight.operated_after_window",
+    "value": 11,
+    "quote": "11 DUB departures operated 15:30–17:30Z",
+    "role": "supports",
+    "trust_tier": 2,
+    "struck": false
+   }
+  ]
+ },
+ "scenarios": {
+  "explain:NS31": {
+   "method": "explain",
+   "args": {
+    "decision": "@ns31_decision",
+    "context": {
+     "std": "2025-01-24T16:30:00Z",
+     "pax": 172,
+     "operated_after_window": "11 DUB departures operated 15:30–17:30Z",
+     "payouts": "172 payouts drafted, pending Claims Lead approval"
+    }
+   },
+   "response": {
+    "text": "Not weather. EI-NSB was AOG from 23 Jan 21:40Z with an engine-driven pump leak beyond AMM limits (ATA 2913) and no MEL relief, logged before Dublin's storm window of 02:30–15:00Z; the window closed 90 min before the 16:30Z STD, and 11 DUB departures operated 15:30–17:30Z. OCC's weather code 71 is struck and the cause recoded 71 → 41: a technical fault is not an extraordinary circumstance (EU261 Art.5(3); CJEU C-549/07, C-257/14), so compensation is owed and 172 payouts are drafted, pending Claims Lead approval. Cause-finding confidence 91%."
+   }
+  },
+  "challenge_reply:NS31:assertion": {
+   "method": "challenge_reply",
+   "args": {
+    "decision": "@ns31_decision",
+    "classification": "assertion",
+    "cited": "@ns31_cited"
+   },
+   "response": {
+    "text": "Decision stands. Dublin's storm window closed at 15:00Z, the 16:30Z METAR shows 11 kt gusting 22 kt, and 11 DUB departures operated 15:30–17:30Z. EI-NSB had been AOG since 23 Jan 21:40Z with an engine-driven pump leak and no MEL relief, logged before the storm, so the storm did not cause this cancellation."
+   }
+  },
+  "challenge_reply:NS31:new_legal_pattern": {
+   "method": "challenge_reply",
+   "args": {
+    "decision": "@ns31_decision",
+    "classification": "new_legal_pattern",
+    "cited": "@ns31_cited"
+   },
+   "response": {
+    "text": "Decision stands. A manufacturer's notice of a hidden defect in the pump batch is a new legal question (CJEU C-549/07 ¶26), so it has gone to Legal, and the decision does not change unless Legal rules. On the evidence today EI-NSB was AOG from 23 Jan 21:40Z with no MEL relief, logged before Dublin's storm window closed at 15:00Z."
+   }
+  },
+  "classify:NS31:storm_anyway": {
+   "method": "classify_challenge",
+   "args": {
+    "decision": "@ns31_decision",
+    "text": "The storm would have grounded it anyway"
+   },
+   "response": {
+    "parsed": {
+     "classification": "assertion",
+     "reason": "It disagrees with the decision but cites no new log line, reading or document; the METAR after 15:00Z and the tech log entry of 23 Jan 21:40Z already answer it.",
+     "facts": []
+    }
+   }
+  },
+  "classify:NS31:airbus_hidden_defect": {
+   "method": "classify_challenge",
+   "args": {
+    "decision": "@ns31_decision",
+    "text": "Airbus operator notice: hidden defect in this EDP batch"
+   },
+   "response": {
+    "parsed": {
+     "classification": "new_legal_pattern",
+     "reason": "A manufacturer's notice of a hidden defect raises whether the pump failure is extraordinary under CJEU C-549/07 ¶26; the decision's rules and precedents do not cover it.",
+     "facts": [
+      {
+       "field": "manufacturer.hidden_defect",
+       "value_json": "true",
+       "span": "hidden defect in this EDP batch"
+      }
+     ]
+    }
+   }
+  },
+  "je_memo:JE-000101": {
+   "method": "je_memo",
+   "args": {
+    "je": {
+     "id": "JE-000101",
+     "event_date": "2025-01-24",
+     "period": "2025-01",
+     "memo": "NS31 EU261 compensation liability: 35% expected ultimate claim rate × €99,000 full Art. 7 entitlement",
+     "lines": [
+      {
+       "account": "4090",
+       "account_name": "EU261 compensation (reduction of passenger revenue)",
+       "dr_cents": 3465000,
+       "cr_cents": 0,
+       "dims": {
+        "storm": "EIDW@2025-01-24",
+        "flight": "NS31@2025-01-24",
+        "segment": "long_haul_gt3500",
+        "cohort": "EIDW@2025-01-24"
+       }
+      },
+      {
+       "account": "2140",
+       "account_name": "EU261 compensation liability (estimated)",
+       "dr_cents": 0,
+       "cr_cents": 3465000,
+       "dims": {
+        "storm": "EIDW@2025-01-24",
+        "flight": "NS31@2025-01-24",
+        "segment": "long_haul_gt3500",
+        "cohort": "EIDW@2025-01-24"
+       }
+      }
+     ],
+     "kind": "compensation_estimate",
+     "ias8_class": "none",
+     "reverses": null,
+     "estimate_ref": "EST-EIDW@2025-01-24-LH",
+     "source_decision_id": "NS31@2025-01-24",
+     "status": "draft",
+     "preparer": "agent.books",
+     "approver": null,
+     "built_from": 9,
+     "ties_to": [
+      "2140"
+     ]
+    }
+   },
+   "response": {
+    "text": "NS31 day-1 EU261 compensation liability, drafted, pending approval: Dr 4090 EU261 compensation (reduction of passenger revenue) €34,650 / Cr 2140 EU261 compensation liability (estimated) €34,650, the IFRS 15 variable-consideration estimate of 35% expected ultimate claim rate × €99,000 full Art. 7 entitlement; built from 9 sources and ties to GL 2140."
+   }
+  },
+  "rights_notice:NS31:refund_initiated_corrected": {
+   "method": "rights_notice",
+   "args": {
+    "ent": {
+     "coupon_id": "NS31@2025-01-24:3A",
+     "flight_id": "NS31@2025-01-24",
+     "distance_km": 4804.0,
+     "band_eur": 600,
+     "band_margin_km": 1304.0,
+     "regime": "EU261_2004",
+     "compensation_cents": 60000,
+     "reduction": "none",
+     "refund_due_cents": 0,
+     "refund_already_initiated": true,
+     "care_due": true,
+     "voucher_offset_cents": 0,
+     "status": "owed",
+     "article": "Art. 7(1)(c), 8(1)(a)",
+     "reason": "Refund already initiated by the CRM bot 24 Jan 06:02Z; not repeated. Compensation owed.",
+     "rules_applied": []
+    },
+    "corrects": "Your flight NS31 on 24 Jan was cancelled due to weather (extraordinary circumstances). No compensation is payable under EU261. Your refund of EUR 510.00 has been initiated.",
+    "cause": "a technical fault on the aircraft (engine-driven pump leak logged before the storm), not the weather"
+   },
+   "response": {
+    "text": "Dear {{passenger_name}},\n\nWe are writing to correct our earlier email about your booking {{booking_reference}}. It said your flight was \"cancelled due to weather (extraordinary circumstances)\" and that \"No compensation is payable under EU261\". That was wrong: Northstar Air flight NS31 on 24 January 2025 was cancelled because of a technical fault on the aircraft, not the weather.\n\nThis notice sets out your rights under Regulation (EC) No 261/2004, as Article 14(2) requires.\n\nCompensation: you are entitled to €600 under Article 7(1)(c). We pay it in cash, by bank transfer or by cheque; we will only use travel vouchers if you agree in writing (Article 7(3)).\n\nRefund: your refund of EUR 510.00 has already been initiated and will not be repeated (Article 8(1)(a)).\n\nCare: you were also entitled to meals and refreshments, hotel accommodation where necessary and transport between the airport and the hotel (Article 9). If you paid for any of these yourself, please send us your receipts.\n\nIf you need help, you can contact the national enforcement body: {{neb_contact}}.\n\nNorthstar Air Customer Care"
+   }
+  },
+  "rights_notice:NS108:weather": {
+   "method": "rights_notice",
+   "args": {
+    "ent": {
+     "coupon_id": "NS108@2025-01-24:12A",
+     "flight_id": "NS108@2025-01-24",
+     "distance_km": 1486.0,
+     "band_eur": 250,
+     "band_margin_km": 14.0,
+     "regime": "EU261_2004",
+     "compensation_cents": 0,
+     "reduction": "none",
+     "refund_due_cents": 0,
+     "refund_already_initiated": false,
+     "care_due": true,
+     "voucher_offset_cents": 0,
+     "status": "no_compensation",
+     "article": "Art. 5(3)",
+     "reason": "Extraordinary: STD 08:15Z inside the DUB storm window 02:30–15:00Z.",
+     "rules_applied": []
+    },
+    "corrects": null,
+    "cause": "Storm Éowyn: departure inside Dublin's storm window"
+   },
+   "response": {
+    "text": "Dear {{passenger_name}},\n\nYour Northstar Air flight NS108 on 24 January 2025 (booking {{booking_reference}}) was cancelled because of Storm Éowyn. This notice sets out your rights under Regulation (EC) No 261/2004, as Article 14(2) requires.\n\nCompensation: no compensation; refunds and care still due. The storm is an extraordinary circumstance under Article 5(3), so no compensation is payable under Article 7.\n\nRefund or re-routing: you can choose a refund of your ticket, paid within seven days, or re-routing to your destination at the earliest opportunity or at a later date of your choosing (Article 8).\n\nCare: while you wait for a re-routed flight we provide meals and refreshments, hotel accommodation where necessary, transport between the airport and the hotel, and two telephone calls or emails (Article 9). Keep your receipts for anything you paid for yourself.\n\nIf you need help, you can contact the national enforcement body: {{neb_contact}}.\n\nNorthstar Air Customer Care"
+   }
+  },
+  "rule:Q-1": {
+   "method": "propose_rule",
+   "args": {
+    "ruling": {
+     "id": "RUL-Q1",
+     "question_id": "Q-1",
+     "author_role": "claims_lead",
+     "author": "claims_lead:maria",
+     "kind": "answer",
+     "decision": "No signed acceptance, no offset: pay €600 cash; the voucher stays as goodwill.",
+     "explanation": "",
+     "at": "2025-01-25T09:40:00Z"
+    },
+    "question": {
+     "id": "Q-1",
+     "case_refs": [
+      "NS31@2025-01-24:14C"
+     ],
+     "pattern": "voucher_in_lieu_unsigned",
+     "routed_to": "claims_lead",
+     "asked_at": "2025-01-25T06:00:00Z",
+     "title": "Does a €300 service-desk voucher 'in lieu of compensation' offset 14C's €600?",
+     "found": "On 24 Jan the T2 service desk issued passenger 14C (NS31) a €300 voucher 'in lieu of compensation'. CRM records it as accepted; her claim says she never agreed. There is no signed acceptance on file.",
+     "why_flagged": "Sources disagree (CRM vs. the passenger's claim), and Art. 7(3) needs signed acceptance for an offset. No precedent for unsigned in-lieu vouchers.",
+     "recommends": "No signed acceptance, no offset: pay €600 cash; the voucher stays as goodwill.",
+     "recommended_option": "Pay €600 cash; the voucher stays as goodwill",
+     "options": [
+      "Pay €600 cash; the voucher stays as goodwill",
+      "Offset the voucher: pay €300 cash",
+      "Ask 14C to sign the acceptance first"
+     ],
+     "evidence": [
+      {
+       "fact_id": "F-CRM-NS31-14C-voucher",
+       "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
+       "field": "voucher.in_lieu",
+       "value": true,
+       "quote": "EUR300 VOUCHER IN LIEU OF COMPENSATION",
+       "role": "context",
+       "trust_tier": 3,
+       "struck": false
+      },
+      {
+       "fact_id": "F-CRM-NS31-14C-accepted",
+       "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
+       "field": "voucher.accepted",
+       "value": true,
+       "quote": "PAX ACCEPTED",
+       "role": "contradicts",
+       "trust_tier": 3,
+       "struck": false
+      },
+      {
+       "fact_id": "F-CRM-NS31-14C-signed",
+       "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
+       "field": "voucher.signed",
+       "value": false,
+       "quote": null,
+       "role": "supports",
+       "trust_tier": 3,
+       "struck": false
+      },
+      {
+       "fact_id": "F-CLAIM-NS31-14C-dispute",
+       "source_id": "SRC-CLAIM-NS31-14C-2025-01-25T0131Z",
+       "field": "claim.voucher_disputed",
+       "value": true,
+       "quote": "I never agreed to take a voucher instead of my compensation",
+       "role": "supports",
+       "trust_tier": 4,
+       "struck": false
+      },
+      {
+       "fact_id": "F-CRM-NS31-14C-amount",
+       "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
+       "field": "voucher.amount_cents",
+       "value": 30000,
+       "quote": "EUR300",
+       "role": "context",
+       "trust_tier": 3,
+       "struck": false
+      }
+     ],
+     "confidence": {
+      "score": 0.39,
+      "kind": "voucher",
+      "label": "voucher-offset confidence",
+      "features": {
+       "in_lieu": 1.0,
+       "signed": 0.0,
+       "sources_disagree": 1.0,
+       "precedent_count": 0.0
+      },
+      "caps": [
+       "capped:sources-disagree"
+      ],
+      "calibration_version": "cal-v1"
+     },
+     "reason_tag": "sources-disagree",
+     "holds": [
+      "NS31@2025-01-24:14C"
+     ],
+     "holds_cents": 60000,
+     "status": "open",
+     "remind_at": "2025-01-25T09:00:00Z"
+    },
+    "case_facts": [
+     {
+      "id": "F-CRM-14C-in_lieu",
+      "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
+      "subject": "coupon:NS31@2025-01-24:14C",
+      "field": "voucher.in_lieu",
+      "value": true,
+      "span": "EUR300 VOUCHER IN LIEU OF COMPENSATION",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-CRM-14C-amount",
+      "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
+      "subject": "coupon:NS31@2025-01-24:14C",
+      "field": "voucher.amount_cents",
+      "value": 30000,
+      "span": "EUR300",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-CRM-14C-accepted",
+      "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
+      "subject": "coupon:NS31@2025-01-24:14C",
+      "field": "voucher.accepted",
+      "value": true,
+      "span": "PAX ACCEPTED",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-CRM-14C-signed",
+      "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
+      "subject": "coupon:NS31@2025-01-24:14C",
+      "field": "voucher.signed",
+      "value": false,
+      "span": null,
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-CLAIM-14C-disputed",
+      "source_id": "SRC-CLAIM-NS31-14C",
+      "subject": "coupon:NS31@2025-01-24:14C",
+      "field": "claim.voucher_disputed",
+      "value": true,
+      "span": "I never agreed to take a voucher instead of my compensation",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": [
+       "pii"
+      ]
+     },
+     {
+      "id": "F-SCHED-NS31-origin",
+      "source_id": "SRC-SCHEDULE",
+      "subject": "flight:NS31@2025-01-24",
+      "field": "flight.origin",
+      "value": "DUB",
+      "span": "DUB",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-SCHED-NS31-dest",
+      "source_id": "SRC-SCHEDULE",
+      "subject": "flight:NS31@2025-01-24",
+      "field": "flight.dest",
+      "value": "BOS",
+      "span": "BOS",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     }
+    ]
+   },
+   "response": {
+    "parsed": {
+     "action": "deny_offset",
+     "action_arg": null,
+     "action_phrase": "no offset",
+     "match": "all",
+     "condition": [
+      {
+       "feature": "voucher.in_lieu",
+       "op": "eq",
+       "value_json": "true",
+       "phrase": "the voucher stays as goodwill"
+      },
+      {
+       "feature": "voucher.signed",
+       "op": "eq",
+       "value_json": "false",
+       "phrase": "No signed acceptance"
+      }
+     ],
+     "scope": [
+      {
+       "key": "flight.departs_eu",
+       "value_json": "true",
+       "phrase": null
+      }
+     ],
+     "notes": "An in-lieu voucher without signed acceptance never offsets compensation (Art. 7(3)). The ruling does not say where the flight departs, so the case's EU departure is kept as scope."
+    }
+   }
+  },
+  "rule:Q-2": {
+   "method": "propose_rule",
+   "args": {
+    "ruling": {
+     "id": "RUL-Q2",
+     "question_id": "Q-2",
+     "author_role": "legal",
+     "author": "legal:aoife",
+     "kind": "answer",
+     "decision": "A return sector of a storm-cancelled rotation is extraordinary only if no aircraft and crew could operate it within 3 h of STD, and passengers were offered the earliest reroute on any carrier (C-74/19).",
+     "explanation": "",
+     "at": "2025-01-25T10:05:00Z"
+    },
+    "question": {
+     "id": "Q-2",
+     "case_refs": [
+      "NS113@2025-01-24",
+      "NS115@2025-01-24",
+      "NS117@2025-01-24"
+     ],
+     "pattern": "knock_on_return",
+     "routed_to": "legal",
+     "asked_at": "2025-01-25T06:00:00Z",
+     "title": "Is the return sector of a storm-cancelled rotation extraordinary when both ends were calm?",
+     "found": "NS113 (LIS–DUB), NS115 (FCO–DUB) and NS117 (MUC–DUB) were cancelled because their outbound legs NS112, NS114 and NS116 never left Dublin. Each return was calm at both ends: e.g. NS117, Munich calm at STD 14:05Z and Dublin 11 kt at STA 16:20Z, after the 02:30–15:00Z window.",
+     "why_flagged": "No precedent. C-74/19 (previous rotation) needs a direct causal link and reasonable measures. No spare tail within 3 h: NS117's earliest ferry ex-DUB 15:30Z → MUC dep 18:25Z = STD+4h20. Passengers were offered the earliest reroute (LH via FRA).",
+     "recommends": "Extraordinary only if no aircraft and crew could operate the return within 3 h of STD and passengers were offered the earliest reroute on any carrier (C-74/19).",
+     "recommended_option": "Extraordinary if no aircraft within 3 h of STD and the earliest reroute was offered",
+     "options": [
+      "Extraordinary if no aircraft within 3 h of STD and the earliest reroute was offered",
+      "Not extraordinary: compensation owed on all three",
+      "Decide flight by flight"
+     ],
+     "evidence": [
+      {
+       "fact_id": "F-ROT-NS113-prev",
+       "source_id": "SRC-OCC-2025-01-24T0512Z",
+       "field": "rotation.prev_cancelled",
+       "value": true,
+       "quote": "NS112/113",
+       "role": "supports",
+       "trust_tier": 3,
+       "struck": false
+      },
+      {
+       "fact_id": "F-METAR-EIDW-20250124T1600Z",
+       "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+       "field": "metar.sknt",
+       "value": 11,
+       "quote": "EIDW 241600Z 24011KT 200V290 9999 -RA FEW012 SCT020 BKN050 05/M01 Q0989 NOSIG",
+       "role": "contradicts",
+       "trust_tier": 1,
+       "struck": false
+      },
+      {
+       "fact_id": "F-SPARE-NS113",
+       "source_id": "SRC-SPARES-2025-01-24",
+       "field": "spare.available_within_h",
+       "value": 5.58,
+       "quote": "No tail at LIS. Earliest ferry ex-DUB 15:30Z → LIS dep 18:55Z = STD+5h35.",
+       "role": "context",
+       "trust_tier": 2,
+       "struck": false
+      },
+      {
+       "fact_id": "F-ROT-NS115-prev",
+       "source_id": "SRC-OCC-2025-01-24T0512Z",
+       "field": "rotation.prev_cancelled",
+       "value": true,
+       "quote": "NS114/115",
+       "role": "supports",
+       "trust_tier": 3,
+       "struck": false
+      },
+      {
+       "fact_id": "F-METAR-EIDW-20250124T1700Z",
+       "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+       "field": "metar.sknt",
+       "value": 14,
+       "quote": "EIDW 241700Z 22014G25KT 200V260 9999 -RA FEW012 SCT020 BKN050 04/M00 Q0990 NOSIG",
+       "role": "contradicts",
+       "trust_tier": 1,
+       "struck": false
+      },
+      {
+       "fact_id": "F-SPARE-NS115",
+       "source_id": "SRC-SPARES-2025-01-24",
+       "field": "spare.available_within_h",
+       "value": 5.08,
+       "quote": "No tail at FCO. Earliest ferry ex-DUB 15:30Z → FCO dep 19:15Z = STD+5h05.",
+       "role": "context",
+       "trust_tier": 2,
+       "struck": false
+      },
+      {
+       "fact_id": "F-ROT-NS117-prev",
+       "source_id": "SRC-OCC-2025-01-24T0512Z",
+       "field": "rotation.prev_cancelled",
+       "value": true,
+       "quote": "NS116/117",
+       "role": "supports",
+       "trust_tier": 3,
+       "struck": false
+      },
+      {
+       "fact_id": "F-METAR-EIDW-20250124T1630Z",
+       "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+       "field": "metar.sknt",
+       "value": 11,
+       "quote": "EIDW 241630Z 23011G22KT 190V270 9999 -RA FEW012 SCT020 BKN050 05/00 Q0990 NOSIG",
+       "role": "contradicts",
+       "trust_tier": 1,
+       "struck": false
+      },
+      {
+       "fact_id": "F-SPARE-NS117",
+       "source_id": "SRC-SPARES-2025-01-24",
+       "field": "spare.available_within_h",
+       "value": 4.33,
+       "quote": "No tail at MUC. Earliest ferry ex-DUB 15:30Z → MUC dep 18:25Z = STD+4h20.",
+       "role": "context",
+       "trust_tier": 2,
+       "struck": false
+      }
+     ],
+     "confidence": {
+      "score": 0.47,
+      "kind": "cause",
+      "label": "cause-finding confidence",
+      "features": {
+       "in_window_dep": 0.0,
+       "in_window_arr": 0.0,
+       "window_margin_h": 0.92,
+       "aog_before_window": 0.0,
+       "aog_inside_window": 0.0,
+       "root_cause_internal": 0.0,
+       "sources_disagree": 0.0,
+       "precedent_count": 0.0,
+       "knock_on": 1.0
+      },
+      "caps": [
+       "capped:no-precedent"
+      ],
+      "calibration_version": "cal-v1"
+     },
+     "reason_tag": "no-precedent",
+     "holds": [
+      "NS113@2025-01-24",
+      "NS115@2025-01-24",
+      "NS117@2025-01-24"
+     ],
+     "holds_cents": 4749600,
+     "status": "open",
+     "remind_at": "2025-01-25T09:00:00Z"
+    },
+    "case_facts": [
+     {
+      "id": "F-ROT-NS113-prev",
+      "source_id": "SRC-OCC-2025-01-24T0512Z",
+      "subject": "flight:NS113@2025-01-24",
+      "field": "rotation.prev_cancelled",
+      "value": true,
+      "span": "NS112/113",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-ROT-NS113-cause",
+      "source_id": "SRC-OCC-2025-01-24T0512Z",
+      "subject": "flight:NS113@2025-01-24",
+      "field": "rotation.prev_cause",
+      "value": "weather",
+      "span": null,
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-SPARE-NS113",
+      "source_id": "SRC-SPARES-LIS",
+      "subject": "flight:NS113@2025-01-24",
+      "field": "spare.available_within_h",
+      "value": 5.58,
+      "span": "STD+5h35",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-REROUTE-NS113",
+      "source_id": "SRC-PSS-NS113@2025-01-24",
+      "subject": "flight:NS113@2025-01-24",
+      "field": "pax.reroute_earliest_offered",
+      "value": true,
+      "span": null,
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-SCHED-NS113-origin",
+      "source_id": "SRC-SCHEDULE",
+      "subject": "flight:NS113@2025-01-24",
+      "field": "flight.origin",
+      "value": "LIS",
+      "span": "LIS",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-SCHED-NS113-dest",
+      "source_id": "SRC-SCHEDULE",
+      "subject": "flight:NS113@2025-01-24",
+      "field": "flight.dest",
+      "value": "DUB",
+      "span": "DUB",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-ROT-NS115-prev",
+      "source_id": "SRC-OCC-2025-01-24T0512Z",
+      "subject": "flight:NS115@2025-01-24",
+      "field": "rotation.prev_cancelled",
+      "value": true,
+      "span": "NS114/115",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-ROT-NS115-cause",
+      "source_id": "SRC-OCC-2025-01-24T0512Z",
+      "subject": "flight:NS115@2025-01-24",
+      "field": "rotation.prev_cause",
+      "value": "weather",
+      "span": null,
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-SPARE-NS115",
+      "source_id": "SRC-SPARES-FCO",
+      "subject": "flight:NS115@2025-01-24",
+      "field": "spare.available_within_h",
+      "value": 5.08,
+      "span": "STD+5h05",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-REROUTE-NS115",
+      "source_id": "SRC-PSS-NS115@2025-01-24",
+      "subject": "flight:NS115@2025-01-24",
+      "field": "pax.reroute_earliest_offered",
+      "value": true,
+      "span": null,
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-SCHED-NS115-origin",
+      "source_id": "SRC-SCHEDULE",
+      "subject": "flight:NS115@2025-01-24",
+      "field": "flight.origin",
+      "value": "FCO",
+      "span": "FCO",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-SCHED-NS115-dest",
+      "source_id": "SRC-SCHEDULE",
+      "subject": "flight:NS115@2025-01-24",
+      "field": "flight.dest",
+      "value": "DUB",
+      "span": "DUB",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-ROT-NS117-prev",
+      "source_id": "SRC-OCC-2025-01-24T0512Z",
+      "subject": "flight:NS117@2025-01-24",
+      "field": "rotation.prev_cancelled",
+      "value": true,
+      "span": "NS116/117",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-ROT-NS117-cause",
+      "source_id": "SRC-OCC-2025-01-24T0512Z",
+      "subject": "flight:NS117@2025-01-24",
+      "field": "rotation.prev_cause",
+      "value": "weather",
+      "span": null,
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-SPARE-NS117",
+      "source_id": "SRC-SPARES-MUC",
+      "subject": "flight:NS117@2025-01-24",
+      "field": "spare.available_within_h",
+      "value": 4.33,
+      "span": "STD+4h20",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-REROUTE-NS117",
+      "source_id": "SRC-PSS-NS117@2025-01-24",
+      "subject": "flight:NS117@2025-01-24",
+      "field": "pax.reroute_earliest_offered",
+      "value": true,
+      "span": null,
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-SCHED-NS117-origin",
+      "source_id": "SRC-SCHEDULE",
+      "subject": "flight:NS117@2025-01-24",
+      "field": "flight.origin",
+      "value": "MUC",
+      "span": "MUC",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-SCHED-NS117-dest",
+      "source_id": "SRC-SCHEDULE",
+      "subject": "flight:NS117@2025-01-24",
+      "field": "flight.dest",
+      "value": "DUB",
+      "span": "DUB",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     }
+    ]
+   },
+   "response": {
+    "parsed": {
+     "action": "set_extraordinary",
+     "action_arg": null,
+     "action_phrase": "is extraordinary",
+     "match": "all",
+     "condition": [
+      {
+       "feature": "flight.is_return_sector",
+       "op": "eq",
+       "value_json": "true",
+       "phrase": "A return sector"
+      },
+      {
+       "feature": "rotation.prev_cancelled",
+       "op": "eq",
+       "value_json": "true",
+       "phrase": "storm-cancelled rotation"
+      },
+      {
+       "feature": "spare.available_within_h",
+       "op": "gt",
+       "value_json": "3",
+       "phrase": "no aircraft and crew could operate it within 3 h of STD"
+      },
+      {
+       "feature": "pax.reroute_earliest_offered",
+       "op": "eq",
+       "value_json": "true",
+       "phrase": "passengers were offered the earliest reroute on any carrier"
+      }
+     ],
+     "scope": [
+      {
+       "key": "rotation.prev_cause",
+       "value_json": "\"weather\"",
+       "phrase": "storm"
+      }
+     ],
+     "notes": "C-74/19: the previous rotation's storm cancellation is extraordinary for the return only without a spare within 3 h and with the earliest reroute offered."
+    }
+   }
+  },
+  "rule:Q-3": {
+   "method": "propose_rule",
+   "args": {
+    "ruling": {
+     "id": "RUL-Q3",
+     "question_id": "Q-3",
+     "author_role": "controller",
+     "author": "controller:ana",
+     "kind": "rejection",
+     "decision": "Never release the tail. At M12 keep (ultimate − M12 rate) × entitlement until the six-year limitation.",
+     "explanation": "",
+     "at": "2025-01-25T10:30:00Z"
+    },
+    "question": {
+     "id": "Q-3",
+     "case_refs": [
+      "EIDW@2024-01-21"
+     ],
+     "pattern": "cohort_release",
+     "routed_to": "controller",
+     "asked_at": "2025-01-25T06:00:00Z",
+     "title": "Reduce the Storm Isha long-haul cohort to nil at M12?",
+     "found": "Storm Isha cohort (EIDW@2024-01-21, long-haul): €60,000 full Art. 7 entitlement, 29% claimed by M12, €3,600 EU261 compensation liability remaining. No new claims in 3 months.",
+     "why_flagged": "Release proposal: a change in estimate (IAS 8.36) needs the Controller.",
+     "recommends": "Reduce the remaining €3,600 to nil as a change in estimate (no new claims in 3 months).",
+     "recommended_option": "Reduce to nil now",
+     "options": [
+      "Reduce to nil now",
+      "Keep the expected tail until the six-year limitation",
+      "Review again at M18"
+     ],
+     "evidence": [
+      {
+       "fact_id": "F-OB-EIDW@2024-01-21-balance",
+       "source_id": "SRC-GL-2140-2024-12",
+       "field": "cohort.balance_cents",
+       "value": 360000,
+       "quote": "2140 EIDW@2024-01-21 LH 3,600.00",
+       "role": "supports",
+       "trust_tier": 2,
+       "struck": false
+      },
+      {
+       "fact_id": "F-OB-EIDW@2024-01-21-claimed",
+       "source_id": "SRC-CLAIMS-EIDW@2024-01-21",
+       "field": "cohort.claimed_pct",
+       "value": 0.29,
+       "quote": "claimed 29% of entitlement by M12",
+       "role": "context",
+       "trust_tier": 2,
+       "struck": false
+      },
+      {
+       "fact_id": "F-OB-EIDW@2024-01-21-lastclaim",
+       "source_id": "SRC-CLAIMS-EIDW@2024-01-21",
+       "field": "cohort.months_since_last_claim",
+       "value": 3,
+       "quote": "last claim 2024-10-19",
+       "role": "supports",
+       "trust_tier": 2,
+       "struck": false
+      }
+     ],
+     "confidence": {
+      "score": 0.72,
+      "kind": "release",
+      "label": "release confidence",
+      "features": {
+       "cohort_age_months": 12.0,
+       "months_since_last_claim": 3.0,
+       "claimed_pct": 0.29,
+       "limitation_expired": 0.0
+      },
+      "caps": [],
+      "calibration_version": "cal-v1"
+     },
+     "reason_tag": "release-proposal",
+     "holds": [
+      "EIDW@2024-01-21"
+     ],
+     "holds_cents": 360000,
+     "status": "open",
+     "remind_at": "2025-01-25T09:00:00Z"
+    },
+    "case_facts": [
+     {
+      "id": "F-OB-ISHA-ent",
+      "source_id": "SRC-GL-2140",
+      "subject": "cohort:EIDW@2024-01-21",
+      "field": "cohort.entitlement_cents",
+      "value": 6000000,
+      "span": null,
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-OB-ISHA-claimed",
+      "source_id": "SRC-GL-2140",
+      "subject": "cohort:EIDW@2024-01-21",
+      "field": "cohort.claimed_pct",
+      "value": 0.29,
+      "span": "claimed 29% of entitlement by M12",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-OB-ISHA-bal",
+      "source_id": "SRC-GL-2140",
+      "subject": "cohort:EIDW@2024-01-21",
+      "field": "cohort.balance_cents",
+      "value": 360000,
+      "span": "2140 EIDW@2024-01-21 LH 3,600.00",
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-OB-ISHA-quiet",
+      "source_id": "SRC-GL-2140",
+      "subject": "cohort:EIDW@2024-01-21",
+      "field": "cohort.months_since_last_claim",
+      "value": 3,
+      "span": null,
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     },
+     {
+      "id": "F-OB-ISHA-seg",
+      "source_id": "SRC-GL-2140",
+      "subject": "cohort:EIDW@2024-01-21",
+      "field": "cohort.curve_segment",
+      "value": "long_haul_gt3500",
+      "span": null,
+      "extractor": "normalize@1",
+      "recorded_at": "2025-01-25T06:00:00Z",
+      "acl_tags": []
+     }
+    ]
+   },
+   "response": {
+    "parsed": {
+     "action": "keep_tail",
+     "action_arg": null,
+     "action_phrase": "Never release the tail",
+     "match": "all",
+     "condition": [
+      {
+       "feature": "cohort.age_months",
+       "op": "ge",
+       "value_json": "12",
+       "phrase": "At M12"
+      },
+      {
+       "feature": "cohort.limitation_expired",
+       "op": "eq",
+       "value_json": "false",
+       "phrase": "until the six-year limitation"
+      }
+     ],
+     "scope": [
+      {
+       "key": "cohort",
+       "value_json": "\"EIDW@2024-01-21\"",
+       "phrase": null
+      }
+     ],
+     "notes": "The Controller rejected the release: from M12 keep the expected tail until limitation. Scoped to the Isha cohort the question was about."
+    }
+   }
+  }
+ }
+}
