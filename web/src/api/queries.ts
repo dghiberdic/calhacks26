@@ -37,8 +37,11 @@ export const qk = {
   injections: ["injections"] as const,
   evalReport: ["eval"] as const,
   health: ["health"] as const,
+  clock: ["clock"] as const,
 };
 
+/** The server's known-at (GET /clock, additive). A server without it answers 404 and the scrubber says "server clock". */
+export const useServerClock = () => useQuery({ queryKey: qk.clock, queryFn: api.clockNow, retry: false, staleTime: 30_000 });
 export const useHealth = () => useQuery({ queryKey: qk.health, queryFn: api.health, staleTime: 60_000, retry: false });
 export const useStorms = () => useQuery({ queryKey: qk.storms, queryFn: api.storms });
 export const useStormRun = (id: string | undefined) => useQuery({ queryKey: qk.storm(id ?? ""), queryFn: () => api.storm(id!), enabled: !!id });
