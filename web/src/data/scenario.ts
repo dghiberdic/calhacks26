@@ -1,5 +1,6 @@
-// The storm night, as the UI sees it. Numbers follow FINAL_IDEA.md; when the engine's API
-// lands, this module becomes the adapter's fallback fixture.
+// The storm night, as the UI sees it. Numbers follow FINAL_IDEA.md; weather is the real METAR for
+// Storm Bram at Dublin. When the engine's API lands, this module becomes the adapter's fallback fixture.
+import BRAM_METAR from "./bram-metar.json";
 
 export type Verdict = "weather" | "technical" | "review" | "operated";
 
@@ -20,33 +21,52 @@ export type Flight = {
 
 export const AIRLINE = { name: "Northstar Air", code: "NS", hub: "DUB", hubIcao: "EIDW" };
 
+export type MetarReport = { t: string; raw: string; dir: number | null; kt: number | null; gust: number | null };
+
+/** Real EIDW reports for Storm Bram, 9 Dec 2025 (Iowa Environmental Mesonet archive). */
+export const METAR: MetarReport[] = (BRAM_METAR as MetarReport[]).map((r) => ({ t: r.t, raw: r.raw, dir: r.dir, kt: r.kt, gust: r.gust }));
+
+const toMinutes = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+export const metarAt = (t: string) => METAR.reduce((a, b) => (Math.abs(toMinutes(b.t) - toMinutes(t)) < Math.abs(toMinutes(a.t) - toMinutes(t)) ? b : a));
+
 export const STORM = {
-  name: "Storm night",
+  name: "Storm Bram",
   station: "EIDW",
-  date: "2025-01-24",
-  dateLabel: "24 JAN",
-  windowStart: "11:00",
+  date: "2025-12-09",
+  dateLabel: "9 DEC",
+  // From METAR: gusts at or above 40 kt from 13:30Z to 18:30Z (window closes with the 19:00Z report).
+  windowStart: "13:30",
   windowEnd: "19:00",
-  limitKt: 45, // gust limit used by the cause engine for the storm window
+  limitKt: 40,
+  peak: { t: "15:30", gust: 50 },
 };
 
 /** EU261 Art. 7 compensation tier by great-circle distance. */
 export const tier = (km: number) => (km <= 1500 ? 250 : km <= 3500 ? 400 : 600);
 
+const gustNote = (t: string) => {
+  const m = metarAt(t);
+  return `Gusts ${m.gust ?? m.kt} kt at departure (${m.t}Z METAR)`;
+};
+
+const F = (id: string, dest: string, city: string, sched: string, reg: string, type: Flight["type"], pax: number, km: number, confidence: number): Flight => ({
+  id, dest, city, sched, reg, type, pax, km, coded: "WX", verdict: "weather", confidence, note: gustNote(sched),
+});
+
 export const FLIGHTS: Flight[] = [
-  { id: "NS102", dest: "LHR", city: "London", sched: "11:10", reg: "EI-NSE", type: "A320", pax: 168, km: 449, coded: "WX", verdict: "weather", confidence: 97, note: "Departure inside storm window" },
-  { id: "NS21", dest: "JFK", city: "New York", sched: "11:25", reg: "EI-NSK", type: "A330", pax: 262, km: 5103, coded: "WX", verdict: "weather", confidence: 96, note: "Gusts 58 kt at departure" },
-  { id: "NS27", dest: "BOS", city: "Boston", sched: "11:50", reg: "EI-NSB", type: "A321", pax: 196, km: 4802, coded: "WX", verdict: "weather", confidence: 96, note: "Gusts 61 kt at departure" },
-  { id: "NS214", dest: "CDG", city: "Paris", sched: "12:20", reg: "EI-NSF", type: "A320", pax: 171, km: 784, coded: "WX", verdict: "weather", confidence: 97, note: "Departure inside storm window" },
-  { id: "NS25", dest: "EWR", city: "Newark", sched: "12:45", reg: "EI-NSC", type: "A321", pax: 188, km: 5078, coded: "WX", verdict: "weather", confidence: 95, note: "Gusts 64 kt at departure" },
-  { id: "NS41", dest: "ORD", city: "Chicago", sched: "13:15", reg: "EI-NSL", type: "A330", pax: 250, km: 5939, coded: "WX", verdict: "weather", confidence: 96, note: "Gusts 68 kt at departure" },
-  { id: "NS306", dest: "AMS", city: "Amsterdam", sched: "13:40", reg: "EI-NSG", type: "A320", pax: 160, km: 758, coded: "WX", verdict: "weather", confidence: 97, note: "Departure inside storm window" },
-  { id: "NS51", dest: "IAD", city: "Washington", sched: "14:30", reg: "EI-NSD", type: "A321", pax: 190, km: 5451, coded: "WX", verdict: "weather", confidence: 95, note: "Gusts 66 kt at departure" },
-  { id: "NS55", dest: "PHL", city: "Philadelphia", sched: "15:05", reg: "EI-NSH", type: "A321", pax: 184, km: 5297, coded: "WX", verdict: "weather", confidence: 95, note: "Gusts 62 kt at departure" },
-  { id: "NS23", dest: "JFK", city: "New York", sched: "15:40", reg: "EI-NSM", type: "A330", pax: 268, km: 5103, coded: "WX", verdict: "weather", confidence: 94, note: "Gusts 59 kt at departure" },
-  { id: "NS61", dest: "YYZ", city: "Toronto", sched: "16:35", reg: "EI-NSJ", type: "A321", pax: 179, km: 5257, coded: "WX", verdict: "weather", confidence: 93, note: "Gusts 55 kt at departure" },
-  { id: "NS71", dest: "MCO", city: "Orlando", sched: "17:20", reg: "EI-NSN", type: "A330", pax: 246, km: 6576, coded: "WX", verdict: "weather", confidence: 92, note: "Gusts 52 kt at departure" },
-  { id: "NS81", dest: "SEA", city: "Seattle", sched: "18:10", reg: "EI-NSP", type: "A330", pax: 236, km: 7302, coded: "WX", verdict: "weather", confidence: 90, note: "Gusts 49 kt at departure" },
+  F("NS102", "LHR", "London", "13:35", "EI-NSE", "A320", 168, 449, 96),
+  F("NS21", "JFK", "New York", "13:50", "EI-NSK", "A330", 262, 5103, 95),
+  F("NS27", "BOS", "Boston", "14:05", "EI-NSB", "A321", 196, 4802, 95),
+  F("NS214", "CDG", "Paris", "14:20", "EI-NSF", "A320", 171, 784, 93),
+  F("NS25", "EWR", "Newark", "14:40", "EI-NSC", "A321", 188, 5078, 90),
+  F("NS41", "ORD", "Chicago", "15:00", "EI-NSL", "A330", 250, 5939, 91),
+  F("NS306", "AMS", "Amsterdam", "15:20", "EI-NSG", "A320", 160, 758, 94),
+  F("NS51", "IAD", "Washington", "15:45", "EI-NSD", "A321", 190, 5451, 97),
+  F("NS55", "PHL", "Philadelphia", "16:10", "EI-NSH", "A321", 184, 5297, 96),
+  F("NS23", "JFK", "New York", "16:40", "EI-NSM", "A330", 268, 5103, 96),
+  F("NS61", "YYZ", "Toronto", "17:15", "EI-NSJ", "A321", 179, 5257, 94),
+  F("NS71", "MCO", "Orlando", "17:50", "EI-NSN", "A330", 246, 6576, 93),
+  F("NS81", "SEA", "Seattle", "18:30", "EI-NSP", "A330", 236, 7302, 90),
   { id: "NS31", dest: "BOS", city: "Boston", sched: "21:30", reg: "EI-NSA", type: "A321", pax: 212, km: 4802, coded: "WX", verdict: "technical", confidence: 91, note: "Grounded 07:55, hydraulic leak, before the storm" },
 ];
 
@@ -67,27 +87,20 @@ export const NS31 = {
   exposure: 212 * 600,
   claimRate: 0.35,
   provision: Math.round(212 * 600 * 0.35),
-  marginHours: 3.08, // fault logged 3h05m before the storm window opened
+  marginMin: toMinutes("13:30") - toMinutes("07:55"), // fault logged before the storm window opened
 };
 
-/** Hourly METAR-derived wind at EIDW (kt). Shaped to the story: above limits 11:00–19:00. */
-export const METAR_HOURLY: { h: number; dir: number; kt: number; gust: number }[] = [
-  { h: 0, dir: 200, kt: 14, gust: 22 }, { h: 1, dir: 200, kt: 15, gust: 24 }, { h: 2, dir: 205, kt: 16, gust: 26 },
-  { h: 3, dir: 205, kt: 17, gust: 27 }, { h: 4, dir: 210, kt: 18, gust: 29 }, { h: 5, dir: 210, kt: 19, gust: 30 },
-  { h: 6, dir: 215, kt: 21, gust: 32 }, { h: 7, dir: 215, kt: 22, gust: 34 }, { h: 8, dir: 220, kt: 24, gust: 36 },
-  { h: 9, dir: 220, kt: 27, gust: 39 }, { h: 10, dir: 225, kt: 30, gust: 43 }, { h: 11, dir: 230, kt: 36, gust: 52 },
-  { h: 12, dir: 235, kt: 41, gust: 61 }, { h: 13, dir: 240, kt: 46, gust: 68 }, { h: 14, dir: 240, kt: 44, gust: 66 },
-  { h: 15, dir: 245, kt: 42, gust: 62 }, { h: 16, dir: 250, kt: 39, gust: 57 }, { h: 17, dir: 255, kt: 36, gust: 53 },
-  { h: 18, dir: 260, kt: 33, gust: 49 }, { h: 19, dir: 265, kt: 28, gust: 41 }, { h: 20, dir: 270, kt: 23, gust: 34 },
-  { h: 21, dir: 270, kt: 19, gust: 29 }, { h: 22, dir: 275, kt: 16, gust: 25 }, { h: 23, dir: 280, kt: 14, gust: 23 },
-];
+/** Hourly max wind and gust at EIDW from the real METAR (kt). */
+export const METAR_HOURLY: { h: number; dir: number; kt: number; gust: number }[] = Array.from({ length: 24 }, (_, h) => {
+  const inHour = METAR.filter((r) => Number(r.t.slice(0, 2)) === h);
+  const kt = Math.max(0, ...inHour.map((r) => r.kt ?? 0));
+  const gust = Math.max(kt, ...inHour.map((r) => r.gust ?? 0));
+  return { h, dir: inHour[inHour.length - 1]?.dir ?? 0, kt, gust };
+});
 
-export const metarString = (h: number) => {
-  const m = METAR_HOURLY[h];
-  const hh = String(h).padStart(2, "0");
-  const wind = `${String(m.dir).padStart(3, "0")}${String(m.kt).padStart(2, "0")}${m.gust ? `G${m.gust}` : ""}KT`;
-  return `EIDW 24${hh}00Z ${wind} 9999 ${m.kt > 30 ? "-RA " : ""}SCT012 BKN020 ${m.kt > 30 ? "10/07 Q0958" : "09/06 Q0971"}`;
-};
+export const fmtDuration = (min: number) => `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, "0")} min`;
+
+export const metarString = (h: number) => metarAt(`${String(h).padStart(2, "0")}:00`).raw;
 
 export const totals = () => {
   const cancelled = FLIGHTS.length;

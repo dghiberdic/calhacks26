@@ -1,7 +1,7 @@
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { DepartureBoard } from "@/components/landing/DepartureBoard";
 import { StormWindow } from "@/components/landing/StormWindow";
-import { StormMap } from "@/components/landing/hero/StormMap";
+import { StormDay } from "@/components/landing/hero/StormDay";
 import { AircraftBlueprint } from "@/components/landing/AircraftBlueprint";
 import { Verdict } from "@/components/landing/Verdict";
 import { Trace } from "@/components/landing/Trace";
@@ -15,7 +15,7 @@ export default function Home() {
     <SmoothScroll>
       <SiteNav />
       <main id="main" className="bg-night text-[#eef1f4]">
-        <StormMap />
+        <StormDay />
 
         <section className="px-5 pb-28 pt-36 md:px-16">
           <h2 className="display mb-6 max-w-[16ch] text-[clamp(36px,5.6vw,92px)]">14 flights cancelled. All coded weather.</h2>

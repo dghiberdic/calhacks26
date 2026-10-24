@@ -4,7 +4,7 @@ import { useMemo, useRef } from "react";
 import { line, curveMonotoneX } from "d3-shape";
 import { RollingNumber } from "@/components/motion/RollingNumber";
 import { gsap, useGSAP } from "@/components/motion/gsap";
-import { NS31 } from "@/data/scenario";
+import { NS31, fmtDuration } from "@/data/scenario";
 
 /** The euros, in the order a controller would check them. */
 export function Verdict() {
@@ -85,7 +85,7 @@ export function Verdict() {
               <span className="tabular font-mono text-[14px]">91%</span>
             </dd>
             <dt className="text-graphite">Why</dt>
-            <dd>Fault logged 3&nbsp;h&nbsp;05&nbsp;min before the storm window</dd>
+            <dd>Fault logged {fmtDuration(NS31.marginMin)} before the storm window</dd>
             <dt className="text-graphite">Status</dt>
             <dd>212 payouts drafted, held for the Claims Lead</dd>
           </dl>

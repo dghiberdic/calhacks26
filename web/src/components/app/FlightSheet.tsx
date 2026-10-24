@@ -4,7 +4,7 @@ import { useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useApp } from "@/lib/store";
-import { FLIGHTS, NS31, OPERATED, tier, metarString } from "@/data/scenario";
+import { FLIGHTS, NS31, OPERATED, STORM, tier, metarString } from "@/data/scenario";
 import { sideView } from "@/lib/drawings/aircraft";
 import { CauseTimeline } from "./CauseTimeline";
 import { Chip, Confidence, Money } from "./ui";
@@ -142,9 +142,9 @@ export function FlightSheet() {
                       </span>
                     </li>
                     <li className="grid grid-cols-[68px_1fr] gap-3">
-                      <span className="font-mono text-graphite">11–19Z</span>
+                      <span className="font-mono text-graphite">{STORM.windowStart.slice(0, 2)}–{STORM.windowEnd.slice(0, 2)}Z</span>
                       <span>
-                        <span className="font-medium">Storm window, from METAR.</span> NS31 was due 2&nbsp;h&nbsp;30&nbsp;min after it closed.
+                        <span className="font-medium">Storm window, from METAR.</span> Gusts peaked at {STORM.peak.gust}&nbsp;kt at {STORM.peak.t}Z. NS31 was due 2&nbsp;h&nbsp;30&nbsp;min after it closed.
                       </span>
                     </li>
                     <li className="grid grid-cols-[68px_1fr] gap-3">

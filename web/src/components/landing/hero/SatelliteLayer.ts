@@ -14,6 +14,8 @@ const frag = /* glsl */ `
 precision highp float;
 varying vec2 vUv;
 uniform sampler2D uSat;
+uniform sampler2D uSatB;
+uniform float uMix;       // 0 → uSat, 1 → uSatB (frame crossfade)
 uniform vec4 uSatBox;   // map-space x0, y0, x1, y1 of the image (y0 = north edge)
 uniform vec4 uView;     // map-space x0, y0, x1, y1 of the viewport
 uniform vec2 uOrigin;   // map-space point the wash bleeds out from
@@ -38,7 +40,8 @@ float fbm(vec2 p) {
 void main() {
   vec2 m = vec2(mix(uView.x, uView.z, vUv.x), mix(uView.w, uView.y, vUv.y));
   vec2 suv = (m - uSatBox.xy) / (uSatBox.zw - uSatBox.xy);
-  vec3 sat = texture2D(uSat, vec2(suv.x, 1.0 - suv.y)).rgb;
+  vec2 tuv = vec2(suv.x, 1.0 - suv.y);
+  vec3 sat = mix(texture2D(uSat, tuv).rgb, texture2D(uSatB, tuv).rgb, uMix);
   // Feather the frame edges and treat swath gaps / polar night (pure black) as no data.
   float inside = smoothstep(0.0, 0.035, suv.x) * smoothstep(1.0, 0.965, suv.x) * smoothstep(0.0, 0.06, suv.y) * smoothstep(1.0, 0.94, suv.y);
   inside *= smoothstep(0.015, 0.07, max(sat.r, max(sat.g, sat.b)));
@@ -87,6 +90,9 @@ export class SatelliteLayer {
   private material: THREE.ShaderMaterial;
   private texture: THREE.Texture | null = null;
   ready: Promise<void>;
+  setOrigin(x: number, y: number) {
+    this.material.uniforms.uOrigin.value.set(x, y);
+  }
 
   constructor(opts: SatOptions) {
     this.renderer = new THREE.WebGLRenderer({ canvas: opts.canvas, antialias: false, alpha: false, powerPreference: "high-performance" });
@@ -96,6 +102,8 @@ export class SatelliteLayer {
       fragmentShader: frag,
       uniforms: {
         uSat: { value: null },
+        uSatB: { value: null },
+        uMix: { value: 0 },
         uSatBox: { value: new THREE.Vector4(...opts.satBox) },
         uView: { value: new THREE.Vector4(0, 0, 1, 1) },
         uOrigin: { value: new THREE.Vector2(...opts.origin) },
@@ -115,12 +123,41 @@ export class SatelliteLayer {
           tex.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
           this.texture = tex;
           this.material.uniforms.uSat.value = tex;
+          this.material.uniforms.uSatB.value = tex;
           resolve();
         },
         undefined,
         reject,
       );
     });
+  }
+
+  private cache = new Map<string, THREE.Texture>();
+  private loading = new Set<string>();
+
+  /** Lazily upload a frame; returns it once ready (null until then). */
+  frame(url: string): THREE.Texture | null {
+    const hit = this.cache.get(url);
+    if (hit) return hit;
+    if (!this.loading.has(url)) {
+      this.loading.add(url);
+      new THREE.TextureLoader().load(url, (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.minFilter = THREE.LinearFilter;
+        tex.generateMipmaps = false;
+        this.cache.set(url, tex);
+        this.loading.delete(url);
+      });
+    }
+    return null;
+  }
+
+  /** Crossfade between two frames (falls back to whatever is loaded). */
+  setFrames(a: THREE.Texture | null, b: THREE.Texture | null, mix: number) {
+    const u = this.material.uniforms;
+    if (a) u.uSat.value = a;
+    u.uSatB.value = b ?? a ?? u.uSat.value;
+    u.uMix.value = b ? mix : 0;
   }
 
   setSize(w: number, h: number) {
@@ -144,6 +181,7 @@ export class SatelliteLayer {
   }
 
   dispose() {
+    this.cache.forEach((t) => t.dispose());
     this.texture?.dispose();
     this.material.dispose();
     this.renderer.dispose();

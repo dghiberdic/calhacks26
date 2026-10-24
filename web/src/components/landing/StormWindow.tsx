@@ -3,7 +3,7 @@
 import { useMemo, useRef } from "react";
 import { line, curveMonotoneX, area } from "d3-shape";
 import { scaleLinear } from "d3-scale";
-import { FLIGHTS, METAR_HOURLY, NS31, STORM } from "@/data/scenario";
+import { FLIGHTS, METAR_HOURLY, NS31, STORM, fmtDuration } from "@/data/scenario";
 import { windBarb } from "@/lib/drawings/meteo";
 import { gsap, useGSAP } from "@/components/motion/gsap";
 
@@ -40,7 +40,7 @@ export function StormWindow({ pinned = true }: { pinned?: boolean }) {
       const tl = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: pinned
-          ? { trigger: root.current, start: "top top", end: "+=150%", scrub: 0.6, pin: true, anticipatePin: 1, refreshPriority: 2 }
+          ? { trigger: root.current, start: "top top", end: "+=110%", scrub: 0.6, pin: true, anticipatePin: 1, refreshPriority: 2 }
           : { trigger: root.current, start: "top 65%", toggleActions: "play none none reverse" },
       });
       tl.from(".sw-axis", { opacity: 0, duration: 0.3 })
@@ -69,7 +69,7 @@ export function StormWindow({ pinned = true }: { pinned?: boolean }) {
 
   return (
     <div ref={root} className="relative flex min-h-svh flex-col justify-center py-16">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full overflow-visible" role="img" aria-label="Gust speed at Dublin through the day: above the 45 knot limit from 11:00 to 19:00. NS31 was due at 21:30, after the window; its aircraft was grounded at 07:55.">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full overflow-visible" role="img" aria-label={`Gusts at Dublin through the day: at or above ${STORM.limitKt} knots from ${STORM.windowStart} to ${STORM.windowEnd}. NS31 was due at 21:30, after the window; its aircraft was grounded at 07:55.`}>
         <defs>
           <pattern id="sw-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <line x1="0" y1="0" x2="0" y2="8" stroke="#8e9aa8" strokeWidth="1" strokeOpacity="0.35" />
@@ -163,8 +163,8 @@ export function StormWindow({ pinned = true }: { pinned?: boolean }) {
           <line x1={faultX} x2={faultX} y1={laneY - 31} y2={laneY - 21} stroke="#ff7a5c" />
           <line x1={x(ws)} x2={x(ws)} y1={laneY - 31} y2={laneY - 21} stroke="#ff7a5c" />
         </g>
-        <text className="sw-margin-label fill-[#ff7a5c] font-mono text-[12px]" x={(faultX + x(ws)) / 2} y={laneY - 34} textAnchor="middle">
-          3 H 05 M BEFORE THE STORM
+        <text className="sw-margin-label fill-[#ff7a5c] text-[13px]" x={(faultX + x(ws)) / 2} y={laneY - 34} textAnchor="middle">
+          {fmtDuration(NS31.marginMin)} before the storm
         </text>
       </svg>
     </div>

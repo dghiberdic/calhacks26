@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { gsap, useGSAP } from "@/components/motion/gsap";
 import { cn } from "@/lib/cn";
+import { STORM } from "@/data/scenario";
 
 type Node = { value: string; mono?: boolean; title: string; detail: React.ReactNode; tone?: "owed" | "ink" | "weather" };
 
@@ -18,10 +19,10 @@ const NODES: Node[] = [
     detail: <span className="font-mono text-[13px]">HYD G RSVR LO LVL. LEAK FOUND AT ENG 1 EDP CASE DRAIN LINE.</span>,
   },
   {
-    value: "11:00–19:00Z",
+    value: `${STORM.windowStart}–${STORM.windowEnd}Z`,
     mono: true,
     title: "Storm window, from METAR",
-    detail: "NS31 was due at 21:30, after the window closed. Three evening flights left on time.",
+    detail: `Gusts at or above ${STORM.limitKt} kt, peaking at ${STORM.peak.gust} kt at ${STORM.peak.t}Z. NS31 was due at 21:30, after the window closed. Three evening flights left on time.`,
     tone: "weather",
   },
   { value: "Legal", title: "Ruled 12 Mar 2026", detail: "Asked once. Applied 14 times since, never asked again." },

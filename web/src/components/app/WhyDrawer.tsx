@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useApp } from "@/lib/store";
-import { NS31, FLIGHTS, tier } from "@/data/scenario";
+import { NS31, FLIGHTS, STORM, tier } from "@/data/scenario";
 import { Money } from "./ui";
 import { cn } from "@/lib/cn";
 
@@ -25,7 +25,7 @@ export function WhyDrawer() {
         { label: "Passengers × tier", value: <span className="font-mono">{f.pax} × €{per}</span>, note: `Dublin to ${f.city} is ${f.km.toLocaleString("en-IE")} km. Art. 7(1) tier (R-4 v1).` },
         { label: "Cause", value: "Technical fault", note: "Not an extraordinary circumstance: CJEU C-549/07 Wallentin-Hermann (R-3 v2)." },
         { label: "Tech log", value: <span className="font-mono">07:55Z · ATA 29-11</span>, note: <span className="font-mono text-[12.5px]">{NS31.techLog.entry}</span>, mono: true },
-        { label: "Weather", value: <span className="font-mono">11:00–19:00Z</span>, note: "Storm window from METAR. NS31 was due at 21:30, after it.", tone: "weather" as const },
+        { label: "Weather", value: <span className="font-mono">{STORM.windowStart}–{STORM.windowEnd}Z</span>, note: `Storm window from METAR, gusts at or above ${STORM.limitKt} kt. NS31 was due at 21:30, after it.`, tone: "weather" as const },
         { label: "Who ruled", value: "Legal, 12 Mar 2026", note: "Asked once in R-3’s history. Applied 14 times since." },
       ]
     : [];

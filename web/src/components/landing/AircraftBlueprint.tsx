@@ -24,7 +24,7 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         const tl = gsap.timeline({
           defaults: { ease: "plotter" },
-          scrollTrigger: { trigger: root.current, start: "top top", end: "+=160%", scrub: 0.7, pin: true, anticipatePin: 1, refreshPriority: 1 },
+          scrollTrigger: { trigger: root.current, start: "top top", end: "+=130%", scrub: 0.7, pin: true, anticipatePin: 1, refreshPriority: 1 },
         });
         tl.from(".bp-frame", { drawSVG: 0, duration: 0.5, ease: "power1.inOut" })
           .from(".bp-side-outline", { drawSVG: 0, duration: 1.4, stagger: 0.05 }, 0.2)
@@ -139,7 +139,7 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
           <div>
             <h2 className="display text-[clamp(40px,4.4vw,72px)] text-white">Grounded at 07:55.</h2>
             <p className="mt-5 max-w-[34ch] text-[17px] leading-relaxed text-[#bfd3ea]">
-              NS31&rsquo;s aircraft lost green-system hydraulic fluid at the engine&nbsp;1 pump, three hours before the wind reached Dublin. A technical fault isn&rsquo;t weather.
+              NS31&rsquo;s aircraft lost green-system hydraulic fluid at the engine&nbsp;1 pump at 07:55, five and a half hours before the storm reached Dublin. A technical fault isn&rsquo;t weather.
             </p>
           </div>
           <div className="bp-legend flex gap-5 text-[13px] text-[#bfd3ea]">

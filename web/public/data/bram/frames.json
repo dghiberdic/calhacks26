@@ -1,0 +1,155 @@
+{
+  "source": "EUMETSAT MTG-I (0°) FCI full disc, Geo Colour RGB, via EUMETView WMS (view.eumetsat.int)",
+  "licence": "CC BY 4.0",
+  "attribution": "Contains modified EUMETSAT data, 2025",
+  "layer": "mtg_fd:rgb_geocolour",
+  "date": "2025-12-09",
+  "crs": "EPSG:4326",
+  "bbox": {
+    "lonMin": -32,
+    "lonMax": 12,
+    "latMin": 40,
+    "latMax": 64
+  },
+  "width": 2200,
+  "height": 1200,
+  "frames": [
+    {
+      "t": "07:00",
+      "file": "geo-0700.webp"
+    },
+    {
+      "t": "07:30",
+      "file": "geo-0730.webp"
+    },
+    {
+      "t": "08:00",
+      "file": "geo-0800.webp"
+    },
+    {
+      "t": "08:30",
+      "file": "geo-0830.webp"
+    },
+    {
+      "t": "09:00",
+      "file": "geo-0900.webp"
+    },
+    {
+      "t": "09:30",
+      "file": "geo-0930.webp"
+    },
+    {
+      "t": "10:00",
+      "file": "geo-1000.webp"
+    },
+    {
+      "t": "10:30",
+      "file": "geo-1030.webp"
+    },
+    {
+      "t": "11:00",
+      "file": "geo-1100.webp"
+    },
+    {
+      "t": "11:30",
+      "file": "geo-1130.webp"
+    },
+    {
+      "t": "12:00",
+      "file": "geo-1200.webp"
+    },
+    {
+      "t": "12:30",
+      "file": "geo-1230.webp"
+    },
+    {
+      "t": "13:30",
+      "file": "geo-1330.webp"
+    },
+    {
+      "t": "14:30",
+      "file": "geo-1430.webp"
+    },
+    {
+      "t": "15:00",
+      "file": "geo-1500.webp"
+    },
+    {
+      "t": "15:30",
+      "file": "geo-1530.webp"
+    },
+    {
+      "t": "16:00",
+      "file": "geo-1600.webp"
+    },
+    {
+      "t": "16:30",
+      "file": "geo-1630.webp"
+    },
+    {
+      "t": "17:00",
+      "file": "geo-1700.webp"
+    },
+    {
+      "t": "17:30",
+      "file": "geo-1730.webp"
+    },
+    {
+      "t": "18:00",
+      "file": "geo-1800.webp"
+    },
+    {
+      "t": "18:30",
+      "file": "geo-1830.webp"
+    },
+    {
+      "t": "19:00",
+      "file": "geo-1900.webp"
+    },
+    {
+      "t": "19:30",
+      "file": "geo-1930.webp"
+    },
+    {
+      "t": "20:00",
+      "file": "geo-2000.webp"
+    },
+    {
+      "t": "20:30",
+      "file": "geo-2030.webp"
+    },
+    {
+      "t": "21:00",
+      "file": "geo-2100.webp"
+    },
+    {
+      "t": "21:30",
+      "file": "geo-2130.webp"
+    }
+  ],
+  "truecolour": {
+    "layer": "mtg_fd:rgb_truecolour",
+    "frames": [
+      {
+        "t": "12:00",
+        "file": "true-1200.webp"
+      },
+      {
+        "t": "15:00",
+        "file": "true-1500.webp"
+      }
+    ]
+  },
+  "omitted": [
+    {
+      "t": "13:00",
+      "layer": "mtg_fd:rgb_geocolour",
+      "reason": "HTTP 502"
+    },
+    {
+      "t": "14:00",
+      "layer": "mtg_fd:rgb_geocolour",
+      "reason": "HTTP 502"
+    }
+  ]
+}
