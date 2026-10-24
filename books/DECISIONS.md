@@ -223,21 +223,6 @@ carry `storm`, `cohort` and `flight` dims; `built_from` = coupons) and dated at 
   `derecognise(cohort, known_at, session, rule_ref)` does it on demand; before limitation it needs a Controller
   session citing a Controller rule (recorded as a `derecognise` policy event).
 
-## Contract gaps (not changed; `contracts/` is David's)
-1. `SoDViolation` / `PeriodLocked` aren't in `contracts/`. The server must import them from `books.errors`, or
-   David can add `contracts/errors.py`.
-2. `OpeningBalance` has no event date, last-claim date or pax. The event date is parsed from the cohort id,
-   `as_of` stands in for the last claim, and pax = 0 on the card.
-3. `JournalEntry.status` has no `rejected`, so rejected entries are omitted from `journal()`. `JournalEntry` has
-   no flags field, so out-of-period flags live in line dims.
-4. `BooksAPI` has no way to: reject a JE; apply a keep-tail policy (R-CTL-1); load opening balances; or pass the
-   IAS 8.5 evidence time to `post_recode`. These are covered by the local extensions above, with
-   `evidence_received_at` as a keyword-only argument.
-5. The `RollforwardRow` sign convention is unspecified (choice above). `expected/rollforward_2025-02.json` should
-   use the same one.
-6. The `curves.json` format isn't defined yet, hence the tolerant loader.
-7. `ReplayDiff.flips` entity granularity is unspecified. Books reports per flight; the engine reports decisions.
-
 # F8c: invariants, CFO view, estimate card, audit (`books/reporting.py`)
 
 ## Invariants (`invariants()`, 16 results for the 11 THREAD_FILIP invariants)
@@ -292,3 +277,18 @@ the period and lock, register rows linked to the JE (for a cohort-level estimate
 50 shown + the count), coupon and care subledger rows, claims, the engine decisions of its flights (cause,
 extraordinary, recoded, evidence source ids, rules), decision commits, rules, GL tie-outs of every account on the
 JE through its period, and `blame_target` (the 2140 line when there is one).
+
+## Contract gaps (not changed; `contracts/` is David's)
+1. `SoDViolation` / `PeriodLocked` aren't in `contracts/`. The server must import them from `books.errors`, or
+   David can add `contracts/errors.py`.
+2. `OpeningBalance` has no event date, last-claim date or pax. The event date is parsed from the cohort id,
+   `as_of` stands in for the last claim, and pax = 0 on the card.
+3. `JournalEntry.status` has no `rejected`, so rejected entries are omitted from `journal()`. `JournalEntry` has
+   no flags field, so out-of-period flags live in line dims.
+4. `BooksAPI` has no way to: reject a JE; apply a keep-tail policy (R-CTL-1); load opening balances; or pass the
+   IAS 8.5 evidence time to `post_recode`. These are covered by the local extensions above, with
+   `evidence_received_at` as a keyword-only argument.
+5. The `RollforwardRow` sign convention is unspecified (choice above). `expected/rollforward_2025-02.json` should
+   use the same one.
+6. The `curves.json` format isn't defined yet, hence the tolerant loader.
+7. `ReplayDiff.flips` entity granularity is unspecified. Books reports per flight; the engine reports decisions.
