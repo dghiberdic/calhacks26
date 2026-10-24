@@ -211,3 +211,44 @@ The checks themselves are code in `controls.py`:
 - Append-only events: `version` (immutable `Rule` snapshot, version number assigned on add, `supersedes` = the previous version), `status` and `cite`.
 - `rules_known_at(K)` replays the events up to K. A version is shown `retired` while a newer version is active, so retiring (reverting) the newer version brings the older one back. To retire a rule entirely, retire each version.
 - `times_cited` is Σ cite events. The server and trace own persistence; `RuleBook` is the pure view.
+
+## D5 · `engine/lifecycle.py`
+
+**Store.** `Lifecycle(engine, world, trace, books=, drafter=)` keeps rules, rulings, question events, decisions and citations in `engine.trace.TraceStore`.
+- `rules_at(t)` = the latest active version per rule id as known at t.
+- `record_run(decisions, ents, at)` records a run and one `cited` event per case per rule: flight-level rules once per decision, coupon-level rules once per coupon not already cited on its decision. Only rules the trace knows are cited.
+- The server can call `record_run` for every storm it runs.
+
+**decide_fn for replay.** `Lifecycle.decide_fn(flight_ids)` overlays the stored facts on the base world (`engine.case.overlay_facts`) and re-decides those flights plus their entitlements.
+- The overlay ignores facts that only restate the world, so replaying `contracts.normalize.world_to_facts(golden)` (73,517 facts) gives byte-identical decisions for all 27 Éowyn flights (checked).
+- `aog.defect_text` (the registry's name) is accepted as the tech-log text.
+
+**Drafting.**
+- An injected `DrafterAPI.propose_rule` drafts. If there is none, or its draft does not compile, `template_rule` builds one from the ruling's own words for the known patterns:
+  - voucher → `deny_offset` (or `allow_offset` if the ruling says "offset the voucher"), condition `in_lieu ∧ ¬signed`, scope `flight.departs_eu` from the case;
+  - knock-on → `set_extraordinary` (or `set_not_extraordinary`), `is_return_sector ∧ prev_cancelled`, plus `spare > N` when the ruling says "within N h" and `reroute_earliest_offered` when it says "earliest reroute", scope `rotation.prev_cause` from the case;
+  - cohort release → `keep_tail` (or `deny_release`), `age ≥ M<n>` plus `limitation_expired = false` when "limitation" is said, scope `cohort`.
+- Ops patterns (data gaps, contradictions, crew/ATC, challenge facts) produce no rule: an Ops answer is a fact, not a policy.
+- The engine always sets `id` (`R-CL-n` / `R-LEG-n` / `R-CTL-n`, next free number), `version`, `tier` (from the author's role), `authority_required`, `origin_*`, `recorded_at` and `status=proposed`.
+- `valid_from` is None for interpretations (Legal, and Claims Lead voucher rulings, so R-CL-1 settles 14C on the flight it came from). It is `at` for Controller release policy (prospective; the cohort check passes no flight date).
+
+**Verify + preview.**
+- `engine.rules.checks` grounds the rule (ungrounded scope → `case:`) and runs all six checks.
+- `would_flip` = `TraceStore.replay(at, decide_fn(on-record flights), rules_override = rules in force + the candidate active, preview_fn = BooksAPI.preview)`. Only flights already on record are re-decided: a later storm whose METAR isn't known yet is never pre-decided.
+- Release rules (`keep_tail`, `deny_release`) don't change flights. Their preview is one flip per matching opening-balance cohort: `release_proposed_cents` balance → 0, Δ 0. Nothing booked changes; the proposal was gated. R-CTL-1 keeps 360,000.
+
+**Confirm.**
+- Refused (`validation`) unless every check passed. Refused (`forbidden`, with an `access_denied` commit) unless the confirmer holds the authority.
+- Then: record `active`, `replay_run`, `BooksAPI.post_recode(before, after)` for changed coupons, record the re-decided decisions/entitlements linked to the rule commit, and cite.
+- Results: Q2 settles NS113/115/117 (Δ −4,749,600, Éowyn 2140 → 3,465,000, cited 3×). Q1 settles 14C (cited 1×). On Herminia, `record_run` cites R-CL-1 31× and BOS→DUB asks again.
+- **`times_cited` for R-CL-1 is therefore 32** (14C + 31). `expected/questions.json` says `times_cited_after_herminia: 31`, but `q2_rule_cited: 3` counts the question's own cases. Counting the origin case is the only reading consistent with both, so the tests assert "+31 on Herminia" and the plan beat "31 settled, ruling cited" holds.
+
+**Reject.**
+- `reject(question, explanation)` records a `rejection` ruling against the question's recommended option and drafts from the explanation. That is the Q3 path: "Never release the tail…" → R-CTL-1 `keep_tail`, scope `cohort: case:EIDW@2024-01-21`, `widen_next = {"remove": "cohort", "question": "All storm cohorts?"}`.
+- `reject(rule_ref, explanation)` retires a proposed/active rule and drafts a new proposal from the rejection, if the origin question is known.
+
+**Widen.**
+- Exactly one rung: drop the first `case:` scope key and any condition clause on that feature, giving a new version (`supersedes` = the old ref).
+- The widened rule is re-checked with the original ruling's words and the confirmer's role.
+- `widen_next` names the next case key, or None. Widening a rule with no case keys is a `validation` error.
+- R-LEG-1's `rotation.prev_cause` is grounded by "storm" in Legal's text, so it is a literal, not `case:`, and R-LEG-1 cannot be widened. That differs from the stub's canned card.
