@@ -1,0 +1,33 @@
+{
+  "models": {
+    "cause": {
+      "coef": [
+        0.870506989797,
+        1.972596223062,
+        0.276775321689,
+        -0.277511282194,
+        -2.328167368718,
+        -1.001847130189,
+        -3.489937785607,
+        0.0,
+        -3.88358350592
+      ],
+      "features": [
+        "in_window_dep",
+        "in_window_arr",
+        "window_margin_h",
+        "aog_before_window",
+        "aog_inside_window",
+        "root_cause_internal",
+        "sources_disagree",
+        "precedent_count",
+        "knock_on"
+      ],
+      "intercept": 0.646480661685,
+      "n": 394,
+      "trained_on": "2023-07-01..2024-12-31"
+    }
+  },
+  "note": "calibrated on synthetic labels; validates the pipeline, not the world",
+  "version": "cal-synthetic-v1-117a2e4731ac"
+}

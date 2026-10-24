@@ -1,5 +1,24 @@
 # world/ decisions (Filip lane A)
 
+## F3c integration with the shared world
+
+The team's new world/plant.py implementation owns controlled error and ambiguity coverage. The local experimental hidden-crew draw was removed when integrating upstream, so this branch preserves the shared generator, compact answer keys and all of its acceptance tests. The supplemental error_cases.py corpus remains a separate schema-valid regression input set. Evaluation expands the shared answer key in memory; it does not replace its labels or committed compact format.
+
+## F3d · Judge-day WorldAPI
+
+- `world.api.WorldImpl` supplies the public load/weather/airport/day interfaces. `world.generate.generate_day`
+  is also a module-level entry point discovered by the existing server.
+- Requested weather remains real and unchanged. A missing station/day raises the existing plain `WorldError`.
+  Future days and unknown airports are rejected before simulation; offline runs never need an LLM or network.
+- The selected Dublin route is simulated with the existing deterministic network and passenger generators.
+  Intra-EU requests include a labelled Heathrow control rotation so there is a non-EU-origin voucher counterexample.
+- Explicit simulated no-go faults supply inspectable judge cases even on calm days. Later sectors of the grounded
+  aircraft are cancelled too. These are simulated operational records, not assertions about a real airline.
+- Three EU-origin and one non-EU-origin revenue coupons receive unsigned in-lieu vouchers. Existing signed vouchers
+  are preserved; the fixtures select other coupons rather than deleting evidence of consent.
+- Pins, schema round-trip, source hashes, determinism, scope controls, invalid inputs and the under-two-second pinned
+  Heathrow path are checked through WorldAPI. Live weather retrieval retains the weather client's existing timeout.
+
 Judgment calls made while implementing, newest last. Each one says what we chose and why.
 
 ## F1 · METAR fetch + pins
@@ -176,6 +195,11 @@ Judgment calls made while implementing, newest last. Each one says what we chose
    notice). They don't count toward the curve.
 9. **Care:** per cancelled flight, an accrual row per kind (hotel for 35–55 % of passengers, meals for all, transport
    for hotel guests) at 22:00Z on the day, plus a vendor invoice 18–30 days later at 94–102 % of the accrual.
+# F3c answer keys and error inputs — 24 October 2026
+
+`answer_key.py` exports independent train/test labels from latent truth and immutable golden inputs, including NS31's 172 coupons and €99,000 face entitlement. Claim labels reject missing agency authority, expired claims, settled vouchers and duplicate coupon claims; they do not copy amounts claimed into amounts owed.
+
+`error_cases.py` provides a separate 140-case controlled regression corpus (five variants of 14 errors in each split). Weather is real pinned METAR, while flights, people, errors and expected actions are simulated. Ordinary technical scenarios require positive calm observations at both ends; concurrent examples retain actual windy observations. These input variants do not count as independent storms or inflate natural-world accuracy. Assignment/payment events are source documents plus metadata pending a typed settlement-event interface.
 
 ## F3c · Planted errors, answer key, history
 
