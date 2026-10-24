@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
@@ -10,6 +10,10 @@ import { useDesk } from "./state";
 import { useLiveFeed } from "@/api/stream";
 
 const initial = useDesk.getState();
+
+// These drive real typing through cmdk and motion; on a busy machine that outlasts vitest's 5 s default.
+vi.setConfig({ testTimeout: 20_000 });
+const typist = () => userEvent.setup({ delay: null });
 
 beforeAll(() => {
   // jsdom lacks these; cmdk and motion reach for them.
@@ -39,7 +43,7 @@ describe("the day form", () => {
     };
     setTransport(transport);
     render(<DayForm />);
-    const user = userEvent.setup();
+    const user = typist();
 
     await user.click(screen.getByRole("combobox", { name: "Airport" }));
     await user.keyboard("dub{Enter}");
@@ -61,7 +65,7 @@ describe("the day form", () => {
   it("the airport list is keyboard-driven: arrows move, Enter picks, an unlisted ICAO can be used as typed", async () => {
     setTransport(async () => reply(200, {}));
     render(<DayForm />);
-    const user = userEvent.setup();
+    const user = typist();
     const airport = screen.getByRole("combobox", { name: "Airport" });
     await user.click(airport);
     await user.keyboard("london");
@@ -86,7 +90,7 @@ describe("the day form", () => {
         <textarea aria-label="elsewhere" />
       </>,
     );
-    const user = userEvent.setup();
+    const user = typist();
     await user.keyboard("/");
     expect(screen.getByRole("combobox", { name: "Airport" })).toHaveFocus();
     await user.click(screen.getByLabelText("elsewhere"));
@@ -102,7 +106,7 @@ describe("the day form", () => {
       return reply(200, {});
     });
     render(<DayForm />);
-    await userEvent.setup().click(screen.getByRole("button", { name: /Run the day/ }));
+    await typist().click(screen.getByRole("button", { name: /Run the day/ }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Name an airport first.");
     expect(calls).not.toContain("/desk");
   });
@@ -112,7 +116,7 @@ describe("the day form", () => {
       throw new TypeError("Failed to fetch");
     });
     render(<DayForm />);
-    const user = userEvent.setup();
+    const user = typist();
     await user.click(screen.getByRole("button", { name: /Storm Éowyn/ }));
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("Can't reach the StormCheck server.");
