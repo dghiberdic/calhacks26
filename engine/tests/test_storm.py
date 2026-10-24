@@ -91,3 +91,25 @@ def test_expected_liability_rounds_per_flight_segment():
                                              band_margin_km=0, compensation_cents=c, status="owed", article="", reason="")
     assert expected_liability([e("A", 1), e("A", 1), e("B", 1)]) == 1 + 0       # 2×.35=.7→1 ; .35→0
     assert expected_liability([e("A", 30_000, 250)]) == 6_000
+
+
+@pytest.mark.parametrize("outcome,routed,who", [("escalated", Role.OPS, "ops"),
+                                                ("human", Role.CONTROLLER, "controller"), ("human", None, "a person")])
+def test_chip_holds_every_unsettled_decision(outcome, routed, who):
+    """A decision that is not `auto` (escalated, or batch review / materiality) is HELD in the feed, never
+    "DRAFTED · 0 payouts drafted" (its entitlements are all `held`, engine/eu261.py)."""
+    from contracts.models import Confidence, Extraordinary, FlightDecision
+    from engine import eu261
+    from engine.storm import _chip_summary
+    w = mw.build()
+    for ext in (Extraordinary.NO, Extraordinary.YES):
+        d = FlightDecision(
+            flight_id=mw.fid("NS31"), cause="technical" if ext == Extraordinary.NO else "atc", extraordinary=ext,
+            ops_cause_code="41", recoded=False, in_window_dep="out", in_window_arr="out",
+            confidence=Confidence(score=0.75, kind="cause", label="cause-finding confidence", features={},
+                                  calibration_version="test"),
+            reason="test", evidence=[], rules_applied=[], legal_basis=[], outcome=outcome, routed_to=routed,
+            known_at=KNOWN)
+        chip, summary = _chip_summary(d, eu261.entitlements(d, w, [REDUCE]), "NS31")
+        assert chip == "HELD", (ext, summary)
+        assert summary.startswith(f"NS31 held for {who}") and "payouts drafted" not in summary
