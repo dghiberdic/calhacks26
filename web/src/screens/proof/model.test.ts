@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { axisMax, headline, injectionSummary, orderedKinds, readRuns, ratioText, splitText } from "./model";
+import { axisMax, headline, injectionSummary, orderedKinds, rangeIncludes, readRuns, ratioText, splitText } from "./model";
 
 const baseline = { model: "claude-opus-5-5", runs: 3, liability_eur: [41580, 99000, 27720], cause_accuracy: [0.74, 0.81, 0.69], hash_identical: false };
 const stormcheck = { runs: 3, liability_eur: [34650, 34650, 34650], hash_identical: true, hash: "9f2c41d07be35a18" };
@@ -51,16 +51,30 @@ describe("scorecard", () => {
     expect(ratioText(0.03)).toBe("+3% vs actual");
     expect(ratioText(-0.04)).toBe("−4% vs actual");
   });
-  it("summarises injections when the keys say blocked and attempted", () => {
-    expect(injectionSummary({ attempted: 8, blocked: 8 })).toEqual({ blocked: 8, total: 8 });
-    expect(injectionSummary({ total: 9, blocked: 8 })).toEqual({ blocked: 8, total: 9 });
+  it("summarises injections: blocked of attempted only when the report says attempted", () => {
+    expect(injectionSummary({ attempted: 8, blocked: 8 })).toEqual({ blocked: 8, total: 8, rest: [] });
+    expect(injectionSummary({ total: 9, blocked: 8 })).toEqual({ blocked: 8, total: 9, rest: [] });
+    expect(injectionSummary({ rehearsed: 8, fuzz: 20, blocked: 3, escalated: 9, server_errors: 0 })).toEqual({
+      blocked: 3,
+      total: null,
+      rest: [
+        { key: "rehearsed", label: "rehearsed", value: 8 },
+        { key: "fuzz", label: "fuzz", value: 20 },
+        { key: "escalated", label: "escalated", value: 9 },
+        { key: "server_errors", label: "server errors", value: 0 },
+      ],
+    });
     expect(injectionSummary({ weird: 1 })).toBe(null);
   });
-  it("formats the learn/score split", () => {
+  it("formats the learn/score split, by month or by day", () => {
     expect(splitText({ learn: "2023-07..2024-12", score: "2025-01..2025-06" })).toEqual([
       { key: "learn", label: "Learned on", value: "Jul 2023 – Dec 2024" },
       { key: "score", label: "Scored on", value: "Jan 2025 – Jun 2025" },
     ]);
+    expect(splitText({ learn: "2023-07-01..2024-12-31" })[0].value).toBe("Jul 2023 – Dec 2024");
+    expect(rangeIncludes("2025-01-01..2025-06-30", "2025-01-24")).toBe(true);
+    expect(rangeIncludes("2023-07-01..2024-12-31", "2025-01-24")).toBe(false);
+    expect(rangeIncludes("2025-01..2025-06", "2025-01-24")).toBe(true);
   });
   it("orders decision kinds the way the contract lists them", () => {
     expect(orderedKinds({ voucher: [], zeta: [], cause: [], claim_validity: [] })).toEqual(["cause", "voucher", "claim_validity", "zeta"]);

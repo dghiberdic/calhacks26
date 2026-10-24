@@ -154,9 +154,20 @@ function Report({ report: r }: { report: EvalReport }) {
           {inj ? (
             <>
               <p className="display-tight mt-3 text-[34px] leading-none text-navy-900" data-testid="injections-blocked">
-                {count(inj.blocked)} <span className="text-[17px] font-medium text-slate-400 [font-stretch:100%]">of {count(inj.total)}</span>
+                {count(inj.blocked)}{" "}
+                <span className="text-[17px] font-medium text-slate-400 [font-stretch:100%]">{inj.total !== null ? `of ${count(inj.total)} blocked` : "blocked"}</span>
               </p>
-              <p className="mt-2 text-[13px] leading-relaxed text-slate-500">prompt-injection attempts planted in claims and emails, blocked. The Reader only extracts facts, each quoting its source.</p>
+              <p className="mt-2 text-[13px] leading-relaxed text-slate-500">Prompt-injection attempts planted in claims and emails. The Reader only extracts facts, each quoting its source.</p>
+              {inj.rest.length ? (
+                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 border-t border-cloud-100 pt-3 text-[12.5px]">
+                  {inj.rest.map((x) => (
+                    <div key={x.key} className="flex items-baseline justify-between gap-2">
+                      <dt className="text-slate-500">{x.label}</dt>
+                      <dd className="figure text-navy-900">{count(x.value)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : null}
             </>
           ) : (
             <dl className="mt-3 flex flex-col gap-1.5 text-[13px]">

@@ -58,29 +58,43 @@ export function ratioText(v: number) {
   return `${v < 0 ? "−" : "+"}${p}% vs actual`;
 }
 
+/**
+ * Injections: the number blocked, "of N" only when the report gives the attempts, and every other count
+ * as it is (rehearsed, fuzz, escalated, server errors…), never folded into a ratio it didn't state.
+ */
 export function injectionSummary(d: Record<string, number> | undefined) {
   if (!d) return null;
   const blocked = num(d.blocked);
-  const total = num(d.attempted) ?? num(d.total) ?? num(d.tried);
-  return blocked !== null && total !== null ? { blocked, total } : null;
+  if (blocked === null) return null;
+  const totalKey = ["attempted", "total", "tried"].find((k) => num(d[k]) !== null);
+  const rest = Object.entries(d)
+    .filter(([k]) => k !== "blocked" && k !== totalKey)
+    .map(([key, v]) => ({ key, label: key.replace(/_/g, " "), value: num(v) }))
+    .filter((x): x is { key: string; label: string; value: number } => x.value !== null);
+  return { blocked, total: totalKey ? num(d[totalKey]) : null, rest };
 }
 
 const SPLIT_LABEL: Record<string, string> = { learn: "Learned on", train: "Learned on", score: "Scored on", test: "Scored on" };
 
-/** {"learn":"2023-07..2024-12"} → "Learned on Jul 2023 – Dec 2024". */
+/** "2023-07..2024-12" or "2023-07-01..2024-12-31" → its two ends, each "YYYY-MM" or "YYYY-MM-DD". */
+const RANGE = /^(\d{4}-\d{2}(?:-\d{2})?)\s*\.\.\s*(\d{4}-\d{2}(?:-\d{2})?)$/;
+
+/** {"learn":"2023-07..2024-12"} → "Learned on Jul 2023 – Dec 2024" (day-precise ranges read by month too). */
 export function splitText(split: Record<string, string> | undefined) {
   return Object.entries(split ?? {}).map(([key, raw]) => {
-    const m = String(raw).match(/^(\d{4}-\d{2})\s*\.\.\s*(\d{4}-\d{2})$/);
-    return { key, label: SPLIT_LABEL[key] ?? key.replace(/_/g, " "), value: m ? `${periodLabel(m[1])} – ${periodLabel(m[2])}` : String(raw) };
+    const m = String(raw).match(RANGE);
+    return { key, label: SPLIT_LABEL[key] ?? key.replace(/_/g, " "), value: m ? `${periodLabel(m[1].slice(0, 7))} – ${periodLabel(m[2].slice(0, 7))}` : String(raw) };
   });
 }
 
-/** Does a "YYYY-MM..YYYY-MM" range include a date? */
+/** Does a split range include a date? Month ranges include the whole end month. */
 export function rangeIncludes(raw: string | undefined, isoDate: string) {
-  const m = String(raw ?? "").match(/^(\d{4}-\d{2})\s*\.\.\s*(\d{4}-\d{2})$/);
+  const m = String(raw ?? "").match(RANGE);
   if (!m) return false;
-  const ym = isoDate.slice(0, 7);
-  return ym >= m[1] && ym <= m[2];
+  const lo = m[1].length === 7 ? `${m[1]}-01` : m[1];
+  const hi = m[2].length === 7 ? `${m[2]}-31` : m[2];
+  const d = isoDate.slice(0, 10);
+  return d >= lo && d <= hi;
 }
 
 /** Confidence.kind order from the contract, then anything else the report adds. */

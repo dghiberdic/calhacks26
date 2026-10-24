@@ -119,9 +119,9 @@ function RunsPlot({ base, sc }: { base: Runs; sc: Runs }) {
                   transition={{ duration: 1.1, delay: 0.35 + i * 0.12, ease: EASE }}
                 />
                 <motion.text
-                  x={cx}
+                  x={cx < 24 ? cx - 7 : cx > iw - 24 ? cx + 7 : cx}
                   y={below.has(i) ? laneA + 26 : laneA - 16}
-                  textAnchor="middle"
+                  textAnchor={cx < 24 ? "start" : cx > iw - 24 ? "end" : "middle"}
                   className="fill-cloud-300 text-[12px] tabular-nums"
                   initial={reduce ? false : { opacity: 0 }}
                   animate={{ opacity: 1 }}
