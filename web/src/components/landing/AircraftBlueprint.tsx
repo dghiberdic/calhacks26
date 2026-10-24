@@ -94,7 +94,7 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
   );
 
   return (
-    <div ref={root} className="relative flex min-h-svh flex-col justify-center overflow-hidden bg-cyanotype py-12 text-blueprint-line max-lg:py-6">
+    <div ref={root} className="relative flex min-h-svh flex-col justify-center overflow-hidden bg-cyanotype py-12 text-blueprint-line max-lg:py-6 [@media(max-height:760px)]:py-6">
       {/* drafting grid + grain */}
       <div
         className="bp-grid pointer-events-none absolute inset-0 opacity-[0.22]"
@@ -142,7 +142,7 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
           </svg>
 
           {/* plan view with hydraulic systems */}
-          <svg viewBox="-2 -19.4 49 38.8" className="bp-plan mx-auto mt-4 w-[78%] max-lg:max-h-[26svh]" role="img" aria-label="Plan view with the three hydraulic systems. The green system's engine-1 pump is marked as the leak.">
+          <svg viewBox="-2 -19.4 49 38.8" className="bp-plan mx-auto mt-4 max-h-[48svh] w-[78%] max-lg:max-h-[26svh]" role="img" aria-label="Plan view with the three hydraulic systems. The green system's engine-1 pump is marked as the leak.">
             <g transform={`scale(${TOP_VIEW.mpp}) translate(${-TOP_VIEW.noseX} ${-TOP_VIEW.centreY})`}>
               {TOP_LINES.map((d, i) => (
                 <path key={i} className="bp-plan-outline" d={d} fill="none" stroke={LINE} strokeOpacity={0.9} strokeWidth={2.6} strokeLinejoin="round" {...PLOTTED} />
