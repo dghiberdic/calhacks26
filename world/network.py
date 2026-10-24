@@ -29,7 +29,7 @@ class AircraftType:
     range_km: int
 
 
-A20N = AircraftType("A20N", "A320neo", 186, 6300)
+A20N = AircraftType("A20N", "A320neo", 194, 6300)
 A21N = AircraftType("A21N", "A321neo", 212, 6400)
 A21X = AircraftType("A21X", "A321XLR", 184, 8700)
 A333 = AircraftType("A333", "A330-300", 277, 11700)
@@ -37,9 +37,10 @@ TYPES = {t.code: t for t in (A20N, A21N, A21X, A333)}
 
 # tail -> type. EI-NS* = narrowbody (incl. the two golden XLRs EI-NSB / EI-NSN), EI-NW* = A330 (as in the plan's
 # stub), EI-NL* = later XLR deliveries, EI-NT* = DUB standby spares.
-FLEET: dict[str, AircraftType] = {
-    **{f"EI-NS{c}": A21N for c in "CDEFGH"},
-    **{f"EI-NS{c}": A20N for c in "JKLMPQRSTUVWXYZA"},
+FLEET: dict[str, AircraftType] = {      # types of the golden tails as in golden world.json meta.fleet
+    **{f"EI-NS{c}": A20N for c in "CDEFGHJKLPQRST"},
+    "EI-NSM": A21N,
+    **{f"EI-NS{c}": A21N for c in "UVWXYZA"},
     "EI-NSB": A21X, "EI-NSN": A21X, "EI-NLA": A21X,
     "EI-NWA": A333, "EI-NWB": A333, "EI-NWC": A333, "EI-NWD": A333,
     "EI-NTA": A20N, "EI-NTB": A21N, "EI-NWE": A333,
