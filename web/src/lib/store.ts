@@ -16,6 +16,8 @@ type State = {
   setPalette: (v: boolean) => void;
   run: boolean;
   setRun: (v: boolean) => void;
+  letter: { name: string; flight: string; amount: number } | null;
+  openLetter: (l: { name: string; flight: string; amount: number } | null) => void;
   answered: Record<string, string>; // question id → answer id
   answer: (q: string, a: string) => void;
   rules: Rule[];
@@ -33,6 +35,8 @@ export const useApp = create<State>((set) => ({
   setPalette: (palette) => set({ palette }),
   run: false,
   setRun: (run) => set({ run }),
+  letter: null,
+  openLetter: (letter) => set({ letter }),
   answered: {},
   answer: (q, a) =>
     set((s) => {

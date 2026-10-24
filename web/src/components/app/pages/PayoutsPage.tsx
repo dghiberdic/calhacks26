@@ -21,7 +21,7 @@ const pseudonym = (p: Payout) => `Passenger ${p.id.split("-").pop()}`;
 export function PayoutsPage() {
   const searchParams = useSearchParams();
   const flightParam = searchParams.get("flight");
-  const { role, openWhy } = useApp();
+  const { role, openWhy, openLetter } = useApp();
 
   const all = useMemo(() => payouts(), []);
   const heldIds = useMemo(() => all.filter((p) => p.status === "held").map((p) => p.id), [all]);
@@ -251,14 +251,25 @@ export function PayoutsPage() {
                       <span className="rounded-full bg-fog px-2 py-[2px] font-mono text-[12px] text-graphite">{p.rule}</span>
                     </td>
                     <td className="px-5 py-3 text-right">
-                      {rs === "held" || rs === "approved" ? (
-                        <button
-                          type="button"
-                          onClick={() => openWhy({ kind: "payout", flight: p.flight, passenger: name, amount: p.amount })}
-                          className="text-[13px] text-front underline-offset-4 hover:underline"
-                        >
-                          Why?
-                        </button>
+                      {rs === "held" || rs === "approved" || rs === "asked" ? (
+                        <span className="inline-flex gap-3">
+                          {role !== "ops" && (
+                            <button
+                              type="button"
+                              onClick={() => openLetter({ name, flight: p.flight, amount: p.amount || 600 })}
+                              className="text-[13px] text-front underline-offset-4 hover:underline"
+                            >
+                              Letter
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => openWhy({ kind: "payout", flight: p.flight, passenger: name, amount: p.amount || 600 })}
+                            className="text-[13px] text-front underline-offset-4 hover:underline"
+                          >
+                            Why?
+                          </button>
+                        </span>
                       ) : (
                         <span className="text-[13px] text-graphite">—</span>
                       )}

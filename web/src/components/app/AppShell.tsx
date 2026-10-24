@@ -10,6 +10,7 @@ import { FlightSheet } from "./FlightSheet";
 import { WhyDrawer } from "./WhyDrawer";
 import { CommandPalette } from "./CommandPalette";
 import { AgentRun } from "./AgentRun";
+import { LetterDrawer } from "./LetterDrawer";
 import { useApp } from "@/lib/store";
 import { QUESTIONS, ROLES } from "@/data/app";
 import { cn } from "@/lib/cn";
@@ -253,6 +254,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <WhyDrawer />
       <CommandPalette />
       <AgentRun open={run} onClose={closeRun} />
+      <LetterDrawer />
     </div>
   );
 }
