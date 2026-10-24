@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { CornerDownLeft, Loader2 } from "lucide-react";
 import { stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,19 @@ export function DayForm() {
   const problem = s.problem;
 
   const focusAirport = () => airportBoxRef.current?.querySelector("input")?.focus();
+
+  // "/" from anywhere on the page (outside a text field) goes to the airport: the fastest way in.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.closest("input, textarea, select, [contenteditable=true]") || t.isContentEditable)) return;
+      e.preventDefault();
+      airportBoxRef.current?.querySelector("input")?.focus();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const run = (override?: { icao: string; date: string }) => {
     if (busy && !override) return;

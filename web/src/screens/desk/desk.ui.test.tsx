@@ -77,6 +77,23 @@ describe("the day form", () => {
     expect(useDesk.getState().airport).toEqual({ icao: "KXYZ" });
   });
 
+  it("'/' from the page goes to the airport field, but not while typing elsewhere", async () => {
+    setTransport(async () => reply(200, {}));
+    render(
+      <>
+        <DayForm />
+        <textarea aria-label="elsewhere" />
+      </>,
+    );
+    const user = userEvent.setup();
+    await user.keyboard("/");
+    expect(screen.getByRole("combobox", { name: "Airport" })).toHaveFocus();
+    await user.click(screen.getByLabelText("elsewhere"));
+    await user.keyboard("/");
+    expect(screen.getByLabelText("elsewhere")).toHaveFocus();
+    expect(screen.getByLabelText("elsewhere")).toHaveValue("/");
+  });
+
   it("asks for what's missing without calling the server", async () => {
     const calls: string[] = [];
     setTransport(async (path) => {

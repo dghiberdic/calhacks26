@@ -85,8 +85,9 @@ export function AirportField({
           }
         }}
       >
-        <span className="micro cursor-text text-slate-500" aria-hidden="true">
-          Airport
+        <span className="flex items-center justify-between gap-2" aria-hidden="true">
+          <span className="micro cursor-text text-slate-500">Airport</span>
+          {!focused ? <kbd className="hidden h-[18px] items-center rounded border border-cloud-200 px-1.5 font-mono text-[10.5px] leading-none text-slate-400 md:inline-flex">/</kbd> : null}
         </span>
         <div className="relative mt-1">
           <Cmdk.Input
