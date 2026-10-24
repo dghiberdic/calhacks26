@@ -8,7 +8,8 @@ import { boxOf, greatCircle, K, pathOf, toMap, viewFor, type Box, type View } fr
 import { COAST, GRATICULE } from "../data/geo-lines";
 import { nearestObs, routeEnds } from "../data/model";
 import { useStory } from "../data/context";
-import { gsap, MEDIA, PLOTTED, prefersReducedMotion, ScrollTrigger, UNPLOTTED, useGSAP } from "../motion/gsap";
+import { gsap, MEDIA, PLOTTED, prefersReducedMotion, UNPLOTTED, useGSAP } from "../motion/gsap";
+import { PIN_PRIORITY } from "../motion/useAutoRefresh";
 import { Pending } from "../ui";
 import { buildChart, type Era5 } from "./synoptic";
 import { WindParticles } from "./WindParticles";
@@ -135,12 +136,7 @@ export function Hero() {
         const b = modis.bbox;
         sat = new SatelliteLayer({ canvas: glRef.current, image: asset("eowyn-modis.webp"), satBox: [b.lonMin * K, -b.latMax, b.lonMax * K, -b.latMin], origin: chart.low.pt, night: NIGHT });
         sat.setSize(W, H);
-        sat.ready
-          .then(() => {
-            if (still) frame(performance.now(), 0);
-            ScrollTrigger.refresh();
-          })
-          .catch(() => !disposed && setNoGL(true));
+        sat.ready.then(() => still && frame(performance.now(), 0)).catch(() => !disposed && setNoGL(true));
       })
       // No WebGL (an old projector, a locked-down browser) or the chunk failed: the chart and the wind carry on.
       .catch(() => !disposed && setNoGL(true));
@@ -189,7 +185,7 @@ export function Hero() {
       mm.add(MEDIA.motion, () => {
         gsap.set(".hero-hud, .hero-end", { autoAlpha: 0 });
         gsap
-          .timeline({ scrollTrigger: { trigger: root.current, start: "top top", end: "+=230%", scrub: 0.9, pin: true, anticipatePin: 1, refreshPriority: 9 } })
+          .timeline({ scrollTrigger: { trigger: root.current, start: "top top", end: "+=230%", scrub: 0.9, pin: true, anticipatePin: 1, refreshPriority: PIN_PRIORITY.hero } })
           .to(".hero-copy", { autoAlpha: 0, y: -28, duration: 0.6, ease: "power2.in" }, 0)
           .to(".hero-cue", { autoAlpha: 0, duration: 0.3 }, 0)
           .to(state.current, { reveal: 1, duration: 1.2, ease: "power1.inOut" }, 0.1)
@@ -294,7 +290,7 @@ export function Hero() {
       </div>
 
       {/* pulled back: the network it grounded */}
-      <div className="hero-end pointer-events-none absolute inset-x-0 bottom-0 px-5 pb-16 md:px-16 md:pb-20">
+      <div className="hero-end pointer-events-none absolute inset-x-0 bottom-0 px-5 pb-16 motion-reduce:hidden md:px-16 md:pb-20">
         <p className="display-tight max-w-[22ch] text-[clamp(28px,3.4vw,52px)] leading-[1.04] text-cloud-50">
           {counters?.cancelled !== undefined ? count(counters.cancelled) : <Pending ch={2} />} Northstar flights cancelled.{" "}
           <span className="text-cloud-400">{counters?.passengers !== undefined ? count(counters.passengers) : <Pending ch={4} />} passengers.</span>

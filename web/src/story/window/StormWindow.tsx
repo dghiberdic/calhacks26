@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { focusRow, hhmm, mainWindow, ms, nearestObs } from "../data/model";
 import { useStory } from "../data/context";
 import { gsap, MEDIA, PLOTTED, UNPLOTTED, useGSAP } from "../motion/gsap";
+import { PIN_PRIORITY } from "../motion/useAutoRefresh";
 import { Pending } from "../ui";
 import { windBarb } from "./barbs";
 
@@ -79,7 +80,7 @@ export function StormWindow() {
         const phone = !!ctx.conditions.phone;
         const tl = gsap.timeline({
           defaults: { ease: "none" },
-          scrollTrigger: { trigger: ".sw-stage", start: "top top", end: phone ? "+=190%" : "+=140%", scrub: 0.6, pin: true, anticipatePin: 1, invalidateOnRefresh: true },
+          scrollTrigger: { trigger: ".sw-stage", start: "top top", end: phone ? "+=190%" : "+=140%", scrub: 0.6, pin: true, anticipatePin: 1, invalidateOnRefresh: true, refreshPriority: PIN_PRIORITY.window },
         });
         tl.from(".sw-axis", { opacity: 0, duration: 0.3 })
           .from(".sw-barb", { opacity: 0, y: -6, stagger: 0.03, duration: 0.3 }, "<")

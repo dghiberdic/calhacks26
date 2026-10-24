@@ -5,6 +5,7 @@ import { HERO_LINES } from "../data/lineart";
 import { nearestObs } from "../data/model";
 import { useStory } from "../data/context";
 import { gsap, MEDIA, PLOTTED, ScrollTrigger, UNPLOTTED, useGSAP } from "../motion/gsap";
+import { PIN_PRIORITY } from "../motion/useAutoRefresh";
 import { Pending } from "../ui";
 
 /**
@@ -28,7 +29,7 @@ export function Interlude() {
       mm.add(MEDIA.motion, () => {
         const tl = gsap.timeline({
           defaults: { ease: "none" },
-          scrollTrigger: { trigger: root.current, start: "top top", end: "+=150%", scrub: 0.8, pin: true, anticipatePin: 1 },
+          scrollTrigger: { trigger: root.current, start: "top top", end: "+=150%", scrub: 0.8, pin: true, anticipatePin: 1, refreshPriority: PIN_PRIORITY.interlude },
         });
         tl.from(".il-line", { ...UNPLOTTED, duration: 0.5, stagger: { amount: 3.2 }, ease: "plotter" }, 0)
           .fromTo(".il-img", { "--r": "0%" }, { "--r": "175%", duration: 3.2, ease: "power1.inOut" }, 3.0)

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Blueprint } from "./aircraft/Blueprint";
 import { Board } from "./board/Board";
 import { ScrollProgress } from "./chrome/ScrollProgress";
@@ -7,6 +7,7 @@ import { StoryData } from "./data/StoryData";
 import { Hero } from "./hero/Hero";
 import { Interlude } from "./interlude/Interlude";
 import { SmoothScroll } from "./motion/SmoothScroll";
+import { useAutoRefresh } from "./motion/useAutoRefresh";
 import { AskOnce } from "./verdict/AskOnce";
 import { Closing } from "./verdict/Closing";
 import { MorningAfter } from "./verdict/MorningAfter";
@@ -22,6 +23,8 @@ import "./story.css";
  * the API's (StoryData); motion is GSAP ScrollTrigger on Lenis, and reduced motion shows every beat still.
  */
 export default function StoryScreen() {
+  const main = useRef<HTMLElement>(null);
+  useAutoRefresh(main);
   useEffect(() => {
     const title = document.title;
     document.title = "StormCheck · Every storm leaves a bill";
@@ -36,7 +39,7 @@ export default function StoryScreen() {
         <div className="story">
           <SiteNav />
           <ScrollProgress />
-          <main id="story-main">
+          <main ref={main} id="story-main">
             <Hero />
             <Board />
             <StormWindow />

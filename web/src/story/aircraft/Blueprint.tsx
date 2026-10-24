@@ -4,6 +4,7 @@ import { asset } from "../data/assets";
 import { SIDE_LINES, SIDE_VIEW, TOP_LINES, TOP_VIEW } from "../data/lineart";
 import { useStory } from "../data/context";
 import { gsap, MEDIA, PLOTTED, prefersReducedMotion, UNPLOTTED, useGSAP } from "../motion/gsap";
+import { PIN_PRIORITY } from "../motion/useAutoRefresh";
 import { Contained, Pending } from "../ui";
 import type { AircraftProgress } from "./AircraftScene";
 import { A321, HYDRAULICS, LEAK, type HydSystem } from "./hydraulics";
@@ -48,7 +49,7 @@ export function Blueprint() {
         if (!ctx.conditions?.motion) return;
         const tl = gsap.timeline({
           defaults: { ease: "plotter" },
-          scrollTrigger: { trigger: root.current, start: "top top", end: "+=280%", scrub: 0.7, pin: true, anticipatePin: 1, invalidateOnRefresh: true },
+          scrollTrigger: { trigger: root.current, start: "top top", end: "+=280%", scrub: 0.7, pin: true, anticipatePin: 1, invalidateOnRefresh: true, refreshPriority: PIN_PRIORITY.blueprint },
         });
         tl.from(".bp-frame", { ...UNPLOTTED, duration: 0.5, ease: "power1.inOut" })
           .from(".bp-side-line", { ...UNPLOTTED, duration: 0.7, stagger: { amount: 1.5 } }, 0.2)
