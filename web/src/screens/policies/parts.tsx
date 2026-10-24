@@ -107,35 +107,42 @@ export function StatusLifecycle({ className }: { className?: string }) {
  * "41 of 42": one tick per past decision, filled where the mined policy was applied. The count is the
  * API's `support`; the ticks only draw it.
  */
-export function SupportTicks({ support, className }: { support: string | null | undefined; className?: string }) {
+export function SupportTicks({ support, detail, className }: { support: string | null | undefined; detail?: string | null; className?: string }) {
   const reduce = useReducedMotion();
   const parsed = parseSupport(support);
-  if (!support) return null;
-  if (!parsed) return <p className={cn("font-mono text-[12.5px] text-slate-600", className)}>support {support}</p>;
-  const { hits, of } = parsed;
-  const ticks = of <= 96;
+  if (!support) return detail ? <p className={cn("max-w-[68ch] text-[13px] leading-relaxed text-slate-500", className)}>{detail}</p> : null;
+  const caption =
+    detail && detail.startsWith(support) ? (
+      <>
+        <span className="figure font-semibold text-navy-900">{support}</span>
+        {detail.slice(support.length)}
+      </>
+    ) : (
+      <>
+        <span className="figure font-semibold text-navy-900">{support}</span> past decisions agreed
+        {detail ? <span className="mt-1 block">{detail}</span> : null}
+      </>
+    );
   return (
     <figure className={cn("min-w-0", className)}>
-      {ticks ? (
-        <div className="flex flex-wrap gap-[3px]" role="img" aria-label={`${hits} of ${of} past decisions`}>
-          {Array.from({ length: of }, (_, i) => (
+      {parsed && parsed.of <= 96 ? (
+        <div className="flex flex-wrap gap-[3px]" role="img" aria-label={`${parsed.hits} of ${parsed.of} past decisions`}>
+          {Array.from({ length: parsed.of }, (_, i) => (
             <motion.span
               key={i}
               initial={reduce ? false : { scaleY: 0.2, opacity: 0 }}
               animate={{ scaleY: 1, opacity: 1 }}
               transition={{ delay: 0.15 + i * 0.012, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className={cn("h-4 w-[4px] origin-bottom rounded-[1px]", i < hits ? "bg-navy-800" : "bg-transparent shadow-[inset_0_0_0_1px_var(--color-cloud-400)]")}
+              className={cn("h-4 w-[4px] origin-bottom rounded-[1px]", i < parsed.hits ? "bg-navy-800" : "bg-transparent shadow-[inset_0_0_0_1px_var(--color-cloud-400)]")}
             />
           ))}
         </div>
-      ) : (
-        <div className="h-2 w-full max-w-[320px] overflow-hidden rounded-full bg-cloud-200" role="img" aria-label={`${hits} of ${of} past decisions`}>
-          <div className="h-full rounded-full bg-navy-800" style={{ width: `${(hits / of) * 100}%` }} />
+      ) : parsed ? (
+        <div className="h-2 w-full max-w-[320px] overflow-hidden rounded-full bg-cloud-200" role="img" aria-label={`${parsed.hits} of ${parsed.of} past decisions`}>
+          <div className="h-full rounded-full bg-navy-800" style={{ width: `${(parsed.hits / parsed.of) * 100}%` }} />
         </div>
-      )}
-      <figcaption className="mt-2 text-[13px] text-slate-500">
-        <span className="figure font-semibold text-navy-900">{support}</span> past decisions agreed
-      </figcaption>
+      ) : null}
+      <figcaption className={cn("max-w-[68ch] text-[13px] leading-relaxed text-slate-500", parsed && "mt-2")}>{caption}</figcaption>
     </figure>
   );
 }

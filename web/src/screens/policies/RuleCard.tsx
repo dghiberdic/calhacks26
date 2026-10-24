@@ -145,8 +145,7 @@ function Provenance({ rule, origin }: { rule: Rule; origin: Origin }) {
   if (origin === "learned") {
     return (
       <div className="mt-4">
-        <SupportTicks support={rule.support} />
-        {prose ? <p className="mt-2 max-w-[68ch] text-[13px] leading-relaxed text-slate-500">{prose}</p> : null}
+        <SupportTicks support={rule.support} detail={prose} />
       </div>
     );
   }
