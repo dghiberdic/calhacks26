@@ -9,7 +9,7 @@
       "end": "2025-01-24T00:30:00Z",
       "peak_gust_kt": 38,
       "definition": "gust>=35kt or sknt>=30kt or vsby<0.5sm or wx in {SN,FZ,TS,GR}; gaps<2h merged",
-      "obs_count": 3
+      "obs_count": 2
     },
     {
       "station": "EIDW",
@@ -17,7 +17,7 @@
       "end": "2025-01-24T15:00:00Z",
       "peak_gust_kt": 56,
       "definition": "gust>=35kt or sknt>=30kt or vsby<0.5sm or wx in {SN,FZ,TS,GR}; gaps<2h merged",
-      "obs_count": 26
+      "obs_count": 24
     }
   ],
   "metar": [
@@ -625,18 +625,362 @@
   "flights": [
     {
       "flight": {
-        "id": "NS31@2025-01-24",
-        "number": "NS31",
-        "date": "2025-01-24",
-        "origin": "DUB",
-        "dest": "BOS",
-        "sched_dep": "2025-01-24T16:30:00Z",
-        "sched_arr": "2025-01-24T23:45:00Z",
-        "aircraft": "EI-NSB",
+        "id": "NS40@2025-01-23",
+        "number": "NS40",
+        "date": "2025-01-23",
+        "origin": "ORD",
+        "dest": "DUB",
+        "sched_dep": "2025-01-23T23:00:00Z",
+        "sched_arr": "2025-01-24T05:40:00Z",
+        "aircraft": "EI-NWB",
         "status": "cancelled",
         "actual_dep": null,
         "actual_arr": null,
-        "pax": 172,
+        "pax": 249,
+        "ops_cause_code": "72",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-23T21:30:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS40@2025-01-23",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "72",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "unknown",
+        "in_window_arr": "in",
+        "window_margin_min": -190,
+        "confidence": {
+          "score": 0.98,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 1.0,
+            "window_margin_h": 3.17,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STA 05:40Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T0530Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 45,
+            "quote": "EIDW 240530Z 22027G45KT 190V270 9999 FEW012 SCT025 BKN045 08/00 Q0967 TEMPO 22038G63KT",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS40@2025-01-23:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "72",
+            "quote": "RSN 72",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "452d7dd12b6846491f5b1ba620b129612008949db44eb10519579496804a8f75"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS20@2025-01-23",
+        "number": "NS20",
+        "date": "2025-01-23",
+        "origin": "JFK",
+        "dest": "DUB",
+        "sched_dep": "2025-01-23T23:30:00Z",
+        "sched_arr": "2025-01-24T05:50:00Z",
+        "aircraft": "EI-NWA",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 262,
+        "ops_cause_code": "72",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-23T21:30:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS20@2025-01-23",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "72",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "unknown",
+        "in_window_arr": "in",
+        "window_margin_min": -200,
+        "confidence": {
+          "score": 0.98,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 1.0,
+            "window_margin_h": 3.33,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STA 05:50Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T0600Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 48,
+            "quote": "EIDW 240600Z 22026G48KT 200V260 9999 FEW012 SCT025 BKN045 08/M00 Q0967 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS20@2025-01-23:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "72",
+            "quote": "RSN 72",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "ba24284b2736b3060f1ae4a63429fe55bc78743a053b582bd23f93bf996d2a9f"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS50@2025-01-23",
+        "number": "NS50",
+        "date": "2025-01-23",
+        "origin": "YYZ",
+        "dest": "DUB",
+        "sched_dep": "2025-01-23T23:45:00Z",
+        "sched_arr": "2025-01-24T05:35:00Z",
+        "aircraft": "EI-NWC",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 236,
+        "ops_cause_code": "72",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-23T21:30:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS50@2025-01-23",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "72",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "unknown",
+        "in_window_arr": "in",
+        "window_margin_min": -185,
+        "confidence": {
+          "score": 0.97,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 1.0,
+            "window_margin_h": 3.08,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STA 05:35Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T0530Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 45,
+            "quote": "EIDW 240530Z 22027G45KT 190V270 9999 FEW012 SCT025 BKN045 08/00 Q0967 TEMPO 22038G63KT",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS50@2025-01-23:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "72",
+            "quote": "RSN 72",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "6c1858dcb641906ee5a9d55d63b14ca66949a1255d7b211db4d951694fbafa59"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS30@2025-01-23",
+        "number": "NS30",
+        "date": "2025-01-23",
+        "origin": "BOS",
+        "dest": "DUB",
+        "sched_dep": "2025-01-24T00:10:00Z",
+        "sched_arr": "2025-01-24T05:30:00Z",
+        "aircraft": "EI-NSN",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 168,
+        "ops_cause_code": "72",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-23T21:30:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS30@2025-01-23",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "72",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "out",
+        "in_window_arr": "in",
+        "window_margin_min": -180,
+        "confidence": {
+          "score": 0.97,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 1.0,
+            "window_margin_h": 3.0,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STA 05:30Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T0530Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 45,
+            "quote": "EIDW 240530Z 22027G45KT 190V270 9999 FEW012 SCT025 BKN045 08/00 Q0967 TEMPO 22038G63KT",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS30@2025-01-23:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "72",
+            "quote": "RSN 72",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "af14f6c22c5cf723824c1a866160b314dab4ed254aa91e5aa22a44502e1bff3c"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS100@2025-01-24",
+        "number": "NS100",
+        "date": "2025-01-24",
+        "origin": "DUB",
+        "dest": "LHR",
+        "sched_dep": "2025-01-24T06:10:00Z",
+        "sched_arr": "2025-01-24T07:25:00Z",
+        "aircraft": "EI-NSC",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 186,
         "ops_cause_code": "71",
         "inbound_flight_id": null,
         "outbound_pair_id": null,
@@ -644,121 +988,1617 @@
         "operating_carrier_eu": true
       },
       "decision": {
-        "flight_id": "NS31@2025-01-24",
-        "cause": "technical",
-        "extraordinary": "not_extraordinary",
+        "flight_id": "NS100@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
         "ops_cause_code": "71",
-        "recoded": true,
-        "recode_label": "71 → 41",
-        "in_window_dep": "out",
-        "in_window_arr": "out",
-        "window_margin_min": 90,
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "in",
+        "in_window_arr": "unknown",
+        "window_margin_min": -220,
         "confidence": {
-          "score": 0.91,
+          "score": 0.98,
           "kind": "cause",
           "label": "cause-finding confidence",
           "features": {
-            "in_window_dep": 0.0,
+            "in_window_dep": 1.0,
             "in_window_arr": 0.0,
-            "window_margin_h": 1.5,
-            "aog_before_window": 1.0,
+            "window_margin_h": 3.67,
+            "aog_before_window": 0.0,
             "aog_inside_window": 0.0,
-            "root_cause_internal": 1.0,
+            "root_cause_internal": 0.0,
             "sources_disagree": 0.0,
             "precedent_count": 3.0,
             "knock_on": 0.0
           },
           "caps": [],
-          "calibration_version": "cal-v1"
+          "calibration_version": "cal-plan-fixture"
         },
-        "reason": "Not weather: EDP leak logged 23 Jan 21:40Z with no MEL relief, before the storm; DUB window closed 15:00Z, 90 min before STD.",
+        "reason": "Weather: Dublin inside the storm window at STD 06:10Z.",
         "evidence": [
           {
-            "fact_id": "F-TL-EI-NSB-aog",
-            "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
-            "field": "aog.mel_relief",
-            "value": false,
-            "quote": "NO MEL RELIEF. A/C AOG.",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-TL-EI-NSB-ata",
-            "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
-            "field": "aog.ata_chapter",
-            "value": "2913",
-            "quote": "EXT LEAK EDP CASE DRAIN PORT, EXCEEDS AMM LIMIT",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-TL-EI-NSB-logged",
-            "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
-            "field": "aog.logged_at",
-            "value": "2025-01-23T21:40:00Z",
-            "quote": "23JAN 21:40Z EI-NSB DUB",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-MCC-EI-NSB-eta",
-            "source_id": "SRC-MCC-2025-01-23T2215Z",
-            "field": "mcc.part_eta",
-            "value": "2025-01-25T14:00:00Z",
-            "quote": "POOL UNIT EX-TLS VIA CDG 25JAN ETA 14:00Z",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-METAR-EIDW-20250124T1630Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+            "fact_id": "F:METAR-EIDW-20250124T0600Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
             "field": "metar.gust_kt",
-            "value": 22,
-            "quote": "EIDW 241630Z 23011G22KT 190V270 9999 -RA FEW012 SCT020 BKN050 05/00 Q0990 NOSIG",
+            "value": 48,
+            "quote": "EIDW 240600Z 22026G48KT 200V260 9999 FEW012 SCT025 BKN045 08/M00 Q0967 NOSIG",
             "role": "supports",
             "trust_tier": 1,
             "struck": false
           },
           {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS31-code",
+            "fact_id": "F:NS100@2025-01-24:flight.ops_cause_code",
             "source_id": "SRC-OCC-2025-01-24T0512Z",
             "field": "flight.ops_cause_code",
             "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "contradicts",
+            "quote": "RSN 71",
+            "role": "supports",
             "trust_tier": 3,
-            "struck": true
+            "struck": false
           }
         ],
-        "rules_applied": [],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
         "legal_basis": [
           "EU261 Art.5(3)",
-          "CJEU C-549/07",
-          "CJEU C-257/14"
+          "EU261 Recital 14",
+          "CJEU C-549/07"
         ],
         "outcome": "auto",
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "5bca0b867ef16f48483a9f978e4b5acd5db47d7e77df9629a09d63e43bd70b6f"
+        "commit": "116eaaee46083b2de921f4ce9bc59ae6b09dfcdcfda15e131729afee0494072b"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS102@2025-01-24",
+        "number": "NS102",
+        "date": "2025-01-24",
+        "origin": "DUB",
+        "dest": "CDG",
+        "sched_dep": "2025-01-24T06:40:00Z",
+        "sched_arr": "2025-01-24T08:15:00Z",
+        "aircraft": "EI-NSD",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 180,
+        "ops_cause_code": "71",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS102@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "in",
+        "in_window_arr": "unknown",
+        "window_margin_min": -250,
+        "confidence": {
+          "score": 0.98,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 1.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 4.0,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STD 06:40Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T0630Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 52,
+            "quote": "EIDW 240630Z 23027G52KT 180V260 9999 -RA FEW012 SCT020 BKN035 06/02 Q0969 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS102@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "0902070553933607b131b501db7db9ed07f8e6c265170808b4a706673afed39f"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS104@2025-01-24",
+        "number": "NS104",
+        "date": "2025-01-24",
+        "origin": "DUB",
+        "dest": "AMS",
+        "sched_dep": "2025-01-24T07:05:00Z",
+        "sched_arr": "2025-01-24T08:30:00Z",
+        "aircraft": "EI-NSE",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 174,
+        "ops_cause_code": "71",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS104@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "in",
+        "in_window_arr": "unknown",
+        "window_margin_min": -275,
+        "confidence": {
+          "score": 0.98,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 1.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 4.0,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STD 07:05Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T0700Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 56,
+            "quote": "EIDW 240700Z 22028G56KT 190V290 9000 -RA FEW012 SCT017 BKN030 06/02 Q0970 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS104@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "b69126c23a13137256573db126949ed03644285341019ae1bb37ab4218bc8783"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS106@2025-01-24",
+        "number": "NS106",
+        "date": "2025-01-24",
+        "origin": "DUB",
+        "dest": "FRA",
+        "sched_dep": "2025-01-24T07:30:00Z",
+        "sched_arr": "2025-01-24T09:15:00Z",
+        "aircraft": "EI-NSF",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 188,
+        "ops_cause_code": "71",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS106@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "in",
+        "in_window_arr": "unknown",
+        "window_margin_min": -300,
+        "confidence": {
+          "score": 0.98,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 1.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 4.0,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STD 07:30Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T0730Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 46,
+            "quote": "EIDW 240730Z 23022G46KT 190V260 9999 -RA FEW012 SCT017 BKN030 06/01 Q0971 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS106@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "15fb4f2c8ffabdf19244ecda52d407f2a38ed60c2f1e7d747360470a396dbfc6"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS101@2025-01-24",
+        "number": "NS101",
+        "date": "2025-01-24",
+        "origin": "LHR",
+        "dest": "DUB",
+        "sched_dep": "2025-01-24T08:00:00Z",
+        "sched_arr": "2025-01-24T09:15:00Z",
+        "aircraft": "EI-NSC",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 182,
+        "ops_cause_code": "71",
+        "inbound_flight_id": "NS100@2025-01-24",
+        "outbound_pair_id": "NS100@2025-01-24",
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS101@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "unknown",
+        "in_window_arr": "in",
+        "window_margin_min": -345,
+        "confidence": {
+          "score": 0.98,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 1.0,
+            "window_margin_h": 4.0,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STA 09:15Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T0900Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 46,
+            "quote": "EIDW 240900Z 23023G46KT 200V290 9999 -RA FEW012 BKN020 06/01 Q0974 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS101@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "45cfddf975c39d95d28aa6a8671e0619840d08dfe74fd01cd3c96065785409d2"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS108@2025-01-24",
+        "number": "NS108",
+        "date": "2025-01-24",
+        "origin": "DUB",
+        "dest": "BCN",
+        "sched_dep": "2025-01-24T08:15:00Z",
+        "sched_arr": "2025-01-24T10:40:00Z",
+        "aircraft": "EI-NSG",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 192,
+        "ops_cause_code": "71",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS108@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "in",
+        "in_window_arr": "unknown",
+        "window_margin_min": -345,
+        "confidence": {
+          "score": 0.98,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 1.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 4.0,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STD 08:15Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T0800Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 48,
+            "quote": "EIDW 240800Z 23024G48KT 200V260 9999 -RA FEW012 SCT020 BKN032 06/01 Q0971 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS108@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "c57a079d40b604cd245248b5fb55eeddac2cbcfd50299d21b7b9642e96b26e3c"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS103@2025-01-24",
+        "number": "NS103",
+        "date": "2025-01-24",
+        "origin": "CDG",
+        "dest": "DUB",
+        "sched_dep": "2025-01-24T08:50:00Z",
+        "sched_arr": "2025-01-24T10:30:00Z",
+        "aircraft": "EI-NSD",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 176,
+        "ops_cause_code": "71",
+        "inbound_flight_id": "NS102@2025-01-24",
+        "outbound_pair_id": "NS102@2025-01-24",
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS103@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "unknown",
+        "in_window_arr": "in",
+        "window_margin_min": -270,
+        "confidence": {
+          "score": 0.98,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 1.0,
+            "window_margin_h": 4.0,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STA 10:30Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T1030Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 41,
+            "quote": "EIDW 241030Z 24026G41KT 210V270 9999 FEW012 BKN030 06/00 Q0979 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS103@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "2a9a2c97edf30f8ffd23e34f7744e2db66c64eb21a9ff08a21d682db17eb0136"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS110@2025-01-24",
+        "number": "NS110",
+        "date": "2025-01-24",
+        "origin": "DUB",
+        "dest": "MAD",
+        "sched_dep": "2025-01-24T09:00:00Z",
+        "sched_arr": "2025-01-24T11:20:00Z",
+        "aircraft": "EI-NSH",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 190,
+        "ops_cause_code": "71",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS110@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "in",
+        "in_window_arr": "unknown",
+        "window_margin_min": -360,
+        "confidence": {
+          "score": 0.98,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 1.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 4.0,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STD 09:00Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T0900Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 46,
+            "quote": "EIDW 240900Z 23023G46KT 200V290 9999 -RA FEW012 BKN020 06/01 Q0974 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS110@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "30555b1c718eea9a0c751a800ba64e26dbcc007734fa24fcbefde9bd32e4055a"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS105@2025-01-24",
+        "number": "NS105",
+        "date": "2025-01-24",
+        "origin": "AMS",
+        "dest": "DUB",
+        "sched_dep": "2025-01-24T09:15:00Z",
+        "sched_arr": "2025-01-24T10:40:00Z",
+        "aircraft": "EI-NSE",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 170,
+        "ops_cause_code": "71",
+        "inbound_flight_id": "NS104@2025-01-24",
+        "outbound_pair_id": "NS104@2025-01-24",
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS105@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "unknown",
+        "in_window_arr": "in",
+        "window_margin_min": -260,
+        "confidence": {
+          "score": 0.98,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 1.0,
+            "window_margin_h": 4.0,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STA 10:40Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T1030Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 41,
+            "quote": "EIDW 241030Z 24026G41KT 210V270 9999 FEW012 BKN030 06/00 Q0979 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS105@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "8e2f836c87e418cb3b9edbb5902eaab2ee062f04ef18fbfd9158f55217d4629f"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS112@2025-01-24",
+        "number": "NS112",
+        "date": "2025-01-24",
+        "origin": "DUB",
+        "dest": "LIS",
+        "sched_dep": "2025-01-24T09:40:00Z",
+        "sched_arr": "2025-01-24T12:20:00Z",
+        "aircraft": "EI-NSJ",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 178,
+        "ops_cause_code": "71",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS112@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "in",
+        "in_window_arr": "out",
+        "window_margin_min": -320,
+        "confidence": {
+          "score": 0.98,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 1.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 4.0,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STD 09:40Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T0930Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 43,
+            "quote": "EIDW 240930Z 24022G43KT 200V280 9999 -RA FEW012 BKN030 06/01 Q0976 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS112@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "6ed03d8ca224b1c112f42421fd760f00ffc5f64b588f1ff9992d5c033703eea8"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS107@2025-01-24",
+        "number": "NS107",
+        "date": "2025-01-24",
+        "origin": "FRA",
+        "dest": "DUB",
+        "sched_dep": "2025-01-24T09:50:00Z",
+        "sched_arr": "2025-01-24T11:20:00Z",
+        "aircraft": "EI-NSF",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 185,
+        "ops_cause_code": "71",
+        "inbound_flight_id": "NS106@2025-01-24",
+        "outbound_pair_id": "NS106@2025-01-24",
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS107@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "unknown",
+        "in_window_arr": "in",
+        "window_margin_min": -220,
+        "confidence": {
+          "score": 0.98,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 1.0,
+            "window_margin_h": 3.67,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STA 11:20Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T1130Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 32,
+            "quote": "EIDW 241130Z 24018G32KT 200V280 9999 FEW012 SCT030 07/M01 Q0982 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS107@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "51121d6630fcf2a5c006385155ee47ad2bf63608f66ecef43c70b619a7ee905e"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS114@2025-01-24",
+        "number": "NS114",
+        "date": "2025-01-24",
+        "origin": "DUB",
+        "dest": "FCO",
+        "sched_dep": "2025-01-24T10:20:00Z",
+        "sched_arr": "2025-01-24T13:15:00Z",
+        "aircraft": "EI-NSK",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 184,
+        "ops_cause_code": "71",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS114@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "in",
+        "in_window_arr": "out",
+        "window_margin_min": -280,
+        "confidence": {
+          "score": 0.98,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 1.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 4.0,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STD 10:20Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T1030Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 41,
+            "quote": "EIDW 241030Z 24026G41KT 210V270 9999 FEW012 BKN030 06/00 Q0979 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS114@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "6d5e3fd4ef2c7cd16d351c802295e9ce3938d2f6d506d972795746e4327c6441"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS116@2025-01-24",
+        "number": "NS116",
+        "date": "2025-01-24",
+        "origin": "DUB",
+        "dest": "MUC",
+        "sched_dep": "2025-01-24T11:00:00Z",
+        "sched_arr": "2025-01-24T13:10:00Z",
+        "aircraft": "EI-NSL",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 170,
+        "ops_cause_code": "71",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS116@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "in",
+        "in_window_arr": "out",
+        "window_margin_min": -240,
+        "confidence": {
+          "score": 0.98,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 1.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 4.0,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STD 11:00Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T1100Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 41,
+            "quote": "EIDW 241100Z 25024G41KT 210V280 9999 FEW012 SCT030 06/M01 Q0980 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS116@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "cc106d6dd3d146a198c0d3ddfdd0e89bf3a7201aee5172253a50d87179f61eb1"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS21@2025-01-24",
+        "number": "NS21",
+        "date": "2025-01-24",
+        "origin": "DUB",
+        "dest": "JFK",
+        "sched_dep": "2025-01-24T11:05:00Z",
+        "sched_arr": "2025-01-24T18:50:00Z",
+        "aircraft": "EI-NWA",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 268,
+        "ops_cause_code": "71",
+        "inbound_flight_id": "NS20@2025-01-23",
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS21@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "in",
+        "in_window_arr": "unknown",
+        "window_margin_min": -235,
+        "confidence": {
+          "score": 0.98,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 1.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 3.92,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STD 11:05Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T1100Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 41,
+            "quote": "EIDW 241100Z 25024G41KT 210V280 9999 FEW012 SCT030 06/M01 Q0980 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS21@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "800b30da55c3ad75baeca113a2266970f256a8ef727e023368b4601385650ec4"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS109@2025-01-24",
+        "number": "NS109",
+        "date": "2025-01-24",
+        "origin": "BCN",
+        "dest": "DUB",
+        "sched_dep": "2025-01-24T11:15:00Z",
+        "sched_arr": "2025-01-24T13:40:00Z",
+        "aircraft": "EI-NSG",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 188,
+        "ops_cause_code": "71",
+        "inbound_flight_id": "NS108@2025-01-24",
+        "outbound_pair_id": "NS108@2025-01-24",
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS109@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "unknown",
+        "in_window_arr": "in",
+        "window_margin_min": -80,
+        "confidence": {
+          "score": 0.95,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 1.0,
+            "window_margin_h": 1.33,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STA 13:40Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T1330Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 38,
+            "quote": "EIDW 241330Z 25021G38KT 220V280 9999 FEW012 SCT050 08/M02 Q0985 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS109@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "1e591762220aea48d711c0b9be3e0f853c192ae8ca16dd4d6d52641a4d6d265a"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS111@2025-01-24",
+        "number": "NS111",
+        "date": "2025-01-24",
+        "origin": "MAD",
+        "dest": "DUB",
+        "sched_dep": "2025-01-24T11:55:00Z",
+        "sched_arr": "2025-01-24T14:20:00Z",
+        "aircraft": "EI-NSH",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 186,
+        "ops_cause_code": "71",
+        "inbound_flight_id": "NS110@2025-01-24",
+        "outbound_pair_id": "NS110@2025-01-24",
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS111@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "unknown",
+        "in_window_arr": "in",
+        "window_margin_min": -40,
+        "confidence": {
+          "score": 0.94,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 1.0,
+            "window_margin_h": 0.67,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STA 14:20Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T1430Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 35,
+            "quote": "EIDW 241430Z 24016G35KT 200V270 9999 FEW012 BKN060 07/M04 Q0987 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS111@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "f16271d4b7569f56f432716c33af3a3f07e9d4a520c0b9e5c3e861e98dfc9d56"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS41@2025-01-24",
+        "number": "NS41",
+        "date": "2025-01-24",
+        "origin": "DUB",
+        "dest": "ORD",
+        "sched_dep": "2025-01-24T12:10:00Z",
+        "sched_arr": "2025-01-24T20:55:00Z",
+        "aircraft": "EI-NWB",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 254,
+        "ops_cause_code": "71",
+        "inbound_flight_id": "NS40@2025-01-23",
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS41@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "in",
+        "in_window_arr": "unknown",
+        "window_margin_min": -170,
+        "confidence": {
+          "score": 0.97,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 1.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 2.83,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STD 12:10Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T1200Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 56,
+            "quote": "EIDW 241200Z 25027G56KT 210V280 9999 FEW012 SCT030 07/M01 Q0982 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS41@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "8074c85e51e7e42dc29f5aefd6b3880c14653c830a22c3e00fc483ddc878d6b4"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS118@2025-01-24",
+        "number": "NS118",
+        "date": "2025-01-24",
+        "origin": "DUB",
+        "dest": "ATH",
+        "sched_dep": "2025-01-24T12:40:00Z",
+        "sched_arr": "2025-01-24T16:30:00Z",
+        "aircraft": "EI-NSM",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 183,
+        "ops_cause_code": "71",
+        "inbound_flight_id": null,
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS118@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "in",
+        "in_window_arr": "unknown",
+        "window_margin_min": -140,
+        "confidence": {
+          "score": 0.97,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 1.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 2.33,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STD 12:40Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T1230Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 41,
+            "quote": "EIDW 241230Z 25022G41KT 210V280 9999 FEW012 08/M03 Q0983 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS118@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "f21bc9d681ff531c881591e0ad202028e6ff684bf86e6e30cd7a29ff1c3ee397"
+      }
+    },
+    {
+      "flight": {
+        "id": "NS51@2025-01-24",
+        "number": "NS51",
+        "date": "2025-01-24",
+        "origin": "DUB",
+        "dest": "YYZ",
+        "sched_dep": "2025-01-24T13:00:00Z",
+        "sched_arr": "2025-01-24T21:00:00Z",
+        "aircraft": "EI-NWC",
+        "status": "cancelled",
+        "actual_dep": null,
+        "actual_arr": null,
+        "pax": 241,
+        "ops_cause_code": "71",
+        "inbound_flight_id": "NS50@2025-01-23",
+        "outbound_pair_id": null,
+        "notified_at": "2025-01-24T05:20:00Z",
+        "operating_carrier_eu": true
+      },
+      "decision": {
+        "flight_id": "NS51@2025-01-24",
+        "cause": "weather",
+        "extraordinary": "extraordinary",
+        "ops_cause_code": "71",
+        "recoded": false,
+        "recode_label": null,
+        "in_window_dep": "in",
+        "in_window_arr": "unknown",
+        "window_margin_min": -120,
+        "confidence": {
+          "score": 0.96,
+          "kind": "cause",
+          "label": "cause-finding confidence",
+          "features": {
+            "in_window_dep": 1.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 2.0,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 3.0,
+            "knock_on": 0.0
+          },
+          "caps": [],
+          "calibration_version": "cal-plan-fixture"
+        },
+        "reason": "Weather: Dublin inside the storm window at STD 13:00Z.",
+        "evidence": [
+          {
+            "fact_id": "F:METAR-EIDW-20250124T1300Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 37,
+            "quote": "EIDW 241300Z 24020G37KT 210V280 9999 FEW012 08/M03 Q0985 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS51@2025-01-24:flight.ops_cause_code",
+            "source_id": "SRC-OCC-2025-01-24T0512Z",
+            "field": "flight.ops_cause_code",
+            "value": "71",
+            "quote": "RSN 71",
+            "role": "supports",
+            "trust_tier": 3,
+            "struck": false
+          }
+        ],
+        "rules_applied": [
+          "R-REG-ART5-3@1"
+        ],
+        "legal_basis": [
+          "EU261 Art.5(3)",
+          "EU261 Recital 14",
+          "CJEU C-549/07"
+        ],
+        "outcome": "auto",
+        "routed_to": null,
+        "question_id": null,
+        "known_at": "2025-01-25T06:00:00Z",
+        "commit": "13339e0c9148137c155e73850783dc3208d539c9774041aee0ab48bdd96fbf8e"
       }
     },
     {
@@ -809,53 +2649,33 @@
           "caps": [
             "capped:no-precedent"
           ],
-          "calibration_version": "cal-v1"
+          "calibration_version": "cal-plan-fixture"
         },
-        "reason": "Knock-on: NS112 never left Dublin, so EI-NSJ never reached LIS; calm at both ends (LIS at STD, DUB 11 kt at STA). Legal question (C-74/19).",
+        "reason": "Knock-on: NS112 never left Dublin, so EI-NSJ never reached LIS; calm at both ends. Legal question.",
         "evidence": [
           {
-            "fact_id": "F-ROT-NS113-prev",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "rotation.prev_cancelled",
-            "value": true,
-            "quote": "NS112/113",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-ROT-NS113-prevcause",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "rotation.prev_cause",
-            "value": "weather",
-            "quote": "RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-METAR-EIDW-20250124T1600Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.sknt",
-            "value": 11,
+            "fact_id": "F:METAR-EIDW-20250124T1600Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": null,
             "quote": "EIDW 241600Z 24011KT 200V290 9999 -RA FEW012 SCT020 BKN050 05/M01 Q0989 NOSIG",
             "role": "contradicts",
             "trust_tier": 1,
             "struck": false
           },
           {
-            "fact_id": "F-SPARE-NS113",
-            "source_id": "SRC-SPARES-2025-01-24",
+            "fact_id": "F:SPARES-2025-01-24T1330Z-NS113:NS113@2025-01-24:spare.available_within_h",
+            "source_id": "SRC-SPARES-2025-01-24T1330Z-NS113",
             "field": "spare.available_within_h",
             "value": 5.58,
-            "quote": "No tail at LIS. Earliest ferry ex-DUB 15:30Z → LIS dep 18:55Z = STD+5h35.",
+            "quote": "STD+5h35",
             "role": "context",
             "trust_tier": 2,
             "struck": false
           },
           {
-            "fact_id": "F-REROUTE-NS113",
-            "source_id": "SRC-PSS-NS113-2025-01-24",
+            "fact_id": "F:NS113@2025-01-24:reroute:pax.reroute_earliest_offered",
+            "source_id": "SRC-PSS-NS113@2025-01-24",
             "field": "pax.reroute_earliest_offered",
             "value": true,
             "quote": "EARLIEST REROUTE OFFERED: TP via LHR",
@@ -864,11 +2684,11 @@
             "struck": false
           },
           {
-            "fact_id": "F-OCC-NS113-code",
+            "fact_id": "F:NS113@2025-01-24:flight.ops_cause_code",
             "source_id": "SRC-OCC-2025-01-24T0512Z",
             "field": "flight.ops_cause_code",
             "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
+            "quote": "RSN 71",
             "role": "contradicts",
             "trust_tier": 3,
             "struck": false
@@ -884,7 +2704,7 @@
         "routed_to": "legal",
         "question_id": "Q-2",
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "82d798bb149e06f969aa06460ce6d2220b3774f6ba743c125ce3e874d970f113"
+        "commit": "6c8f1009cac609f535957f61699292b85942f7f6efa725e48a923ddbf949c128"
       }
     },
     {
@@ -918,7 +2738,7 @@
         "in_window_arr": "out",
         "window_margin_min": 80,
         "confidence": {
-          "score": 0.47,
+          "score": 0.51,
           "kind": "cause",
           "label": "cause-finding confidence",
           "features": {
@@ -935,53 +2755,33 @@
           "caps": [
             "capped:no-precedent"
           ],
-          "calibration_version": "cal-v1"
+          "calibration_version": "cal-plan-fixture"
         },
-        "reason": "Knock-on: NS116 never left Dublin, so EI-NSL never reached MUC; calm at both ends (MUC at STD, DUB 11 kt at STA). Legal question (C-74/19).",
+        "reason": "Knock-on: NS116 never left Dublin, so EI-NSL never reached MUC; calm at both ends. Legal question.",
         "evidence": [
           {
-            "fact_id": "F-ROT-NS117-prev",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "rotation.prev_cancelled",
-            "value": true,
-            "quote": "NS116/117",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-ROT-NS117-prevcause",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "rotation.prev_cause",
-            "value": "weather",
-            "quote": "RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-METAR-EIDW-20250124T1630Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.sknt",
-            "value": 11,
+            "fact_id": "F:METAR-EIDW-20250124T1630Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 22,
             "quote": "EIDW 241630Z 23011G22KT 190V270 9999 -RA FEW012 SCT020 BKN050 05/00 Q0990 NOSIG",
             "role": "contradicts",
             "trust_tier": 1,
             "struck": false
           },
           {
-            "fact_id": "F-SPARE-NS117",
-            "source_id": "SRC-SPARES-2025-01-24",
+            "fact_id": "F:SPARES-2025-01-24T1330Z-NS117:NS117@2025-01-24:spare.available_within_h",
+            "source_id": "SRC-SPARES-2025-01-24T1330Z-NS117",
             "field": "spare.available_within_h",
             "value": 4.33,
-            "quote": "No tail at MUC. Earliest ferry ex-DUB 15:30Z → MUC dep 18:25Z = STD+4h20.",
+            "quote": "STD+4h20",
             "role": "context",
             "trust_tier": 2,
             "struck": false
           },
           {
-            "fact_id": "F-REROUTE-NS117",
-            "source_id": "SRC-PSS-NS117-2025-01-24",
+            "fact_id": "F:NS117@2025-01-24:reroute:pax.reroute_earliest_offered",
+            "source_id": "SRC-PSS-NS117@2025-01-24",
             "field": "pax.reroute_earliest_offered",
             "value": true,
             "quote": "EARLIEST REROUTE OFFERED: LH via FRA",
@@ -990,11 +2790,11 @@
             "struck": false
           },
           {
-            "fact_id": "F-OCC-NS117-code",
+            "fact_id": "F:NS117@2025-01-24:flight.ops_cause_code",
             "source_id": "SRC-OCC-2025-01-24T0512Z",
             "field": "flight.ops_cause_code",
             "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
+            "quote": "RSN 71",
             "role": "contradicts",
             "trust_tier": 3,
             "struck": false
@@ -1010,7 +2810,7 @@
         "routed_to": "legal",
         "question_id": "Q-2",
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "f871f0d2d847d58677d595e6e4757aa8dc37c18482f7bf73613583ae93a64ac5"
+        "commit": "673c9b420601245cd787d7eb003f1d06090d8539764919adaa38613f2f75bc3e"
       }
     },
     {
@@ -1044,7 +2844,7 @@
         "in_window_arr": "out",
         "window_margin_min": 120,
         "confidence": {
-          "score": 0.47,
+          "score": 0.57,
           "kind": "cause",
           "label": "cause-finding confidence",
           "features": {
@@ -1061,53 +2861,33 @@
           "caps": [
             "capped:no-precedent"
           ],
-          "calibration_version": "cal-v1"
+          "calibration_version": "cal-plan-fixture"
         },
-        "reason": "Knock-on: NS114 never left Dublin, so EI-NSK never reached FCO; calm at both ends (FCO at STD, DUB 14 kt at STA). Legal question (C-74/19).",
+        "reason": "Knock-on: NS114 never left Dublin, so EI-NSK never reached FCO; calm at both ends. Legal question.",
         "evidence": [
           {
-            "fact_id": "F-ROT-NS115-prev",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "rotation.prev_cancelled",
-            "value": true,
-            "quote": "NS114/115",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-ROT-NS115-prevcause",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "rotation.prev_cause",
-            "value": "weather",
-            "quote": "RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-METAR-EIDW-20250124T1700Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.sknt",
-            "value": 14,
+            "fact_id": "F:METAR-EIDW-20250124T1700Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 25,
             "quote": "EIDW 241700Z 22014G25KT 200V260 9999 -RA FEW012 SCT020 BKN050 04/M00 Q0990 NOSIG",
             "role": "contradicts",
             "trust_tier": 1,
             "struck": false
           },
           {
-            "fact_id": "F-SPARE-NS115",
-            "source_id": "SRC-SPARES-2025-01-24",
+            "fact_id": "F:SPARES-2025-01-24T1330Z-NS115:NS115@2025-01-24:spare.available_within_h",
+            "source_id": "SRC-SPARES-2025-01-24T1330Z-NS115",
             "field": "spare.available_within_h",
             "value": 5.08,
-            "quote": "No tail at FCO. Earliest ferry ex-DUB 15:30Z → FCO dep 19:15Z = STD+5h05.",
+            "quote": "STD+5h05",
             "role": "context",
             "trust_tier": 2,
             "struck": false
           },
           {
-            "fact_id": "F-REROUTE-NS115",
-            "source_id": "SRC-PSS-NS115-2025-01-24",
+            "fact_id": "F:NS115@2025-01-24:reroute:pax.reroute_earliest_offered",
+            "source_id": "SRC-PSS-NS115@2025-01-24",
             "field": "pax.reroute_earliest_offered",
             "value": true,
             "quote": "EARLIEST REROUTE OFFERED: AZ via LHR",
@@ -1116,11 +2896,11 @@
             "struck": false
           },
           {
-            "fact_id": "F-OCC-NS115-code",
+            "fact_id": "F:NS115@2025-01-24:flight.ops_cause_code",
             "source_id": "SRC-OCC-2025-01-24T0512Z",
             "field": "flight.ops_cause_code",
             "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
+            "quote": "RSN 71",
             "role": "contradicts",
             "trust_tier": 3,
             "struck": false
@@ -1136,23 +2916,23 @@
         "routed_to": "legal",
         "question_id": "Q-2",
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "1936b1f843897d55f8764bae35faf2a6f921ee5af593aef57f892394f54c2c12"
+        "commit": "8ae40464cb1138bf18f6da10bc86bac33e9b6c1de469637594d1bc1c9b4835bd"
       }
     },
     {
       "flight": {
-        "id": "NS100@2025-01-24",
-        "number": "NS100",
+        "id": "NS31@2025-01-24",
+        "number": "NS31",
         "date": "2025-01-24",
         "origin": "DUB",
-        "dest": "LHR",
-        "sched_dep": "2025-01-24T06:10:00Z",
-        "sched_arr": "2025-01-24T07:25:00Z",
-        "aircraft": "EI-NSC",
+        "dest": "BOS",
+        "sched_dep": "2025-01-24T16:30:00Z",
+        "sched_arr": "2025-01-24T23:45:00Z",
+        "aircraft": "EI-NSB",
         "status": "cancelled",
         "actual_dep": null,
         "actual_arr": null,
-        "pax": 186,
+        "pax": 172,
         "ops_cause_code": "71",
         "inbound_flight_id": null,
         "outbound_pair_id": null,
@@ -1160,2283 +2940,107 @@
         "operating_carrier_eu": true
       },
       "decision": {
-        "flight_id": "NS100@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
+        "flight_id": "NS31@2025-01-24",
+        "cause": "technical",
+        "extraordinary": "not_extraordinary",
         "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "in",
-        "in_window_arr": "out",
-        "window_margin_min": 220,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 1.0,
-            "in_window_arr": 0.0,
-            "window_margin_h": 3.67,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 48 kt near STD 06:10Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T0600Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 48,
-            "quote": "EIDW 240600Z 22026G48KT 200V260 9999 FEW012 SCT025 BKN045 08/M00 Q0967 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS100-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "a17a783e16b44bc2b7c84ac1972472c5d9677c78d4b2c639507432d88dfb0b36"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS102@2025-01-24",
-        "number": "NS102",
-        "date": "2025-01-24",
-        "origin": "DUB",
-        "dest": "CDG",
-        "sched_dep": "2025-01-24T06:40:00Z",
-        "sched_arr": "2025-01-24T08:15:00Z",
-        "aircraft": "EI-NSD",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 180,
-        "ops_cause_code": "71",
-        "inbound_flight_id": null,
-        "outbound_pair_id": null,
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS102@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "in",
-        "in_window_arr": "out",
-        "window_margin_min": 250,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 1.0,
-            "in_window_arr": 0.0,
-            "window_margin_h": 4.17,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 52 kt near STD 06:40Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T0630Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 52,
-            "quote": "EIDW 240630Z 23027G52KT 180V260 9999 -RA FEW012 SCT020 BKN035 06/02 Q0969 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS102-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "686fbd78d3e2171e72e6346a50c21639f9a10614f98a56eaa5a343cf414a51b8"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS104@2025-01-24",
-        "number": "NS104",
-        "date": "2025-01-24",
-        "origin": "DUB",
-        "dest": "AMS",
-        "sched_dep": "2025-01-24T07:05:00Z",
-        "sched_arr": "2025-01-24T08:30:00Z",
-        "aircraft": "EI-NSE",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 174,
-        "ops_cause_code": "71",
-        "inbound_flight_id": null,
-        "outbound_pair_id": null,
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS104@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "in",
-        "in_window_arr": "out",
-        "window_margin_min": 275,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 1.0,
-            "in_window_arr": 0.0,
-            "window_margin_h": 4.58,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 56 kt near STD 07:05Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T0700Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 56,
-            "quote": "EIDW 240700Z 22028G56KT 190V290 9000 -RA FEW012 SCT017 BKN030 06/02 Q0970 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS104-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "faa5affbcd89531684743a7702d8d5ad966b86cdf507423c331119220ba9570e"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS106@2025-01-24",
-        "number": "NS106",
-        "date": "2025-01-24",
-        "origin": "DUB",
-        "dest": "FRA",
-        "sched_dep": "2025-01-24T07:30:00Z",
-        "sched_arr": "2025-01-24T09:15:00Z",
-        "aircraft": "EI-NSF",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 188,
-        "ops_cause_code": "71",
-        "inbound_flight_id": null,
-        "outbound_pair_id": null,
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS106@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "in",
-        "in_window_arr": "out",
-        "window_margin_min": 300,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 1.0,
-            "in_window_arr": 0.0,
-            "window_margin_h": 5.0,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 46 kt near STD 07:30Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T0730Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 46,
-            "quote": "EIDW 240730Z 23022G46KT 190V260 9999 -RA FEW012 SCT017 BKN030 06/01 Q0971 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS106-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "6793b1311670a53a9e02c27abf070b87c57edc630171b29719895e9b4ef4ffd9"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS108@2025-01-24",
-        "number": "NS108",
-        "date": "2025-01-24",
-        "origin": "DUB",
-        "dest": "BCN",
-        "sched_dep": "2025-01-24T08:15:00Z",
-        "sched_arr": "2025-01-24T10:40:00Z",
-        "aircraft": "EI-NSG",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 192,
-        "ops_cause_code": "71",
-        "inbound_flight_id": null,
-        "outbound_pair_id": null,
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS108@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "in",
-        "in_window_arr": "out",
-        "window_margin_min": 345,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 1.0,
-            "in_window_arr": 0.0,
-            "window_margin_h": 5.75,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 48 kt near STD 08:15Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T0800Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 48,
-            "quote": "EIDW 240800Z 23024G48KT 200V260 9999 -RA FEW012 SCT020 BKN032 06/01 Q0971 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS108-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "1a0fa0cd7d82032c02ceee3c38c45a25d0b0d2129a7fcb3180969610bd870e58"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS110@2025-01-24",
-        "number": "NS110",
-        "date": "2025-01-24",
-        "origin": "DUB",
-        "dest": "MAD",
-        "sched_dep": "2025-01-24T09:00:00Z",
-        "sched_arr": "2025-01-24T11:20:00Z",
-        "aircraft": "EI-NSH",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 190,
-        "ops_cause_code": "71",
-        "inbound_flight_id": null,
-        "outbound_pair_id": null,
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS110@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "in",
-        "in_window_arr": "out",
-        "window_margin_min": 360,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 1.0,
-            "in_window_arr": 0.0,
-            "window_margin_h": 6.0,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 46 kt near STD 09:00Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T0900Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 46,
-            "quote": "EIDW 240900Z 23023G46KT 200V290 9999 -RA FEW012 BKN020 06/01 Q0974 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS110-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "99233d4d6c8b0dc161b114014581ca1cbd263e22fef19da7193619ae61b42eb9"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS112@2025-01-24",
-        "number": "NS112",
-        "date": "2025-01-24",
-        "origin": "DUB",
-        "dest": "LIS",
-        "sched_dep": "2025-01-24T09:40:00Z",
-        "sched_arr": "2025-01-24T12:20:00Z",
-        "aircraft": "EI-NSJ",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 178,
-        "ops_cause_code": "71",
-        "inbound_flight_id": null,
-        "outbound_pair_id": null,
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS112@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "in",
-        "in_window_arr": "out",
-        "window_margin_min": 320,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 1.0,
-            "in_window_arr": 0.0,
-            "window_margin_h": 5.33,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 43 kt near STD 09:40Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T0930Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 43,
-            "quote": "EIDW 240930Z 24022G43KT 200V280 9999 -RA FEW012 BKN030 06/01 Q0976 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS112-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "79b5ead9ca76c1f020174333d7d9e57db75f7b723fa5489ef30d5d411c07ff36"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS114@2025-01-24",
-        "number": "NS114",
-        "date": "2025-01-24",
-        "origin": "DUB",
-        "dest": "FCO",
-        "sched_dep": "2025-01-24T10:20:00Z",
-        "sched_arr": "2025-01-24T13:15:00Z",
-        "aircraft": "EI-NSK",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 184,
-        "ops_cause_code": "71",
-        "inbound_flight_id": null,
-        "outbound_pair_id": null,
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS114@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "in",
-        "in_window_arr": "out",
-        "window_margin_min": 280,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 1.0,
-            "in_window_arr": 0.0,
-            "window_margin_h": 4.67,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 41 kt near STD 10:20Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T1030Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 41,
-            "quote": "EIDW 241030Z 24026G41KT 210V270 9999 FEW012 BKN030 06/00 Q0979 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS114-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "8ebfb0d17e3c0f210edc6dd3a9a3a65d7477401d200784ddeef6548bca5ee911"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS116@2025-01-24",
-        "number": "NS116",
-        "date": "2025-01-24",
-        "origin": "DUB",
-        "dest": "MUC",
-        "sched_dep": "2025-01-24T11:00:00Z",
-        "sched_arr": "2025-01-24T13:10:00Z",
-        "aircraft": "EI-NSL",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 170,
-        "ops_cause_code": "71",
-        "inbound_flight_id": null,
-        "outbound_pair_id": null,
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS116@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "in",
-        "in_window_arr": "out",
-        "window_margin_min": 240,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 1.0,
-            "in_window_arr": 0.0,
-            "window_margin_h": 4.0,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 41 kt near STD 11:00Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T1100Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 41,
-            "quote": "EIDW 241100Z 25024G41KT 210V280 9999 FEW012 SCT030 06/M01 Q0980 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS116-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "f6b57a26c40fc1420ef8119e8b2db202241822a3322fe8e9e3494532532f1351"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS21@2025-01-24",
-        "number": "NS21",
-        "date": "2025-01-24",
-        "origin": "DUB",
-        "dest": "JFK",
-        "sched_dep": "2025-01-24T11:05:00Z",
-        "sched_arr": "2025-01-24T18:50:00Z",
-        "aircraft": "EI-NWA",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 268,
-        "ops_cause_code": "71",
-        "inbound_flight_id": "NS20@2025-01-23",
-        "outbound_pair_id": null,
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS21@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "in",
-        "in_window_arr": "out",
-        "window_margin_min": 235,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 1.0,
-            "in_window_arr": 0.0,
-            "window_margin_h": 3.92,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 41 kt near STD 11:05Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T1100Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 41,
-            "quote": "EIDW 241100Z 25024G41KT 210V280 9999 FEW012 SCT030 06/M01 Q0980 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS21-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "5e6f62049fe4d9c778b0bc187d6ad9398f9a3b6f0688c5517d86666c4994cdb1"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS41@2025-01-24",
-        "number": "NS41",
-        "date": "2025-01-24",
-        "origin": "DUB",
-        "dest": "ORD",
-        "sched_dep": "2025-01-24T12:10:00Z",
-        "sched_arr": "2025-01-24T20:55:00Z",
-        "aircraft": "EI-NWB",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 254,
-        "ops_cause_code": "71",
-        "inbound_flight_id": "NS40@2025-01-23",
-        "outbound_pair_id": null,
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS41@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "in",
-        "in_window_arr": "out",
-        "window_margin_min": 170,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 1.0,
-            "in_window_arr": 0.0,
-            "window_margin_h": 2.83,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 56 kt near STD 12:10Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T1200Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 56,
-            "quote": "EIDW 241200Z 25027G56KT 210V280 9999 FEW012 SCT030 07/M01 Q0982 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS41-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "f9834149bac1af0a8491dd43fed3603762e05bdfe372fa68c6fa092a24421c8c"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS118@2025-01-24",
-        "number": "NS118",
-        "date": "2025-01-24",
-        "origin": "DUB",
-        "dest": "ATH",
-        "sched_dep": "2025-01-24T12:40:00Z",
-        "sched_arr": "2025-01-24T16:30:00Z",
-        "aircraft": "EI-NSM",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 183,
-        "ops_cause_code": "71",
-        "inbound_flight_id": null,
-        "outbound_pair_id": null,
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS118@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "in",
-        "in_window_arr": "out",
-        "window_margin_min": 140,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 1.0,
-            "in_window_arr": 0.0,
-            "window_margin_h": 2.33,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 41 kt near STD 12:40Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T1230Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 41,
-            "quote": "EIDW 241230Z 25022G41KT 210V280 9999 FEW012 08/M03 Q0983 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS118-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "043f65c6134a624125841659bf9eb15d1ba043db9adecf248c39778b548e6717"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS51@2025-01-24",
-        "number": "NS51",
-        "date": "2025-01-24",
-        "origin": "DUB",
-        "dest": "YYZ",
-        "sched_dep": "2025-01-24T13:00:00Z",
-        "sched_arr": "2025-01-24T21:00:00Z",
-        "aircraft": "EI-NWC",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 241,
-        "ops_cause_code": "71",
-        "inbound_flight_id": "NS50@2025-01-23",
-        "outbound_pair_id": null,
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS51@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "in",
-        "in_window_arr": "out",
-        "window_margin_min": 120,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 1.0,
-            "in_window_arr": 0.0,
-            "window_margin_h": 2.0,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 37 kt near STD 13:00Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T1300Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 37,
-            "quote": "EIDW 241300Z 24020G37KT 210V280 9999 FEW012 08/M03 Q0985 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS51-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "7381b0791bc4c4dde31f8ea2870aa3a90f0c2303b109bc191562ae0c65b2bb43"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS101@2025-01-24",
-        "number": "NS101",
-        "date": "2025-01-24",
-        "origin": "LHR",
-        "dest": "DUB",
-        "sched_dep": "2025-01-24T08:00:00Z",
-        "sched_arr": "2025-01-24T09:15:00Z",
-        "aircraft": "EI-NSC",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 182,
-        "ops_cause_code": "71",
-        "inbound_flight_id": "NS100@2025-01-24",
-        "outbound_pair_id": "NS100@2025-01-24",
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS101@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
+        "recoded": true,
+        "recode_label": "71 → 41",
         "in_window_dep": "out",
-        "in_window_arr": "in",
-        "window_margin_min": 345,
+        "in_window_arr": "out",
+        "window_margin_min": 90,
         "confidence": {
-          "score": 0.97,
+          "score": 0.91,
           "kind": "cause",
           "label": "cause-finding confidence",
           "features": {
             "in_window_dep": 0.0,
-            "in_window_arr": 1.0,
-            "window_margin_h": 5.75,
-            "aog_before_window": 0.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 1.5,
+            "aog_before_window": 1.0,
             "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
+            "root_cause_internal": 1.0,
             "sources_disagree": 0.0,
-            "precedent_count": 12.0,
+            "precedent_count": 3.0,
             "knock_on": 0.0
           },
           "caps": [],
-          "calibration_version": "cal-v1"
+          "calibration_version": "cal-plan-fixture"
         },
-        "reason": "Weather: DUB gusts 46 kt near STA 09:15Z, inside the 02:30Z–15:00Z storm window.",
+        "reason": "Not weather: EI-NSB AOG with no MEL relief, logged before the storm; out of window at both ends.",
         "evidence": [
           {
-            "fact_id": "F-METAR-EIDW-20250124T0900Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 46,
-            "quote": "EIDW 240900Z 23023G46KT 200V290 9999 -RA FEW012 BKN020 06/01 Q0974 NOSIG",
+            "fact_id": "F:TECHLOG-EI-NSB-2025-01-23T2140Z:aog.logged_at",
+            "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+            "field": "aog.logged_at",
+            "value": "2025-01-23T21:40:00Z",
+            "quote": "23JAN 21:40Z",
             "role": "supports",
             "trust_tier": 1,
             "struck": false
           },
           {
-            "fact_id": "F-OCC-NS101-code",
+            "fact_id": "F:TECHLOG-EI-NSB-2025-01-23T2140Z:aog.ata_chapter",
+            "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+            "field": "aog.ata_chapter",
+            "value": "2913",
+            "quote": "ATA 2913",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:TECHLOG-EI-NSB-2025-01-23T2140Z:aog.mel_relief",
+            "source_id": "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",
+            "field": "aog.mel_relief",
+            "value": false,
+            "quote": "NO MEL RELIEF",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:MCC-2025-01-23T2215Z:NS31@2025-01-24:mcc.part_eta",
+            "source_id": "SRC-MCC-2025-01-23T2215Z",
+            "field": "mcc.part_eta",
+            "value": "2025-01-25T14:00:00Z",
+            "quote": "25JAN ETA 14:00Z",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:METAR-EIDW-20250124T1630Z:metar.gust_kt",
+            "source_id": "SRC-METAR-EIDW@2025-01-24",
+            "field": "metar.gust_kt",
+            "value": 22,
+            "quote": "EIDW 241630Z 23011G22KT 190V270 9999 -RA FEW012 SCT020 BKN050 05/00 Q0990 NOSIG",
+            "role": "supports",
+            "trust_tier": 1,
+            "struck": false
+          },
+          {
+            "fact_id": "F:NS31@2025-01-24:flight.ops_cause_code",
             "source_id": "SRC-OCC-2025-01-24T0512Z",
             "field": "flight.ops_cause_code",
             "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
+            "quote": "RSN 71",
+            "role": "contradicts",
             "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
+            "struck": true
           }
         ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
+        "rules_applied": [],
         "legal_basis": [
           "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
+          "CJEU C-549/07",
+          "CJEU C-257/14"
         ],
         "outcome": "auto",
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "a3e02b3eb46016e0583c5150b2c8325fc6be0fd70f9e5cf57f0a7acdb82c061b"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS103@2025-01-24",
-        "number": "NS103",
-        "date": "2025-01-24",
-        "origin": "CDG",
-        "dest": "DUB",
-        "sched_dep": "2025-01-24T08:50:00Z",
-        "sched_arr": "2025-01-24T10:30:00Z",
-        "aircraft": "EI-NSD",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 176,
-        "ops_cause_code": "71",
-        "inbound_flight_id": "NS102@2025-01-24",
-        "outbound_pair_id": "NS102@2025-01-24",
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS103@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "out",
-        "in_window_arr": "in",
-        "window_margin_min": 270,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 0.0,
-            "in_window_arr": 1.0,
-            "window_margin_h": 4.5,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 41 kt near STA 10:30Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T1030Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 41,
-            "quote": "EIDW 241030Z 24026G41KT 210V270 9999 FEW012 BKN030 06/00 Q0979 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS103-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "75cb711fcc269cac979a02e2aabb69a3be84dd4b88bed1dd4ced6865988b0312"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS105@2025-01-24",
-        "number": "NS105",
-        "date": "2025-01-24",
-        "origin": "AMS",
-        "dest": "DUB",
-        "sched_dep": "2025-01-24T09:15:00Z",
-        "sched_arr": "2025-01-24T10:40:00Z",
-        "aircraft": "EI-NSE",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 170,
-        "ops_cause_code": "71",
-        "inbound_flight_id": "NS104@2025-01-24",
-        "outbound_pair_id": "NS104@2025-01-24",
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS105@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "out",
-        "in_window_arr": "in",
-        "window_margin_min": 260,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 0.0,
-            "in_window_arr": 1.0,
-            "window_margin_h": 4.33,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 41 kt near STA 10:40Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T1030Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 41,
-            "quote": "EIDW 241030Z 24026G41KT 210V270 9999 FEW012 BKN030 06/00 Q0979 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS105-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "b7f5ebd7d680e87857182a63f6269e298de9053951327123a06b90acb1aef0df"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS107@2025-01-24",
-        "number": "NS107",
-        "date": "2025-01-24",
-        "origin": "FRA",
-        "dest": "DUB",
-        "sched_dep": "2025-01-24T09:50:00Z",
-        "sched_arr": "2025-01-24T11:20:00Z",
-        "aircraft": "EI-NSF",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 185,
-        "ops_cause_code": "71",
-        "inbound_flight_id": "NS106@2025-01-24",
-        "outbound_pair_id": "NS106@2025-01-24",
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS107@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "out",
-        "in_window_arr": "in",
-        "window_margin_min": 220,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 0.0,
-            "in_window_arr": 1.0,
-            "window_margin_h": 3.67,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 41 kt near STA 11:20Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T1100Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 41,
-            "quote": "EIDW 241100Z 25024G41KT 210V280 9999 FEW012 SCT030 06/M01 Q0980 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS107-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "1d5295d12174ea69c070a368f8f774b503f3f6451c4dbcf54d824d59368f809b"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS109@2025-01-24",
-        "number": "NS109",
-        "date": "2025-01-24",
-        "origin": "BCN",
-        "dest": "DUB",
-        "sched_dep": "2025-01-24T11:15:00Z",
-        "sched_arr": "2025-01-24T13:40:00Z",
-        "aircraft": "EI-NSG",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 188,
-        "ops_cause_code": "71",
-        "inbound_flight_id": "NS108@2025-01-24",
-        "outbound_pair_id": "NS108@2025-01-24",
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS109@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "out",
-        "in_window_arr": "in",
-        "window_margin_min": 80,
-        "confidence": {
-          "score": 0.95,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 0.0,
-            "in_window_arr": 1.0,
-            "window_margin_h": 1.33,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 38 kt near STA 13:40Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T1330Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 38,
-            "quote": "EIDW 241330Z 25021G38KT 220V280 9999 FEW012 SCT050 08/M02 Q0985 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS109-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "717975eeb8056e6a123b49ed8c7a883a3ce8e41d399f132a691639f234ce3fad"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS111@2025-01-24",
-        "number": "NS111",
-        "date": "2025-01-24",
-        "origin": "MAD",
-        "dest": "DUB",
-        "sched_dep": "2025-01-24T11:55:00Z",
-        "sched_arr": "2025-01-24T14:20:00Z",
-        "aircraft": "EI-NSH",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 186,
-        "ops_cause_code": "71",
-        "inbound_flight_id": "NS110@2025-01-24",
-        "outbound_pair_id": "NS110@2025-01-24",
-        "notified_at": "2025-01-24T05:20:00Z",
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS111@2025-01-24",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "71",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "out",
-        "in_window_arr": "in",
-        "window_margin_min": 40,
-        "confidence": {
-          "score": 0.93,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 0.0,
-            "in_window_arr": 1.0,
-            "window_margin_h": 0.67,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 35 kt near STA 14:20Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T1430Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 35,
-            "quote": "EIDW 241430Z 24016G35KT 200V270 9999 FEW012 BKN060 07/M04 Q0987 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS111-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "71",
-            "quote": "CNL LIST → NETLINE, RSN 71",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "5bd5bd874b61cf7a0134f7954f5dae93bd30cea82b401db16aaa727bcd8dd879"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS40@2025-01-23",
-        "number": "NS40",
-        "date": "2025-01-23",
-        "origin": "ORD",
-        "dest": "DUB",
-        "sched_dep": "2025-01-23T23:00:00Z",
-        "sched_arr": "2025-01-24T05:40:00Z",
-        "aircraft": "EI-NWB",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 249,
-        "ops_cause_code": "72",
-        "inbound_flight_id": null,
-        "outbound_pair_id": null,
-        "notified_at": null,
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS40@2025-01-23",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "72",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "out",
-        "in_window_arr": "in",
-        "window_margin_min": 190,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 0.0,
-            "in_window_arr": 1.0,
-            "window_margin_h": 3.17,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 45 kt near STA 05:40Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T0530Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 45,
-            "quote": "EIDW 240530Z 22027G45KT 190V270 9999 FEW012 SCT025 BKN045 08/00 Q0967 TEMPO 22038G63KT",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS40-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "72",
-            "quote": "INBD NS20 NS30 NS40 NS50 RSN 72",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "541912ee76a4b6cd7f8f0624a0861dec3c19700e6d83c879f749dc2d8779f873"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS20@2025-01-23",
-        "number": "NS20",
-        "date": "2025-01-23",
-        "origin": "JFK",
-        "dest": "DUB",
-        "sched_dep": "2025-01-23T23:30:00Z",
-        "sched_arr": "2025-01-24T05:50:00Z",
-        "aircraft": "EI-NWA",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 262,
-        "ops_cause_code": "72",
-        "inbound_flight_id": null,
-        "outbound_pair_id": null,
-        "notified_at": null,
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS20@2025-01-23",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "72",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "out",
-        "in_window_arr": "in",
-        "window_margin_min": 200,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 0.0,
-            "in_window_arr": 1.0,
-            "window_margin_h": 3.33,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 48 kt near STA 05:50Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T0600Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 48,
-            "quote": "EIDW 240600Z 22026G48KT 200V260 9999 FEW012 SCT025 BKN045 08/M00 Q0967 NOSIG",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS20-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "72",
-            "quote": "INBD NS20 NS30 NS40 NS50 RSN 72",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "5b4ac610584542de9e9f1a57794e88ad53dbf3c110d398adc5e9f57edf63ffb3"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS50@2025-01-23",
-        "number": "NS50",
-        "date": "2025-01-23",
-        "origin": "YYZ",
-        "dest": "DUB",
-        "sched_dep": "2025-01-23T23:45:00Z",
-        "sched_arr": "2025-01-24T05:35:00Z",
-        "aircraft": "EI-NWC",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 236,
-        "ops_cause_code": "72",
-        "inbound_flight_id": null,
-        "outbound_pair_id": null,
-        "notified_at": null,
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS50@2025-01-23",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "72",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "out",
-        "in_window_arr": "in",
-        "window_margin_min": 185,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 0.0,
-            "in_window_arr": 1.0,
-            "window_margin_h": 3.08,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 45 kt near STA 05:35Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T0530Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 45,
-            "quote": "EIDW 240530Z 22027G45KT 190V270 9999 FEW012 SCT025 BKN045 08/00 Q0967 TEMPO 22038G63KT",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS50-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "72",
-            "quote": "INBD NS20 NS30 NS40 NS50 RSN 72",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "03b24f10beba829abb60bd6d12e7705c61216b0cfd7bcba4ff32c3a91c7fc43d"
-      }
-    },
-    {
-      "flight": {
-        "id": "NS30@2025-01-23",
-        "number": "NS30",
-        "date": "2025-01-23",
-        "origin": "BOS",
-        "dest": "DUB",
-        "sched_dep": "2025-01-24T00:10:00Z",
-        "sched_arr": "2025-01-24T05:30:00Z",
-        "aircraft": "EI-NSN",
-        "status": "cancelled",
-        "actual_dep": null,
-        "actual_arr": null,
-        "pax": 168,
-        "ops_cause_code": "72",
-        "inbound_flight_id": null,
-        "outbound_pair_id": null,
-        "notified_at": null,
-        "operating_carrier_eu": true
-      },
-      "decision": {
-        "flight_id": "NS30@2025-01-23",
-        "cause": "weather",
-        "extraordinary": "extraordinary",
-        "ops_cause_code": "72",
-        "recoded": false,
-        "recode_label": null,
-        "in_window_dep": "out",
-        "in_window_arr": "in",
-        "window_margin_min": 180,
-        "confidence": {
-          "score": 0.97,
-          "kind": "cause",
-          "label": "cause-finding confidence",
-          "features": {
-            "in_window_dep": 0.0,
-            "in_window_arr": 1.0,
-            "window_margin_h": 3.0,
-            "aog_before_window": 0.0,
-            "aog_inside_window": 0.0,
-            "root_cause_internal": 0.0,
-            "sources_disagree": 0.0,
-            "precedent_count": 12.0,
-            "knock_on": 0.0
-          },
-          "caps": [],
-          "calibration_version": "cal-v1"
-        },
-        "reason": "Weather: DUB gusts 45 kt near STA 05:30Z, inside the 02:30Z–15:00Z storm window.",
-        "evidence": [
-          {
-            "fact_id": "F-METAR-EIDW-20250124T0530Z",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "metar.gust_kt",
-            "value": 45,
-            "quote": "EIDW 240530Z 22027G45KT 190V270 9999 FEW012 SCT025 BKN045 08/00 Q0967 TEMPO 22038G63KT",
-            "role": "supports",
-            "trust_tier": 1,
-            "struck": false
-          },
-          {
-            "fact_id": "F-OCC-NS30-code",
-            "source_id": "SRC-OCC-2025-01-24T0512Z",
-            "field": "flight.ops_cause_code",
-            "value": "72",
-            "quote": "INBD NS20 NS30 NS40 NS50 RSN 72",
-            "role": "supports",
-            "trust_tier": 3,
-            "struck": false
-          },
-          {
-            "fact_id": "F-WINDOW-EIDW@2025-01-24",
-            "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-            "field": "storm.window",
-            "value": {
-              "start": "2025-01-24T02:30:00Z",
-              "end": "2025-01-24T15:00:00Z",
-              "peak_gust_kt": 56
-            },
-            "quote": null,
-            "role": "context",
-            "trust_tier": 1,
-            "struck": false
-          }
-        ],
-        "rules_applied": [
-          "R-REG-ART5-3@1"
-        ],
-        "legal_basis": [
-          "EU261 Art.5(3)",
-          "EU261 Recital 14",
-          "CJEU C-549/07"
-        ],
-        "outcome": "auto",
-        "routed_to": null,
-        "question_id": null,
-        "known_at": "2025-01-25T06:00:00Z",
-        "commit": "379bbe02fd110947babaecbba8c814006712bf574f6ad267e65ba5fb705fd47b"
+        "commit": "e918af7a868cca89b5b1a70b844486afb8a379b621a7672f474ef93a243f791d"
       }
     },
     {
@@ -3740,17 +3344,17 @@
       ],
       "evidence": [
         {
-          "fact_id": "F-CRM-NS31-14C-voucher",
+          "fact_id": "F:CRM-NS31-14C-2025-01-24T1420Z:voucher.in_lieu",
           "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
           "field": "voucher.in_lieu",
           "value": true,
-          "quote": "EUR300 VOUCHER IN LIEU OF COMPENSATION",
+          "quote": "IN LIEU OF COMPENSATION",
           "role": "context",
           "trust_tier": 3,
           "struck": false
         },
         {
-          "fact_id": "F-CRM-NS31-14C-accepted",
+          "fact_id": "F:CRM-NS31-14C-2025-01-24T1420Z:voucher.accepted",
           "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
           "field": "voucher.accepted",
           "value": true,
@@ -3760,27 +3364,27 @@
           "struck": false
         },
         {
-          "fact_id": "F-CRM-NS31-14C-signed",
+          "fact_id": "F:CRM-NS31-14C-2025-01-24T1420Z:voucher.signed",
           "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
           "field": "voucher.signed",
           "value": false,
-          "quote": null,
+          "quote": "SIGNATURE: NOT CAPTURED",
           "role": "supports",
           "trust_tier": 3,
           "struck": false
         },
         {
-          "fact_id": "F-CLAIM-NS31-14C-dispute",
-          "source_id": "SRC-CLAIM-NS31-14C-2025-01-25T0131Z",
+          "fact_id": "F:CLM-NS31-14C-2025-01-25T0131Z:claim.voucher_disputed",
+          "source_id": "SRC-CLM-NS31-14C-2025-01-25T0131Z",
           "field": "claim.voucher_disputed",
           "value": true,
-          "quote": "I never agreed to take a voucher instead of my compensation",
+          "quote": "I never agreed to take a voucher instead of my compensation and I did not sign anything",
           "role": "supports",
           "trust_tier": 4,
           "struck": false
         },
         {
-          "fact_id": "F-CRM-NS31-14C-amount",
+          "fact_id": "F:CRM-NS31-14C-2025-01-24T1420Z:voucher.amount_cents",
           "source_id": "SRC-CRM-NS31-14C-2025-01-24T1420Z",
           "field": "voucher.amount_cents",
           "value": 30000,
@@ -3803,7 +3407,7 @@
         "caps": [
           "capped:sources-disagree"
         ],
-        "calibration_version": "cal-v1"
+        "calibration_version": "cal-plan-fixture"
       },
       "reason_tag": "sources-disagree",
       "holds": [
@@ -3835,91 +3439,91 @@
       ],
       "evidence": [
         {
-          "fact_id": "F-ROT-NS113-prev",
-          "source_id": "SRC-OCC-2025-01-24T0512Z",
-          "field": "rotation.prev_cancelled",
-          "value": true,
-          "quote": "NS112/113",
-          "role": "supports",
-          "trust_tier": 3,
-          "struck": false
-        },
-        {
-          "fact_id": "F-METAR-EIDW-20250124T1600Z",
-          "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-          "field": "metar.sknt",
-          "value": 11,
+          "fact_id": "F:METAR-EIDW-20250124T1600Z:metar.gust_kt",
+          "source_id": "SRC-METAR-EIDW@2025-01-24",
+          "field": "metar.gust_kt",
+          "value": null,
           "quote": "EIDW 241600Z 24011KT 200V290 9999 -RA FEW012 SCT020 BKN050 05/M01 Q0989 NOSIG",
           "role": "contradicts",
           "trust_tier": 1,
           "struck": false
         },
         {
-          "fact_id": "F-SPARE-NS113",
-          "source_id": "SRC-SPARES-2025-01-24",
+          "fact_id": "F:SPARES-2025-01-24T1330Z-NS113:NS113@2025-01-24:spare.available_within_h",
+          "source_id": "SRC-SPARES-2025-01-24T1330Z-NS113",
           "field": "spare.available_within_h",
           "value": 5.58,
-          "quote": "No tail at LIS. Earliest ferry ex-DUB 15:30Z → LIS dep 18:55Z = STD+5h35.",
+          "quote": "STD+5h35",
           "role": "context",
           "trust_tier": 2,
           "struck": false
         },
         {
-          "fact_id": "F-ROT-NS115-prev",
-          "source_id": "SRC-OCC-2025-01-24T0512Z",
-          "field": "rotation.prev_cancelled",
+          "fact_id": "F:NS113@2025-01-24:reroute:pax.reroute_earliest_offered",
+          "source_id": "SRC-PSS-NS113@2025-01-24",
+          "field": "pax.reroute_earliest_offered",
           "value": true,
-          "quote": "NS114/115",
-          "role": "supports",
-          "trust_tier": 3,
-          "struck": false
-        },
-        {
-          "fact_id": "F-METAR-EIDW-20250124T1700Z",
-          "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-          "field": "metar.sknt",
-          "value": 14,
-          "quote": "EIDW 241700Z 22014G25KT 200V260 9999 -RA FEW012 SCT020 BKN050 04/M00 Q0990 NOSIG",
-          "role": "contradicts",
-          "trust_tier": 1,
-          "struck": false
-        },
-        {
-          "fact_id": "F-SPARE-NS115",
-          "source_id": "SRC-SPARES-2025-01-24",
-          "field": "spare.available_within_h",
-          "value": 5.08,
-          "quote": "No tail at FCO. Earliest ferry ex-DUB 15:30Z → FCO dep 19:15Z = STD+5h05.",
+          "quote": "EARLIEST REROUTE OFFERED: TP via LHR",
           "role": "context",
           "trust_tier": 2,
           "struck": false
         },
         {
-          "fact_id": "F-ROT-NS117-prev",
-          "source_id": "SRC-OCC-2025-01-24T0512Z",
-          "field": "rotation.prev_cancelled",
-          "value": true,
-          "quote": "NS116/117",
-          "role": "supports",
-          "trust_tier": 3,
-          "struck": false
-        },
-        {
-          "fact_id": "F-METAR-EIDW-20250124T1630Z",
-          "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-          "field": "metar.sknt",
-          "value": 11,
+          "fact_id": "F:METAR-EIDW-20250124T1630Z:metar.gust_kt",
+          "source_id": "SRC-METAR-EIDW@2025-01-24",
+          "field": "metar.gust_kt",
+          "value": 22,
           "quote": "EIDW 241630Z 23011G22KT 190V270 9999 -RA FEW012 SCT020 BKN050 05/00 Q0990 NOSIG",
           "role": "contradicts",
           "trust_tier": 1,
           "struck": false
         },
         {
-          "fact_id": "F-SPARE-NS117",
-          "source_id": "SRC-SPARES-2025-01-24",
+          "fact_id": "F:SPARES-2025-01-24T1330Z-NS117:NS117@2025-01-24:spare.available_within_h",
+          "source_id": "SRC-SPARES-2025-01-24T1330Z-NS117",
           "field": "spare.available_within_h",
           "value": 4.33,
-          "quote": "No tail at MUC. Earliest ferry ex-DUB 15:30Z → MUC dep 18:25Z = STD+4h20.",
+          "quote": "STD+4h20",
+          "role": "context",
+          "trust_tier": 2,
+          "struck": false
+        },
+        {
+          "fact_id": "F:NS117@2025-01-24:reroute:pax.reroute_earliest_offered",
+          "source_id": "SRC-PSS-NS117@2025-01-24",
+          "field": "pax.reroute_earliest_offered",
+          "value": true,
+          "quote": "EARLIEST REROUTE OFFERED: LH via FRA",
+          "role": "context",
+          "trust_tier": 2,
+          "struck": false
+        },
+        {
+          "fact_id": "F:METAR-EIDW-20250124T1700Z:metar.gust_kt",
+          "source_id": "SRC-METAR-EIDW@2025-01-24",
+          "field": "metar.gust_kt",
+          "value": 25,
+          "quote": "EIDW 241700Z 22014G25KT 200V260 9999 -RA FEW012 SCT020 BKN050 04/M00 Q0990 NOSIG",
+          "role": "contradicts",
+          "trust_tier": 1,
+          "struck": false
+        },
+        {
+          "fact_id": "F:SPARES-2025-01-24T1330Z-NS115:NS115@2025-01-24:spare.available_within_h",
+          "source_id": "SRC-SPARES-2025-01-24T1330Z-NS115",
+          "field": "spare.available_within_h",
+          "value": 5.08,
+          "quote": "STD+5h05",
+          "role": "context",
+          "trust_tier": 2,
+          "struck": false
+        },
+        {
+          "fact_id": "F:NS115@2025-01-24:reroute:pax.reroute_earliest_offered",
+          "source_id": "SRC-PSS-NS115@2025-01-24",
+          "field": "pax.reroute_earliest_offered",
+          "value": true,
+          "quote": "EARLIEST REROUTE OFFERED: AZ via LHR",
           "role": "context",
           "trust_tier": 2,
           "struck": false
@@ -3943,7 +3547,7 @@
         "caps": [
           "capped:no-precedent"
         ],
-        "calibration_version": "cal-v1"
+        "calibration_version": "cal-plan-fixture"
       },
       "reason_tag": "no-precedent",
       "holds": [
@@ -3975,31 +3579,31 @@
       ],
       "evidence": [
         {
-          "fact_id": "F-OB-EIDW@2024-01-21-balance",
+          "fact_id": "F:OB-EIDW@2024-01-21-2140:cohort.balance_cents",
           "source_id": "SRC-GL-2140-2024-12",
           "field": "cohort.balance_cents",
           "value": 360000,
-          "quote": "2140 EIDW@2024-01-21 LH 3,600.00",
+          "quote": "2140 EIDW@2024-01-21 LH 3,600.00 · ENTITLEMENT 60,000.00 · CLAIMED 17,400.00 (29%) · LAST CLAIM 2024-10-19",
           "role": "supports",
           "trust_tier": 2,
           "struck": false
         },
         {
-          "fact_id": "F-OB-EIDW@2024-01-21-claimed",
-          "source_id": "SRC-CLAIMS-EIDW@2024-01-21",
+          "fact_id": "F:OB-EIDW@2024-01-21-2140:cohort.claimed_pct",
+          "source_id": "SRC-GL-2140-2024-12",
           "field": "cohort.claimed_pct",
           "value": 0.29,
-          "quote": "claimed 29% of entitlement by M12",
+          "quote": "2140 EIDW@2024-01-21 LH 3,600.00 · ENTITLEMENT 60,000.00 · CLAIMED 17,400.00 (29%) · LAST CLAIM 2024-10-19",
           "role": "context",
           "trust_tier": 2,
           "struck": false
         },
         {
-          "fact_id": "F-OB-EIDW@2024-01-21-lastclaim",
-          "source_id": "SRC-CLAIMS-EIDW@2024-01-21",
-          "field": "cohort.months_since_last_claim",
-          "value": 3,
-          "quote": "last claim 2024-10-19",
+          "fact_id": "F:OB-EIDW@2024-01-21-2140:cohort.last_claim_at",
+          "source_id": "SRC-GL-2140-2024-12",
+          "field": "cohort.last_claim_at",
+          "value": "2024-10-19",
+          "quote": "LAST CLAIM 2024-10-19",
           "role": "supports",
           "trust_tier": 2,
           "struck": false
@@ -4012,11 +3616,10 @@
         "features": {
           "cohort_age_months": 12.0,
           "months_since_last_claim": 3.0,
-          "claimed_pct": 0.29,
-          "limitation_expired": 0.0
+          "precedent_count": 0.0
         },
         "caps": [],
-        "calibration_version": "cal-v1"
+        "calibration_version": "cal-plan-fixture"
       },
       "reason_tag": "release-proposal",
       "holds": [
@@ -4190,13 +3793,18 @@
     }
   ],
   "real_context": {
+    "storm_name": "Éowyn",
     "eurocontrol_departures": 179,
     "normal_departures": "292–316",
     "reported_cancellations_dep": 119,
     "reported_cancellations_arr": 109,
     "red_warning": "06:00-11:00",
     "orange_warning": "until 16:00",
-    "storm_name": "Éowyn"
+    "sources": [
+      "Eurocontrol airport_traffic_2025.csv",
+      "Cirium (reported)",
+      "Met Éireann"
+    ]
   },
   "message": null,
   "airports": [
@@ -4204,8 +3812,8 @@
       "icao": "EIDW",
       "iata": "DUB",
       "name": "Dublin Airport",
-      "lat": 53.4213,
-      "lon": -6.2701,
+      "lat": 53.428713,
+      "lon": -6.262121,
       "country": "IE",
       "eu": true,
       "tz": "Europe/Dublin"
@@ -4214,8 +3822,8 @@
       "icao": "EHAM",
       "iata": "AMS",
       "name": "Amsterdam Airport Schiphol",
-      "lat": 52.3086,
-      "lon": 4.7639,
+      "lat": 52.308601,
+      "lon": 4.76389,
       "country": "NL",
       "eu": true,
       "tz": "Europe/Amsterdam"
@@ -4223,8 +3831,8 @@
     {
       "icao": "LGAV",
       "iata": "ATH",
-      "name": "Eleftherios Venizelos International Airport",
-      "lat": 37.9364,
+      "name": "Athens Eleftherios Venizelos International Airport",
+      "lat": 37.936401,
       "lon": 23.9445,
       "country": "GR",
       "eu": true,
@@ -4233,9 +3841,9 @@
     {
       "icao": "LEBL",
       "iata": "BCN",
-      "name": "Barcelona International Airport",
+      "name": "Josep Tarradellas Barcelona-El Prat Airport",
       "lat": 41.2971,
-      "lon": 2.0785,
+      "lon": 2.07846,
       "country": "ES",
       "eu": true,
       "tz": "Europe/Madrid"
@@ -4243,9 +3851,9 @@
     {
       "icao": "KBOS",
       "iata": "BOS",
-      "name": "General Edward Lawrence Logan International Airport",
-      "lat": 42.3629,
-      "lon": -71.0064,
+      "name": "Boston Logan International Airport",
+      "lat": 42.36197,
+      "lon": -71.0079,
       "country": "US",
       "eu": false,
       "tz": "America/New_York"
@@ -4254,8 +3862,8 @@
       "icao": "EBBR",
       "iata": "BRU",
       "name": "Brussels Airport",
-      "lat": 50.5405,
-      "lon": 4.2904,
+      "lat": 50.901402,
+      "lon": 4.48444,
       "country": "BE",
       "eu": true,
       "tz": "Europe/Brussels"
@@ -4264,8 +3872,8 @@
       "icao": "LFPG",
       "iata": "CDG",
       "name": "Charles de Gaulle International Airport",
-      "lat": 49.0128,
-      "lon": 2.55,
+      "lat": 49.00896,
+      "lon": 2.554117,
       "country": "FR",
       "eu": true,
       "tz": "Europe/Paris"
@@ -4274,7 +3882,7 @@
       "icao": "EKCH",
       "iata": "CPH",
       "name": "Copenhagen Kastrup Airport",
-      "lat": 55.6179,
+      "lat": 55.617901,
       "lon": 12.656,
       "country": "DK",
       "eu": true,
@@ -4284,8 +3892,8 @@
       "icao": "EGPH",
       "iata": "EDI",
       "name": "Edinburgh Airport",
-      "lat": 55.95,
-      "lon": -3.3725,
+      "lat": 55.950145,
+      "lon": -3.372288,
       "country": "GB",
       "eu": false,
       "tz": "Europe/London"
@@ -4293,9 +3901,9 @@
     {
       "icao": "LIRF",
       "iata": "FCO",
-      "name": "Leonardo Da Vinci (Fiumicino) International Airport",
-      "lat": 41.8045,
-      "lon": 12.2508,
+      "name": "Rome–Fiumicino Leonardo da Vinci International Airport",
+      "lat": 41.804532,
+      "lon": 12.251998,
       "country": "IT",
       "eu": true,
       "tz": "Europe/Rome"
@@ -4303,9 +3911,9 @@
     {
       "icao": "EDDF",
       "iata": "FRA",
-      "name": "Frankfurt am Main International Airport",
-      "lat": 50.0264,
-      "lon": 8.5431,
+      "name": "Frankfurt Main Airport",
+      "lat": 50.026706,
+      "lon": 8.55835,
       "country": "DE",
       "eu": true,
       "tz": "Europe/Berlin"
@@ -4313,9 +3921,9 @@
     {
       "icao": "KJFK",
       "iata": "JFK",
-      "name": "John F Kennedy International Airport",
-      "lat": 40.6399,
-      "lon": -73.7787,
+      "name": "John F. Kennedy International Airport",
+      "lat": 40.639447,
+      "lon": -73.779317,
       "country": "US",
       "eu": false,
       "tz": "America/New_York"
@@ -4324,8 +3932,8 @@
       "icao": "EGLL",
       "iata": "LHR",
       "name": "London Heathrow Airport",
-      "lat": 51.4706,
-      "lon": -0.4619,
+      "lat": 51.470748,
+      "lon": -0.459909,
       "country": "GB",
       "eu": false,
       "tz": "Europe/London"
@@ -4333,9 +3941,9 @@
     {
       "icao": "LPPT",
       "iata": "LIS",
-      "name": "Lisbon Portela Airport",
+      "name": "Lisbon Humberto Delgado Airport",
       "lat": 38.7813,
-      "lon": -9.1359,
+      "lon": -9.13592,
       "country": "PT",
       "eu": true,
       "tz": "Europe/Lisbon"
@@ -4343,9 +3951,9 @@
     {
       "icao": "LEMD",
       "iata": "MAD",
-      "name": "Madrid Barajas International Airport",
-      "lat": 40.4936,
-      "lon": -3.5668,
+      "name": "Adolfo Suárez Madrid–Barajas Airport",
+      "lat": 40.493407,
+      "lon": -3.572249,
       "country": "ES",
       "eu": true,
       "tz": "Europe/Madrid"
@@ -4354,8 +3962,8 @@
       "icao": "EGCC",
       "iata": "MAN",
       "name": "Manchester Airport",
-      "lat": 53.3537,
-      "lon": -2.275,
+      "lat": 53.349375,
+      "lon": -2.279521,
       "country": "GB",
       "eu": false,
       "tz": "Europe/London"
@@ -4363,8 +3971,8 @@
     {
       "icao": "EDDM",
       "iata": "MUC",
-      "name": "Munich International Airport",
-      "lat": 48.3538,
+      "name": "Munich Airport",
+      "lat": 48.353802,
       "lon": 11.7861,
       "country": "DE",
       "eu": true,
@@ -4374,8 +3982,8 @@
       "icao": "KORD",
       "iata": "ORD",
       "name": "Chicago O'Hare International Airport",
-      "lat": 41.9769,
-      "lon": -87.9082,
+      "lat": 41.9786,
+      "lon": -87.9048,
       "country": "US",
       "eu": false,
       "tz": "America/Chicago"
@@ -4384,8 +3992,8 @@
       "icao": "CYYZ",
       "iata": "YYZ",
       "name": "Toronto Pearson International Airport",
-      "lat": 43.6772,
-      "lon": -79.6306,
+      "lat": 43.675935,
+      "lon": -79.629421,
       "country": "CA",
       "eu": false,
       "tz": "America/Toronto"
@@ -4393,9 +4001,9 @@
     {
       "icao": "LSZH",
       "iata": "ZRH",
-      "name": "Zurich Airport",
-      "lat": 47.4647,
-      "lon": 8.5492,
+      "name": "Zürich Airport",
+      "lat": 47.458056,
+      "lon": 8.548056,
       "country": "CH",
       "eu": true,
       "tz": "Europe/Zurich"

@@ -88,7 +88,7 @@
     "status": "active",
     "supersedes": null,
     "times_cited": 1,
-    "static_card": false,
+    "static_card": true,
     "title": "Payouts need Claims Lead approval"
   },
   {
@@ -112,7 +112,7 @@
     "status": "active",
     "supersedes": null,
     "times_cited": 27,
-    "static_card": false,
+    "static_card": true,
     "title": "Auto-draft only if per-flight liability < €50k and confidence ≥ 0.90"
   },
   {
@@ -136,7 +136,7 @@
     "status": "active",
     "supersedes": null,
     "times_cited": 1,
-    "static_card": false,
+    "static_card": true,
     "title": "Preparer ≠ approver; external parties never satisfy an internal approval"
   },
   {

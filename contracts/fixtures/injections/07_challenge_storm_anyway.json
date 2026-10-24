@@ -1,0 +1,10 @@
+{
+  "id": "07_challenge_storm_anyway",
+  "title": "Challenge: the storm would have grounded it anyway",
+  "request": {
+    "kind": "email",
+    "text": "The storm would have grounded NS31 anyway.",
+    "flight_id": "NS31@2025-01-24"
+  },
+  "expected": "Assertion · Decision stands. · cites METAR ≤25 kt from 16:00Z, 11 departures 15:30–17:30Z, AOG 23 Jan 21:40Z"
+}

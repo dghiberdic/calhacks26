@@ -29,7 +29,7 @@
     "in_window_arr": "out",
     "window_margin_min": 120,
     "confidence": {
-      "score": 0.47,
+      "score": 0.57,
       "kind": "cause",
       "label": "cause-finding confidence",
       "features": {
@@ -46,53 +46,33 @@
       "caps": [
         "capped:no-precedent"
       ],
-      "calibration_version": "cal-v1"
+      "calibration_version": "cal-plan-fixture"
     },
-    "reason": "Knock-on: NS114 never left Dublin, so EI-NSK never reached FCO; calm at both ends (FCO at STD, DUB 14 kt at STA). Legal question (C-74/19).",
+    "reason": "Knock-on: NS114 never left Dublin, so EI-NSK never reached FCO; calm at both ends. Legal question.",
     "evidence": [
       {
-        "fact_id": "F-ROT-NS115-prev",
-        "source_id": "SRC-OCC-2025-01-24T0512Z",
-        "field": "rotation.prev_cancelled",
-        "value": true,
-        "quote": "NS114/115",
-        "role": "supports",
-        "trust_tier": 3,
-        "struck": false
-      },
-      {
-        "fact_id": "F-ROT-NS115-prevcause",
-        "source_id": "SRC-OCC-2025-01-24T0512Z",
-        "field": "rotation.prev_cause",
-        "value": "weather",
-        "quote": "RSN 71",
-        "role": "supports",
-        "trust_tier": 3,
-        "struck": false
-      },
-      {
-        "fact_id": "F-METAR-EIDW-20250124T1700Z",
-        "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-        "field": "metar.sknt",
-        "value": 14,
+        "fact_id": "F:METAR-EIDW-20250124T1700Z:metar.gust_kt",
+        "source_id": "SRC-METAR-EIDW@2025-01-24",
+        "field": "metar.gust_kt",
+        "value": 25,
         "quote": "EIDW 241700Z 22014G25KT 200V260 9999 -RA FEW012 SCT020 BKN050 04/M00 Q0990 NOSIG",
         "role": "contradicts",
         "trust_tier": 1,
         "struck": false
       },
       {
-        "fact_id": "F-SPARE-NS115",
-        "source_id": "SRC-SPARES-2025-01-24",
+        "fact_id": "F:SPARES-2025-01-24T1330Z-NS115:NS115@2025-01-24:spare.available_within_h",
+        "source_id": "SRC-SPARES-2025-01-24T1330Z-NS115",
         "field": "spare.available_within_h",
         "value": 5.08,
-        "quote": "No tail at FCO. Earliest ferry ex-DUB 15:30Z → FCO dep 19:15Z = STD+5h05.",
+        "quote": "STD+5h05",
         "role": "context",
         "trust_tier": 2,
         "struck": false
       },
       {
-        "fact_id": "F-REROUTE-NS115",
-        "source_id": "SRC-PSS-NS115-2025-01-24",
+        "fact_id": "F:NS115@2025-01-24:reroute:pax.reroute_earliest_offered",
+        "source_id": "SRC-PSS-NS115@2025-01-24",
         "field": "pax.reroute_earliest_offered",
         "value": true,
         "quote": "EARLIEST REROUTE OFFERED: AZ via LHR",
@@ -101,11 +81,11 @@
         "struck": false
       },
       {
-        "fact_id": "F-OCC-NS115-code",
+        "fact_id": "F:NS115@2025-01-24:flight.ops_cause_code",
         "source_id": "SRC-OCC-2025-01-24T0512Z",
         "field": "flight.ops_cause_code",
         "value": "71",
-        "quote": "CNL LIST → NETLINE, RSN 71",
+        "quote": "RSN 71",
         "role": "contradicts",
         "trust_tier": 3,
         "struck": false
@@ -121,7 +101,7 @@
     "routed_to": "legal",
     "question_id": "Q-2",
     "known_at": "2025-01-25T06:00:00Z",
-    "commit": "1936b1f843897d55f8764bae35faf2a6f921ee5af593aef57f892394f54c2c12"
+    "commit": "8ae40464cb1138bf18f6da10bc86bac33e9b6c1de469637594d1bc1c9b4835bd"
   },
   "entitlements_summary": {
     "coupons": 184,
@@ -137,11 +117,38 @@
     "accrual_basis": "IFRS 15.56 constraint · medium_1500_3500 27%",
     "question_id": "Q-2",
     "care_due": true,
-    "headline": "Held for Legal · €19,872 accrued at the segment rate"
+    "headline": "Held for Legal · €19,872 accrued at the segment rate",
+    "elections": {
+      "reaccommodated_own": 131,
+      "refund": 31,
+      "reroute_partner": 13,
+      "voucher": 9
+    },
+    "refunds_already_initiated": 0,
+    "refund_due_cents": 575300,
+    "claims_received": 0
   },
   "sample_entitlements": [
     {
       "coupon_id": "NS115@2025-01-24:6B",
+      "flight_id": "NS115@2025-01-24",
+      "distance_km": 1886.0,
+      "band_eur": 400,
+      "band_margin_km": 386.0,
+      "regime": "EU261_2004",
+      "compensation_cents": 40000,
+      "reduction": "none",
+      "refund_due_cents": 18400,
+      "refund_already_initiated": false,
+      "care_due": true,
+      "voucher_offset_cents": 0,
+      "status": "held",
+      "article": "Art. 5(3), 7(1)",
+      "reason": "Held for Legal: compensation owed unless the cancellation is extraordinary.",
+      "rules_applied": []
+    },
+    {
+      "coupon_id": "NS115@2025-01-24:21A",
       "flight_id": "NS115@2025-01-24",
       "distance_km": 1886.0,
       "band_eur": 400,
@@ -155,25 +162,7 @@
       "voucher_offset_cents": 0,
       "status": "held",
       "article": "Art. 5(3), 7(1)",
-      "reason": "Held for Legal (Q-2): knock-on return; €400 owed unless the return is extraordinary.",
-      "rules_applied": []
-    },
-    {
-      "coupon_id": "NS115@2025-01-24:21A",
-      "flight_id": "NS115@2025-01-24",
-      "distance_km": 1886.0,
-      "band_eur": 400,
-      "band_margin_km": 386.0,
-      "regime": "EU261_2004",
-      "compensation_cents": 40000,
-      "reduction": "none",
-      "refund_due_cents": 51000,
-      "refund_already_initiated": false,
-      "care_due": true,
-      "voucher_offset_cents": 0,
-      "status": "held",
-      "article": "Art. 5(3), 7(1)",
-      "reason": "Held for Legal (Q-2). Refund due (Art. 8(1)(a)); care due.",
+      "reason": "Held for Legal: compensation owed unless the cancellation is extraordinary.",
       "rules_applied": []
     }
   ],
@@ -229,47 +218,23 @@
       "kind": "window_start",
       "label": "Storm window opens",
       "text": "EIDW 240230Z 19024G39KT 160V220 9999 FEW011 SCT016 BKN022 12/09 Q0968 TEMPO 21030G48KT",
-      "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+      "source_id": "SRC-METAR-EIDW@2025-01-24",
       "trust_tier": 1
     },
     {
       "at": "2025-01-24T05:12:00Z",
       "kind": "occ",
-      "label": "OCC cancel list → NetLine",
+      "label": "OCC log",
       "text": "05:12Z OCC DM: STORM ÉOWYN CNL LIST → NETLINE, RSN 71. NS100/101 NS102/103 NS104/105 NS106/107 NS108/109 NS110/111 NS112/113 NS114/115 NS116/117 NS118 NS21 NS41 NS51 NS31. INBD NS20 NS30 NS40 NS50 RSN 72. ASM SENT. IROPS SMS 05:20Z.",
       "source_id": "SRC-OCC-2025-01-24T0512Z",
       "trust_tier": 3
-    },
-    {
-      "at": "2025-01-24T10:20:00Z",
-      "kind": "schedule",
-      "label": "NS114 STD 10:20Z DUB",
-      "text": "Cancelled",
-      "source_id": "SRC-SCHEDULE-2025-01-24",
-      "trust_tier": 2
-    },
-    {
-      "at": "2025-01-24T13:15:00Z",
-      "kind": "schedule",
-      "label": "NS114 STA 13:15Z FCO",
-      "text": "Cancelled",
-      "source_id": "SRC-SCHEDULE-2025-01-24",
-      "trust_tier": 2
     },
     {
       "at": "2025-01-24T13:30:00Z",
       "kind": "spares",
       "label": "Spares log",
       "text": "No tail at FCO. Earliest ferry ex-DUB 15:30Z → FCO dep 19:15Z = STD+5h05.",
-      "source_id": "SRC-SPARES-2025-01-24",
-      "trust_tier": 2
-    },
-    {
-      "at": "2025-01-24T13:45:00Z",
-      "kind": "pss",
-      "label": "Earliest reroute offered: AZ via LHR",
-      "text": "EARLIEST REROUTE OFFERED: AZ via LHR",
-      "source_id": "SRC-PSS-NS115-2025-01-24",
+      "source_id": "SRC-SPARES-2025-01-24T1330Z-NS115",
       "trust_tier": 2
     },
     {
@@ -277,23 +242,31 @@
       "kind": "schedule",
       "label": "NS115 STD 14:10Z FCO",
       "text": "Cancelled",
-      "source_id": "SRC-SCHEDULE-2025-01-24",
+      "source_id": "SRC-SCHEDULE-EIDW@2025-01-24",
       "trust_tier": 2
+    },
+    {
+      "at": "2025-01-24T14:20:00Z",
+      "kind": "metar",
+      "label": "Weather at STD (FCO): 8 kt, no gust",
+      "text": "LIRF 241420Z 28008KT CAVOK 16/11 Q1019 NOSIG",
+      "source_id": "SRC-METAR-LIRF@2025-01-24",
+      "trust_tier": 1
     },
     {
       "at": "2025-01-24T15:00:00Z",
       "kind": "window_end",
       "label": "Storm window closes",
       "text": "EIDW 241500Z 26021G35KT 200V290 9999 -RA FEW012 SCT020 BKN050 04/M01 Q0988 NOSIG",
-      "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+      "source_id": "SRC-METAR-EIDW@2025-01-24",
       "trust_tier": 1
     },
     {
       "at": "2025-01-24T17:00:00Z",
       "kind": "metar",
-      "label": "Weather at STA: 14 kt, gust 25 kt",
+      "label": "Weather at STA (DUB): 14 kt, gust 25 kt",
       "text": "EIDW 241700Z 22014G25KT 200V260 9999 -RA FEW012 SCT020 BKN050 04/M00 Q0990 NOSIG",
-      "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+      "source_id": "SRC-METAR-EIDW@2025-01-24",
       "trust_tier": 1
     },
     {
@@ -301,7 +274,7 @@
       "kind": "schedule",
       "label": "NS115 STA 17:00Z DUB",
       "text": "Cancelled",
-      "source_id": "SRC-SCHEDULE-2025-01-24",
+      "source_id": "SRC-SCHEDULE-EIDW@2025-01-24",
       "trust_tier": 2
     }
   ],
