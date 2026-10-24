@@ -6,10 +6,9 @@ import type { FlightFile } from "@/api/types";
 import { MicroLabel, StatusChip } from "@/components/chips";
 import { RoleAvatar } from "@/components/kit";
 import { VERDICT_COLOR, verdictChip, type VerdictKind } from "@/components/verdict";
-import { count, duration, longDate, zulu } from "@/lib/format";
+import { count, duration, longDate, routedTo, zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { cityOf, consequence, splitRecode, summaryText, VERDICT_HEADLINE } from "./lib";
-import { routedPhrase } from "../questions/lib";
 import { Recode } from "./Recode";
 
 const HEADLINE_INK: Record<VerdictKind, string> = {
@@ -115,7 +114,7 @@ export function VerdictCover({ file, kind, stormLabel, stormId }: { file: Flight
             {decision.routed_to && kind === "held" ? (
               <Link to="/questions" className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-[13px] text-slate-600 hover:bg-cloud-50">
                 <RoleAvatar role={decision.routed_to} size="sm" />
-                {routedPhrase(decision.routed_to)}
+                {routedTo(decision.routed_to)}
               </Link>
             ) : null}
           </div>

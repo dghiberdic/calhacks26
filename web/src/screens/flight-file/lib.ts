@@ -41,8 +41,8 @@ export function splitRecode(label: string | null | undefined, decision?: Pick<Fl
 const FEATURE: Record<string, string> = {
   in_window_dep: "Departure in storm window",
   in_window_arr: "Arrival in storm window",
-  window_margin_h: "Hours clear of the window",
-  window_margin_min: "Minutes clear of the window",
+  window_margin_h: "Hours from the window edge",
+  window_margin_min: "Minutes from the window edge",
   aog_before_window: "Grounded before the storm",
   aog_inside_window: "Grounded in storm window",
   root_cause_internal: "Root cause internal (ATA)",

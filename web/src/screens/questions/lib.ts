@@ -1,5 +1,5 @@
 import type { Question, ReplayDiff, Role, Rule } from "@/api/types";
-import { count, idDate, longDate, ROLE_LABEL } from "@/lib/format";
+import { count, idDate, longDate, ROLE_LABEL, routedTo } from "@/lib/format";
 import { stormName } from "@/lib/storms";
 
 /** "sources-disagree" → "sources disagree", for `confidence 39% · sources disagree`. */
@@ -33,8 +33,7 @@ function hoursText(fromIso: string, toIso: string): string | null {
  */
 export function reminderText(q: Question): string | null {
   const who = ROLE_LABEL[q.routed_to];
-  const others = (q as Question & { others_settled?: unknown }).others_settled;
-  const settled = typeof others === "number" && others > 0 ? ` · ${count(others)} others settled` : "";
+  const settled = q.others_settled ? ` · ${count(q.others_settled)} others settled` : "";
   if (q.status === "reminded") {
     const waited = q.remind_at ? hoursText(q.asked_at, q.remind_at) : null;
     return `Waiting on ${who}${waited ? ` ${waited}` : ""} · reminder sent${settled}`;
@@ -125,10 +124,5 @@ export function nextStormLine(replay: ReplayDiff | null | undefined, caseRefs: s
 /** Server-side PII masks, recognised so they render as a quiet "hidden" mark instead of raw symbols. */
 export const MASK_RE = /(\[(?:redacted|masked|pii)[^\]]*\]|█{2,}|•{3,}|\*{3,}|░{2,})/gi;
 
-/**
- * How a seat reads mid-sentence: "the Claims Lead", "the Controller", but "Legal" and "Ops" (no article).
- * Local because the shared `routedTo` writes "Routed to the Legal".
- */
-const SEAT: Partial<Record<Role, string>> = { claims_lead: "the Claims Lead", legal: "Legal", controller: "the Controller", ops: "Ops", cfo: "the CFO", judge: "the judge" };
-export const seatPhrase = (role: Role) => SEAT[role] ?? ROLE_LABEL[role];
-export const routedPhrase = (role: Role) => `Routed to ${seatPhrase(role)}`;
+/** How a seat reads mid-sentence, as `routedTo` writes it: "the Claims Lead", "the Controller", "Legal", "Ops". */
+export const seatPhrase = (role: Role) => routedTo(role).replace(/^Routed to /, "");

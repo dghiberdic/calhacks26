@@ -5,13 +5,12 @@ import { BellRing, ChevronDown, Lock, LockOpen } from "lucide-react";
 import type { Question, Role } from "@/api/types";
 import { MicroLabel, StatusChip } from "@/components/chips";
 import { EvidenceList } from "@/components/evidence";
-import { ConfidenceLine } from "@/components/kit";
+import { ConfidenceLine, RoutedTo } from "@/components/kit";
 import { count, ROLE_LABEL, zuluDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { AnswerFlow, type Flow } from "./AnswerFlow";
 import { caseCount, caseHref, caseKind, caseLabel, reasonText, reminderText } from "./lib";
 import { MaskedText } from "./MaskedText";
-import { RoutedLine } from "./RoutedLine";
 
 /**
  * One question per pattern: what it found, why it flagged it, what it recommends, the evidence, and
@@ -36,11 +35,11 @@ export function QuestionCard({ question, role, flow, onFlow }: { question: Quest
       <div className="grid lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_440px]">
         <div className="min-w-0 p-5 md:p-6">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <RoutedLine role={question.routed_to} holdsCents={resolved ? null : question.holds_cents} />
+            <RoutedTo role={question.routed_to} holdsCents={resolved ? null : question.holds_cents} />
             {reminder && !resolved ? (
               <StatusChip tone="held" dot={false} className="h-auto min-h-6 items-start gap-1.5 whitespace-normal py-1 leading-snug">
                 <BellRing className="mt-px size-3 shrink-0" aria-hidden="true" />
-                <ClockText text={reminder} />
+                <span>{reminder}</span>
               </StatusChip>
             ) : null}
           </div>
@@ -88,23 +87,6 @@ export function QuestionCard({ question, role, flow, onFlow }: { question: Quest
         </div>
       </div>
     </article>
-  );
-}
-
-/** Mono chip text with its clock times in tabular Archivo (B612 sets "09:00Z" as "09: 00Z"). */
-function ClockText({ text }: { text: string }) {
-  return (
-    <span>
-      {text.split(/(\d{1,2}:\d{2}Z)/).map((part, i) =>
-        i % 2 ? (
-          <span key={i} className="font-sans tabular-nums">
-            {part}
-          </span>
-        ) : (
-          part
-        ),
-      )}
-    </span>
   );
 }
 

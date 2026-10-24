@@ -6,11 +6,10 @@ import type { FlightRow, StormRun } from "@/api/types";
 import { MicroLabel, StatusChip } from "@/components/chips";
 import { ConfidenceLine, Empty, ErrorNote, PageHeader, Shimmer } from "@/components/kit";
 import { VERDICT_COLOR, verdictChip, verdictOf, type VerdictKind } from "@/components/verdict";
-import { count, longDate, zulu } from "@/lib/format";
+import { count, longDate, routedTo, zulu } from "@/lib/format";
 import { stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
 import { cityOf, consequence, flightHref, splitRecode, VERDICT_HEADLINE } from "./lib";
-import { routedPhrase } from "../questions/lib";
 import { Recode } from "./Recode";
 
 /** Not weather first: the 1% the run caught, then what waits on a person, then the rest. */
@@ -129,9 +128,9 @@ function VerdictRibbon({ groups, total }: { groups: Group[]; total: number }) {
 function groupNote(group: Group): string | null {
   if (group.kind === "held") {
     const role = group.rows.find((r) => r.decision?.routed_to)?.decision?.routed_to;
-    return role ? `${routedPhrase(role)}; ${consequence("held")}` : consequence("held");
+    return role ? `${routedTo(role)}; ${consequence("held")}` : consequence("held");
   }
-  if (group.kind === "notweather") return "Recoded from the weather code OCC typed. Compensation owed.";
+  if (group.kind === "notweather") return group.rows.every((r) => r.decision?.recoded) ? "Recoded from the weather code OCC typed. Compensation owed." : "Not extraordinary: compensation owed.";
   if (group.kind === "operated") return "Flew as scheduled.";
   return consequence(group.kind);
 }

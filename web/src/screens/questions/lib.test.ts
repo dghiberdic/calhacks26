@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Question, ReplayDiff, Rule } from "@/api/types";
-import { caseCount, caseHref, caseLabel, findProposalRule, MASK_RE, nextStormLine, REJECT_RE, reminderText, routedPhrase, seatPhrase } from "./lib";
+import { caseCount, caseHref, caseLabel, findProposalRule, MASK_RE, nextStormLine, REJECT_RE, reminderText, seatPhrase } from "./lib";
 
 const q = (over: Partial<Question> = {}): Question => ({
   id: "Q-1",
@@ -38,8 +38,8 @@ describe("question helpers", () => {
   });
 
   it("says the seat the way a sentence needs it", () => {
-    expect(routedPhrase("claims_lead")).toBe("Routed to the Claims Lead");
-    expect(routedPhrase("legal")).toBe("Routed to Legal");
+    expect(seatPhrase("claims_lead")).toBe("the Claims Lead");
+    expect(seatPhrase("legal")).toBe("Legal");
     expect(seatPhrase("ops")).toBe("Ops");
   });
 

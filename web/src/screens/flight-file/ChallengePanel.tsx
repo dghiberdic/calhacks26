@@ -9,11 +9,10 @@ import type { ChallengeResponse, Question } from "@/api/types";
 import { useSession } from "@/app/session";
 import { MicroLabel, StatusChip, type Tone } from "@/components/chips";
 import { EvidenceList } from "@/components/evidence";
-import { ConfidenceLine, ErrorNote } from "@/components/kit";
+import { ConfidenceLine, ErrorNote, RoutedTo } from "@/components/kit";
 import type { VerdictKind } from "@/components/verdict";
 import { ROLE_LABEL } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { RoutedLine } from "../questions/RoutedLine";
 import { useViewAs } from "../questions/viewAs";
 
 /** Worded like the challenges people actually send; static copy that only fills the box. */
@@ -155,7 +154,7 @@ function RoutedQuestion({ question }: { question: Question }) {
       <MicroLabel tone="held">New question</MicroLabel>
       <p className="mt-1.5 text-[14.5px] font-semibold leading-snug text-navy-900">{question.title}</p>
       <div className="mt-2 flex flex-col gap-1.5">
-        <RoutedLine role={question.routed_to} holdsCents={question.holds_cents} />
+        <RoutedTo role={question.routed_to} holdsCents={question.holds_cents} />
         <ConfidenceLine confidence={question.confidence} reason={question.reason_tag.replace(/-/g, " ")} />
       </div>
       <div className="mt-3">
