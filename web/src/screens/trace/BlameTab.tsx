@@ -2,12 +2,14 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, CornerDownRight } from "lucide-react";
-import { ApiError } from "@/api/client";
-import { useBlame, useRules, useStormRun, useStorms } from "@/api/queries";
+import { api, ApiError } from "@/api/client";
+import { useQuery } from "@tanstack/react-query";
+import { qk, useBlame, useRules, useStormRun, useStorms } from "@/api/queries";
+import { STATUS_WORD } from "@/components/journal";
 import type { Blame, BlameStep } from "@/api/types";
 import { MicroLabel } from "@/components/chips";
 import { Empty, ErrorNote, Shimmer } from "@/components/kit";
-import { longDate, zulu } from "@/lib/format";
+import { eur, longDate, periodLabel, zulu } from "@/lib/format";
 import { HERO_STORM } from "@/lib/storms";
 import { cn } from "@/lib/utils";
 import { STEP_NAME, receiptText, ruleRefIn, shortHash, stepKind, suggestTargets, type BlameTarget, type StepKind } from "./model";
@@ -149,6 +151,29 @@ function TargetPicker({ targets, current, onChoose, loading }: { targets: BlameT
   );
 }
 
+/** A journal target leads with its amount and accounts, read from the journal (the blame label carries neither). */
+function EntryAmount({ target }: { target: string }) {
+  const isJe = /^JE-/.test(target);
+  const journal = useQuery({ queryKey: qk.journal(undefined, undefined), queryFn: () => api.journal(), enabled: isJe });
+  const je = isJe ? journal.data?.find((e) => e.id === target) : undefined;
+  if (!je) return null;
+  const amount = je.lines.reduce((t, l) => t + (l.dr_cents ?? 0), 0);
+  const side = (dr: boolean) =>
+    je.lines
+      .filter((l) => (dr ? l.dr_cents : l.cr_cents))
+      .map((l) => `${l.account} ${l.account_name}`)
+      .join(", ");
+  return (
+    <div className="mt-2" data-testid="blame-amount">
+      <p className="display text-[30px] leading-none text-navy-900 md:text-[34px]">{eur(amount)}</p>
+      <p className="mt-1.5 text-[13px] leading-snug text-slate-600">
+        Dr {side(true)} / Cr {side(false)} · {STATUS_WORD[je.status] ?? je.status}
+        {je.status === "draft" ? ", pending approval" : ""} · period {periodLabel(je.period)}
+      </p>
+    </div>
+  );
+}
+
 // ---------- receipt ----------
 function Receipt({ blame }: { blame: Blame }) {
   const reduce = useReducedMotion();
@@ -165,6 +190,7 @@ function Receipt({ blame }: { blame: Blame }) {
           <h2 className="mt-1 break-all text-[15px] font-bold text-navy-900">
             <span className="font-mono">{blame.target}</span>
           </h2>
+          <EntryAmount target={blame.target} />
         </div>
         <div className="flex gap-2">
           <CopyButton text={receiptText(blame.target, blame.steps, origin)} label="Copy receipt" what="Receipt" />

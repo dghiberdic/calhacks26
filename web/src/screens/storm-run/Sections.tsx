@@ -44,7 +44,7 @@ export function LiabilityTiles({ run, cfo, recodedFlight }: { run: StormRun; cfo
           {cfo?.held_for_legal_cents ? (
             <>
               {" "}
-              <Money cents={cfo.drafted_liability_cents} className="text-navy-900" /> owed + <Money cents={cfo.held_for_legal_cents} className="text-held-ink" /> held for Legal, accrued under the IFRS 15.56 constraint.
+              <Money cents={cfo.drafted_liability_cents} className="text-navy-900" /> drafted + <Money cents={cfo.held_for_legal_cents} className="text-held-ink" /> held for Legal, accrued under the IFRS 15.56 constraint.
             </>
           ) : null}{" "}
           Weather flights: no compensation; refunds and care still due.

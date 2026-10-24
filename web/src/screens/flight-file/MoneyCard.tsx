@@ -63,7 +63,7 @@ export function MoneyCard({ file, kind, className }: { file: FlightFile; kind: V
         <p className={cn(showLiability ? "mt-2 text-[13px] text-slate-500" : "mt-2 text-[14px] text-navy-900")}>{headline.note}</p>
         {rateLine && kind !== "weather" && kind !== "operated" ? <p className="mt-1 text-[13px] leading-snug text-slate-500">{capitalize(rateLine)}</p> : null}
         {showLiability ? (
-          <Link to={`/trace?target=${encodeURIComponent(file.flight.id)}`} className="mt-2 inline-block text-[12.5px] font-medium text-metar-ink hover:underline">
+          <Link to={`/trace?target=${encodeURIComponent(estimate?.id ?? file.flight.id)}`} className="mt-2 inline-block text-[12.5px] font-medium text-metar-ink hover:underline">
             Why this amount? € → entitlement → rule → evidence
           </Link>
         ) : null}
