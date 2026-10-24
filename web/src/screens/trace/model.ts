@@ -111,9 +111,16 @@ export const CELL_HINT: Record<AccessCell, string> = {
   none: "No access",
 };
 
-/** The resource that holds passenger PII, as the broker names it. */
+/**
+ * The resource that holds passenger PII: one the broker names that way, else one it serves `redacted` to some
+ * seat (that is what redacted means), preferring claims, where a passenger's own words and name live.
+ */
 export function piiResource(matrix: AccessMatrix | undefined): string | null {
-  return matrix?.resources.find((r) => /pii|passenger|personal/i.test(r)) ?? null;
+  if (!matrix) return null;
+  const named = matrix.resources.find((r) => /pii|passenger|personal/i.test(r));
+  if (named) return named;
+  const redacted = matrix.resources.filter((r) => matrix.principals.some((p) => matrix.cells[p]?.[r] === "redacted"));
+  return redacted.find((r) => /claim/i.test(r)) ?? redacted[0] ?? null;
 }
 
 /** The short reason in `agent.drafter approve_payout → DENIED · SoD`. */

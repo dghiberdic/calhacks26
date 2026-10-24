@@ -78,8 +78,8 @@ export function PiiMask({ matrix }: { matrix: AccessMatrix | undefined }) {
           </p>
         ) : (
           <>
-            <Seat seat={CLEAR} cell={cell(CLEAR)} record={record} viewer={role} />
-            <Seat seat={MASKED} cell={cell(MASKED)} record={record} viewer={role} />
+            <Seat seat={CLEAR} cell={cell(CLEAR)} resource={resource} record={record} viewer={role} />
+            <Seat seat={MASKED} cell={cell(MASKED)} resource={resource} record={record} viewer={role} />
           </>
         )}
       </div>
@@ -88,7 +88,7 @@ export function PiiMask({ matrix }: { matrix: AccessMatrix | undefined }) {
 }
 
 /** One seat's view of the record. Clear text appears only when this browser was actually given it. */
-function Seat({ seat, cell, record, viewer }: { seat: Role; cell: AccessCell | null; record: PiiRecord; viewer: Role }) {
+function Seat({ seat, cell, resource, record, viewer }: { seat: Role; cell: AccessCell | null; resource: string | null; record: PiiRecord; viewer: Role }) {
   // The matrix decides; without a PII column, the Claims Lead is the seat that reads PII (plan §2) and the
   // record's values still come only from the server.
   const clearSeat = cell ? cell === "read" || cell === "write" || cell === "approve" : seat === CLEAR;
@@ -103,7 +103,7 @@ function Seat({ seat, cell, record, viewer }: { seat: Role; cell: AccessCell | n
           <RoleAvatar role={seat} size="sm" />
         </span>
         <span className="text-[13px] font-medium text-navy-900">{ROLE_LABEL[seat]}</span>
-        {cell ? <span className="font-mono text-[11px] text-slate-400">{cell}</span> : null}
+        {cell ? <span className="font-mono text-[11px] text-slate-400">{resource ? `${resource} · ${cell}` : cell}</span> : null}
         {viewer === seat ? <span className="micro text-slate-400">you</span> : null}
         <span className="ml-auto font-mono text-[11px] text-slate-400">{[record.question.id, ...record.question.case_refs.map(shortId)].join(" · ")}</span>
       </header>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BlameStep, Commit, FlightRow, Question, Rule, StormRun } from "@/api/types";
-import { REDACTED, blameTarget, chainOrder, eventRef, findPiiRecord, isPiiField, splitPii, suggestTargets, compareFrameworkRef, denialTag, evidenceTarget, isTab, orderPrincipals, principalLabel, principalRole, receiptText, ruleRefIn, shortHash, stepKind } from "./model";
+import { REDACTED, blameTarget, chainOrder, eventRef, piiResource, findPiiRecord, isPiiField, splitPii, suggestTargets, compareFrameworkRef, denialTag, evidenceTarget, isTab, orderPrincipals, principalLabel, principalRole, receiptText, ruleRefIn, shortHash, stepKind } from "./model";
 
 const commit = (over: Partial<Commit> = {}): Commit => ({
   hash: "9f2c41ab77de0c55aa13",
@@ -177,6 +177,13 @@ describe("the PII record", () => {
         { fact_id: "f2", source_id: "claim", field: "claim.passenger_name", value: name, quote: name, role: "context", trust_tier: 4 },
       ],
     }) as unknown as Question;
+
+  it("finds the PII column by name, else by its redacted cells", () => {
+    const cells = { ops: { flights: "read", coupons: "redacted", claims: "redacted" }, claims_lead: { flights: "read", coupons: "read", claims: "write" } } as const;
+    expect(piiResource({ principals: ["ops", "claims_lead"], resources: ["flights", "coupons", "claims"], cells })).toBe("claims");
+    expect(piiResource({ principals: ["ops"], resources: ["passenger_pii", "claims"], cells: { ops: { passenger_pii: "redacted", claims: "none" } } })).toBe("passenger_pii");
+    expect(piiResource({ principals: ["ops"], resources: ["flights"], cells: { ops: { flights: "read" } } })).toBeNull();
+  });
 
   it("recognises identity fields only", () => {
     expect(isPiiField("claim.passenger_name")).toBe(true);
