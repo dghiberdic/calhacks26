@@ -12,7 +12,7 @@
       "cal@cal-v1"
     ],
     "message": "Q-3 → controller · cohort_release · 0.72",
-    "recorded_at": null
+    "recorded_at": "2025-01-25T06:00:28Z"
   },
   {
     "hash": "8c8fb7c2c3fc4253913f3c8369dfbdc5f8cd3e2abe10b673aeaa360a79b92661",
@@ -27,7 +27,7 @@
       "cal@cal-v1"
     ],
     "message": "Q-1 → claims_lead · voucher_in_lieu_unsigned · 0.39",
-    "recorded_at": null
+    "recorded_at": "2025-01-25T06:00:26Z"
   },
   {
     "hash": "2c39efdb2dc2d96262d45c8fb152acdb2ff266b23f0deeadb9e564cb601f6ad2",
@@ -42,7 +42,7 @@
       "cal@cal-v1"
     ],
     "message": "Q-2 → legal · knock_on_return · 0.47 · no-precedent",
-    "recorded_at": null
+    "recorded_at": "2025-01-25T06:00:22Z"
   },
   {
     "hash": "e5950d55970a1342c2c55457c0373777d40e00b698d8a1c009dcaddf9855a589",
@@ -57,7 +57,7 @@
       "cal@cal-v1"
     ],
     "message": "agent.drafter approve_payout → DENIED · SoD",
-    "recorded_at": null
+    "recorded_at": "2025-01-25T06:00:20Z"
   },
   {
     "hash": "03ddf67c6109a4bbead3ad1ec2fda6d91a68d9187555ca3e028b8279c7b8a52b",
@@ -73,7 +73,7 @@
       "cal@cal-v1"
     ],
     "message": "JE-000101 drafted · Dr 4090 / Cr 2140 €34,650",
-    "recorded_at": null
+    "recorded_at": "2025-01-25T06:00:14Z"
   },
   {
     "hash": "d10eefc94d21dd2dae5432c95b8ee28c37b40ca4916a5cd04a0026effdd22cbe",
@@ -90,7 +90,7 @@
       "cal@cal-v1"
     ],
     "message": "NS31 · 172 entitlements · €99,000 full Art. 7 entitlement",
-    "recorded_at": null
+    "recorded_at": "2025-01-25T06:00:12Z"
   },
   {
     "hash": "13af71797abd0b19220fc0b16a1e483b3213c115f239e3915290ae7900100f04",
@@ -108,7 +108,7 @@
       "cal@cal-v1"
     ],
     "message": "NS31 technical · not extraordinary · recoded 71 → 41 · 0.91",
-    "recorded_at": null
+    "recorded_at": "2025-01-25T06:00:08Z"
   },
   {
     "hash": "0302a4c290d098d4fccb728c319298b0f11a04cb295c9026610aa9933ce27ba3",
@@ -124,7 +124,7 @@
       "cal@cal-v1"
     ],
     "message": "tech log EI-NSB 23 Jan 21:40Z · AOG · no MEL relief",
-    "recorded_at": null
+    "recorded_at": "2025-01-25T06:00:05Z"
   },
   {
     "hash": "4d52187a35555ce707b58391d72d8802a911a44351d038c445c5b8051248128b",
@@ -139,7 +139,7 @@
       "cal@cal-v1"
     ],
     "message": "Reader · claude-opus-5-5 · tech log EI-NSB · 4 facts, spans verified",
-    "recorded_at": null
+    "recorded_at": "2025-01-25T06:00:04Z"
   },
   {
     "hash": "5fea3bdc245b1a2352b29efb799e7d2816f719830c4ae1481cf91b59f31d4091",
@@ -154,7 +154,7 @@
       "cal@cal-v1"
     ],
     "message": "OCC cancel list 05:12Z · 27 flights",
-    "recorded_at": null
+    "recorded_at": "2025-01-25T06:00:00Z"
   },
   {
     "hash": "5cbad934de728aeba79a05bab8127a62fb3ecd08c211db2cb418e7a146d23db6",
@@ -169,7 +169,7 @@
       "cal@cal-v1"
     ],
     "message": "60 METAR obs EIDW 2025-01-23T18:00Z..2025-01-24T23:30Z (IEM)",
-    "recorded_at": null
+    "recorded_at": "2025-01-25T06:00:00Z"
   },
   {
     "hash": "a92933f50edbd7c62e5c36273d0272a0edb7fb68a072d238e07e56a102bf06a6",
@@ -184,6 +184,6 @@
       "cal@cal-v1"
     ],
     "message": "mined R-MINED-REDUCE@1 from history (41 of 42) · active",
-    "recorded_at": null
+    "recorded_at": "2025-01-20T00:00:00Z"
   }
 ]

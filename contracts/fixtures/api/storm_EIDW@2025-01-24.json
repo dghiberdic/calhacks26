@@ -671,8 +671,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 2.9,
+            "window_margin_h": 1.268,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STA 05:40Z.",
         "evidence": [
@@ -709,7 +720,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "5757e9d4b89fce874ae0e1d582af2e166aafa3c3b520ba52af8063dc1945352e"
+        "commit": "e8b81ef4022ccfff70e62b4ffb4b35431a5b917244afbb1155f1d4a155e1e9cc"
       }
     },
     {
@@ -760,8 +771,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 2.9,
+            "window_margin_h": 1.332,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STA 05:50Z.",
         "evidence": [
@@ -798,7 +820,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "0f2e99c7813c8f230de323ab198dc30978e8cbaba444a9782ad79daa81eabfa5"
+        "commit": "3bdfa3defa719409a5b15b00084a6f41f46ecfec090e60517152c4e9a30cf3f2"
       }
     },
     {
@@ -849,8 +871,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 2.9,
+            "window_margin_h": 1.232,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STA 05:35Z.",
         "evidence": [
@@ -887,7 +920,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "6fc8aba8025639b7494bb9980948c8a4f44cbb22a779f812609e042ed28e2c7a"
+        "commit": "0bd566e799dee8dd2bf271f286c71d766a34b28e57dffaa81938427d494b20ca"
       }
     },
     {
@@ -938,8 +971,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 2.9,
+            "window_margin_h": 1.2,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STA 05:30Z.",
         "evidence": [
@@ -976,7 +1020,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "b5fcfce155e4f0d517959580e0a34e4b74d1a66e7314ebb5dc1aacb2373012ce"
+        "commit": "a734eb1556191bbf5e1d3c2208e22df431083fa1779211a1f915a14dee2a4394"
       }
     },
     {
@@ -1027,8 +1071,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 2.9,
+            "in_window_arr": 0.0,
+            "window_margin_h": 1.468,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STD 06:10Z.",
         "evidence": [
@@ -1065,7 +1120,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "80ed63e5c5c0d739de45f10a76435d2e5dc9b0a616120b235db62bb756870232"
+        "commit": "13039e75af564bc9614e8bb19ca371473798b4dd2ef9ea35650d5edfe892cfc3"
       }
     },
     {
@@ -1116,8 +1171,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 2.9,
+            "in_window_arr": 0.0,
+            "window_margin_h": 1.6,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STD 06:40Z.",
         "evidence": [
@@ -1154,7 +1220,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "97c9580e28a0f8b612ef9ffacbf6fd39fdaa45e79a83699164347657da1e9b13"
+        "commit": "2000388f3baf8568823bc52cd24cf9d6d5f144449b32e6f7b0cb057309dedfed"
       }
     },
     {
@@ -1205,8 +1271,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 2.9,
+            "in_window_arr": 0.0,
+            "window_margin_h": 1.6,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STD 07:05Z.",
         "evidence": [
@@ -1243,7 +1320,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "305968a813b1995686c6e4f766775debbe014e9f8a02073d54ff8b8740258000"
+        "commit": "f38460054ef55c89281a1747017a205279ff17847cc5a6f68d18cf1eaba07d47"
       }
     },
     {
@@ -1294,8 +1371,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 2.9,
+            "in_window_arr": 0.0,
+            "window_margin_h": 1.6,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STD 07:30Z.",
         "evidence": [
@@ -1332,7 +1420,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "f3f076f1dd1d7929c66d92795cf75822d528c2364fdac4c2e96b3b8cd796c674"
+        "commit": "f9b50a7f62482f54328b43b5b33047ec6156271367a2a023a6b866a2afe86e04"
       }
     },
     {
@@ -1383,8 +1471,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 2.9,
+            "window_margin_h": 1.6,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STA 09:15Z.",
         "evidence": [
@@ -1421,7 +1520,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "33e084c64f8f6f8b97b5b24dfe86300c0420a2518b1fe2d78406914c0360eacb"
+        "commit": "c458f80041130f166597b0e294d7a837823cc4763a4541f5ab59081b39ac9df6"
       }
     },
     {
@@ -1472,8 +1571,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 2.9,
+            "in_window_arr": 0.0,
+            "window_margin_h": 1.6,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STD 08:15Z.",
         "evidence": [
@@ -1510,7 +1620,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "bda6cbd57070113c2e8713129fc97ac86454a511089ec67c545fd26eaebd267d"
+        "commit": "08ebd510b004daf996a847a3cbbbf2d5e31f9a907036a339341e7e5e59961cb2"
       }
     },
     {
@@ -1561,8 +1671,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 2.9,
+            "window_margin_h": 1.6,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STA 10:30Z.",
         "evidence": [
@@ -1599,7 +1720,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "5007bd7df271e5458987cf45cf83864c48b3160fd219f69dc33afdd83fd2260b"
+        "commit": "538a8fcf2ea87ede58785b5a6482f1e810620d93ef3a78ff2be61cc22e0ce273"
       }
     },
     {
@@ -1650,8 +1771,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 2.9,
+            "in_window_arr": 0.0,
+            "window_margin_h": 1.6,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STD 09:00Z.",
         "evidence": [
@@ -1688,7 +1820,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "41bde929e00bc86f54ec43d326786373cc6a21df8d46bcb7aaee5d0e5c6212d9"
+        "commit": "7cae00f187f1c0921bf38e4db7499d8d4621eb07bc1bee0c3dfc03cc7e376490"
       }
     },
     {
@@ -1739,8 +1871,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 2.9,
+            "window_margin_h": 1.6,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STA 10:40Z.",
         "evidence": [
@@ -1777,7 +1920,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "d36146ff218f5e1bf2cbf3fa66888b0fb85bb1dcb6e4ed2b9d2af632454e5f62"
+        "commit": "2012b629f94120133f382eedeac7b15a178cc9efb08ac6128c64003c8e679fda"
       }
     },
     {
@@ -1828,8 +1971,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 2.9,
+            "in_window_arr": 0.0,
+            "window_margin_h": 1.6,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STD 09:40Z.",
         "evidence": [
@@ -1866,7 +2020,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "ac7f9f63c49c2ec15a0dafe9d0fcdc2878e952101f706d8fe7775bdd52a02c53"
+        "commit": "4f415d6aa879b6d104d0eeaed7cfc62d83c64d9f8ad1f7c1498dc63dc6d30013"
       }
     },
     {
@@ -1917,8 +2071,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 2.9,
+            "window_margin_h": 1.468,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STA 11:20Z.",
         "evidence": [
@@ -1955,7 +2120,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "3eacb8da2934af3df4c6dc0186a300020e8aea37ee8a9ff9e1741a70f52fa5cb"
+        "commit": "b61cd18ab3c23c035984f5b4521ac180ddf4148611a56c7032b9571fbc64c3fa"
       }
     },
     {
@@ -2006,8 +2171,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 2.9,
+            "in_window_arr": 0.0,
+            "window_margin_h": 1.6,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STD 10:20Z.",
         "evidence": [
@@ -2044,7 +2220,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "ee89f7760b06cc6d828f3ac9a8363fca958181c30c5a81b80bb83b7e885fa33f"
+        "commit": "1b719b8d63019dd734aeff9ba400c6fd0ad88d547f8c9df5f6880394c5d5021d"
       }
     },
     {
@@ -2095,8 +2271,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 2.9,
+            "in_window_arr": 0.0,
+            "window_margin_h": 1.6,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STD 11:00Z.",
         "evidence": [
@@ -2133,7 +2320,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "9c9c18f9fada2bf3204b8620e0190acc3c99a7ea06c8d4e3ea65d0de9aa8d929"
+        "commit": "d7d5111c49ff689a0ca1c4039f11db7fda6f3e31aae7f30708e03e8a05525158"
       }
     },
     {
@@ -2184,8 +2371,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 2.9,
+            "in_window_arr": 0.0,
+            "window_margin_h": 1.568,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STD 11:05Z.",
         "evidence": [
@@ -2222,7 +2420,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "38ea05a4ec4108ca8337971abceaa96782f2dc6654773520bcd4c4adc79fc0dc"
+        "commit": "250f335c59cb264f87a3aa0a4b1bdc8d76dc79bae562766ef59a46e4d29a6a81"
       }
     },
     {
@@ -2273,8 +2471,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 2.9,
+            "window_margin_h": 0.532,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STA 13:40Z.",
         "evidence": [
@@ -2311,7 +2520,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "66d684d439c9de0c9f3adce1e6cbba09bc4e573800398f75c0125a2a4b927f82"
+        "commit": "b869ba72adb65771822b2e287356fcc9f3c8208e70e894d24bdb6ce262b15ae2"
       }
     },
     {
@@ -2362,8 +2571,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 2.9,
+            "window_margin_h": 0.268,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STA 14:20Z.",
         "evidence": [
@@ -2400,7 +2620,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "d21ecea285f370025ab15a9c0ee16244a5d471e220995371fb39b305f4ed88d7"
+        "commit": "8d4e0f722b7a69bc6cc9bcc1ab8e7c67d95be19e33f54323b08d65c5d705cae6"
       }
     },
     {
@@ -2451,8 +2671,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 2.9,
+            "in_window_arr": 0.0,
+            "window_margin_h": 1.132,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STD 12:10Z.",
         "evidence": [
@@ -2489,7 +2720,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "8ad164ec38da130c26800febb75c8387932ac434f012dc63494bbc1e1d029083"
+        "commit": "c67d9e86fca1283b1ea99fe3f591a1b23a338cb8d18e169f4e9cc34d556f4ca5"
       }
     },
     {
@@ -2540,8 +2771,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 2.9,
+            "in_window_arr": 0.0,
+            "window_margin_h": 0.932,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STD 12:40Z.",
         "evidence": [
@@ -2578,7 +2820,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "536b7b072200679c642b02aa3da7b4115fc79787abc52f7aa57fe24c38d01664"
+        "commit": "a4516933f046710106cedc298dc5f76e19482593f975053edb747fd35d69632e"
       }
     },
     {
@@ -2629,8 +2871,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 2.9,
+            "in_window_arr": 0.0,
+            "window_margin_h": 0.8,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Weather: Dublin inside the storm window at STD 13:00Z.",
         "evidence": [
@@ -2667,7 +2920,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "b8eadb09d4edaf29f78d36d2b07a278f97f18fb1b210cc57014929ad9195b245"
+        "commit": "c627c13cf16c2477ddf60b3dbf515b3008f16e732f5c86209d2463941f75b6aa"
       }
     },
     {
@@ -2720,8 +2973,19 @@
             "capped:no-precedent"
           ],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 0.368,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.0,
+            "knock_on": 0.3,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Knock-on: NS112 never left Dublin, so EI-NSJ never reached LIS; calm at both ends. Legal question.",
         "evidence": [
@@ -2776,7 +3040,7 @@
         "routed_to": "legal",
         "question_id": "Q-2",
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "611f22d368a8ae24812d28ada8566282bc45a5f6cc938744c485de2e7b76bbbd"
+        "commit": "e0b72f2fbc260f366ee043e60ce4439e4b019adeaad27451a5b26b22740f3332"
       }
     },
     {
@@ -2829,8 +3093,19 @@
             "capped:no-precedent"
           ],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 0.532,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.0,
+            "knock_on": 0.3,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Knock-on: NS116 never left Dublin, so EI-NSL never reached MUC; calm at both ends. Legal question.",
         "evidence": [
@@ -2885,7 +3160,7 @@
         "routed_to": "legal",
         "question_id": "Q-2",
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "e67998b1163a4d1a9dd894aeff0c04aa36951fbed04cc27b4470e034a10172ac"
+        "commit": "652a7ce705a8d227dc76b4401d1ea52485006138a130f876184a38ad8bb88c2a"
       }
     },
     {
@@ -2938,8 +3213,19 @@
             "capped:no-precedent"
           ],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 0.8,
+            "aog_before_window": 0.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 0.0,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.0,
+            "knock_on": 0.3,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Knock-on: NS114 never left Dublin, so EI-NSK never reached FCO; calm at both ends. Legal question.",
         "evidence": [
@@ -2994,7 +3280,7 @@
         "routed_to": "legal",
         "question_id": "Q-2",
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "36950391cc090f1613aa187fa422c14f4489f54ab0c209abbe71cfd02061d319"
+        "commit": "151406830a2525f6852d32b090b1b48c878699b811253cea7469153c0b1e1f59"
       }
     },
     {
@@ -3045,8 +3331,19 @@
           },
           "caps": [],
           "calibration_version": "cal-plan-fixture",
-          "contributions": {},
-          "intercept": null
+          "contributions": {
+            "in_window_dep": 0.0,
+            "in_window_arr": 0.0,
+            "window_margin_h": 0.6,
+            "aog_before_window": 1.0,
+            "aog_inside_window": 0.0,
+            "root_cause_internal": 1.21,
+            "sources_disagree": 0.0,
+            "precedent_count": 0.3,
+            "knock_on": 0.0,
+            "concurrent_causes": 0.0
+          },
+          "intercept": -0.8
         },
         "reason": "Not weather: EI-NSB AOG with no MEL relief, logged before the storm; out of window at both ends.",
         "evidence": [
@@ -3121,7 +3418,7 @@
         "routed_to": null,
         "question_id": null,
         "known_at": "2025-01-25T06:00:00Z",
-        "commit": "09c0332ac6d451314f81403f271b936836a224056d35bf53a673aada77e6d614"
+        "commit": "bcdf3967db0f12473ed9ad8c988bc429669368b646e09d17112bbdf551e2d186"
       }
     },
     {
@@ -3371,7 +3668,7 @@
     "passengers": 5292,
     "cancelled": 27,
     "operated": 11,
-    "drafted": 172,
+    "drafted": 171,
     "held": 530,
     "questions": 3,
     "people": 3,
@@ -3489,8 +3786,13 @@
           "capped:sources-disagree"
         ],
         "calibration_version": "cal-plan-fixture",
-        "contributions": {},
-        "intercept": null
+        "contributions": {
+          "in_lieu": -1.0,
+          "signed": 0.0,
+          "sources_disagree": -0.45,
+          "precedent_count": 0.0
+        },
+        "intercept": 1.0
       },
       "reason_tag": "sources-disagree",
       "holds": [
@@ -3499,7 +3801,7 @@
       "holds_cents": 60000,
       "status": "open",
       "remind_at": "2025-01-25T09:00:00Z",
-      "others_settled": 0,
+      "others_settled": 4761,
       "proposal_rule_id": null
     },
     {
@@ -3634,8 +3936,19 @@
           "capped:no-precedent"
         ],
         "calibration_version": "cal-plan-fixture",
-        "contributions": {},
-        "intercept": null
+        "contributions": {
+          "in_window_dep": 0.0,
+          "in_window_arr": 0.0,
+          "window_margin_h": 0.368,
+          "aog_before_window": 0.0,
+          "aog_inside_window": 0.0,
+          "root_cause_internal": 0.0,
+          "sources_disagree": 0.0,
+          "precedent_count": 0.0,
+          "knock_on": 0.3,
+          "concurrent_causes": 0.0
+        },
+        "intercept": -0.8
       },
       "reason_tag": "no-precedent",
       "holds": [
@@ -3646,7 +3959,7 @@
       "holds_cents": 4749600,
       "status": "open",
       "remind_at": "2025-01-25T09:00:00Z",
-      "others_settled": 0,
+      "others_settled": 24,
       "proposal_rule_id": null
     },
     {
@@ -3710,8 +4023,12 @@
         },
         "caps": [],
         "calibration_version": "cal-plan-fixture",
-        "contributions": {},
-        "intercept": null
+        "contributions": {
+          "cohort_age_months": 1.2,
+          "months_since_last_claim": 0.99,
+          "precedent_count": 0.0
+        },
+        "intercept": -1.25
       },
       "reason_tag": "release-proposal",
       "holds": [
@@ -3720,7 +4037,7 @@
       "holds_cents": 360000,
       "status": "open",
       "remind_at": "2025-01-25T09:00:00Z",
-      "others_settled": 0,
+      "others_settled": 24,
       "proposal_rule_id": null
     }
   ],
@@ -3770,7 +4087,7 @@
       "at": "2025-01-25T06:00:08Z",
       "kind": "decision",
       "actor": "agent.engine",
-      "summary": "NS31 recoded 71 → 41 · 172 payouts drafted",
+      "summary": "NS31 recoded 71 → 41 · 171 payouts drafted · 14C waits on the Claims Lead",
       "ref": "NS31@2025-01-24",
       "chip": "APPLIED",
       "amount_cents": null
@@ -4103,5 +4420,5 @@
       "tz": "Europe/Zurich"
     }
   ],
-  "name": null
+  "name": "Storm Éowyn"
 }

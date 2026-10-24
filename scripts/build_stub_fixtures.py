@@ -424,7 +424,7 @@ def ent_summary_ns31() -> dict[str, Any]:
         "status_counts": {"owed": 171, "needs_ruling": 1},
         "elections": {"refund": 32, "voucher": 14, "reaccommodated_own": 112, "reroute_partner": 14},
         "refunds_already_initiated": 32, "claims_received": 6, "care_due": True,
-        "headline": "172 payouts drafted, pending Claims Lead approval",
+        "headline": "171 payouts drafted, pending Claims Lead approval · 14C waits on her ruling (Q-1)",
     }
 
 
@@ -622,7 +622,8 @@ TRACE = [
         "INFO", TL_SRC),
     tev("decision", "agent.engine", "23 flights confirmed weather · no compensation; refunds and care still due",
         "APPLIED", STORM_ID),
-    tev("decision", "agent.engine", "NS31 recoded 71 → 41 · 172 payouts drafted", "APPLIED", "NS31@2025-01-24"),
+    tev("decision", "agent.engine", "NS31 recoded 71 → 41 · 171 payouts drafted · 14C waits on the Claims Lead",
+        "APPLIED", "NS31@2025-01-24"),
     tev("rule", "agent.engine", "Cited R-MINED-REDUCE@1 (41 of 42) · 14 partner reroutes reduced 50%", "CITED",
         "R-MINED-REDUCE@1"),
     tev("entitlement", "agent.engine", "NS31 entitlements drafted · €99,000 full Art. 7 entitlement · "
@@ -676,7 +677,11 @@ RULES = [
          action=RuleAction.ROUTE_TO, action_arg="legal", tier="regulation", authority_required=Role.LEGAL,
          valid_from=datetime(2027, 10, 23, tzinfo=UTC), recorded_at=datetime(2026, 10, 22, tzinfo=UTC),
          status="active", static_card=True,
-         title="Reg (EU) 2026/2202 (EU261 revision): in force 22 Oct 2026, applies from 23 Oct 2027"),
+         title="Reg (EU) 2026/2202 (EU261 revision): in force 22 Oct 2026, applies from 23 Oct 2027",
+         origin_quote=("Amounts (€250/400/600) and the 3 h threshold unchanged. A carrier relying on extraordinary "
+                       "circumstances names the circumstance and explains the causal link and reasonable measures "
+                       "within 30 days. New claims within nine months. Applies from 23 October 2027: no effect on "
+                       "today's balances.")),
 ]
 
 # ---------------------------------------------------------------- commits + blame
@@ -691,7 +696,7 @@ def commit(kind: str, actor: str, payload: Any, ref: str, message: str, at_: dat
     h = canon_hash({"kind": kind, "parent": parent, "payload_hash": ph, "inputs": inp,
                     "at": at_.isoformat().replace("+00:00", "Z"), "actor": actor})
     c = Commit(hash=h, parent=parent, kind=kind, at=at_, actor=actor, payload_hash=ph, payload_ref=ref,
-               inputs=inp, message=message)
+               inputs=inp, message=message, recorded_at=at_)
     COMMITS.append(c)
     return c
 
@@ -771,7 +776,7 @@ ROWS = [FlightRow(flight=f, decision=DECISIONS.get(f.id))
 AIRPORTS = [airport(c) for c in sorted({c for f in FLIGHTS.values() for c in (f.origin, f.dest)},
                                        key=lambda c: (c != "DUB", c))]
 COUNTERS = {
-    "passengers": sum(f.pax for f in CANCELLED), "cancelled": len(CANCELLED), "operated": 11, "drafted": 172,
+    "passengers": sum(f.pax for f in CANCELLED), "cancelled": len(CANCELLED), "operated": 11, "drafted": 171,
     "held": sum(FLIGHTS[k].pax for k in KNOCK_ACCRUAL), "questions": len(QUESTIONS),
     "people": len({q.routed_to for q in QUESTIONS}), "repeat_questions": 0, "rules_cited": 23 + 14,
     "recoded": 1, "weather": 23,
@@ -850,7 +855,7 @@ def flight_file(f: Flight) -> FlightFile:
                                    "pump leak beyond AMM limits with no MEL relief, logged before any storm window. "
                                    "Dublin's window closed at 15:00Z, 90 min before the 16:30Z STD, and 11 Northstar "
                                    "departures operated 15:30–17:30Z. OCC's code 71 is replaced by 41 (aircraft "
-                                   "defect). 172 payouts drafted, pending Claims Lead approval."))
+                                   "defect). 171 payouts drafted, pending Claims Lead approval; 14C waits on Q-1."))
     if g == "knock_on":
         b, mg = band(f.origin)
         o = obs_near(f.sched_arr)
@@ -974,7 +979,7 @@ CFO = CfoMetrics(
                        change_in_estimate_cents=0, closing_cents=360000, unclaimed_entitlement_cents=4260000),
     ],
     recodes_count=1, recodes_cents=3465000, refunds_within_7d_pct=100.0, vouchers_outstanding_cents=744000,
-    care_accrued_cents=22700000, care_invoiced_cents=0)
+    care_accrued_cents=22700000, care_invoiced_cents=0, cohort=STORM_ID)
 INVARIANTS = [
     InvariantResult(id="INV-BALANCED", description="Every journal entry balances (Σ Dr = Σ Cr)", ok=True,
                     detail=f"{len(JOURNAL)} entries"),
@@ -1084,7 +1089,8 @@ INJECTIONS = [
     Injection(id="06_claim_after_limitation", title="Claim after the six-year limitation",
               request=InjectRequest(kind="claim", flight_id=None,
                                     text="Claim for NS44 DUB-ORD on 12 March 2018, EU261 €600. Received today."),
-              expected="After limitation (Ireland 6 years, C-139/11) · no compensation · Claims Lead informed"),
+              expected="After the limitation period that may apply (Ireland: 6 years; the forum decides, C-139/11 "
+                       "Moré) · not asserted · routed to the Claims Lead / Legal"),
     Injection(id="07_challenge_storm_anyway", title="Challenge: the storm would have grounded it anyway",
               request=InjectRequest(kind="email", flight_id="NS31@2025-01-24",
                                     text="The storm would have grounded NS31 anyway."),
