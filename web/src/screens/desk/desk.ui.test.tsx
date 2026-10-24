@@ -7,6 +7,7 @@ import type { InjectResponse } from "@/api/types";
 import { DayForm } from "./DayForm";
 import { InjectResult } from "./InjectResult";
 import { useDesk } from "./state";
+import { useLiveFeed } from "@/api/stream";
 
 const initial = useDesk.getState();
 
@@ -172,5 +173,21 @@ describe("an injection's answer", () => {
     expect(facts).not.toHaveTextContent("amount_cents");
     expect(screen.getByTestId("inject-dropped")).toHaveTextContent("Every fact kept quotes the text word for word.");
     expect(screen.queryByTestId("inject-fallback")).toBeNull();
+  });
+
+  it("streams later events about what it touched, never replayed history or unrelated news", async () => {
+    useLiveFeed.setState({ events: [], lastSeq: 0 });
+    render(
+      <MemoryRouter>
+        <InjectResult request={{ kind: "tech_log", text, flight_id: "NS31@2025-01-24" }} response={response} startSeq={500} before={{}} after={null} />
+      </MemoryRouter>,
+    );
+    const ev = (seq: number, ref: string, summary: string) => ({ seq, at: "2025-01-25T09:00:02Z", kind: "decision" as const, actor: "agent.engine", summary, ref, chip: "APPLIED" as const });
+    useLiveFeed.getState().add([ev(499, "NS31@2025-01-24", "an old NS31 event replayed late"), ev(510, "NS31@2025-01-24", "NS31 re-decided after the read"), ev(511, "NS100@2025-01-24", "something about NS100")]);
+    const list = await screen.findByTestId("inject-events");
+    await waitFor(() => expect(list).toHaveTextContent("NS31 re-decided after the read"), { timeout: 4000 });
+    expect(list).toHaveTextContent("2 facts recorded from the tech log");
+    expect(list).not.toHaveTextContent("an old NS31 event replayed late");
+    expect(list).not.toHaveTextContent("something about NS100");
   });
 });

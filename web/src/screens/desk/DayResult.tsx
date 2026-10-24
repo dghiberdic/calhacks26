@@ -298,7 +298,7 @@ function NotWeather({ rows, onOpen }: { rows: FlightRow[]; onOpen: (id: string) 
 function MoneyRow({ run }: { run: StormRun }) {
   const c = run.counters ?? {};
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" data-testid="desk-money">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1.35fr]" data-testid="desk-money">
       <Panel>
         <MicroLabel>EU261 compensation liability</MicroLabel>
         <p className="display mt-2 text-[30px] text-navy-900">
@@ -325,7 +325,7 @@ function MoneyRow({ run }: { run: StormRun }) {
         <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[12.5px]">
           {counterRows(c, ["passengers", "drafted"]).map(([k, label]) => (
             <div key={k} className="flex items-baseline justify-between gap-2 border-b border-cloud-100 py-0.5">
-              <dt className="text-slate-500">{label}</dt>
+              <dt className="whitespace-nowrap text-slate-500">{label}</dt>
               <dd className="figure font-semibold text-navy-900">{count(c[k])}</dd>
             </div>
           ))}

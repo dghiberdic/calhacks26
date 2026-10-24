@@ -233,7 +233,10 @@ function WhatChanged({ response, startSeq, before, after }: { response: InjectRe
       if (fl) keys.add(fl);
     }
     const own = new Map(response.events.map((e) => [e.seq, e]));
-    const later = live.filter((e) => e.seq > startSeq && !own.has(e.seq) && !!e.ref && (keys.has(e.ref) || keys.has(flightOf(e.ref) ?? "")));
+    // Only what happened after this injection's own events: a stream still replaying history must not
+    // slip an older event about the same flight into the diff.
+    const after = Math.max(startSeq, ...response.events.map((e) => e.seq));
+    const later = live.filter((e) => e.seq > after && !own.has(e.seq) && !!e.ref && (keys.has(e.ref) || keys.has(flightOf(e.ref) ?? "")));
     return [...own.values(), ...later].sort((a, b) => a.seq - b.seq);
   }, [response, live, startSeq]);
 
