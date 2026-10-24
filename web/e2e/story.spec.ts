@@ -8,6 +8,9 @@ function watchErrors(page: Page) {
   return errors;
 }
 
+/** A cold dev server pre-bundles three.js and friends on the first visit; the first check gets room for it. */
+const LOADED = { timeout: 45_000 };
+
 // The scroll story: Storm Éowyn from the API (the mock world by default). Reduced motion shows every
 // beat in its final state with no pins, so these checks don't depend on scroll timing.
 test.describe("story, reduced motion", () => {
@@ -16,7 +19,7 @@ test.describe("story, reduced motion", () => {
   test("tells NS31's recode and links to the storm run", async ({ page }) => {
     const errors = watchErrors(page);
     await page.goto("/story");
-    await expect(page.getByRole("heading", { level: 1, name: "Every storm leaves a bill." })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Every storm leaves a bill." })).toBeVisible(LOADED);
 
     // The board flips NS31 to TECH 41 with its full Art. 7 entitlement, from the API.
     await expect(page.locator('[data-flight="NS31"]').first()).toHaveAttribute("data-tone", "notweather");
@@ -40,6 +43,7 @@ test.describe("story, reduced motion", () => {
     await page.goto("/story");
     const closing = page.getByTestId("story-closing");
     await closing.scrollIntoViewIfNeeded();
+    await expect(closing).toBeVisible(LOADED);
     await closing.getByRole("link", { name: /Open the storm run/ }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByTestId("storm-headline")).toContainText("5,292");
@@ -49,7 +53,7 @@ test.describe("story, reduced motion", () => {
 test("story with motion: scrolling to the board flips NS31 to TECH", async ({ page }) => {
   const errors = watchErrors(page);
   await page.goto("/story");
-  await expect(page.getByRole("heading", { level: 1, name: "Every storm leaves a bill." })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Every storm leaves a bill." })).toBeVisible(LOADED);
   // Past the pinned hero to the departures board; the re-check fires when NS31's row is on screen.
   const ns31 = page.locator('[data-flight="NS31"]').first();
   await expect(ns31).toBeAttached({ timeout: 15_000 });
