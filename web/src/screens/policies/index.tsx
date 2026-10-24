@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Link, useLocation } from "react-router";
 import { useMutation } from "@tanstack/react-query";
 import { MotionConfig, useReducedMotion } from "motion/react";
 import { api } from "@/api/client";
@@ -13,9 +13,17 @@ import { StatusLifecycle } from "./parts";
 import { HardControls, StaticRegulationCard } from "./regulation";
 import { RuleCard, type CardActions } from "./RuleCard";
 
-const EMPTY_LINE: Record<Origin, string> = {
+const EMPTY_LINE: Record<Origin, ReactNode> = {
   learned: "Nothing mined yet.",
-  ruled: "No rulings yet. Answer a question and the ruling lands here as a rule.",
+  ruled: (
+    <>
+      No rulings yet.{" "}
+      <Link to="/questions" className="font-medium text-metar-ink hover:underline">
+        Answer a question
+      </Link>{" "}
+      and the ruling lands here as a rule.
+    </>
+  ),
   rejected: "No rejections yet. A rejected proposal lands here as a rule.",
   regulation: "No regulation versions loaded.",
   hard: "",
