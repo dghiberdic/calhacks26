@@ -153,7 +153,9 @@ function ScenarioList({ busy }: { busy: boolean }) {
                   <span className="pt-0.5 font-mono text-[11.5px] tabular-nums text-slate-400">{String(i + 1).padStart(2, "0")}</span>
                   <span className="min-w-0">
                     <span className="block text-[14px] font-medium leading-snug text-navy-900">{s.title}</span>
-                    <span className="mt-0.5 block text-[12.5px] leading-snug text-slate-500">{s.expected}</span>
+                    <span className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-slate-500" title={s.expected}>
+                      {s.expected}
+                    </span>
                   </span>
                   <span className="flex items-center gap-2 pt-0.5">
                     <StatusChip tone="outline" dot={false} className="hidden h-5 text-[10.5px] sm:inline-flex">
