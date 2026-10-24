@@ -134,9 +134,13 @@ def cp2(client, c: Check) -> None:
         t0 = time.monotonic()
         r = client.post("/api/desk", json={"icao": "EGLL", "date": "2024-01-21"}, timeout=30)
         dt = time.monotonic() - t0
-        ok = r.status_code == 200 and StormRun.model_validate(r.json()) is not None
-        return ok and dt < 5, f"{r.status_code} in {dt:.1f}s"
-    c.guard("desk EGLL 2024-01-21 returns a StormRun within 5 s", desk_new)
+        if r.status_code != 200:
+            return False, f"{r.status_code} in {dt:.1f}s"
+        run = StormRun.model_validate(r.json())
+        # a real desk run (not the stub's empty one): Northstar DUB<->LHR flights on Storm Isha's real window
+        ok = bool(run.flights) and bool(run.windows) and dt < 5
+        return ok, f"{len(run.flights)} flights · {len(run.windows)} windows · {dt:.1f}s · {run.message or ''}"
+    c.guard("desk EGLL 2024-01-21 runs a real day within 5 s", desk_new)
 
     def desk_422() -> tuple[bool, str]:
         fut = (date.today() + timedelta(days=30)).isoformat()
@@ -151,16 +155,20 @@ def cp2(client, c: Check) -> None:
         last = max([e["seq"] for e in client.get("/api/trace").json()] or [0])
         inj = next(Injection.model_validate(x) for x in client.get("/api/injections").json()
                    if x["id"] == "01_aog_inside_window")
+        commits_before = {x["hash"] for x in client.get("/api/commits", params={"limit": 1000}).json()}
         t0 = time.monotonic()
         r = client.post("/api/inject", json=inj.request.model_dump(mode="json"), timeout=30)
         resp = InjectResponse.model_validate(r.json())
         ev = first_sse_event(client, last, 20)
         dt = time.monotonic() - t0
         kinds = Counter(e.kind for e in resp.events)
+        new = [x for x in client.get("/api/commits", params={"limit": 1000}).json() if x["hash"] not in commits_before]
+        new_kinds = Counter(x["kind"] for x in new)
         return (r.status_code == 200 and resp.facts and ev is not None and ev.seq > last and dt < 20
-                and ("decision" in kinds or "fact" in kinds)), \
-            f"{len(resp.facts)} facts · events {dict(kinds)} · SSE seq {ev.seq if ev else None} · {dt:.1f}s"
-    c.guard("inject a tech-log line → facts → SSE trace event within 20 s", inject_sse)
+                and "decision" in kinds and "decision" in new_kinds), \
+            f"{len(resp.facts)} facts · events {dict(kinds)} · new commits {dict(new_kinds)} · " \
+            f"SSE seq {ev.seq if ev else None} · {dt:.1f}s"
+    c.guard("inject a tech-log line → fact → decision → commit, streamed within 20 s", inject_sse)
 
     def q1_herminia() -> tuple[bool, str]:
         cl = session(client, "claims_lead", "Maria")
