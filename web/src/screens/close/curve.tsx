@@ -238,7 +238,17 @@ export function ClaimCurveChart({ curves, focus, actual }: { curves: Partial<Rec
             className="pointer-events-none absolute z-10 w-[188px] rounded-lg bg-navy-900 px-3 py-2.5 text-cloud-50 shadow-lg"
             style={{ left: ML + hx + (hx > iw * 0.55 ? -200 : 12), top: Math.max(0, MT + fy - 30) }}
           >
-            <p className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-cloud-400">{stop === "ult" ? "Ultimate · to limitation" : `M${stop} · months since the event`}</p>
+            <p className="text-[11.5px] text-cloud-400">
+              {stop === "ult" ? (
+                <>
+                  <span className="font-semibold text-cloud-50">Ultimate</span> · to limitation
+                </>
+              ) : (
+                <>
+                  <span className="font-semibold text-cloud-50">M{stop}</span> · months since the event
+                </>
+              )}
+            </p>
             <ul className="mt-1.5 flex flex-col gap-1">
               {SEGMENTS.filter((s) => curves[s.id]).map((s) => {
                 const c = curves[s.id]!;
@@ -251,7 +261,11 @@ export function ClaimCurveChart({ curves, focus, actual }: { curves: Partial<Rec
                 );
               })}
             </ul>
-            {stop !== "ult" && f.n_by_point[hover!] !== undefined ? <p className="mt-1.5 font-mono text-[10.5px] text-cloud-400">n {count(f.n_by_point[hover!])} · {segmentName(focus).toLowerCase()}</p> : null}
+            {stop !== "ult" && f.n_by_point[hover!] !== undefined ? (
+              <p className="figure mt-1.5 text-[11px] text-cloud-400">
+                n {count(f.n_by_point[hover!])} · {segmentName(focus).toLowerCase()}
+              </p>
+            ) : null}
           </div>
         ) : null}
       </div>

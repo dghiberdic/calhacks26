@@ -113,7 +113,7 @@ export default function CloseScreen() {
               id="rollforward-title"
               eyebrow={<MicroLabel>2140 · rollforward by cohort</MicroLabel>}
               title="EU261 compensation liability (estimated)"
-              actions={rf.data ? <RollforwardChips rf={rf.data} /> : null}
+              actions={rf.data?.rows.length ? <RollforwardChips rf={rf.data} /> : null}
             >
               {periodLabel(period)} · {isLocked ? "locked" : "open"} · € · negatives in parentheses
             </SectionHead>

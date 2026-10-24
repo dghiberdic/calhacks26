@@ -117,9 +117,9 @@ function Diagram({ bins, label }: { bins: CalibrationBin[]; label: string }) {
         </g>
       </svg>
       {b ? (
-        <div className="pointer-events-none absolute z-10 w-[176px] rounded-lg bg-navy-900 px-3 py-2 text-cloud-50 shadow-lg" style={{ left: Math.min(width - 176, Math.max(0, ML + x((b.lo + b.hi) / 2) - 88)), top: MT + Math.max(0, y(b.wilson_hi) - 74) }}>
+        <div className="pointer-events-none absolute z-10 w-[196px] rounded-lg bg-navy-900 px-3 py-2 text-cloud-50 shadow-lg" style={{ left: Math.min(width - 196, Math.max(0, ML + x((b.lo + b.hi) / 2) - 98)), top: MT + Math.max(0, y(b.wilson_hi) - 74) }}>
           <p className="figure text-[11px] text-cloud-400">
-            confidence {pct(b.lo)}–{pct(b.hi)} · n {count(b.n)}
+            {pct(b.lo)}–{pct(b.hi)} confidence · n {count(b.n)}
           </p>
           <p className="mt-1 text-[13px]">
             <span className="figure font-semibold">{pct(b.accuracy)}</span> right

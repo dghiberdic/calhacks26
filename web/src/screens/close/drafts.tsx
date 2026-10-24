@@ -103,8 +103,19 @@ type ActState = { kind: "idle" } | { kind: "busy" } | { kind: "refused"; error: 
 function EntryActions({ entry, role, canAct, onEdit }: { entry: JournalEntry; role: Role; canAct: boolean; onEdit: () => void }) {
   const [state, setState] = useState<ActState>({ kind: "idle" });
   const own = preparerRole(entry.preparer) === role;
-  if (entry.status !== "draft") return null;
-  if (!canAct && !own) return <span className="text-[12px] text-slate-400">the Controller approves</span>;
+  const trail = (
+    <button type="button" onClick={onEdit} className="rounded-lg px-2.5 py-1.5 text-[12.5px] font-medium text-slate-600 shadow-[inset_0_0_0_1px_var(--color-cloud-300)] transition-colors hover:bg-cloud-50 hover:text-navy-900">
+      View trail
+    </button>
+  );
+  if (entry.status !== "draft") return trail;
+  if (!canAct && !own)
+    return (
+      <span className="inline-flex items-center gap-3">
+        <span className="text-[12px] text-slate-400">the Controller approves</span>
+        {trail}
+      </span>
+    );
   if (state.kind === "refused") return <Denied error={state.error} className="basis-full rounded-lg bg-cloud-50 px-2.5 py-2 shadow-[inset_0_0_0_1px_var(--color-cloud-200)]" />;
   if (state.kind === "approved")
     return (

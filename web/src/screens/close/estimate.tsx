@@ -57,7 +57,7 @@ export function EstimateCardView({ est, curve }: { est: Estimate; curve?: ClaimC
 
       <div className="px-5 pt-4">
         <div className="flex items-baseline justify-between gap-3">
-          <h3 className="text-[13px] font-semibold text-navy-900">Three methods, developed to M{est.months_developed}</h3>
+          <h3 className="text-[13px] font-semibold text-navy-900">{est.months_developed > 0 ? `Three methods, developed to M${est.months_developed}` : "Three methods, day 1 (no development yet)"}</h3>
           <span className="font-mono text-[11.5px] text-slate-400">remaining liability</span>
         </div>
         <ol className="mt-2 grid gap-2 sm:grid-cols-3">
