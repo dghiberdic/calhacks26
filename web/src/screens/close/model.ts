@@ -1,4 +1,4 @@
-import type { Cents, Commit, CurveSegment, MonthEndResponse, Role, Rollforward, RollforwardRow, TraceEvent } from "@/api/types";
+import type { Cents, Commit, CurveSegment, JournalEntry, MonthEndResponse, Role, Rollforward, RollforwardRow, TraceEvent } from "@/api/types";
 
 // ---------- the 2140 rollforward, read the way an IFRS liability note reads ----------
 
@@ -53,6 +53,54 @@ export function rollforwardTotals(rf: Rollforward) {
     everyRowFoots: rf.rows.every((r) => footRow(r).foots),
     crossFoots: closing === rf.closing_total_cents,
   };
+}
+
+/** Which journal kinds make up each movement of 2140. */
+const KIND_MOVEMENT: Partial<Record<JournalEntry["kind"], MovementKey>> = {
+  compensation_estimate: "new_cents",
+  claim_approved: "claims_approved_cents",
+  voucher_in_lieu: "settled_in_kind_cents",
+  change_in_estimate: "change_in_estimate_cents",
+  recode: "recode_cents",
+  out_of_period_adjustment: "out_of_period_cents",
+  derecognition: "derecognised_cents",
+};
+
+/** An entry's effect on the liability: credits to 2140 raise it, debits lower it. */
+export const effectOn2140 = (je: JournalEntry, account = "2140") => je.lines.filter((l) => l.account === account).reduce((s, l) => s + (l.cr_cents ?? 0) - (l.dr_cents ?? 0), 0);
+
+/**
+ * Tick and tie: for each movement, the period's journals of that kind and whether their effect on 2140
+ * agrees with the movement's total. Only entries that touch 2140 count.
+ */
+export function journalTies(rf: Rollforward, entries: JournalEntry[]) {
+  const totals = rollforwardTotals(rf).movements;
+  const out: Partial<Record<MovementKey, { ids: string[]; cents: Cents; agrees: boolean }>> = {};
+  for (const je of entries) {
+    const key = KIND_MOVEMENT[je.kind];
+    if (!key || je.period !== rf.period) continue;
+    const effect = effectOn2140(je);
+    if (!effect) continue;
+    const t = (out[key] ??= { ids: [], cents: 0, agrees: false });
+    t.ids.push(je.id);
+    t.cents += effect;
+  }
+  for (const [key, t] of Object.entries(out) as [MovementKey, { ids: string[]; cents: Cents; agrees: boolean }][]) t.agrees = t.cents === totals[key];
+  return out;
+}
+
+/** The note as CSV for the workpapers: movements down, cohorts across, total last; euros, negatives signed. */
+export function rollforwardCsv(rf: Rollforward) {
+  const t = rollforwardTotals(rf);
+  const e = (c: Cents) => (c / 100).toFixed(2);
+  const lines = [["Movement", ...rf.rows.map((r) => r.cohort), "Total"]];
+  lines.push(["Opening", ...rf.rows.map((r) => e(r.opening_cents)), e(t.opening)]);
+  for (const m of MOVEMENTS) lines.push([m.label, ...rf.rows.map((r) => e(movementCents(r, m.key))), e(t.movements[m.key])]);
+  lines.push(["Closing", ...rf.rows.map((r) => e(r.closing_cents)), e(rf.closing_total_cents)]);
+  lines.push(["GL 2140 balance", ...rf.rows.map(() => ""), e(rf.gl_balance_cents)]);
+  lines.push(["Memo: unclaimed entitlement", ...rf.rows.map((r) => e(r.unclaimed_entitlement_cents)), e(t.unclaimed)]);
+  const cell = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+  return lines.map((l) => l.map(cell).join(",")).join("\n");
 }
 
 /** True when a movement line is nil in every cohort (shown, but quietly). */

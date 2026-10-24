@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Commit, JournalEntry, MonthEndResponse, Rollforward, RollforwardRow, TraceEvent } from "@/api/types";
-import { bridgeScale, footRow, liabilityChange, lockedPeriods, monthBounds, movementCents, preparerRole, rollforwardTotals } from "./model";
+import { bridgeScale, footRow, journalTies, liabilityChange, lockedPeriods, monthBounds, movementCents, preparerRole, rollforwardCsv, rollforwardTotals } from "./model";
 
 const row = (over: Partial<RollforwardRow> = {}): RollforwardRow => ({
   cohort: "EIDW@2025-01-24",
@@ -46,6 +46,46 @@ describe("rollforward movements", () => {
     expect(t.everyRowFoots).toBe(true);
     expect(t.crossFoots).toBe(true);
     expect(rollforwardTotals({ ...rf, closing_total_cents: 2_900_000 }).crossFoots).toBe(false);
+  });
+});
+
+describe("tick and tie to the journal", () => {
+  const je = (id: string, kind: JournalEntry["kind"], dr2140: number, cr2140: number): JournalEntry => ({
+    id,
+    event_date: "2025-02-28",
+    period: "2025-02",
+    memo: "",
+    kind,
+    lines: [
+      { account: "2140", account_name: "EU261 compensation liability", dr_cents: dr2140, cr_cents: cr2140 },
+      { account: "4090", account_name: "EU261 compensation", dr_cents: cr2140, cr_cents: dr2140 },
+    ],
+    status: "draft",
+    preparer: "agent.engine",
+  });
+  const rf: Rollforward = { period: "2025-02", rows: [row()], closing_total_cents: 2_574_000, gl_balance_cents: 2_574_000, ties_to_gl: true };
+
+  it("agrees each movement to the journals of its kind, by their effect on 2140", () => {
+    const ties = journalTies(rf, [je("JE-1", "claim_approved", 930_000, 0), je("JE-2", "change_in_estimate", 0, 399_000)]);
+    expect(ties.claims_approved_cents).toEqual({ ids: ["JE-1"], cents: -930_000, agrees: true });
+    expect(ties.change_in_estimate_cents).toEqual({ ids: ["JE-2"], cents: 399_000, agrees: true });
+    expect(ties.new_cents).toBe(undefined);
+  });
+  it("doesn't claim a tie that isn't there", () => {
+    const ties = journalTies(rf, [je("JE-1", "claim_approved", 900_000, 0)]);
+    expect(ties.claims_approved_cents?.agrees).toBe(false);
+  });
+  it("ignores entries that never touch 2140", () => {
+    const goodwill: JournalEntry = { ...je("JE-9", "voucher_in_lieu", 0, 0), lines: [{ account: "4090", account_name: "", dr_cents: 30_000 }, { account: "2132", account_name: "", cr_cents: 30_000 }] };
+    expect(journalTies(rf, [goodwill]).settled_in_kind_cents).toBe(undefined);
+  });
+  it("writes the note as CSV, negatives signed, total column last", () => {
+    const csv = rollforwardCsv(rf).split("\n");
+    expect(csv[0]).toBe("Movement,EIDW@2025-01-24,Total");
+    expect(csv[1]).toBe("Opening,31050.00,31050.00");
+    expect(csv).toContain("Claims approved,-9300.00,-9300.00");
+    expect(csv).toContain("Closing,25740.00,25740.00");
+    expect(csv).toContain("GL 2140 balance,,25740.00");
   });
 });
 

@@ -1,12 +1,12 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
-import { Lock } from "lucide-react";
+import { Check, Download, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { invalidateAfterWrite, useCfo, useCommits, useCurve, useEstimate, useJournal, useRollforward, useTrace } from "@/api/queries";
 import { useLiveFeed } from "@/api/stream";
-import type { CurveSegment, EstimateCard, MonthEndResponse, Role } from "@/api/types";
+import type { CurveSegment, EstimateCard, MonthEndResponse, Role, Rollforward } from "@/api/types";
 import { useSession } from "@/app/session";
-import { MicroLabel, StatusChip, TiesChip } from "@/components/chips";
+import { MicroLabel, TiesChip } from "@/components/chips";
 import { Empty, ErrorNote, PageHeader, RoleAvatar, Shimmer } from "@/components/kit";
 import { eur, periodLabel, ROLE_LABEL } from "@/lib/format";
 import { HERO_STORM, stormName } from "@/lib/storms";
@@ -14,7 +14,7 @@ import { CfoBridge } from "./bridge";
 import { ClaimCurveChart, type CohortActual } from "./curve";
 import { JournalDrafts } from "./drafts";
 import { EstimateCardView } from "./estimate";
-import { isSegment, lockedPeriods, rollforwardTotals, SEGMENTS } from "./model";
+import { isSegment, journalTies, lockedPeriods, rollforwardCsv, rollforwardTotals, SEGMENTS } from "./model";
 import { CloseRail } from "./rail";
 import { FootingNotes, RollforwardTable } from "./rollforward";
 import { SectionHead, Segmented } from "./ui";
@@ -63,6 +63,7 @@ export default function CloseScreen() {
   const monthEndView: MonthEndResponse | null =
     monthEnd && monthEnd.rollforward?.period === period ? monthEnd : trueUps.length && rf.data ? { entries: trueUps, rollforward: rf.data, estimate: est as EstimateCard } : null;
   const justRan = !!monthEnd && monthEnd.rollforward?.period === period;
+  const ties = useMemo(() => (rf.data && journal.data ? journalTies(rf.data, journal.data) : {}), [rf.data, journal.data]);
 
   const setPeriod = (p: string) =>
     setParams(
@@ -127,12 +128,16 @@ export default function CloseScreen() {
               <Empty title={`No 2140 movements in ${periodLabel(period)}`}>Nothing was drafted to the EU261 compensation liability in this period.</Empty>
             ) : (
               <>
-                <RollforwardTable rf={rf.data} highlight={justRan ? "change_in_estimate_cents" : null} />
+                <RollforwardTable rf={rf.data} highlight={justRan ? "change_in_estimate_cents" : null} ties={ties} />
                 <FootingNotes rf={rf.data} />
               </>
             )}
           </div>
-          {rf.data?.rows.length ? <RollforwardFooter period={period} locked={locked} cie={rollforwardTotals(rf.data).movements.change_in_estimate_cents} /> : null}
+          {rf.data?.rows.length ? (
+            <RollforwardFooter period={period} locked={locked} cie={rollforwardTotals(rf.data).movements.change_in_estimate_cents}>
+              <IntegrityLine rf={rf.data} ties={ties} />
+            </RollforwardFooter>
+          ) : null}
         </section>
 
         <CloseRail
@@ -199,15 +204,19 @@ function cohortActual(est: EstimateCard | undefined, curve: { points: [number, n
   return { segment: est.segment, month: est.months_developed, expected, rate: expected * est.actual_vs_expected, ae: est.actual_vs_expected, label: stormName(est.cohort) ?? "Cohort" };
 }
 
-function RollforwardChips({ rf }: { rf: { ties_to_gl: boolean } & Parameters<typeof rollforwardTotals>[0] }) {
-  const t = rollforwardTotals(rf);
+function RollforwardChips({ rf }: { rf: Rollforward }) {
+  const download = () => {
+    const blob = new Blob([rollforwardCsv(rf)], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement("a"), { href: url, download: `2140-rollforward-${rf.period}.csv` });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
   return (
     <>
-      {t.everyRowFoots && t.crossFoots ? (
-        <StatusChip tone="outline" dot={false} title="Every cohort's movements add to its closing, and the cohorts add to the total">
-          foots · cross-foots
-        </StatusChip>
-      ) : null}
+      <button type="button" onClick={download} className="inline-flex h-6 items-center gap-1 rounded-md px-1.5 text-[12px] font-medium text-slate-500 transition-colors hover:bg-cloud-50 hover:text-navy-900" title="Download the rollforward as CSV">
+        <Download className="size-3.5" aria-hidden="true" /> CSV
+      </button>
       <span data-testid="ties-to-gl">
         <TiesChip ok={rf.ties_to_gl} />
       </span>
@@ -215,7 +224,22 @@ function RollforwardChips({ rf }: { rf: { ties_to_gl: boolean } & Parameters<typ
   );
 }
 
-function RollforwardFooter({ period, locked, cie }: { period: string; locked: Set<string>; cie: number }) {
+/** "foots · cross-foots · J agrees to its journals": said only when true; FootingNotes says what isn't. */
+function IntegrityLine({ rf, ties }: { rf: Rollforward; ties: ReturnType<typeof journalTies> }) {
+  const t = rollforwardTotals(rf);
+  const moving = (Object.entries(t.movements) as [keyof typeof ties, number][]).filter(([, v]) => v !== 0).map(([k]) => k);
+  const allAgree = moving.length > 0 && moving.every((k) => ties[k]?.agrees);
+  const parts = [t.everyRowFoots ? "foots" : null, t.crossFoots ? "cross-foots" : null, allAgree ? "J agrees to its journals" : null].filter(Boolean);
+  if (!parts.length) return null;
+  return (
+    <p className="flex items-center gap-1.5 text-slate-500" title="Each cohort's movements add to its closing; the cohorts add to the total; each movement agrees to the journals of its kind">
+      <Check className="size-3.5 text-slate-400" aria-hidden="true" />
+      {parts.join(" · ")}
+    </p>
+  );
+}
+
+function RollforwardFooter({ period, locked, cie, children }: { period: string; locked: Set<string>; cie: number; children?: ReactNode }) {
   const isLocked = locked.has(period);
   const prior = [...locked].filter((p) => p < period).sort();
   const parts: string[] = [];
@@ -225,6 +249,7 @@ function RollforwardFooter({ period, locked, cie }: { period: string; locked: Se
   return (
     <div className="flex flex-col gap-1 border-t border-cloud-100 px-5 py-3 text-[12.5px] leading-relaxed text-slate-500 md:px-6">
       {parts.length ? <p className="text-navy-900">{parts.join(" · ")}</p> : null}
+      {children}
       <p>Each cohort: reduce to the expected tail at M12; derecognise at limitation.</p>
     </div>
   );

@@ -6,7 +6,7 @@ import { Money } from "@/components/kit";
 import { eur, idDate, longDate, periodLabel } from "@/lib/format";
 import { stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
-import { footRow, isNilLine, monthBounds, MOVEMENTS, movementCents, rollforwardTotals, type MovementKey } from "./model";
+import { footRow, isNilLine, type journalTies, monthBounds, MOVEMENTS, movementCents, rollforwardTotals, type MovementKey } from "./model";
 import { Nil } from "./ui";
 
 const cell = "px-3 py-[7px] text-right align-baseline md:px-4";
@@ -15,6 +15,18 @@ const label = "sticky left-0 z-[1] bg-card py-[7px] pl-5 pr-3 text-left align-ba
 function Amount({ cents, strong, quiet }: { cents: Cents; strong?: boolean; quiet?: boolean }) {
   if (!cents) return <Nil />;
   return <Money cents={cents} className={cn("text-[13.5px]", strong ? "font-semibold text-navy-900" : quiet ? "text-slate-500" : "text-navy-900")} />;
+}
+
+type Ties = ReturnType<typeof journalTies>;
+
+/** Tick mark for "agrees to its journals", in a fixed slot so the total column stays aligned. */
+function Tick({ tie }: { tie?: { ids: string[]; agrees: boolean } }) {
+  const on = tie?.agrees;
+  return (
+    <span className="inline-block w-4 pl-1 text-left font-mono text-[9.5px] leading-none text-slate-400" title={on ? `Agrees to ${tie!.ids.join(", ")}` : undefined} aria-label={on ? `agrees to ${tie!.ids.join(", ")}` : undefined}>
+      {on ? "J" : ""}
+    </span>
+  );
 }
 
 /** A total ruled off the way accounts are: a single rule above the figure, a double rule below. */
@@ -30,7 +42,7 @@ function CohortHead({ cohort }: { cohort: string }) {
   return (
     <>
       <span className="block text-[13px] font-semibold text-navy-900">{name ?? cohort}</span>
-      <span className="mt-0.5 block font-mono text-[10.5px] font-normal text-slate-400">{date ? `${station} · ${longDate(date)}` : cohort}</span>
+      <span className="mt-0.5 block whitespace-nowrap font-mono text-[10.5px] font-normal text-slate-400">{date ? `${station} · ${longDate(date)}` : cohort}</span>
     </>
   );
 }
@@ -39,7 +51,7 @@ function CohortHead({ cohort }: { cohort: string }) {
  * The 2140 rollforward as an accounts note: movements down, cohorts across, total on the right;
  * closing ruled off (single rule above, double below), then the GL balance and a memo line.
  */
-export function RollforwardTable({ rf, highlight }: { rf: Rollforward; highlight?: MovementKey | null }) {
+export function RollforwardTable({ rf, highlight, ties = {} }: { rf: Rollforward; highlight?: MovementKey | null; ties?: Ties }) {
   const totals = rollforwardTotals(rf);
   const { first, last } = monthBounds(rf.period);
   const reduce = useReducedMotion();
@@ -62,8 +74,8 @@ export function RollforwardTable({ rf, highlight }: { rf: Rollforward; highlight
               </th>
             ))}
             <th scope="col" className={cn(cell, "pb-2.5 pt-1 align-bottom")}>
-              <span className="block text-[13px] font-semibold text-navy-900">Total</span>
-              <span className="mt-0.5 block font-mono text-[10.5px] font-normal text-slate-400">GL 2140</span>
+              <span className="block pr-4 text-[13px] font-semibold text-navy-900">Total</span>
+              <span className="mt-0.5 block pr-4 font-mono text-[10.5px] font-normal text-slate-400">GL 2140</span>
             </th>
           </tr>
         </thead>
@@ -79,6 +91,7 @@ export function RollforwardTable({ rf, highlight }: { rf: Rollforward; highlight
             ))}
             <td className={cn(cell, "pt-3")}>
               <Amount cents={totals.opening} />
+              <Tick />
             </td>
           </tr>
           {MOVEMENTS.map((m) => {
@@ -102,6 +115,7 @@ export function RollforwardTable({ rf, highlight }: { rf: Rollforward; highlight
                 ))}
                 <td className={cell}>
                   <Amount cents={totals.movements[m.key]} />
+                  <Tick tie={totals.movements[m.key] ? ties[m.key] : undefined} />
                 </td>
               </motion.tr>
             );
@@ -122,6 +136,7 @@ export function RollforwardTable({ rf, highlight }: { rf: Rollforward; highlight
             <td className={cn(cell, "pt-1")}>
               <Ruled>
                 <Amount cents={rf.closing_total_cents} strong />
+                <Tick />
               </Ruled>
             </td>
           </tr>
@@ -134,6 +149,7 @@ export function RollforwardTable({ rf, highlight }: { rf: Rollforward; highlight
               <span className="inline-flex items-center justify-end gap-1.5">
                 {rf.ties_to_gl ? <Check className="size-3.5 text-tie" aria-label="ties" /> : null}
                 <Money cents={rf.gl_balance_cents} className={cn("text-[13.5px]", rf.ties_to_gl ? "text-navy-900" : "font-semibold text-navy-900")} />
+                <Tick />
               </span>
             </td>
           </tr>
@@ -148,6 +164,7 @@ export function RollforwardTable({ rf, highlight }: { rf: Rollforward; highlight
             ))}
             <td className={cn(cell, "pb-1 pt-4")}>
               <Amount cents={totals.unclaimed} quiet />
+              <Tick />
             </td>
           </tr>
         </tfoot>
