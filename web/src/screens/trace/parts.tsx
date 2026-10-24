@@ -1,27 +1,9 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { RoleAvatar } from "@/components/kit";
 import { cn } from "@/lib/utils";
 import { principalLabel, principalRole } from "./model";
-
-/**
- * Machine text in B612 Mono, with the advance after "." and ":" tightened: B612 sets them at the left of
- * a full cell, so "agent.engine" reads "agent. engine" and "CC6.1" reads "CC6. 1". Copied text is unchanged.
- */
-export function Mono({ children, className }: { children: string; className?: string }) {
-  const parts = children.split(/([.:])/);
-  const out: ReactNode[] = parts.map((p, i) =>
-    p === "." || p === ":" ? (
-      <span key={i} className="tracking-[-0.28em]">
-        {p}
-      </span>
-    ) : (
-      p
-    ),
-  );
-  return <span className={cn("font-mono", className)}>{out}</span>;
-}
 
 /** People and agents get their role avatar; anything else (books, parsers, the OCC duty manager) gets a quiet monogram. */
 export function PrincipalAvatar({ principal, className }: { principal: string; className?: string }) {
@@ -48,7 +30,7 @@ export function Principal({ principal, className, showLabel = false }: { princip
   return (
     <span className={cn("inline-flex min-w-0 items-center gap-1.5", className)} title={principalLabel(principal)}>
       <PrincipalAvatar principal={principal} />
-      <Mono className="min-w-0 truncate text-[11.5px] text-slate-600">{name ? (role ?? principal) : principal}</Mono>
+      <span className="font-mono min-w-0 truncate text-[11.5px] text-slate-600">{name ? (role ?? principal) : principal}</span>
       {showLabel && name ? <span className="truncate text-[12px] text-slate-400">{name}</span> : null}
     </span>
   );

@@ -10,7 +10,7 @@ import { longDate, zulu } from "@/lib/format";
 import { HERO_STORM } from "@/lib/storms";
 import { cn } from "@/lib/utils";
 import { STEP_NAME, receiptText, ruleRefIn, shortHash, stepKind, suggestTargets, type BlameTarget, type StepKind } from "./model";
-import { CopyButton, Mono, Principal } from "./parts";
+import { CopyButton, Principal } from "./parts";
 
 /**
  * J5 · Blame: walk one euro (or one rule) back through every commit that produced it, ending at the
@@ -144,7 +144,7 @@ function Receipt({ blame }: { blame: Blame }) {
             Blame · {blame.steps.length} steps · {commits} commit{commits === 1 ? "" : "s"}
           </MicroLabel>
           <h2 className="mt-1 break-all text-[15px] font-bold text-navy-900">
-            <Mono>{blame.target}</Mono>
+            <span className="font-mono">{blame.target}</span>
           </h2>
         </div>
         <div className="flex gap-2">
@@ -252,7 +252,7 @@ function StepBody({ step, kind }: { step: BlameStep; kind: StepKind }) {
           <p className="text-[14px] leading-snug text-slate-600">{step.label}</p>
           {quote ? (
             <pre className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-cloud-50 px-3.5 py-3 text-[12.5px] leading-relaxed text-navy-900 shadow-[inset_0_0_0_1px_var(--color-cloud-200)]">
-              <Mono>{quote}</Mono>
+              <span className="font-mono">{quote}</span>
             </pre>
           ) : null}
         </>
@@ -263,7 +263,7 @@ function StepBody({ step, kind }: { step: BlameStep; kind: StepKind }) {
           <p className="text-[14px] leading-snug text-navy-900">{step.label}</p>
           {quote ? (
             <pre className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-metar-wash px-3.5 py-3 text-[13px] leading-relaxed text-metar-ink shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-metar)_30%,transparent)]">
-              <Mono>{quote}</Mono>
+              <span className="font-mono">{quote}</span>
             </pre>
           ) : null}
         </>
@@ -306,7 +306,7 @@ function CommitMeta({ step }: { step: BlameStep }) {
   return (
     <p className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-slate-400">
       <CornerDownRight className="size-3 text-cloud-400" aria-hidden="true" />
-      <Mono>{c.kind}</Mono>
+      <span className="font-mono">{c.kind}</span>
       <span aria-hidden="true">·</span>
       <Link to={`/trace?tab=commits&commit=${encodeURIComponent(c.hash)}`} aria-label={`Open commit ${shortHash(c.hash)} in the log`} className="font-mono text-metar-ink hover:underline" title={c.hash}>
         {shortHash(c.hash)}

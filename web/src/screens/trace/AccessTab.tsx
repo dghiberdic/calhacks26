@@ -8,7 +8,7 @@ import { longDate, zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { CELL_HINT, CELL_ORDER, denialTag, isAgent, orderPrincipals, principalLabel, principalRole } from "./model";
 import { PiiMask } from "./PiiMask";
-import { Mono, PrincipalAvatar } from "./parts";
+import { PrincipalAvatar } from "./parts";
 
 /** J5 · Access: who (people and agents) can do what, every denial, and what a seat without PII rights sees. */
 export function AccessTab() {
@@ -74,7 +74,7 @@ function Matrix({ matrix }: { matrix: AccessMatrix }) {
             </th>
             {matrix.resources.map((r) => (
               <th key={r} scope="col" className="px-1.5 pb-2.5 pt-1 text-left align-bottom font-normal">
-                <Mono className="block max-w-[96px] break-words text-[11px] leading-tight text-slate-500">{softBreaks(r)}</Mono>
+                <span className="font-mono block max-w-[96px] break-words text-[11px] leading-tight text-slate-500">{softBreaks(r)}</span>
               </th>
             ))}
           </tr>
@@ -193,8 +193,8 @@ function DeniedLog({ log, loading, error, onRetry }: { log: AccessDecision[] | u
                 <div className="min-w-0">
                   <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 font-mono text-[12.5px] text-navy-900">
                     <PrincipalAvatar principal={d.principal} />
-                    <Mono>{d.principal}</Mono>
-                    <Mono>{d.action}</Mono>
+                    <span className="font-mono">{d.principal}</span>
+                    <span className="font-mono">{d.action}</span>
                     <span className="text-slate-400" aria-hidden="true">
                       →
                     </span>
@@ -205,7 +205,7 @@ function DeniedLog({ log, loading, error, onRetry }: { log: AccessDecision[] | u
                     )}
                   </p>
                   <p className="mt-1 text-[12.5px] leading-snug text-slate-500">
-                    <Mono className="text-[11.5px] text-slate-600">{d.resource}</Mono> · {d.reason}
+                    <span className="font-mono text-[11.5px] text-slate-600">{d.resource}</span> · {d.reason}
                   </p>
                 </div>
               </li>

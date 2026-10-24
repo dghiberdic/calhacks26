@@ -8,7 +8,6 @@ import { RoleAvatar, Shimmer } from "@/components/kit";
 import { ROLE_LABEL, shortId } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { findPiiRecord, piiResource, principalRole, splitPii, type PiiRecord } from "./model";
-import { Mono } from "./parts";
 
 /** The seat that reads passenger PII in the clear, and the one the demo masks. */
 const CLEAR: Role = "claims_lead";
@@ -119,7 +118,7 @@ function Seat({ seat, cell, record, viewer }: { seat: Role; cell: AccessCell | n
             {record.fields.map((f) => (
               <div key={f.field} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <dt className="text-[11.5px] text-slate-400">
-                  <Mono>{f.field}</Mono>
+                  <span className="font-mono">{f.field}</span>
                 </dt>
                 <dd className="text-[13px]">{showClear ? <Clear>{f.value}</Clear> : <Masked />}</dd>
               </div>

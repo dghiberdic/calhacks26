@@ -4,7 +4,6 @@ import { ArrowRight } from "lucide-react";
 import { useControls } from "@/api/queries";
 import { Empty, ErrorNote, Shimmer } from "@/components/kit";
 import { compareFrameworkRef, evidenceTarget } from "./model";
-import { Mono } from "./parts";
 
 /** J5 · Controls: SOC 2 is the floor. A mapping of each control to the code and evidence behind it; not a certification. */
 export function ControlsTab() {
@@ -42,12 +41,12 @@ export function ControlsTab() {
                   <div className="min-w-0">
                     <p className="text-[15px] font-medium leading-snug text-navy-900">{c.control}</p>
                     <p className="mt-1 break-words text-[11.5px] leading-relaxed text-slate-500">
-                      <Mono>{c.implemented_by}</Mono>
+                      <span className="font-mono">{c.implemented_by}</span>
                     </p>
                   </div>
                   <div className="min-w-0 md:text-right">
                     <span className="micro block text-slate-400">evidence</span>
-                    <Mono className="mt-0.5 block break-all text-[11.5px] text-slate-600">{c.evidence_endpoint}</Mono>
+                    <span className="font-mono mt-0.5 block break-all text-[11.5px] text-slate-600">{c.evidence_endpoint}</span>
                     {target ? (
                       <Link to={target.to} aria-label={`Evidence for ${c.framework_ref}: ${target.label}`} className="mt-1 inline-flex items-center gap-1 text-[13px] font-medium text-metar-ink hover:underline">
                         {target.label}

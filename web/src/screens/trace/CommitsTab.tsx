@@ -10,7 +10,7 @@ import { Empty, ErrorNote, Shimmer } from "@/components/kit";
 import { longDate, zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { KIND_ORDER, blameTarget, chainOrder, shortHash } from "./model";
-import { Mono, Principal } from "./parts";
+import { Principal } from "./parts";
 
 const PAGE = 100;
 
@@ -259,7 +259,7 @@ function CommitDetail({ commit: c, byHash, onJump }: { commit: Commit; byHash: M
       </span>
       <Term>payload</Term>
       <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-        <Mono className="break-all text-[11.5px] text-navy-900">{c.payload_ref}</Mono>
+        <span className="font-mono break-all text-[11.5px] text-navy-900">{c.payload_ref}</span>
         <span className="font-mono text-[11px] text-slate-400">sha256 {shortHash(c.payload_hash, 12)}</span>
       </span>
       {inputs.length ? (
@@ -273,9 +273,9 @@ function CommitDetail({ commit: c, byHash, onJump }: { commit: Commit; byHash: M
                   {shortHash(hit.hash)} · {hit.kind}
                 </button>
               ) : (
-                <Mono key={input} className="inline-flex h-6 items-center rounded-md bg-cloud-100 px-1.5 text-[11px] text-slate-600">
+                <span key={input} className="font-mono inline-flex h-6 items-center rounded-md bg-cloud-100 px-1.5 text-[11px] text-slate-600">
                   {/^[0-9a-f]{16,}$/.test(input) ? shortHash(input, 10) : input}
-                </Mono>
+                </span>
               );
             })}
           </span>
