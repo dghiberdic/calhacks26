@@ -51,8 +51,9 @@ export function Segmented<T extends string>({
 /** Nil in an accounts table: an en dash, quiet. */
 export function Nil() {
   return (
-    <span className="text-cloud-400" aria-label="nil">
-      –
+    <span className="text-cloud-400">
+      <span aria-hidden="true">–</span>
+      <span className="sr-only">nil</span>
     </span>
   );
 }
