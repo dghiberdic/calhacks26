@@ -394,18 +394,12 @@ def _one(flight: Flight, view: CouponView, band: Band, dist: float, origin: Airp
     return ent("owed", "EU261 " + ", ".join(articles), reason, comp=comp, reduction=reduction, applied=applied)
 
 
-def summarize(ents: Sequence[Entitlement]) -> dict[str, Any]:
-    """Counts and totals for a flight file (no prose amounts the engine did not compute)."""
-    counts: dict[str, int] = {}
-    for e in ents:
-        counts[e.status] = counts.get(e.status, 0) + 1
-    return {
-        "coupons": len(ents),
-        "compensation_cents": sum(e.compensation_cents for e in ents),
-        "status_counts": dict(sorted(counts.items())),
-        "reduced": sum(1 for e in ents if e.reduction != "none"),
-        "refunds_already_initiated": sum(1 for e in ents if e.refund_already_initiated),
-        "refund_due_cents": sum(e.refund_due_cents for e in ents),
-        "voucher_offset_cents": sum(e.voucher_offset_cents for e in ents),
-        "care_due": any(e.care_due for e in ents),
-    }
+def summarize(ents: Sequence[Entitlement], world: World | None = None) -> dict[str, Any]:
+    """Every documented Flight File summary key (contracts.models.EntitlementsSummary) from the entitlements: counts,
+    sums and plan §9 labels of numbers the engine computed. `world` adds the election counts."""
+    from contracts.summary import entitlements_summary
+    elections = None
+    if world is not None:
+        ids = {e.coupon_id for e in ents}
+        elections = {el.coupon_id: el.kind for el in world.elections if el.coupon_id in ids}
+    return entitlements_summary(ents, elections=elections)

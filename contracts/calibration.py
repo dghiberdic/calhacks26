@@ -86,3 +86,18 @@ def score(doc: Mapping[str, Any], kind: str, features: Mapping[str, float]) -> f
                                              for f, c in zip(m["features"], m["coef"]))
     p = 1.0 / (1.0 + math.exp(-z)) if z >= 0 else math.exp(z) / (1.0 + math.exp(z))
     return round(p, 4)
+
+
+def explain(doc: Mapping[str, Any], kind: str, features: Mapping[str, float]) -> tuple[float | None, dict[str, float],
+                                                                                     float | None]:
+    """(score, contributions coef × input in log-odds, intercept); (None, {}, None) when uncalibrated."""
+    m = (doc.get("models") or {}).get(kind)
+    if not isinstance(m, Mapping):
+        return None, {}, None
+    contrib = {f: round(float(c) * float(features.get(f, 0.0)), 4) + 0.0 for f, c in zip(m["features"], m["coef"])}
+    icpt = float(m.get("intercept", 0.0))
+    z = icpt + sum(contrib.values())
+    if not math.isfinite(z):
+        return None, {}, None
+    p = 1.0 / (1.0 + math.exp(-z)) if z >= 0 else math.exp(z) / (1.0 + math.exp(z))
+    return round(p, 4), contrib, round(icpt, 4)

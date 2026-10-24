@@ -411,7 +411,8 @@ class EntitlementsSummary(BaseModel):       # additive (Justin #5/#10): every ke
     distance_km: float | None = None; band_eur: int | None = None; band_margin_km: float | None = None
     band_label: str | None = None           # "4,804 km · 1,304 km over the €600 threshold"
     band_note: str | None = None            # same as band_label (D0a name)
-    compensation_cents: Cents | None = None         # Σ compensation on owed + needs_ruling coupons
+    compensation_cents: Cents | None = None         # Σ compensation_cents over the flight's coupons
+    owed: int | None = None; needs_ruling: int | None = None; held: int | None = None   # status counts
     full_entitlement_cents: Cents | None = None     # full Art. 7 entitlement if every passenger claims (owed + needs_ruling + held)
     full_entitlement_label: str | None = None       # "€99,000 full Art. 7 entitlement if every passenger claims"
     drafted_liability_cents: Cents | None = None    # Σ accruing entitlement × the segment's expected ultimate claim rate

@@ -5,7 +5,8 @@ Data: `data/pinned/airports.csv`, an OurAirports subset (large + medium airports
 any station at the desk) fall back to `airportsdata` itself. Lookups accept ICAO or IATA, case-insensitive.
 
 `eu` means EU261 territory: EU27 + EEA (IS, LI, NO) + CH, including the EU outermost regions (Canaries, Madeira,
-Azores via ES/PT; Guadeloupe, Martinique, French Guiana, Réunion, Mayotte, Saint-Martin by their own ISO codes).
+Azores via ES/PT; Guadeloupe, Martinique, French Guiana, Réunion, Mayotte, Saint-Martin by their own ISO codes),
+except northern Cyprus, RAF Akrotiri and Svalbard (`NOT_EU261_AIRPORTS`; the same rule as `engine/geo.py`).
 The UK is not EU261 territory (UK261 is a separate regime).
 """
 from __future__ import annotations
@@ -28,15 +29,24 @@ EU27 = frozenset({"AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "D
 EEA_CH = frozenset({"IS", "LI", "NO", "CH"})
 OUTERMOST = frozenset({"GP", "MQ", "GF", "RE", "YT", "MF"})   # French outermost regions with their own ISO codes
 EU261_COUNTRIES = EU27 | EEA_CH | OUTERMOST
+# Airports inside an EU261 country code where the Regulation does not apply (IATA and ICAO), as in engine/geo.py:
+# northern Cyprus, Ercan and Geçitkale (acquis suspended, Protocol 10 to the 2003 Act of Accession); RAF Akrotiri
+# (UK Sovereign Base Area, Protocol 3); Svalbard, Longyearbyen (outside the EEA Agreement, Protocol 40).
+NOT_EU261_AIRPORTS = frozenset({"ECN", "LCEN", "GEC", "LCGK", "AKT", "LCRA", "LYR", "ENSB"})
 
 
 def is_eu_country(iso2: str) -> bool:
     return (iso2 or "").strip().upper() in EU261_COUNTRIES
 
 
+def in_eu261_territory(country: str, *codes: str) -> bool:
+    """Art. 3(1) territory: an EU261 country code, unless the airport is one of `NOT_EU261_AIRPORTS`."""
+    return is_eu_country(country) and not any((c or "").upper() in NOT_EU261_AIRPORTS for c in codes)
+
+
 def _airport(icao: str, iata: str, name: str, lat: float, lon: float, country: str, tz: str) -> Airport:
     return Airport(icao=icao, iata=iata or icao, name=name, lat=round(lat, 6), lon=round(lon, 6), country=country,
-                   eu=is_eu_country(country), tz=tz)
+                   eu=in_eu261_territory(country, icao, iata), tz=tz)
 
 
 @lru_cache(maxsize=1)

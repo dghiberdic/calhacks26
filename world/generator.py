@@ -158,11 +158,11 @@ class Aog:
 @dataclass
 class DayPlan:
     """Forced latent events used to plant the answer key's error cases (F3c). Empty = the natural day."""
-    aog: dict[str, tuple[datetime, bool]] = field(default_factory=dict)   # tail -> (logged at DUB, recorded?)
+    aog: dict[str, tuple] = field(default_factory=dict)    # tail -> (logged_at, recorded?[, station; default DUB])
     crew: set[str] = field(default_factory=set)            # flight ids cancelled for crew shortage
     wx: set[str] = field(default_factory=set)              # flight ids cancelled for weather (needs storm obs)
     batch: set[str] = field(default_factory=set)           # flight ids the storm-day OCC batch always lists (RSN 71)
-    code: dict[str, str] = field(default_factory=dict)     # flight id -> OCC code typed
+    code: dict[str, str] = field(default_factory=dict)     # flight id -> OCC code typed (batched only if in `batch`)
     notice: dict[str, int] = field(default_factory=dict)   # flight id -> days of advance notice (planned CNL)
     pax_mismatch: dict[str, int] = field(default_factory=dict)   # flight id -> pax typed by OCC (manifest wins)
 
@@ -190,8 +190,11 @@ class DaySim:
     """Simulate one world day's ops: latent causes → flights, OCC/MCC/spares/tech logs, METAR, flight truth."""
 
     def __init__(self, wday: WorldDay, seed: int, *, pairs: list[N.Pair] | None = None,
-                 loader: MetarLoader = pinned_loader, storm_name: str = "", plan: DayPlan | None = None) -> None:
+                 loader: MetarLoader = pinned_loader, storm_name: str = "", plan: DayPlan | None = None,
+                 sectors: list[N.Sector] | None = None) -> None:
         self.plan = plan or DayPlan()
+        # fixed sectors (the judge's desk: a station's local day); default: the Dublin world day of `pairs`
+        self.fixed_sectors = sorted(sectors, key=lambda s: (s.std, s.number)) if sectors is not None else None
         self.w = wday
         self.day = wday.day
         self.seed = seed
@@ -230,7 +233,7 @@ class DaySim:
     # ---- the simulation
     def run(self) -> DayOutput:
         d = self.day
-        sectors = N.day_sectors(d, self.pairs)
+        sectors = list(self.fixed_sectors) if self.fixed_sectors is not None else N.day_sectors(d, self.pairs)
         self.out.sectors = {s.id: s for s in sectors}
         idx = self.load_metar(sectors)
         self.out.idx = idx
@@ -261,16 +264,18 @@ class DaySim:
                 s0 = secs[0]
                 logged = s0.std - timedelta(minutes=r.randint(50, 110))
                 self._log_mel(tail, s0.origin, logged, r.choice(T.MEL_DEFECTS), r)
-        for tail, (logged, recorded) in sorted(self.plan.aog.items()):
+        for tail, spec in sorted(self.plan.aog.items()):
             if tail not in rot or aog.get(tail) is not None:
                 continue
+            logged, recorded = spec[0], spec[1]
+            station = spec[2] if len(spec) > 2 else N.HUB
             r = rng_for(self.seed, "planted-aog", tail, d.isoformat())
             defect = r.choice(T.AOG_DEFECTS)
             aog_after.pop(tail, None)
             if recorded:
-                aog[tail] = self._log_aog(tail, N.HUB, logged, defect, r, "internal_aog")
+                aog[tail] = self._log_aog(tail, station, logged, defect, r, "internal_aog")
             else:   # the defect was never written up: invisible to every feature
-                aog[tail] = Aog(until=logged + timedelta(hours=30), entry_id="", station=N.HUB, logged_at=logged,
+                aog[tail] = Aog(until=logged + timedelta(hours=30), entry_id="", station=station, logged_at=logged,
                                 latent="internal_aog", defect=defect)
 
         loc = {tail: secs[0].origin for tail, secs in rot.items()}
@@ -558,7 +563,7 @@ class DaySim:
                 in_batch = c.latent != "notice" and (
                     c.latent in WX_LATENT or c.latent == "concurrent" or fid in self.plan.batch
                     or (c.latent == "rotation" and (c.root in wx_ids or c.root in self.plan.batch))
-                    or (c.known_at <= t_batch and rr.random() < C.P_OCC_MISBATCH))
+                    or (fid not in self.plan.code and c.known_at <= t_batch and rr.random() < C.P_OCC_MISBATCH))
                 if in_batch:
                     batch.append(fid)
             sms = t_batch + timedelta(minutes=8)
