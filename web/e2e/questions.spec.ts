@@ -1,0 +1,35 @@
+import { expect, test, type Page } from "@playwright/test";
+
+const LABEL: Record<string, string> = { claims_lead: "Claims Lead", ops: "Ops", legal: "Legal", controller: "Controller" };
+
+async function viewAs(page: Page, role: keyof typeof LABEL) {
+  await page.getByTestId("role-switcher").click();
+  await page.getByTestId(`role-${role}`).click();
+  await expect(page.getByTestId("role-switcher")).toHaveAccessibleName(new RegExp(`Viewing as ${LABEL[role]}`));
+}
+
+/** Q1 is the 14C service-desk voucher: its case ref chip reads "NS31 · 14C". */
+const q1 = (page: Page) => page.locator("article", { hasText: "14C" });
+
+test("Q1 goes to the Claims Lead and never reaches Ops", async ({ page }) => {
+  await page.goto("/questions");
+  await viewAs(page, "claims_lead");
+  await expect(q1(page).first()).toBeVisible();
+  await viewAs(page, "ops");
+  await expect(page.getByText(/Nothing is waiting on Ops/)).toBeVisible();
+  await expect(q1(page)).toHaveCount(0);
+});
+
+test("the Claims Lead rules on Q1 with the recommended option, and it is never asked again", async ({ page }) => {
+  await page.goto("/questions");
+  await viewAs(page, "claims_lead");
+  const card = q1(page).first();
+  await expect(card).toBeVisible();
+  // The recommended option comes preselected; the ruling is in the Claims Lead's own words.
+  await expect(card.getByRole("radio", { checked: true })).toHaveCount(1);
+  await card.getByRole("textbox").fill("No signed acceptance, no offset: pay €600 cash; the voucher stays as goodwill.");
+  await card.getByRole("button", { name: "Submit ruling" }).click();
+  await expect(card.getByTestId("rule-preview")).toBeVisible();
+  await card.getByRole("button", { name: "Confirm as policy" }).click();
+  await expect(card.getByText("Never asked again")).toBeVisible();
+});
