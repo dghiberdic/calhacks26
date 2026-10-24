@@ -23,7 +23,9 @@ export function BlameTab() {
   const run = useStormRun(stormId);
   const rules = useRules();
   const targets = useMemo(() => suggestTargets(run.data, rules.data), [run.data, rules.data]);
-  const target = params.get("target") || targets[0]?.id || null;
+  // The default waits for both sources, so it doesn't jump from a rule to NS31 as they arrive.
+  const settled = !storms.isLoading && !run.isLoading && !rules.isLoading;
+  const target = params.get("target") || (settled ? targets[0]?.id : null) || null;
   const blame = useBlame(target ?? undefined);
   const choose = (id: string) =>
     setParams(
@@ -35,7 +37,7 @@ export function BlameTab() {
       },
       { replace: true },
     );
-  const picking = !target && (storms.isLoading || run.isLoading || rules.isLoading);
+  const picking = !target && !settled;
 
   return (
     <div className="grid gap-5 lg:grid-cols-[272px_minmax(0,1fr)] lg:gap-7">

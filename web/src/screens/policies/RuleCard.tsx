@@ -183,7 +183,7 @@ function RulerWords({ rule, origin }: { rule: Rule; origin: "ruled" | "rejected"
           <RoleAvatar role={ruler} size="sm" />
         </span>
         <span className="min-w-0">
-          <span className="font-medium text-navy-900">{ROLE_LABEL[ruler]}</span> {origin === "rejected" ? (rule.kind === "release" || rule.action === "deny_release" || rule.action === "keep_tail" ? "rejected a release proposal" : "rejected a proposal") : "ruled"}
+          <span className="font-medium text-navy-900">{ROLE_LABEL[ruler]}</span> {origin === "rejected" ? (rule.kind === "release" ? "rejected a release proposal" : "rejected a proposal") : "ruled"}
           {about ? <> · {about}</> : null}
         </span>
       </p>
