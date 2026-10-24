@@ -118,9 +118,22 @@ function parse(s: string): unknown {
 }
 
 /** "When …, and …: <action>." with case-only scope marked. */
+/** Every feature a DSL condition names ({all|any|not} trees of {f, op, v} clauses). */
+function namedFeatures(node: unknown, out = new Set<string>()): Set<string> {
+  if (!node || typeof node !== "object") return out;
+  const n = node as Record<string, unknown>;
+  if (typeof n.f === "string") out.add(n.f);
+  for (const key of ["all", "any"]) if (Array.isArray(n[key])) for (const kid of n[key] as unknown[]) namedFeatures(kid, out);
+  if (n.not) namedFeatures(n.not, out);
+  return out;
+}
+
 export function RuleSentence({ rule, className }: { rule: Pick<Rule, "condition" | "scope" | "action" | "action_arg">; className?: string }) {
   const { clauses, mode, negated } = flatten(rule.condition as DslNode);
-  const scope = scopeClauses(rule.scope ?? {});
+  // Scope keys the condition already states would read twice ("…the flight leaves the EU, and the flight
+  // leaves the EU"); only case-specific scope ("the voucher is €300") adds anything.
+  const named = namedFeatures(rule.condition);
+  const scope = scopeClauses(Object.fromEntries(Object.entries(rule.scope ?? {}).filter(([k]) => !named.has(k))));
   const parts: { text: string; fromCase?: boolean; negated?: boolean }[] = [
     ...clauses.map((c) => ({ text: clauseText(c) })),
     ...negated.map((c) => ({ text: `not: ${clauseText(c)}`, negated: true })),

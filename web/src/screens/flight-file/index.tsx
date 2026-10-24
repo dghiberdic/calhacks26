@@ -1,10 +1,10 @@
-import { Empty, PageHeader } from "@/components/kit";
+import { useParams } from "react-router";
+import FlightFileView from "./FlightFileView";
+import FlightIndex from "./FlightIndex";
+import { decodeId } from "./lib";
 
+/** `/flights` lists the storm's flights by verdict; `/flights/:flightId` is one flight's file. */
 export default function FlightFileScreen() {
-  return (
-    <div className="mx-auto max-w-[1280px]">
-      <PageHeader title="Flight File">Why each flight got its verdict.</PageHeader>
-      <Empty title="Being built" className="mt-8">This screen lands with its work package.</Empty>
-    </div>
-  );
+  const { flightId } = useParams();
+  return flightId ? <FlightFileView key={flightId} flightId={decodeId(flightId)} /> : <FlightIndex />;
 }

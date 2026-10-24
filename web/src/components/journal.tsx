@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { MicroLabel, StatusChip, TiesChip } from "./chips";
 import { Money } from "./kit";
 
-const KIND_LABEL: Record<JournalEntry["kind"], string> = {
+export const KIND_LABEL: Record<JournalEntry["kind"], string> = {
   sale: "sale",
   refund: "refund",
   voucher: "refund voucher",
@@ -127,10 +127,11 @@ export function ReplayFlips({ diff, limit = 8, className }: { diff: ReplayDiff; 
       <ul className="flex flex-col">
         {shown.map((f, i) => (
           <li key={`${f.entity_id}-${i}`} className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 border-t border-cloud-100 py-2 text-[13px] first:border-t-0">
-            <span className="min-w-0 truncate">
+            {/* Wraps rather than truncates: the "after" value is the point of the row. */}
+            <span className="min-w-0 break-words">
               <span className="font-mono text-[12px] text-navy-900">{shortId(f.entity_id)}</span> <span className="text-slate-400">{f.field}</span>{" "}
-              <span className="font-mono text-[12px] text-slate-500">{valueText(f.before)}</span> <span className="text-slate-400">→</span>{" "}
-              <span className="font-mono text-[12px] text-navy-900">{valueText(f.after)}</span>
+              <span className="font-mono text-[12px] text-slate-500 line-through decoration-slate-300">{valueText(f.before)}</span> <span className="text-slate-400">→</span>{" "}
+              <span className="font-mono text-[12px] font-medium text-navy-900">{valueText(f.after)}</span>
             </span>
             {f.delta_cents ? <Money cents={f.delta_cents} signed className="text-[12.5px] text-slate-600" /> : <span />}
           </li>
