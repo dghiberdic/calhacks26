@@ -149,4 +149,28 @@ describe("an injection's answer", () => {
     expect(screen.getByTestId("inject-affected")).toHaveTextContent("NS31");
     expect(screen.getByRole("link", { name: /NS31/ })).toHaveAttribute("href", "/flights/NS31%402025-01-24");
   });
+
+  it("writes money and nested values the way a person reads them", () => {
+    const claim = "Claim under UK261 for GBP 520 for flight NS100 Dublin to London Heathrow on 24 Jan 2025.";
+    const res: InjectResponse = {
+      ...response,
+      source: { ...response.source, kind: "claim", text: claim, trust_tier: 4 },
+      facts: [
+        { id: "c1", source_id: "s", subject: "flight:NS100@2025-01-24", field: "claim.amount", value: { currency: "GBP", amount_cents: 52000 }, span: "GBP 520", extractor: "llm:claude-opus-5-5@reader-v1", recorded_at: "2025-01-25T09:00:00Z" },
+        { id: "c2", source_id: "s", subject: "flight:NS100@2025-01-24", field: "claim.regime", value: "UK261", span: "UK261", extractor: "llm:claude-opus-5-5@reader-v1", recorded_at: "2025-01-25T09:00:00Z" },
+      ],
+      dropped_unverifiable: 0,
+      fallback_used: false,
+    };
+    render(
+      <MemoryRouter>
+        <InjectResult request={{ kind: "claim", text: claim, flight_id: "NS100@2025-01-24" }} response={res} startSeq={500} before={{}} after={null} />
+      </MemoryRouter>,
+    );
+    const facts = screen.getByTestId("inject-facts");
+    expect(facts).toHaveTextContent("£520");
+    expect(facts).not.toHaveTextContent("amount_cents");
+    expect(screen.getByTestId("inject-dropped")).toHaveTextContent("Every fact kept quotes the text word for word.");
+    expect(screen.queryByTestId("inject-fallback")).toBeNull();
+  });
 });

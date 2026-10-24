@@ -27,7 +27,19 @@ function valueText(field: string, value: unknown): string {
   if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) return zuluDay(value);
   if (typeof value === "boolean") return value ? "yes" : "no";
   if (typeof value === "string" || typeof value === "number") return String(value);
-  return JSON.stringify(value);
+  if (Array.isArray(value)) return value.map((v) => valueText(field, v)).join(", ");
+  if (typeof value === "object") {
+    const o = value as Record<string, unknown>;
+    // Money as written in the document: { currency, amount_cents }.
+    if (typeof o.amount_cents === "number") {
+      const cur = typeof o.currency === "string" ? o.currency.toUpperCase() : "EUR";
+      return cur === "EUR" ? eur(o.amount_cents, { cents: o.amount_cents % 100 !== 0 }) : `${cur === "GBP" ? "£" : `${cur} `}${(o.amount_cents / 100).toLocaleString("en-IE", { minimumFractionDigits: o.amount_cents % 100 ? 2 : 0 })}`;
+    }
+    return Object.entries(o)
+      .map(([k, v]) => `${k.replace(/_/g, " ")} ${valueText(k, v)}`)
+      .join(" · ");
+  }
+  return String(value);
 }
 
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);

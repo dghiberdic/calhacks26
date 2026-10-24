@@ -150,3 +150,4 @@ describe("answers at the boundary", () => {
     expect(flightOf("Q-6")).toBeNull();
   });
 });
+
