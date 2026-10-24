@@ -1,0 +1,200 @@
+{
+  "_about": "NS31 journals per plan §1.3 (drafts, pending approval; StormCheck never posts beyond approved).",
+  "external": [
+    {
+      "kind": "refund",
+      "posted_by": "agent.crm_bot",
+      "status": "posted",
+      "lines": [
+        {
+          "account": "2125",
+          "dr_cents": 1632000,
+          "cr_cents": 0
+        },
+        {
+          "account": "1110",
+          "dr_cents": 0,
+          "cr_cents": 1632000
+        }
+      ]
+    }
+  ],
+  "day1": [
+    {
+      "kind": "compensation_estimate",
+      "memo_has": "35%",
+      "lines": [
+        {
+          "account": "4090",
+          "dr_cents": 3465000,
+          "cr_cents": 0
+        },
+        {
+          "account": "2140",
+          "dr_cents": 0,
+          "cr_cents": 3465000
+        }
+      ]
+    },
+    {
+      "kind": "refund",
+      "memo_has": "2125",
+      "lines": [
+        {
+          "account": "2100",
+          "dr_cents": 1440000,
+          "cr_cents": 0
+        },
+        {
+          "account": "2110",
+          "dr_cents": 192000,
+          "cr_cents": 0
+        },
+        {
+          "account": "2125",
+          "dr_cents": 0,
+          "cr_cents": 1632000
+        }
+      ]
+    },
+    {
+      "kind": "voucher",
+      "lines": [
+        {
+          "account": "2100",
+          "dr_cents": 630000,
+          "cr_cents": 0
+        },
+        {
+          "account": "2110",
+          "dr_cents": 84000,
+          "cr_cents": 0
+        },
+        {
+          "account": "2131",
+          "dr_cents": 0,
+          "cr_cents": 714000
+        }
+      ]
+    },
+    {
+      "kind": "reroute_fim",
+      "lines": [
+        {
+          "account": "2100",
+          "dr_cents": 630000,
+          "cr_cents": 0
+        },
+        {
+          "account": "2110",
+          "dr_cents": 84000,
+          "cr_cents": 0
+        },
+        {
+          "account": "2160",
+          "dr_cents": 0,
+          "cr_cents": 714000
+        }
+      ]
+    },
+    {
+      "kind": "voucher_in_lieu",
+      "coupon": "NS31@2025-01-24:14C",
+      "lines": [
+        {
+          "account": "4090",
+          "dr_cents": 30000,
+          "cr_cents": 0
+        },
+        {
+          "account": "2132",
+          "dr_cents": 0,
+          "cr_cents": 30000
+        }
+      ]
+    }
+  ],
+  "jan": {
+    "claims_approved": {
+      "count": 6,
+      "each": [
+        {
+          "account": "2140",
+          "dr_cents": 60000,
+          "cr_cents": 0
+        },
+        {
+          "account": "2141",
+          "dr_cents": 0,
+          "cr_cents": 60000
+        }
+      ],
+      "total_cents": 360000
+    },
+    "payouts": {
+      "count": 6,
+      "each": [
+        {
+          "account": "2141",
+          "dr_cents": 60000,
+          "cr_cents": 0
+        },
+        {
+          "account": "1000",
+          "dr_cents": 0,
+          "cr_cents": 60000
+        }
+      ],
+      "gated": true,
+      "needs": "claims_lead"
+    }
+  },
+  "feb": {
+    "claims_approved": {
+      "count": 16,
+      "total_cents": 930000,
+      "face_values": {
+        "60000": 15,
+        "30000": 1
+      }
+    },
+    "change_in_estimate": {
+      "kind": "change_in_estimate",
+      "ias8_class": "change_in_estimate",
+      "needs": "controller",
+      "lines": [
+        {
+          "account": "4090",
+          "dr_cents": 399000,
+          "cr_cents": 0
+        },
+        {
+          "account": "2140",
+          "dr_cents": 0,
+          "cr_cents": 399000
+        }
+      ]
+    }
+  },
+  "balances": {
+    "2140_day1_ns31": 3465000,
+    "2140_jan_close_ns31": 3105000,
+    "2140_feb_close_ns31": 2574000,
+    "2125_after_books": 0
+  },
+  "q1_after_r_cl_1": {
+    "14C_claim_approved": [
+      {
+        "account": "2140",
+        "dr_cents": 60000,
+        "cr_cents": 0
+      },
+      {
+        "account": "2141",
+        "dr_cents": 0,
+        "cr_cents": 60000
+      }
+    ],
+    "voucher_stays_goodwill": true
+  }
+}
