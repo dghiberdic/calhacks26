@@ -230,18 +230,23 @@ export function electionsOf(summary: Record<string, unknown> | null | undefined)
   return pairs.sort(([a], [b]) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99));
 }
 
-/** Timeline kinds in plain words and whether their text is machine text (mono). */
-export function markKind(mark: TimelineMark): { label: string; machine: boolean; tone: "ink" | "metar" | "slate" | "flight" } {
+export type MarkKey = "tech" | "mcc" | "spares" | "occ" | "window" | "metar" | "crm" | "pss" | "claim" | "schedule" | "operated" | "other";
+
+/** Timeline kinds in plain words, whether their text is machine text (mono), and how they are drawn. */
+export function markKind(mark: TimelineMark): { key: MarkKey; label: string; machine: boolean; tone: "ink" | "metar" | "slate" | "flight" } {
   const k = String(mark.kind ?? mark.source_id ?? "").toLowerCase();
-  if (k.includes("tech")) return { label: "Tech log", machine: true, tone: "ink" };
-  if (k.includes("mcc")) return { label: "MCC", machine: true, tone: "ink" };
-  if (k.includes("spares")) return { label: "Spares", machine: true, tone: "ink" };
-  if (k.includes("occ")) return { label: "OCC", machine: true, tone: "slate" };
-  if (k.includes("metar") || k.includes("window") || k.includes("weather")) return { label: "METAR", machine: true, tone: "metar" };
-  if (k.includes("crm") || k.includes("refund") || k.includes("email")) return { label: "CRM", machine: false, tone: "slate" };
-  if (k.includes("schedule") || k.includes("std") || k.includes("flight") || k.includes("departure")) return { label: "Schedule", machine: false, tone: "flight" };
-  if (k.includes("claim")) return { label: "Claim", machine: false, tone: "slate" };
-  return { label: k ? featureLabel(k) : "Event", machine: false, tone: "slate" };
+  if (k.includes("tech")) return { key: "tech", label: "Tech log", machine: true, tone: "ink" };
+  if (k.includes("mcc")) return { key: "mcc", label: "MCC", machine: true, tone: "ink" };
+  if (k.includes("spares")) return { key: "spares", label: "Spares", machine: true, tone: "ink" };
+  if (k.includes("occ")) return { key: "occ", label: "OCC", machine: true, tone: "slate" };
+  if (k.includes("window")) return { key: "window", label: "Window", machine: true, tone: "metar" };
+  if (k.includes("metar") || k.includes("weather")) return { key: "metar", label: "METAR", machine: true, tone: "metar" };
+  if (k.includes("crm") || k.includes("refund") || k.includes("email")) return { key: "crm", label: "CRM", machine: false, tone: "slate" };
+  if (k.includes("pss")) return { key: "pss", label: "PSS", machine: true, tone: "slate" };
+  if (k.includes("claim")) return { key: "claim", label: "Claim", machine: false, tone: "slate" };
+  if (k.includes("operated")) return { key: "operated", label: "Operated", machine: false, tone: "slate" };
+  if (k.includes("schedule") || k.includes("std") || k.includes("flight") || k.includes("departure")) return { key: "schedule", label: "Schedule", machine: false, tone: "flight" };
+  return { key: "other", label: k ? featureLabel(k) : "Event", machine: false, tone: "slate" };
 }
 
 export const markText = (m: TimelineMark) => (typeof m.text === "string" ? m.text : typeof m.label === "string" ? m.label : "");
