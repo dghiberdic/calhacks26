@@ -156,7 +156,7 @@ function KindButton({ active, onClick, label, n }: { active: boolean; onClick: (
         active ? "bg-navy-900 text-cloud-50" : "bg-white text-slate-600 shadow-[inset_0_0_0_1px_var(--color-cloud-200)] hover:bg-cloud-50",
       )}
     >
-      {label}
+      {label}{" "}
       <span className={cn("tabular", active ? "text-cloud-400" : "text-slate-400")}>{n}</span>
     </button>
   );
