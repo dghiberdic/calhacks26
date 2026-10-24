@@ -44,7 +44,7 @@ export function EstimateCardView({ est, curve }: { est: Estimate; curve?: ClaimC
         <div className="flex flex-wrap items-center justify-between gap-2">
           <MicroLabel>Estimate · {segmentName(est.segment)} cohort</MicroLabel>
           {ias8 ? (
-            <StatusChip tone="outline" dot={false} className="font-sans text-[12px]">
+            <StatusChip tone="outline" dot={false}>
               {ias8}
             </StatusChip>
           ) : null}
