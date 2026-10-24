@@ -167,8 +167,8 @@ function CameraRig({ progress }: { progress: RefObject<AircraftProgress> }) {
     const fov = THREE.MathUtils.lerp(startFov, 30, e);
     // Dolly zoom: the framed width eases from the drawing's to the three-quarter view's while the lens
     // widens, so the aircraft holds its size and only the perspective changes. Narrow screens back off.
-    const fit = Math.max(1, 1.3 / aspect);
-    const halfW = THREE.MathUtils.lerp(halfW0, 80 * fit * halfTan(30) * aspect, e);
+    const fit = Math.max(1, 1.05 / aspect);
+    const halfW = THREE.MathUtils.lerp(halfW0, 72 * fit * halfTan(30) * aspect, e);
     const dist = halfW / (halfTan(fov) * aspect);
     const az = THREE.MathUtils.lerp(0, AZ_END, e);
     const el = THREE.MathUtils.lerp(0, 0.17, e);

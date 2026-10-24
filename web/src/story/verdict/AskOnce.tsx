@@ -141,7 +141,7 @@ export function AskOnce() {
             ) : q ? (
               <>
                 <p className="mt-5 text-[16px] leading-relaxed">
-                  The Claims Lead picks <strong className="font-semibold">{q.recommended_option}</strong>, in their own words. StormCheck drafts the rule from those words, checks it, and replays it before it goes live.
+                  The Claims Lead picks <strong className="font-semibold">{q.recommended_option.replace(/\.$/, "")}</strong>, in their own words. StormCheck drafts the rule from those words, checks it, and replays it before it goes live.
                 </p>
                 <p className="mt-auto pt-6 text-[13px] text-slate-500">{q.recommends}</p>
               </>

@@ -1,6 +1,4 @@
 import { Component, type ReactNode } from "react";
-import type { Cents } from "@/api/types";
-import { count, eur } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 /** A quiet placeholder the width of the value it stands in for, while the API answers. */
@@ -12,18 +10,6 @@ export function Pending({ ch = 4, className, tone = "dark" }: { ch?: number; cla
       style={{ width: `${ch}ch` }}
     />
   );
-}
-
-/** Integer cents as euros (lib/format), or a placeholder until they arrive. */
-export function Euros({ cents, ch = 6, tone, className }: { cents: Cents | null | undefined; ch?: number; tone?: "dark" | "light"; className?: string }) {
-  if (cents === null || cents === undefined) return <Pending ch={ch} tone={tone} className={className} />;
-  return <span className={cn("figure whitespace-nowrap", className)}>{eur(cents)}</span>;
-}
-
-/** A count (5,292), or a placeholder. */
-export function Count({ n, ch = 3, tone, className }: { n: number | null | undefined; ch?: number; tone?: "dark" | "light"; className?: string }) {
-  if (n === null || n === undefined) return <Pending ch={ch} tone={tone} className={className} />;
-  return <span className={cn("figure", className)}>{count(n)}</span>;
 }
 
 /**

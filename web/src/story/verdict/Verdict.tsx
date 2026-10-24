@@ -128,7 +128,7 @@ export function Verdict() {
         </p>
 
         <div className="vd-bridge mt-20 grid grid-cols-1 items-start gap-x-12 gap-y-14 md:mt-28 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.15fr)_minmax(0,1.3fr)]">
-          <Figure label="Not" struck caption="Cash basis: nothing is booked until a claim is paid.">
+          <Figure label="Not" struck caption="Cash basis: nothing until a claim is paid.">
             <span className={big}>{m.cash !== null ? eur(m.cash) : <Pending ch={3} tone="light" />}</span>
           </Figure>
           <Figure

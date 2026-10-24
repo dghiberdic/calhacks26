@@ -1,4 +1,4 @@
-import type { Blame, Cents, CfoMetrics, Evidence, FlightDecision, FlightFile, FlightRow, JournalEntry, MetarObs, Question, Role, Rule, StormRun, StormWindow } from "@/api/types";
+import type { Blame, CfoMetrics, Evidence, FlightDecision, FlightFile, FlightRow, JournalEntry, MetarObs, Question, Role, Rule, StormRun, StormWindow } from "@/api/types";
 import { mainWindowOf } from "@/components/storm/model";
 import { verdictOf, type VerdictKind } from "@/components/verdict";
 import { airport, iataOf } from "@/lib/airports";
@@ -10,8 +10,6 @@ import { count, eur, zulu, zuluDay } from "@/lib/format";
  */
 export const HERO_FLIGHT = "NS31@2025-01-24";
 export const NEXT_STORM = "EIDW@2025-01-26";
-
-const MS_MIN = 60_000;
 
 export const ms = (iso: string | null | undefined) => (iso ? Date.parse(iso) : NaN);
 
@@ -226,11 +224,6 @@ export function ruleFrom(rules: Rule[] | undefined, q: Question | null): Rule | 
     null
   );
 }
-
-/** Whole minutes between two instants (b − a). */
-export const minutesBetween = (a: number, b: number) => Math.round((b - a) / MS_MIN);
-
-export type Amount = Cents | null;
 
 // ---------- every euro, traced ----------
 export type ChainTone = "money" | "rule" | "fault" | "metar" | "plain";
