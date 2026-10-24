@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BlameStep, Commit, FlightRow, Question, Rule, StormRun } from "@/api/types";
-import { REDACTED, blameTarget, findPiiRecord, isPiiField, splitPii, suggestTargets, compareFrameworkRef, denialTag, evidenceTarget, isTab, orderPrincipals, principalLabel, principalRole, receiptText, ruleRefIn, shortHash, stepKind } from "./model";
+import { REDACTED, blameTarget, chainOrder, findPiiRecord, isPiiField, splitPii, suggestTargets, compareFrameworkRef, denialTag, evidenceTarget, isTab, orderPrincipals, principalLabel, principalRole, receiptText, ruleRefIn, shortHash, stepKind } from "./model";
 
 const commit = (over: Partial<Commit> = {}): Commit => ({
   hash: "9f2c41ab77de0c55aa13",
@@ -24,6 +24,28 @@ describe("tabs and hashes", () => {
     expect(shortHash("9f2c41ab77de0c55")).toBe("9f2c41a");
     expect(shortHash("sha256:9f2c41ab77", 8)).toBe("9f2c41ab");
     expect(shortHash(null)).toBe("");
+  });
+});
+
+describe("chain order", () => {
+  const mk = (hash: string, parent: string | null, at: string) => commit({ hash, parent, at });
+  it("follows parents, not timestamps", () => {
+    const a = mk("a", null, "2025-01-25T05:59:00Z");
+    const b = mk("b", "a", "2025-01-25T06:00:00Z"); // a decision stamped with its known-at
+    const c = mk("c", "b", "2025-01-25T05:59:30Z");
+    const { ordered, linked } = chainOrder([a, c, b]);
+    expect(ordered.map((x) => x.hash)).toEqual(["c", "b", "a"]);
+    expect(linked).toBe(true);
+  });
+  it("treats an older parent outside the page as linked", () => {
+    const { ordered, linked } = chainOrder([mk("y", "x", "2025-01-26T00:00:00Z"), mk("z", "y", "2025-01-26T01:00:00Z")]);
+    expect(ordered.map((c) => c.hash)).toEqual(["z", "y"]);
+    expect(linked).toBe(true);
+  });
+  it("falls back to time when the page holds two chains", () => {
+    const { ordered, linked } = chainOrder([mk("p", null, "2025-01-26T00:00:00Z"), mk("q", null, "2025-01-27T00:00:00Z")]);
+    expect(ordered.map((c) => c.hash)).toEqual(["q", "p"]);
+    expect(linked).toBe(false);
   });
 });
 

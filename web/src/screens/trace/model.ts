@@ -12,6 +12,29 @@ export const TAB_LABEL: Record<TraceTab, string> = { commits: "Commits", blame: 
 /** A git-style prefix of a sha256 commit hash. */
 export const shortHash = (hash: string | null | undefined, n = 7) => (hash ? hash.replace(/^sha256:/, "").slice(0, n) : "");
 
+/**
+ * Newest first, in chain order: walk parents back from the head (the commit nobody names as a parent).
+ * Commit times aren't monotonic along the chain (a decision can carry its known-at), so a date sort would
+ * scramble it. Falls back to newest-first by time when the loaded commits aren't one chain.
+ * `linked` says whether every loaded commit was reached by following parents.
+ */
+export function chainOrder(commits: Commit[]): { ordered: Commit[]; linked: boolean } {
+  if (commits.length < 2) return { ordered: [...commits], linked: true };
+  const byHash = new Map(commits.map((c) => [c.hash, c]));
+  const parents = new Set(commits.map((c) => c.parent).filter((p): p is string => !!p && byHash.has(p)));
+  const heads = commits.filter((c) => !parents.has(c.hash));
+  if (heads.length === 1) {
+    const ordered: Commit[] = [];
+    const seen = new Set<string>();
+    for (let c: Commit | undefined = heads[0]; c && !seen.has(c.hash); c = c.parent ? byHash.get(c.parent) : undefined) {
+      seen.add(c.hash);
+      ordered.push(c);
+    }
+    if (ordered.length === commits.length) return { ordered, linked: true };
+  }
+  return { ordered: [...commits].sort((a, b) => b.at.localeCompare(a.at)), linked: false };
+}
+
 /** Commit kinds in the order a storm night produces them. */
 export const KIND_ORDER: CommitKind[] = ["fact", "llm_call", "decision", "entitlement", "question", "ruling", "rule_event", "journal_event", "period_lock", "revert", "access_denied", "clock"];
 

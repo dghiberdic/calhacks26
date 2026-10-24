@@ -9,7 +9,7 @@ import type { Commit, CommitKind } from "@/api/types";
 import { Empty, ErrorNote, Shimmer } from "@/components/kit";
 import { longDate, zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { KIND_ORDER, blameTarget, shortHash } from "./model";
+import { KIND_ORDER, blameTarget, chainOrder, shortHash } from "./model";
 import { Mono, Principal } from "./parts";
 
 const PAGE = 100;
@@ -37,16 +37,12 @@ export function CommitsTab() {
   const [flash, setFlash] = useState<string | null>(null);
   const listRef = useRef<HTMLOListElement>(null);
 
-  const sorted = useMemo(() => [...(commits.data ?? [])].sort((a, b) => b.at.localeCompare(a.at)), [commits.data]);
+  const { ordered: sorted, linked } = useMemo(() => chainOrder(commits.data ?? []), [commits.data]);
   const byHash = useMemo(() => new Map(sorted.map((c) => [c.hash, c])), [sorted]);
   const counts = useMemo(() => {
     const m = new Map<CommitKind, number>();
     for (const c of sorted) m.set(c.kind, (m.get(c.kind) ?? 0) + 1);
     return [...m.entries()].sort((a, b) => KIND_ORDER.indexOf(a[0]) - KIND_ORDER.indexOf(b[0]));
-  }, [sorted]);
-  const gaps = useMemo(() => {
-    const asc = [...sorted].reverse();
-    return asc.slice(1).filter((c, i) => c.parent !== asc[i].hash).length;
   }, [sorted]);
 
   const needle = grep.trim().toLowerCase();
@@ -135,7 +131,7 @@ export function CommitsTab() {
           <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <Legend />
             <span className="font-mono text-[11px] text-slate-400">
-              {sorted.length} loaded · {gaps === 0 ? "parent links unbroken" : `${gaps} parent link${gaps === 1 ? "" : "s"} outside this page`}
+              {sorted.length} loaded · {linked ? "one chain, parent to parent" : "more than one chain on this page"}
             </span>
           </span>
           {(commits.data?.length ?? 0) >= limit ? (
