@@ -174,6 +174,12 @@ export function WidenDialog({ rule, proposal, pending, error, onRetry, onClose }
                 </ul>
               </div>
               <Diff diff={proposal.would_flip} empty="No past decision would change." />
+              {typeof proposal.widen_next?.question === "string" ? (
+                <p className="-mt-2 px-6 pb-5 text-[13px] text-slate-500">
+                  <span className="micro mr-2 text-slate-400">next rung</span>
+                  {proposal.widen_next.question}
+                </p>
+              ) : null}
               {confirm.error ? <Denied error={confirm.error} role={rule.authority_required} onSwitched={() => confirm.reset()} /> : null}
             </>
           ) : null}

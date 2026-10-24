@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { Link } from "react-router";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowUpRight, GitCommitVertical, RotateCcw, Waypoints } from "lucide-react";
@@ -11,8 +11,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { ROLE_LABEL, shortId } from "@/lib/format";
 import { stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
-import { RULER, caseClause, caseKeys, flightOf, originOf, stamp, validFromText, withoutCaseScope, type Origin, type RuleFamily } from "./model";
-import { RuleStatusChip, SupportTicks, VersionTrail } from "./parts";
+import { PRECEDENCE, RULER, caseClause, caseKeys, flightOf, isId, originOf, splitSource, stamp, validFromText, withoutCaseScope, type Origin, type RuleFamily } from "./model";
+import { Marked, RuleStatusChip, SupportTicks, VersionTrail } from "./parts";
 
 export type CardActions = { onWiden?: (rule: Rule) => void; onRevert?: (rule: Rule) => void };
 
@@ -48,7 +48,24 @@ export function RuleCard({ family, index = 0, highlighted, actions }: { family: 
               <h3 id={`${family.id}-ref`} className="font-mono text-[13px] font-bold text-navy-900">
                 {ruleRef(rule)}
               </h3>
-              <span className="text-[12.5px] text-slate-500">{TIER_LABEL[rule.tier]}</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={0} className="cursor-help rounded-sm text-[12.5px] text-slate-500 decoration-cloud-400 decoration-dotted underline-offset-[3px] hover:underline focus-visible:outline-2 focus-visible:outline-metar-ink">
+                    {TIER_LABEL[rule.tier]}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[300px] flex-col items-start gap-1 py-2">
+                  <span className="text-[11px] opacity-70">Precedence, highest first</span>
+                  <span className="text-[12px] leading-snug">
+                    {PRECEDENCE.map((t, i) => (
+                      <Fragment key={t}>
+                        {i > 0 ? <span className="opacity-60"> › </span> : null}
+                        <span className={t === rule.tier ? "font-semibold underline underline-offset-2" : "opacity-80"}>{TIER_LABEL[t]}</span>
+                      </Fragment>
+                    ))}
+                  </span>
+                </TooltipContent>
+              </Tooltip>
               {rule.kind !== "mined_policy" ? (
                 <>
                   <span className="text-cloud-400" aria-hidden="true">
@@ -124,14 +141,28 @@ function CaseScope({ rule }: { rule: Rule }) {
 
 // ---------- provenance ----------
 function Provenance({ rule, origin }: { rule: Rule; origin: Origin }) {
+  const prose = rule.origin_example && !isId(rule.origin_example) ? rule.origin_example : null;
   if (origin === "learned") {
     return (
       <div className="mt-4">
         <SupportTicks support={rule.support} />
+        {prose ? <p className="mt-2 max-w-[68ch] text-[13px] leading-relaxed text-slate-500">{prose}</p> : null}
       </div>
     );
   }
   if (origin === "ruled" || origin === "rejected") return <RulerWords rule={rule} origin={origin} />;
+  if (origin === "regulation" && prose) {
+    const src = splitSource(prose);
+    return (
+      <div className="mt-4 rounded-lg bg-cloud-50 px-4 py-3">
+        <p className="text-[14.5px] leading-relaxed text-navy-900">
+          {src.cite ? <span className="font-semibold">{src.cite}: </span> : null}
+          <Marked text={src.body} grounding={rule.grounding} />
+        </p>
+        {src.gloss ? <p className="mt-1.5 text-[13px] text-slate-500">{src.gloss}</p> : null}
+      </div>
+    );
+  }
   return null;
 }
 
@@ -232,15 +263,15 @@ function Record({ family }: { family: RuleFamily }) {
       <Item label="Versions">
         <VersionTrail versions={family.versions} current={rule} />
       </Item>
-      {rule.origin_example ? (
-        <Item label={rule.tier === "mined" ? "Example" : "Origin"}>
+      {isId(rule.origin_example) && rule.origin_example ? (
+        <Item label="Origin">
           {flight ? (
             <Link to={`/flights/${encodeURIComponent(flight)}`} className="inline-flex items-center gap-0.5 font-mono text-[12px] text-navy-900 hover:underline">
               {shortId(rule.origin_example)}
               <ArrowUpRight className="size-3 text-slate-400" aria-hidden="true" />
             </Link>
           ) : (
-            <span className={cn("break-words text-slate-600", /\s/.test(rule.origin_example) ? "text-[12.5px] leading-snug" : "font-mono text-[11.5px]")}>{stormName(rule.origin_example) ?? rule.origin_example}</span>
+            <span className={cn("break-words text-slate-600", stormName(rule.origin_example) ? "text-[13px]" : "font-mono text-[11.5px]")}>{stormName(rule.origin_example) ?? rule.origin_example}</span>
           )}
         </Item>
       ) : null}

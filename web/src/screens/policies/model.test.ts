@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Rule } from "@/api/types";
-import { byOrigin, caseClause, caseKeys, withoutCaseScope, droppedCaseKeys, familyFromHash, families, flightOf, originOf, parseSupport, regulationTitle, staticCardFacts, validFromText } from "./model";
+import { byOrigin, caseClause, caseKeys, isId, splitSource, withoutCaseScope, droppedCaseKeys, familyFromHash, families, flightOf, originOf, parseSupport, regulationTitle, staticCardFacts, validFromText } from "./model";
 
 const rule = (over: Partial<Rule>): Rule => ({
   id: "R-X-1",
@@ -72,6 +72,25 @@ describe("support, scope and dates", () => {
     expect(caseKeys(before)).toEqual(["cohort"]);
     expect(droppedCaseKeys(before, rule({ scope: { "flight.departs_eu": true } }))).toEqual([{ key: "cohort", value: "EIDW@2024-01-21" }]);
     expect(droppedCaseKeys(before, before)).toEqual([]);
+  });
+
+  it("never states a scope key the condition already tests", () => {
+    const r = rule({
+      scope: { "voucher.in_lieu": true, "voucher.signed": false, "flight.departs_eu": true, "voucher.amount_cents": "case:30000" },
+      condition: { all: [{ f: "voucher.in_lieu", op: "eq", v: true }, { f: "voucher.signed", op: "eq", v: false }] },
+    });
+    expect(withoutCaseScope(r).scope).toEqual({ "flight.departs_eu": true });
+  });
+
+  it("splits a regulation's source line into citation, text and gloss", () => {
+    expect(splitSource("EU261 Art. 5(3): extraordinary circumstances which could not have been avoided · weather inside the window")).toEqual({
+      cite: "EU261 Art. 5(3)",
+      body: "extraordinary circumstances which could not have been avoided",
+      gloss: "weather inside the window",
+    });
+    expect(splitSource("Preparer ≠ approver")).toEqual({ cite: null, body: "Preparer ≠ approver", gloss: null });
+    expect(isId("NS31@2025-01-24:14C")).toBe(true);
+    expect(isId("41 of 42 past reroutes")).toBe(false);
   });
 
   it("keeps case-only scope out of the sentence and names it plainly", () => {

@@ -112,11 +112,42 @@ export function droppedCaseKeys(before: Pick<Rule, "scope">, after: Pick<Rule, "
     .map((k) => ({ key: k, value: String(before.scope[k]).slice(5) }));
 }
 
-/** The sentence states the grounded rule; the case-only scope is shown apart, as what a Widen can drop. */
-export function withoutCaseScope<T extends Pick<Rule, "scope">>(rule: T): T {
+/**
+ * What the sentence should say: the condition plus any grounded scope it doesn't already state. Case-only
+ * scope is shown apart (it is what a Widen can drop), and a scope key the condition already tests with
+ * the same value would only make the sentence say it twice.
+ */
+export function withoutCaseScope<T extends Pick<Rule, "scope" | "condition">>(rule: T): T {
   const keys = caseKeys(rule);
-  if (!keys.length) return rule;
-  return { ...rule, scope: Object.fromEntries(Object.entries(rule.scope).filter(([k]) => !keys.includes(k))) };
+  const said = eqClauses(rule.condition);
+  const scope = Object.fromEntries(Object.entries(rule.scope ?? {}).filter(([k, v]) => !keys.includes(k) && !(said.has(k) && said.get(k) === v)));
+  return Object.keys(scope).length === Object.keys(rule.scope ?? {}).length ? rule : { ...rule, scope };
+}
+
+/** `feature → value` for every top-level `eq` clause under `all` (or a single clause). */
+function eqClauses(condition: unknown): Map<string, unknown> {
+  const out = new Map<string, unknown>();
+  const visit = (n: unknown) => {
+    if (!n || typeof n !== "object") return;
+    const o = n as Record<string, unknown>;
+    if (typeof o.f === "string" && o.op === "eq") out.set(o.f, o.v);
+    if (Array.isArray(o.all)) o.all.forEach(visit);
+  };
+  visit(condition);
+  return out;
+}
+
+/** True for an id ("NS31@2025-01-24:14C", "EIDW@2024-01-21"), false for a sentence. */
+export const isId = (s: string | null | undefined) => !!s && !/\s/.test(s.trim());
+
+/**
+ * A regulation's source line, "EU261 Art. 5(3): extraordinary circumstances … · weather inside the window":
+ * the citation, what it says, and StormCheck's gloss after " · ".
+ */
+export function splitSource(text: string): { cite: string | null; body: string; gloss: string | null } {
+  const [head, ...rest] = text.split(" · ");
+  const m = head.match(/^([^:]{2,90}):\s+(.+)$/);
+  return { cite: m ? m[1] : null, body: m ? m[2] : head, gloss: rest.length ? rest.join(" · ") : null };
 }
 
 /** "the route is EU–US" for an allowlisted feature, else "cohort = Storm Isha". */

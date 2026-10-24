@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import type { Rule, RuleStatus } from "@/api/types";
 import { StatusChip, type Tone } from "@/components/chips";
@@ -5,6 +6,35 @@ import { RuleSentence, ruleRef } from "@/components/rule-sentence";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { parseSupport, stamp } from "./model";
+
+// ---------- grounding ----------
+/**
+ * Text with each grounding phrase marked, like the shared GroundedQuote but without quotation marks:
+ * a regulation's source line is a citation, not someone's words.
+ */
+export function Marked({ text, grounding }: { text: string; grounding?: Record<string, string> }) {
+  const lower = text.toLowerCase();
+  const marks: { start: number; end: number; literal: string }[] = [];
+  for (const [literal, phrase] of Object.entries(grounding ?? {}).sort((a, b) => b[1].length - a[1].length)) {
+    const start = phrase ? lower.indexOf(phrase.toLowerCase()) : -1;
+    if (start >= 0 && !marks.some((m) => start < m.end && start + phrase.length > m.start)) marks.push({ start, end: start + phrase.length, literal });
+  }
+  if (!marks.length) return <>{text}</>;
+  marks.sort((a, b) => a.start - b.start);
+  const out: ReactNode[] = [];
+  let at = 0;
+  marks.forEach((m, i) => {
+    if (m.start > at) out.push(text.slice(at, m.start));
+    out.push(
+      <mark key={i} className="rounded-sm bg-metar-wash px-0.5 text-navy-900 shadow-[inset_0_-2px_0_var(--color-metar)]" title={`grounds ${m.literal}`}>
+        {text.slice(m.start, m.end)}
+      </mark>,
+    );
+    at = m.end;
+  });
+  if (at < text.length) out.push(text.slice(at));
+  return <>{out}</>;
+}
 
 // ---------- status ----------
 const STATUS: Record<RuleStatus, { tone: Tone; hint: string }> = {
