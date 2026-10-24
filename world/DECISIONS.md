@@ -122,3 +122,25 @@ Judgment calls made while implementing, newest last. Each one says what we chose
    and 80 % of other cancellations already known at batch time: that is how a technical cancellation gets miscoded 71
    (NS31). Other cancellations get single OCC lines with the root's code (41/51/64/67/82/93; 30 % of AOGs on a windy
    day are typed 71). `notified_at` is the IROPS SMS time.
+
+## F0 · Golden embed
+
+1. **Golden days are not simulated.** `generate_world` skips every `meta.storms[*].local_date` of golden
+   (2025-01-24 Éowyn, 2025-01-26 Herminia mini-day) and splices golden in verbatim (`world/golden.py::embed`).
+   The Herminia day therefore has only golden's 8 flights. Generating the rest of that day around it would collide
+   with golden's own narrative (e.g. its spares line "EI-NSW covering NS100/NS102").
+2. **Byte-for-byte check.** `golden_slice(world)` filters every list by golden's ids (preserving golden's order) and
+   takes `meta["golden"]`, golden's metar keys and real_context. Its canonical hash equals golden's (test), and
+   `meta.golden_hash` records it. `embed` raises on any id collision.
+3. **Shared keys: golden wins.** Airports are identical (same OurAirports coordinates). `meta.distances_km` merges, and
+   golden's rounded plan distances win for its routes (DUB–BCN 1,486 → "14 km under"). The generator's other routes
+   keep 0.1 km great-circle values.
+4. **History and opening balances:** golden's 42 reroute-reduction cases ("41 of 42") and the Isha cohort are used
+   as is. Generated history never re-mines the same policy, so the headline support stays "41 of 42".
+5. **Golden ground truth** comes from golden's own `meta.groups` (the plan §1.2 truth table), never from the engine:
+   weather groups → weather/extraordinary; knock-on → knock_on, extraordinary under R-LEG-1, expected route Legal;
+   NS31 and Herminia's h_technical → technical/not extraordinary. NS31@24JAN and NS106@26JAN (coded 71, AOG in the
+   tech log) are tagged `miscoded_technical`.
+6. **Id and source conventions follow golden:** `TECHLOG-<tail>-<stamp>`, `MCC-<stamp>-<tail>`, `OCC-<stamp>[-<number>]`,
+   `SPARES-<stamp>-<number>`, sources `SRC-<record id>`, METAR sources `SRC-METAR-<ICAO>@<day>` holding IEM CSV text,
+   tech-log sources holding the AMOS export block. Fleet types follow golden's `meta.fleet`.

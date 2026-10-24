@@ -79,6 +79,7 @@ class FlightTruth:
     reroute_earliest_offered: bool | None = None
     ops_code: str | None = None
     note: str = ""
+    golden: bool = False
 
     def to_json(self) -> dict[str, Any]:
         return {k: v for k, v in self.__dict__.items() if v not in (None, [], "", False) or k in ("status",)}
@@ -413,7 +414,7 @@ class DaySim:
                  latent: str) -> Aog:
         narrative = T.fill(defect, r, station)
         text = T.tech_log_line(logged, tail, station, narrative, defect)
-        eid = f"TL-{tail}-{stamp(logged)}"
+        eid = f"TECHLOG-{tail}-{stamp(logged)}"
         if defect.external:
             rts = logged + timedelta(hours=r.randint(3, 8))
             eta = rts
@@ -423,22 +424,26 @@ class DaySim:
         self.out.tech_log.append(TechLogEntry(id=eid, aircraft=tail, logged_at=logged, station=station,
                                               ata=defect.ata, text=text, mel_relief=defect.mel_relief, aog=True,
                                               rts_est=rts))
-        self._source(f"SRC-TECHLOG-{tail}-{stamp(logged)}", SourceKind.TECH_LOG, f"AMOS tech log {tail}", text,
-                     logged, 1, ["maintenance"])
+        self._source(f"SRC-{eid}", SourceKind.TECH_LOG, f"Tech log {tail} {T.ddmon(logged)} {T.hhmmz(logged)}",
+                     T.amos_record(tail, N.FLEET[tail].name, station, logged, defect, text, rts),
+                     logged + timedelta(minutes=2), 1, ["maintenance", "ops"])
         mcc_at = logged + timedelta(minutes=r.choice([25, 35, 40, 55]))
         mtext = T.mcc_line(mcc_at, station, defect, r.choice(T.POOLS), eta, rts)
-        mid = f"MCC-{tail}-{stamp(mcc_at)}"
-        self.out.ops_log.append(OpsLogEntry(id=mid, at=mcc_at, kind="mcc", flight_ids=[], text=mtext, author="MCC"))
-        self._source(f"SRC-{mid}", SourceKind.MCC_LOG, "MCC log", mtext, mcc_at, 1, ["maintenance"])
+        mid = f"MCC-{stamp(mcc_at)}-{tail}"
+        self.out.ops_log.append(OpsLogEntry(id=mid, at=mcc_at, kind="mcc", flight_ids=[], text=mtext,
+                                            author="MCC DUB"))
+        self._source(f"SRC-{mid}", SourceKind.MCC_LOG, f"MCC log {T.ddmon(mcc_at)} {T.hhmmz(mcc_at)} · {tail}",
+                     mtext + "\n", mcc_at + timedelta(minutes=1), 1, ["ops", "maintenance"])
         return Aog(until=rts, entry_id=eid, station=station, logged_at=logged, latent=latent, defect=defect)
 
     def _log_mel(self, tail: str, station: str, logged: datetime, defect: T.Defect, r: random.Random) -> None:
         text = T.tech_log_line(logged, tail, station, T.fill(defect, r, station), defect)
-        eid = f"TL-{tail}-{stamp(logged)}"
+        eid = f"TECHLOG-{tail}-{stamp(logged)}"
         self.out.tech_log.append(TechLogEntry(id=eid, aircraft=tail, logged_at=logged, station=station,
                                               ata=defect.ata, text=text, mel_relief=True, aog=False))
-        self._source(f"SRC-TECHLOG-{tail}-{stamp(logged)}", SourceKind.TECH_LOG, f"AMOS tech log {tail}", text,
-                     logged, 1, ["maintenance"])
+        self._source(f"SRC-{eid}", SourceKind.TECH_LOG, f"Tech log {tail} {T.ddmon(logged)} {T.hhmmz(logged)}",
+                     T.amos_record(tail, N.FLEET[tail].name, station, logged, defect, text, None),
+                     logged + timedelta(minutes=2), 1, ["maintenance", "ops"])
 
     def _source(self, sid: str, kind: SourceKind, title: str, text: str, at: datetime, tier: int,
                 tags: list[str]) -> Source:
@@ -521,7 +526,8 @@ class DaySim:
             oid = f"OCC-{stamp(t_batch)}"
             self.out.ops_log.append(OpsLogEntry(id=oid, at=t_batch, kind="occ", flight_ids=sorted(batch), code="71",
                                                 text=text, author="OCC DM"))
-            self._source(f"SRC-{oid}", SourceKind.OCC_LOG, "OCC cancel list", text, t_batch, 3, ["ops"])
+            self._source(f"SRC-{oid}", SourceKind.OCC_LOG, f"OCC log {T.ddmon(t_batch)} {T.hhmmz(t_batch)}",
+                         text + "\n", t_batch + timedelta(minutes=1), 3, ["ops"])
             for f in batch:
                 codes[f] = "72" if f in inbound else "71"
                 notified[f] = min(sms, by_id[f].std - timedelta(minutes=90))
@@ -551,8 +557,9 @@ class DaySim:
                                      else " ".join(self._groups(group_ids, by_id)), code, reason, sms)
             oid = f"OCC-{stamp(at)}-{s.number}"
             self.out.ops_log.append(OpsLogEntry(id=oid, at=at, kind="occ", flight_ids=sorted(group_ids), code=code,
-                                                text=text, author="OCC"))
-            self._source(f"SRC-{oid}", SourceKind.OCC_LOG, "OCC log", text, at, 3, ["ops"])
+                                                text=text, author="OCC duty manager"))
+            self._source(f"SRC-{oid}", SourceKind.OCC_LOG, f"OCC log {T.ddmon(at)} {T.hhmmz(at)}", text + "\n",
+                         at + timedelta(minutes=1), 3, ["ops"])
             for g in group_ids:
                 codes[g] = code
                 notified[g] = min(sms, by_id[g].std) if sms < by_id[g].std + timedelta(hours=1) else by_id[g].std
@@ -615,19 +622,21 @@ class DaySim:
                 kind = "long-range" if s.pair.long_haul else "narrowbody"
                 text = f"{s.number}: No {kind} spare at DUB before STD {T.hhmmz(s.std)}."
             at = min(s.std, c.known_at + timedelta(minutes=50)).replace(second=0, microsecond=0)
-            oid = f"SPARES-{s.number}-{s.local_date.isoformat()}"
+            oid = f"SPARES-{stamp(at)}-{s.number}"
             self.out.ops_log.append(OpsLogEntry(id=oid, at=at, kind="spares", flight_ids=[fid], text=text,
-                                                author="OCC"))
-            self._source(f"SRC-{oid}", SourceKind.SPARES, "Spares log", text, at, 2, ["ops"])
+                                                author="OCC fleet desk"))
+            self._source(f"SRC-{oid}", SourceKind.SPARES, f"SPARES log {T.ddmon(at)} {T.hhmmz(at)} · {s.number}",
+                         text + "\n", at + timedelta(minutes=1), 2, ["ops"])
 
     def _metar_sources(self) -> None:
         for key, obs in sorted(self.out.metar.items()):
             if not obs:
                 continue
             icao = key.split("@")[0]
-            text = "\n".join(o.raw for o in obs)
-            self._source(f"SRC-METAR-{icao}-{self.day.isoformat()}", SourceKind.METAR, f"IEM METAR {icao}", text,
-                         obs[-1].valid, 1, ["ops"])
+            src = self._source(f"SRC-METAR-{key}", SourceKind.METAR, f"METAR {icao} (IEM ASOS archive)",
+                               T.iem_csv(obs), obs[-1].valid + timedelta(minutes=25), 1, ["ops"])
+            self.out.sources[-1] = src.model_copy(
+                update={"uri": f"https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?station={icao}"})
 
 
 # ---------------------------------------------------------------- the whole world
@@ -684,9 +693,39 @@ def simulate_days(seed: int = 0, wdays: Sequence[WorldDay] | None = None) -> lis
             for w in (wdays if wdays is not None else world_days())]
 
 
-def generate_world(seed: int = 0, wdays: Sequence[WorldDay] | None = None) -> Generated:
-    outs = simulate_days(seed, wdays)
+def generate_world(seed: int = 0, wdays: Sequence[WorldDay] | None = None, *,
+                   embed_golden: bool | None = None) -> Generated:
+    """The Northstar world. `embed_golden` (default: only for the full world, when golden exists) splices the
+    golden Éowyn/Herminia world in verbatim instead of simulating those days (F0)."""
+    from world import golden
+    from world.days import split_of, world_days
+
+    if embed_golden is None:
+        embed_golden = wdays is None and golden.available()
+    all_days = list(wdays if wdays is not None else world_days())
+    gdays = golden.golden_days() if embed_golden else frozenset()
+    outs = simulate_days(seed, [w for w in all_days if w.day not in gdays])
     truth = Truth()
     for o in outs:
         truth.flights.update(o.truth)
-    return Generated(assemble(outs, seed), truth)
+    world = assemble(outs, seed)
+    if embed_golden:
+        g = golden.load_golden()
+        world = golden.embed(world, g)
+        gdays_meta = [{"date": s["local_date"], "storm_id": sid, "kind": "storm", "split": split_of(
+            date.fromisoformat(s["local_date"])), "golden": True, "flights": list(s["flight_ids"]),
+            "cancelled": sorted(f.id for f in g.flights if f.id in s["flight_ids"] and f.status == "cancelled")}
+            for sid, s in g.meta["storms"].items()]
+        days_meta = sorted(world.meta["days"] + gdays_meta, key=lambda m: m["date"])
+        world = world.model_copy(update={"meta": {**world.meta, "days": days_meta}})
+        for fid, t in golden.golden_flight_truth(g).items():
+            f_day = next(m["date"] for m in gdays_meta if fid in m["flights"])
+            truth.flights[fid] = FlightTruth(fid, f_day, split_of(date.fromisoformat(f_day)), t["status"],
+                                             t["latent"], t["cause"], t["extraordinary"],
+                                             root_flight_id=t["root_flight_id"], root_latent=t["root_latent"],
+                                             planted=list(t["planted"]), expected_route=t["expected_route"],
+                                             spare_within_3h=t["spare_within_3h"],
+                                             reroute_earliest_offered=t["reroute_earliest_offered"],
+                                             ops_code=next((f.ops_cause_code for f in g.flights if f.id == fid), None),
+                                             golden=True)
+    return Generated(world, truth)
