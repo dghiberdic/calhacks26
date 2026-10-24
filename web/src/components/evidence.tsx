@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { Check, Minus, X } from "lucide-react";
 import type { Evidence } from "@/api/types";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,28 @@ function display(value: unknown) {
   if (typeof value === "string") return value;
   if (typeof value === "number" || typeof value === "boolean") return String(value);
   return JSON.stringify(value);
+}
+
+const MASK = /\[redacted\]/gi;
+
+/** Text with the server's PII masks shown as a quiet mark instead of a raw "[redacted]". */
+export function MaskedText({ text }: { text: string }) {
+  const parts = text.split(MASK);
+  if (parts.length === 1) return <>{text}</>;
+  return (
+    <>
+      {parts.map((part, i) => (
+        <Fragment key={i}>
+          {part}
+          {i < parts.length - 1 ? (
+            <span className="mx-0.5 inline-flex h-[1.35em] items-center rounded bg-cloud-100 px-1.5 align-baseline font-mono text-[10.5px] font-normal not-italic text-slate-500 no-underline" title="Personal data, hidden for this role">
+              hidden
+            </span>
+          ) : null}
+        </Fragment>
+      ))}
+    </>
+  );
 }
 
 /** Evidence ranked by trust tier, verbatim quotes, the losing source struck through (Flight File, Questions). */
@@ -61,7 +84,7 @@ export function EvidenceList({ evidence, className, compact }: { evidence: Evide
                   e.struck ? "text-slate-400 line-through decoration-slate-400" : "text-navy-900",
                 )}
               >
-                {e.quote ?? display(e.value)}
+                {e.quote ? <MaskedText text={e.quote} /> : display(e.value)}
               </div>
             </div>
           </li>

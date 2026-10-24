@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { MicroLabel, StatusChip, TiesChip } from "./chips";
 import { Money } from "./kit";
 
-const KIND_LABEL: Record<JournalEntry["kind"], string> = {
+export const KIND_LABEL: Record<JournalEntry["kind"], string> = {
   sale: "sale",
   refund: "refund",
   voucher: "refund voucher",
@@ -69,11 +69,12 @@ export function JournalCard({ entry, actions, className, dense }: { entry: Journ
           {entry.lines.map((l, i) => (
             <tr key={i} className="border-t border-cloud-100">
               <td className="px-5 py-2 font-mono text-[11.5px] text-slate-400">{l.dr_cents ? "Dr" : "Cr"}</td>
-              <td className={cn("py-2", !l.dr_cents && "pl-5")}>
+              {/* Long account names wrap inside their cell; the amounts keep their own columns. */}
+              <td className={cn("break-words py-2 pr-4 align-top", !l.dr_cents && "pl-5")}>
                 <span className="font-mono text-[12px] text-slate-500">{l.account}</span> <span className="text-navy-900">{l.account_name}</span>
               </td>
-              <td className="py-2 pr-3 text-right">{l.dr_cents ? <Money cents={l.dr_cents} withCents /> : null}</td>
-              <td className="py-2 pr-5 text-right">{l.cr_cents ? <Money cents={l.cr_cents} withCents /> : null}</td>
+              <td className="whitespace-nowrap py-2 pr-3 text-right align-top">{l.dr_cents ? <Money cents={l.dr_cents} withCents /> : null}</td>
+              <td className="whitespace-nowrap py-2 pr-5 text-right align-top">{l.cr_cents ? <Money cents={l.cr_cents} withCents /> : null}</td>
             </tr>
           ))}
           <tr className="border-t border-cloud-200 text-slate-500">
@@ -108,8 +109,8 @@ export function JournalCard({ entry, actions, className, dense }: { entry: Journ
 export function ReplaySummary({ diff, className }: { diff: ReplayDiff; className?: string }) {
   const locked = (diff.locked_periods_untouched ?? []).map(periodLabel).join(", ");
   return (
-    <p className={cn("font-mono text-[12.5px] text-slate-600", className)}>
-      flips {diff.flips.length} · Δ {eur(diff.total_delta_cents, { signed: true })}
+    <p className={cn("text-[13px] text-slate-600", className)}>
+      flips <span className="figure font-semibold text-navy-900">{diff.flips.length}</span> · Δ <span className="figure font-semibold text-navy-900">{eur(diff.total_delta_cents, { signed: true })}</span>
       {locked ? ` · ${locked} locked, untouched` : ""}
     </p>
   );
@@ -127,10 +128,11 @@ export function ReplayFlips({ diff, limit = 8, className }: { diff: ReplayDiff; 
       <ul className="flex flex-col">
         {shown.map((f, i) => (
           <li key={`${f.entity_id}-${i}`} className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 border-t border-cloud-100 py-2 text-[13px] first:border-t-0">
-            <span className="min-w-0 truncate">
+            {/* Wraps rather than truncates: the "after" value is the point of the row. */}
+            <span className="min-w-0 break-words">
               <span className="font-mono text-[12px] text-navy-900">{shortId(f.entity_id)}</span> <span className="text-slate-400">{f.field}</span>{" "}
-              <span className="font-mono text-[12px] text-slate-500">{valueText(f.before)}</span> <span className="text-slate-400">→</span>{" "}
-              <span className="font-mono text-[12px] text-navy-900">{valueText(f.after)}</span>
+              <span className="font-mono text-[12px] text-slate-500 line-through decoration-slate-300">{valueText(f.before)}</span> <span className="text-slate-400">→</span>{" "}
+              <span className="font-mono text-[12px] font-medium text-navy-900">{valueText(f.after)}</span>
             </span>
             {f.delta_cents ? <Money cents={f.delta_cents} signed className="text-[12.5px] text-slate-600" /> : <span />}
           </li>
