@@ -53,3 +53,81 @@ The real data matches every expectation in plan §1.2 and THREAD_DAVID D1. Nothi
 - **`rules_applied`** on an entitlement = the decision's rules + the coupon-level rules (reduction, voucher). D5's citation counting has to count flight-level rules once per decision, not per coupon.
 - **DSL (`engine/dsl.py`)** was written here because entitlement rules need it; D4 builds precedence/authority/grounding on top. A missing feature reads as `None` (comparisons are false; `exists` false). A type mismatch is false, never an exception. An invalid rule never fires. Scope keys are the allowlisted features plus the context keys `storm`, `cohort`, `flight`, `station`, `segment`, `coupon`. `case:<v>` values constrain like literals (`case:true`/`case:false` parse as booleans).
 - **Bitemporal:** a rule fires only if `status == active`, `recorded_at ≤ known_at`, and `valid_from` is None or ≤ the flight date.
+
+## D2 · `engine/cause.py`, `engine/ata_table.py`, `engine/case.py`, `engine/engine.py`, `engine/storm.py`
+
+**Inputs.** `FlightCase` is built from the `World` as known at `known_at`:
+- METAR obs with `valid > known_at` are dropped. So are tech/ops log lines logged after `known_at`.
+- Station obs come from every `world.metar` list keyed `<ICAO>@…`, or obs whose `station` is the ICAO, across all days, so overnight flights see both days.
+- `EngineAPI.decide(flight_id, facts, …)` overlays facts on the engine's base world (`Engine(world=…)`). Per (subject, field), only facts recorded by `known_at` count; the best source trust tier wins, then the latest. Understood fields: `flight.ops_cause_code`, `flight.notified_at`, `spare.available_within_h`, `pax.reroute_earliest_offered`, and `aircraft:<tail>` `aog.*`, which becomes a tech-log line. When `contracts/fields.py` lands, the overlay is the only place to align.
+
+**AOG relevance.** A tech-log line counts for a flight when all of these hold:
+- same tail, `aog=True`;
+- logged within 36 h before STD (and by `known_at`);
+- not returned to service by STD (`rts_est` is None or later than STD).
+
+A no-go line (`mel_relief` False or None) beats one with relief; ties go to the latest. **`mel_relief=None` counts as no-go**, because an AOG is no-go unless relief is logged. `mel_relief=True` is not decisive and falls through.
+
+**Rule 1 vs 2, and the "both ends" condition.**
+- Rule 1 needs the AOG to be decisive and outside any window, and the flight to be not `in` at either end. An `unknown` far end (no BOS METAR for NS31) does not block it: the aircraft could not fly either way. The cap `capped:window-unknown` is not added, because the tier-1 evidence is decisive.
+- An AOG logged *after* a window but before STD also qualifies. The `aog_before_window` feature is then 0, which lowers confidence.
+- A decisive AOG with the flight `in` a window at either end is **concurrent** too, not only an AOG logged inside the window. Two causes overlap, so it goes to Legal.
+
+**External or unmatched root cause** (bird, lightning, hail, FOD, de-icing, ash, or no ATA match) gives `technical / needs_legal`, pattern `external_event`, routed to Legal, recoded 71 → 41. The aircraft *was* unserviceable before the storm, so weather is still wrong; whether the event is extraordinary is for Legal.
+
+**Out at both ends, no tier-1 cause.** The OCC code is never trusted alone:
+- A weather code (71/72/73/75/76/77) gives `unknown / needs_legal` → Ops. The pattern is `weather_code_contradicted`, the tag `sources-disagree`, and the OCC evidence is `contradicts` but not struck (no winner yet).
+- 4x without a tech-log line gives `technical / not_extraordinary` with no recode, low confidence, and batch review or escalation to Ops.
+- 6x/94/95 gives `crew` (not extraordinary). 8x gives `atc` (extraordinary, Recital 15). Both have low prior confidence, so a person sees them.
+- No code, or an unknown code, gives `unknown` → Ops.
+
+**`unknown` window (rule 5).** It applies when no end is known calm. With one end calm:
+- a weather code naming the calm end is a contradiction, not a gap (71 → departure end; 72 → arrival end);
+- a recognised non-weather code is taken at its word;
+- otherwise it is a gap → Ops, tag `out-of-scope`. No contract tag fits "data gap" exactly.
+
+**Knock-on.**
+- The previous rotation is `outbound_pair_id`, else `inbound_flight_id`. It is decided recursively (depth ≤ 3), *including* rules.
+- Previous rotation cancelled and extraordinary → `knock_on / needs_legal` → Legal, even when the outstation METAR is `unknown`. The aircraft never got there, so outstation weather at STD is not the cause.
+- Previous rotation not extraordinary → `knock_on / not_extraordinary` (C-74/19: the knock-on of an internal cause is not extraordinary).
+- Previous rotation undecided → follow it to the same person.
+
+**Spares.** Spare evidence and the `spare.available_within_h` feature appear only for non-technical causes, so a legal rule conditioned on spares can never fire on a technical cause. A test shows that changing NS31's spares text leaves its decision byte-identical. The value is parsed from "STD+4h20" (4.33 h) or "available within N h".
+
+**Cause rules.**
+- Only `SET_EXTRAORDINARY` / `SET_NOT_EXTRAORDINARY` rules of tier `hard_control`, `regulation` or `legal_ruling` can settle `extraordinary`. A mined or Claims Lead rule never can.
+- The strongest matching rule (dsl precedence) is cited. If it disagrees with the engine, it is applied: a legal interpretation wins.
+- `ROUTE_TO` from any ruling tier re-routes an unsettled case.
+
+**Confidence (default priors, `engine/default_calibration.json`).**
+- Hand-set so that in-window weather is ≥0.92 even 0 min inside the edge, NS31 is 0.909 ("91%"), knock-ons are 0.37–0.50, and gaps or contradictions are <0.2.
+- `in_window_*` is 1 for `in`, else 0. `window_margin_h` is |deciding margin| / 60, capped at 4.
+- `precedent_count` = history cases whose `kind` equals the pattern, + 10 × matching ruling rules, capped at 10. A binding ruling counts as a full set of precedents, so a knock-on settled by R-LEG-1 scores ≥0.90.
+- `data/calibration.json` overrides when present. Tests pin the default.
+
+**Routing outcome.**
+- `needs_legal` is always `escalated` to the finding's person.
+- Score <0.60 → `escalated`. 0.60–0.90 → `human` (batch review; the contract has no "batch" value). Score `None` → `human`.
+- ≥0.90 → `auto`, unless the per-flight *expected* liability (accruing compensation × segment ultimate rate, as Books computes it) is ≥ €50k. That case is `human`, routed to the Controller.
+- NS31: €34,650 < €50k → auto.
+
+**`window_margin_min`** is non-negative, matching the stub: the |margin| at the end that sits in a window, else the smaller known out-margin. `in_window_*` says which side.
+
+**Question ids.** There is one question per (pattern, storm). Here storm = the run's id, or for a lone `decide`, the window's `<ICAO>@<start date>`.
+- For the world's *primary* storm (`meta.primary_storm`, else the earliest of `meta.storms`), ids are short and match the stub, the demo script and `server/tests`: `Q-1` voucher in lieu, `Q-2` knock-on returns, `Q-3` cohort release, `Q-4…Q-12` the other patterns (`engine.engine.PATTERN_NO`).
+- Every other storm gets `Q-<storm>:<pattern>`, so a later run or a desk world never overwrites the hero's questions in a store. A world with no `meta.storms` (e.g. a desk world) always gets qualified ids.
+- The cohort question is `Q-3` whenever the world lists storms and has exactly one opening-balance cohort; otherwise it is `Q-<cohort>:cohort_release`. The mini world declares `meta.storms` so it behaves like golden.
+
+**`run_storm`.**
+- Flights are those with STD at the station, or STA at the station, inside the station's *local* day (overnight inbounds included).
+- METAR shown runs from the local day −6 h to +6 h.
+- Counters: `drafted` = owed coupons; `held` = held + needs_ruling coupons; `rules_cited` = decision rules + coupon-level rules not already on the decision.
+- `entitlement_cents` = owed + needs_ruling compensation. `liability_drafted_cents` is the engine's preview of Books' day-1 number (same rates, rounded per flight × segment, half away from zero).
+- A day with no window gets `message = "max gust N kt · no storm window"`.
+- **`aog.before_window`** is relative to *the flight's* storm window, i.e. the window it sits in at either end, else the nearest window to either end (`FlightCase.window`). Comparing against any window at the AOG station was wrong on Herminia: Éowyn's window had ended 32 h before EI-NSF's AOG, which made a pre-Herminia AOG read as "after a window". An AOG logged inside the flight's window, or inside any window at its own station, is `inside_window`.
+- **Golden world check (`test_golden_engine.py`, before `expected/` lands):**
+  - Éowyn: 23 weather auto, NS31 technical 71 → 41 auto at 0.909, 3 knock-ons to Legal (0.37–0.50, one question).
+  - Questions are knock-on (Legal), 14C (Claims Lead, 0.39 sources-disagree) and the Isha release (Controller, 0.72), so "3 questions · 3 people".
+  - Money: entitlement 9,900,000 and drafted 8,214,600, with R-MINED-REDUCE active.
+  - Herminia: NS106 recoded 71 → 41, NS110 and NS30@01-25 technical. R-CL-1 settles exactly the 31 EU-departure vouchers; the BOS→DUB one asks again.
+- **The Isha release question is in every run** whose `known_at` month-close puts the cohort at ≥ M12 with ≥3 quiet months and no keep-tail/deny-release rule. It has one id (`Q-3` on golden), so the server can de-duplicate it across runs. It disappears once R-CTL-1 is in force.

@@ -80,6 +80,34 @@ def tech_log_line(logged_at: datetime, tail: str, station: str, narrative: str, 
     return f"{ddmon(logged_at)} {hhmmz(logged_at)} {tail} {station} N/S. {narrative} {tail_txt}"
 
 
+def amos_record(tail: str, type_name: str, station: str, logged: datetime, defect: Defect, line: str,
+                rts: datetime | None) -> str:
+    """The AMOS export block a tech-log Source carries (header lines + the verbatim defect line), golden style."""
+    defect_no = f"D-{logged:%y}-{int(logged.strftime('%j%H%M')) % 100000:05d}"
+    if defect.mel_relief is True:
+        mel, status = f"{defect.ata[:2]}-{defect.ata[2:]} CAT {defect.mel_cat} DEFERRED", "SERVICEABLE"
+    elif defect.mel_relief is False:
+        mel, status = "NIL - NO-GO", "AOG"
+    else:
+        mel, status = "N/A - INSPECTION", "AOG"
+    rts_txt = f" · RTS EST {ddmon(rts)} {hhmmz(rts)}" if rts else ""
+    return (f"AMOS TECH LOG · {tail} ({type_name}) · STN {station} · DEFECT {defect_no}\n"
+            f"ATA {defect.ata} · RAISED {ddmon(logged)} {hhmmz(logged)} · MEL: {mel} · STATUS: {status}{rts_txt}\n"
+            f"{line}\n")
+
+
+def iem_csv(obs) -> str:
+    """IEM `onlycomma` CSV for a list of MetarObs (the golden METAR Source format)."""
+    def num(v, nd=2):
+        return "" if v is None else f"{float(v):.{nd}f}"
+    lines = ["station,valid,sknt,gust,drct,vsby,wxcodes,metar"]
+    for o in obs:
+        st = o.station[1:] if o.station.startswith("K") and len(o.station) == 4 else o.station
+        lines.append(",".join([st, o.valid.strftime("%Y-%m-%d %H:%M"), num(o.sknt), num(o.gust), num(o.drct),
+                               num(o.vsby_sm), o.wxcodes or "", o.raw]))
+    return "\n".join(lines) + "\n"
+
+
 def mcc_line(at: datetime, station: str, defect: Defect, pool: str, eta: datetime, rts: datetime) -> str:
     if defect.external:
         return (f"{hhmmz(at)}: {defect.kind.replace('_', ' ').upper()} INSPECTION {station}; ENGINEER DISPATCHED, "
