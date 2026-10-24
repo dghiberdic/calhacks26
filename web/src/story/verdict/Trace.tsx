@@ -12,6 +12,18 @@ const DOT: Record<ChainTone, string> = {
   plain: "border-slate-400 bg-cloud-50",
 };
 
+/** The first step leads with its amount: "€34,650" large, the rest of the server's label beside it. */
+function Lead({ label }: { label: string }) {
+  const m = label.match(/^(€[\d,]+(?:\.\d+)?)\s*(?:·\s*)?(.*)$/);
+  if (!m) return <>{label}</>;
+  return (
+    <>
+      <span className="figure">{m[1]}</span>
+      {m[2] ? <span className="mt-1 block font-sans text-[15px] font-normal tracking-normal text-slate-600 [font-stretch:100%] md:text-[16px]">{m[2]}</span> : null}
+    </>
+  );
+}
+
 /**
  * Every euro, traced: NS31's drafted liability walked back through the entitlement and the rule to
  * every quoted line of evidence (GET /blame, or the Flight File's own decision evidence and timeline).
@@ -54,19 +66,19 @@ export function Trace() {
         <ol className="tr-list relative">
           <span className="tr-line absolute bottom-6 left-[7px] top-6 w-px bg-navy-900/70" aria-hidden="true" />
           {(steps.length ? steps : Array.from({ length: 6 }, () => null)).map((s, i) => (
-            <li key={s?.key ?? i} className="tr-node relative grid grid-cols-[16px_minmax(0,1fr)] gap-x-6 pb-10 last:pb-0">
-              <span className={cn("relative z-10 mt-[0.5em] size-[15px] rounded-full border-2", s?.struck ? "border-slate-400 bg-cloud-50" : DOT[s?.tone ?? "plain"])} aria-hidden="true" />
+            <li key={s?.key ?? i} className="tr-node relative grid grid-cols-[16px_minmax(0,1fr)] gap-x-6 pb-9 last:pb-0">
+              <span className={cn("relative z-10 size-[15px] rounded-full border-2", i === 0 ? "mt-[0.6em]" : "mt-[0.2em]", s?.struck ? "border-slate-400 bg-cloud-50" : DOT[s?.tone ?? "plain"])} aria-hidden="true" />
               {s ? (
                 <div className="min-w-0">
                   <p
                     className={cn(
-                      "display-tight text-[clamp(19px,1.7vw,27px)] leading-tight",
+                      i === 0 ? "display-tight text-[clamp(30px,3vw,46px)] leading-none" : "text-[16.5px] font-medium leading-snug md:text-[18px]",
                       s.tone === "fault" && "text-notweather-ink",
                       s.tone === "metar" && "text-metar-ink",
                       s.struck && "text-slate-400 line-through decoration-2",
                     )}
                   >
-                    {s.label}
+                    {i === 0 ? <Lead label={s.label} /> : s.label}
                   </p>
                   {s.quote ? <p className={cn("mt-2 max-w-[62ch] break-words font-mono text-[12px] leading-relaxed text-slate-600", s.struck && "text-slate-400 line-through")}>{s.quote}</p> : null}
                   <p className="mt-1.5 break-words font-mono text-[10.5px] text-slate-400">{s.meta}</p>

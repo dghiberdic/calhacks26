@@ -241,10 +241,11 @@ const toneOfSource = (sourceId: string): ChainTone => (/tech_log|mcc_log/.test(s
 
 /** GET /blame, as chain steps (the server's own labels and quotes). */
 export function chainFromBlame(blame: Blame | undefined): ChainStep[] {
-  return (blame?.steps ?? []).map((s) => {
+  return (blame?.steps ?? []).map((s, i) => {
     const text = `${s.label} ${s.commit.payload_ref} ${s.quote ?? ""}`;
     const tone: ChainTone = s.commit.kind === "journal_event" || /€/.test(s.label) ? "money" : s.commit.kind === "rule_event" || s.commit.kind === "ruling" ? "rule" : /tech[ _-]?log|AOG|EDP/i.test(text) ? "fault" : /METAR|EIDW \d{6}Z/.test(text) ? "metar" : "plain";
-    return { key: s.commit.hash, label: s.label, quote: s.quote ?? null, meta: `${s.commit.kind.replace(/_/g, " ")} · ${s.commit.hash.slice(0, 8)} · ${s.commit.actor}`, tone };
+    // one commit can stand behind several steps (a rule and its ruling), so the key carries the position
+    return { key: `${i}:${s.commit.hash}`, label: s.label, quote: s.quote ?? null, meta: `${s.commit.kind.replace(/_/g, " ")} · ${s.commit.hash.slice(0, 8)} · ${s.commit.actor}`, tone };
   });
 }
 

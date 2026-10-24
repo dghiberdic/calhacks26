@@ -27,13 +27,13 @@ function Curve({ curve }: { curve: ClaimCurve }) {
       {g.pts.slice(1).map(([m, r]) => (
         <circle key={m} cx={g.x(m)} cy={g.y(r)} r="2.4" fill="#0d1524" />
       ))}
-      <text x="290" y={g.y(curve.ultimate) - 6} textAnchor="end" className="tabular fill-metar-ink text-[9px]">
+      <text x="290" y={g.y(curve.ultimate) - 6} textAnchor="end" className="tabular fill-metar-ink text-[7.5px]">
         ultimate {pct(curve.ultimate)}
       </text>
       {[0, 6, 12, 18, 24]
         .filter((m) => m <= g.last)
         .map((m) => (
-          <text key={m} x={g.x(m)} y="126" textAnchor="middle" className="tabular fill-slate-500 text-[8px]">
+          <text key={m} x={g.x(m)} y="126" textAnchor="middle" className="tabular fill-slate-500 text-[6.5px]">
             {m === 0 ? "storm" : `M${m}`}
           </text>
         ))}

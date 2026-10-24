@@ -46,7 +46,8 @@ export function Blueprint() {
   const still = prefersReducedMotion();
   const log = story.log;
   const reg = story.focus?.flight.aircraft ?? story.file?.flight.aircraft ?? null;
-  const leakLabel = `${LEAK.label} · leak${log?.at ? ` · ${stamp(log.at)}` : ""}`;
+  // What the leak is, in the tech log's own terms: engine 2's driven pump, yellow system, case drain port.
+  const leak = { title: `${LEAK.label} · case drain leak`, detail: `Yellow system${log?.at ? ` · logged ${stamp(log.at)}` : ""}` };
 
   // Mount the WebGL scene only when the section is close (and never with reduced motion).
   useEffect(() => {
@@ -134,7 +135,7 @@ export function Blueprint() {
             {near ? (
               <Contained fallback={<img src={asset("ns31-render.webp")} alt="Rendering of EI-NSB on a wet stand at Dublin" className="absolute inset-0 h-full w-full object-contain" />}>
                 <Suspense fallback={null}>
-                  <AircraftScene progress={progress} leakLabel={leakLabel} fallback={asset("ns31-render.webp")} className="absolute inset-0" />
+                  <AircraftScene progress={progress} leak={leak} fallback={asset("ns31-render.webp")} className="absolute inset-0" />
                 </Suspense>
               </Contained>
             ) : null}
@@ -183,6 +184,9 @@ export function Blueprint() {
               <path d={`M${LEAK.x - 1.1},${LEAK.y - 0.6} L${LEAK.x - 2.6},${LEAK.y - 2.2} L${LEAK.x - 5.4},${LEAK.y - 2.2}`} fill="none" stroke="#ffb3a1" strokeWidth="0.06" />
               <text x={LEAK.x - 5.7} y={LEAK.y - 1.95} textAnchor="end" fill="#ffb3a1" className="font-mono" style={{ fontSize: 0.9 }}>
                 {LEAK.label}
+                <tspan x={LEAK.x - 5.7} dy="1.15" fill="#ffb3a1" fillOpacity="0.75" style={{ fontSize: 0.72 }}>
+                  CASE DRAIN LEAK
+                </tspan>
               </text>
             </g>
             <text className="bp-dim font-mono" x="-1.6" y="-17.9" fill={INK} fillOpacity="0.7" style={{ fontSize: 0.85, letterSpacing: "0.08em" }}>

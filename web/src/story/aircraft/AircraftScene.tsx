@@ -249,7 +249,7 @@ function Pump({ wrap, progress }: { wrap: RefObject<HTMLDivElement | null>; prog
   return null;
 }
 
-export default function AircraftScene({ progress, leakLabel, fallback, className }: { progress: RefObject<AircraftProgress>; leakLabel: string; fallback: string; className?: string }) {
+export default function AircraftScene({ progress, leak, fallback, className }: { progress: RefObject<AircraftProgress>; leak: { title: string; detail: string }; fallback: string; className?: string }) {
   const wrap = useRef<HTMLDivElement>(null);
   const label = useRef<HTMLDivElement>(null);
   return (
@@ -286,7 +286,10 @@ export default function AircraftScene({ progress, leakLabel, fallback, className
           <span className="absolute inline-flex size-full animate-ping rounded-full bg-notweather opacity-60" />
           <span className="relative inline-flex size-3 rounded-full bg-notweather" />
         </span>
-        <span className="rounded bg-[#160d10]/90 px-2 py-1 font-mono text-[11px] text-[#ffb3a1] shadow-[0_0_0_1px_rgba(226,69,44,0.35)]">{leakLabel}</span>
+        <span className="rounded-md bg-[#160d10]/90 px-2.5 py-1.5 leading-tight shadow-[0_0_0_1px_rgba(226,69,44,0.35)]">
+          <span className="block font-mono text-[11.5px] text-[#ffb3a1]">{leak.title}</span>
+          <span className="mt-0.5 block text-[11.5px] text-cloud-300">{leak.detail}</span>
+        </span>
       </div>
     </div>
   );

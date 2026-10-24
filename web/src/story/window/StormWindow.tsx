@@ -82,30 +82,33 @@ export function StormWindow() {
           defaults: { ease: "none" },
           scrollTrigger: { trigger: ".sw-stage", start: "top top", end: phone ? "+=190%" : "+=140%", scrub: 0.6, pin: true, anticipatePin: 1, invalidateOnRefresh: true, refreshPriority: PIN_PRIORITY.window },
         });
-        tl.from(".sw-axis", { opacity: 0, duration: 0.3 })
-          .from(".sw-barb", { opacity: 0, y: -6, stagger: 0.03, duration: 0.3 }, "<")
-          .from(".sw-limit", { scaleX: 0, transformOrigin: "left center", duration: 0.6 }, "-=0.1")
-          .from(".sw-limit-label", { opacity: 0, duration: 0.3 }, "<0.1")
-          .addLabel("gust")
-          .from(".sw-gust, .sw-mean", { ...UNPLOTTED, duration: 1.6, ease: "power1.inOut" })
-          .from(".sw-fill", { opacity: 0, duration: 0.8 }, "<0.6")
-          .from(".sw-window", { scaleX: 0, transformOrigin: "left center", duration: 0.8, ease: "power2.inOut", stagger: 0.1 })
-          .from(".sw-window-label", { opacity: 0, y: 6, duration: 0.4 }, "-=0.2")
-          .from(".sw-lane", { opacity: 0, duration: 0.3 })
-          .from(".sw-tick", { opacity: 0, y: -16, stagger: 0.025, duration: 0.35, ease: "back.out(2)" })
-          .addLabel("check")
-          .from(".sw-tick-dot", { fill: CODED, duration: 0.5, stagger: 0.015 })
-          .from(".sw-legend", { opacity: 0, y: 6, duration: 0.4 }, "<")
-          .from(".sw-op", { opacity: 0, scaleY: 0, transformOrigin: "50% 100%", stagger: 0.03, duration: 0.3 }, "<0.2")
-          .from(".sw-op-label", { opacity: 0, duration: 0.3 })
-          .addLabel("ns31")
-          .from(".sw-ns31", { opacity: 0, scale: 0.4, transformOrigin: "50% 50%", duration: 0.4, ease: "back.out(3)" })
-          .from(".sw-margin", { scaleX: 0, transformOrigin: "left center", duration: 0.6, ease: "power2.inOut" })
-          .from(".sw-margin-label", { opacity: 0, duration: 0.3 })
-          .addLabel("fault")
-          .from(".sw-fault", { scaleY: 0, transformOrigin: "50% 100%", duration: 0.7, ease: "power2.inOut" })
-          .from(".sw-fault-label", { opacity: 0, x: -8, duration: 0.4 })
-          .to({}, { duration: 0.6 });
+        // Every step targets elements that exist (the tech log and NS31 arrive with the Flight File).
+        const has = (sel: string) => !!root.current?.querySelector(sel);
+        const step = (sel: string, vars: gsap.TweenVars, at?: gsap.Position) => (has(sel) ? tl.from(sel, vars, at) : tl);
+        step(".sw-axis", { opacity: 0, duration: 0.3 });
+        step(".sw-barb", { opacity: 0, y: -6, stagger: 0.03, duration: 0.3 }, "<");
+        step(".sw-limit", { scaleX: 0, transformOrigin: "left center", duration: 0.6 }, "-=0.1");
+        step(".sw-limit-label", { opacity: 0, duration: 0.3 }, "<0.1");
+        tl.addLabel("gust");
+        step(".sw-gust, .sw-mean", { ...UNPLOTTED, duration: 1.6, ease: "power1.inOut" });
+        step(".sw-fill", { opacity: 0, duration: 0.8 }, "<0.6");
+        step(".sw-window", { scaleX: 0, transformOrigin: "left center", duration: 0.8, ease: "power2.inOut", stagger: 0.1 });
+        step(".sw-window-label", { opacity: 0, y: 6, duration: 0.4 }, "-=0.2");
+        step(".sw-lane", { opacity: 0, duration: 0.3 });
+        step(".sw-tick", { opacity: 0, y: -16, stagger: 0.025, duration: 0.35, ease: "back.out(2)" });
+        tl.addLabel("check");
+        step(".sw-tick-dot", { fill: CODED, duration: 0.5, stagger: 0.015 });
+        step(".sw-legend", { opacity: 0, y: 6, duration: 0.4 }, "<");
+        step(".sw-op", { opacity: 0, scaleY: 0, transformOrigin: "50% 100%", stagger: 0.03, duration: 0.3 }, "<0.2");
+        step(".sw-op-label", { opacity: 0, duration: 0.3 });
+        tl.addLabel("ns31");
+        step(".sw-ns31", { opacity: 0, scale: 0.4, transformOrigin: "50% 50%", duration: 0.4, ease: "back.out(3)" });
+        step(".sw-margin", { scaleX: 0, transformOrigin: "left center", duration: 0.6, ease: "power2.inOut" });
+        step(".sw-margin-label", { opacity: 0, duration: 0.3 });
+        tl.addLabel("fault");
+        step(".sw-fault", { scaleY: 0, transformOrigin: "50% 100%", duration: 0.7, ease: "power2.inOut" });
+        step(".sw-fault-label", { opacity: 0, x: -8, duration: 0.4 });
+        tl.to({}, { duration: 0.6 });
 
         if (phone) {
           // On a phone the chart stays readable at 1000 px and the scroll pans across it like a camera:
@@ -126,7 +129,8 @@ export function StormWindow() {
         }
       });
     },
-    { scope: root, dependencies: [!!g], revertOnUpdate: true },
+    // Rebuilt as each part of the chart arrives (the run, then the Flight File's tech log and NS31).
+    { scope: root, dependencies: [!!g, !!focus, !!win, !!log?.at, operated.length], revertOnUpdate: true },
   );
 
   const winLabel = win ? `${zulu(win.start)}–${zulu(win.end)}` : null;
