@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { PayoutsPage } from "@/components/app/pages/PayoutsPage";
+
+export const metadata: Metadata = { title: "Payouts" };
 
 function PayoutsFallback() {
   return (
