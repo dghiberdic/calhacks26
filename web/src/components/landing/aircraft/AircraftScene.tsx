@@ -100,11 +100,15 @@ function Model({ progress }: { progress: React.RefObject<AircraftProgress> }) {
     return { root, edges, ghost };
   }, [scene, uniforms]);
 
-  useFrame(() => {
+  const fans = useMemo(() => ["engine_1_fan", "engine_2_fan"].map((n) => root.getObjectByName(n)).filter(Boolean) as THREE.Object3D[], [root]);
+
+  useFrame((_, dt) => {
     const p = progress.current;
     if (!p) return;
     uniforms.uSweep.value = SWEEP_MIN + (SWEEP_MAX - SWEEP_MIN) * p.sweep;
     uniforms.uLines.value = p.lines;
+    // a grounded engine windmills slowly in the wind
+    for (const f of fans) f.rotation.x += dt * 0.9;
   });
 
   return (

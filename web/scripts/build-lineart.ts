@@ -22,6 +22,7 @@ function paths(file: string) {
 }
 
 const side = paths("a321-side.svg");
+const hero = paths("ns31-hero-lines.svg");
 const top = paths("a321-top.svg");
 const s = views.side;
 const t = views.top;
@@ -31,6 +32,8 @@ const body =
   `export const SIDE_LINES = ${JSON.stringify(side)};\n` +
   `export const SIDE_VIEW = ${JSON.stringify({ mpp: s.metres_per_pixel, noseX: s.nose_tip_px[0], groundY: s.ground_line_y_px })};\n` +
   `export const TOP_LINES = ${JSON.stringify(top)};\n` +
-  `export const TOP_VIEW = ${JSON.stringify({ mpp: t.metres_per_pixel, noseX: t.nose_tip_px[0], centreY: t.centreline_y_px })};\n`;
+  `export const TOP_VIEW = ${JSON.stringify({ mpp: t.metres_per_pixel, noseX: t.nose_tip_px[0], centreY: t.centreline_y_px })};\n` +
+  `// Pixel-aligned with public/renders/ns31-hero-render.webp (2560×1440, same camera).\n` +
+  `export const HERO_LINES = ${JSON.stringify(hero)};\n`;
 writeFileSync(join(process.cwd(), "src/data/geo/lineart.ts"), body);
-console.log("side", side.length, "top", top.length, (body.length / 1024).toFixed(0), "KB");
+console.log("side", side.length, "top", top.length, "hero", hero.length, (body.length / 1024).toFixed(0), "KB");
