@@ -14,11 +14,23 @@ from contracts.models import Airport, World
 
 EARTH_RADIUS_KM = 6371.0
 
-# EU261 territory: EU27 + EEA (IS, LI, NO) + CH.
+# EU261 territory (Art. 3(1)): EU27 + EEA (IS, LI, NO) + CH, plus the outermost regions that carry their own ISO
+# codes (TFEU Arts 349 and 355(1): Guadeloupe, Martinique, French Guiana, Réunion, Mayotte, Saint-Martin). The
+# Azores, Madeira and the Canaries are coded PT / ES already. OCTs (TFEU Art. 355(2), e.g. BL, PM, PF, NC, CW, SX)
+# and Greenland / the Faroes are outside.
 EU261_COUNTRIES = frozenset({
     "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT",
     "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO", "CH",
+    "GP", "MQ", "GF", "RE", "YT", "MF",
 })
+# Airports inside an EU261 country code where the Regulation does not apply, by IATA and ICAO:
+# - northern Cyprus (Ercan, Geçitkale): the acquis is suspended where the Republic has no effective control
+#   (Protocol 10 to the 2003 Act of Accession);
+# - RAF Akrotiri: a UK Sovereign Base Area, outside the EU (Protocol 3 to the 2003 Act of Accession);
+# - Svalbard (Longyearbyen): the EEA Agreement does not apply to it (EEA Agreement Protocol 40).
+NOT_EU261_AIRPORTS = frozenset({"ECN", "LCEN", "GEC", "LCGK", "AKT", "LCRA", "LYR", "ENSB"})
+DISTANCE_DP = 6         # bands use the distance to the millimetre: stable across platforms, never a band flip
+DISPLAY_DP = 1
 
 
 class UnknownAirport(KeyError):
@@ -39,8 +51,14 @@ def _from_table(code: str) -> Airport:
         row = _table("ICAO").get(code)
     if row is None:
         raise UnknownAirport(code)
-    return Airport(icao=row["icao"], iata=row.get("iata") or code, name=row["name"], lat=float(row["lat"]),
-                   lon=float(row["lon"]), country=row["country"], eu=row["country"] in EU261_COUNTRIES, tz=row["tz"])
+    iata, icao = row.get("iata") or code, row["icao"]
+    return Airport(icao=icao, iata=iata, name=row["name"], lat=float(row["lat"]), lon=float(row["lon"]),
+                   country=row["country"], eu=in_eu261_territory(row["country"], iata, icao), tz=row["tz"])
+
+
+def in_eu261_territory(country: str, *codes: str) -> bool:
+    """Art. 3(1) territory: an EU261 country code, unless the airport is one of ``NOT_EU261_AIRPORTS``."""
+    return country in EU261_COUNTRIES and not any(c.upper() in NOT_EU261_AIRPORTS for c in codes if c)
 
 
 def airport(world: World | None, code: str) -> Airport:
@@ -75,11 +93,17 @@ def _pinned_distance(world: World | None, a: str, b: str) -> float | None:
 
 
 def distance_km(world: World | None, a: str, b: str) -> float:
-    """Great-circle distance in km, rounded to 0.1 km so bands are stable across platforms."""
+    """Great-circle distance in km for banding: unrounded (to the millimetre, which only absorbs float noise), so a
+    true 1,500.04 km is band (b), not (a). Round with ``display_km`` for display only."""
     pinned = _pinned_distance(world, a, b)
     if pinned is not None:
-        return round(pinned, 1)
-    return round(haversine_km(airport(world, a), airport(world, b)), 1)
+        return round(pinned, DISTANCE_DP)
+    return round(haversine_km(airport(world, a), airport(world, b)), DISTANCE_DP)
+
+
+def display_km(km: float) -> float:
+    """The distance as shown (0.1 km). Never band on it."""
+    return round(km, DISPLAY_DP)
 
 
 def route_region(origin: Airport, dest: Airport) -> str:

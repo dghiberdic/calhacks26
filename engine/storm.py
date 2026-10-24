@@ -49,9 +49,10 @@ def storm_flights(world: World, station: str, local_day: date):
 
 def _chip_summary(d: FlightDecision, ents: Sequence[Entitlement], number: str) -> tuple[str, str]:
     owed = sum(1 for e in ents if e.status == "owed")
-    if d.outcome == "escalated":
+    if d.outcome != "auto":            # escalated, or batch review / materiality: its entitlements are all held
         who = d.routed_to.value.replace("_", " ") if d.routed_to else "a person"
-        return "HELD", f"{number} held for {who} · {d.cause.value}"
+        review = " review" if d.outcome == "human" else ""
+        return "HELD", f"{number} held for {who}{review} · {d.cause.value}"
     if d.extraordinary == Extraordinary.NO:
         rec = f" recoded {d.recode_label} ·" if d.recode_label else ""
         return "DRAFTED", f"{number}{rec} {d.cause.value} · {owed} payouts drafted, pending Claims Lead approval"
