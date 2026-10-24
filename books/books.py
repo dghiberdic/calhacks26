@@ -19,13 +19,10 @@ from pathlib import Path
 from typing import Any, get_args
 
 from contracts.models import (
-    CfoMetrics,
     Claim,
     ClaimCurve,
     Entitlement,
-    EstimateCard,
     FlightDecision,
-    InvariantResult,
     JournalEntry,
     JournalLine,
     OpeningBalance,
@@ -42,7 +39,8 @@ from . import store
 from .coa import ACCOUNTS, DEBIT_NORMAL
 from .curves import Curve, load_curves, normalize_segment, segment_of_band
 from .errors import BooksError, Forbidden, NotFound, PeriodLocked, SoDViolation
-from .money import apply_rate, eur, pct, round_half_up
+from .money import apply_rate, eur, pct
+from .ops import OpsMixin, enum_value
 from .periods import (
     age_months,
     date_in_id,
@@ -58,6 +56,7 @@ from .periods import (
     to_utc,
     utc_date,
 )
+from .reporting import CONSTRAINT_NOTE, ReportingMixin  # noqa: F401
 
 PREPARER = Role.ENGINE.value                      # "agent.engine"
 ACCRUING = ("owed", "held", "needs_ruling")       # IFRS 15.56: held / needs-Legal items accrue too
@@ -69,11 +68,6 @@ UNASSIGNED = "unassigned"
 SENSITIVITY = Fraction(5, 100)                    # ±5 pp on the ultimate
 RELEASE_MIN_AGE = 12
 RELEASE_MIN_QUIET_MONTHS = 3
-CONSTRAINT_NOTE = (
-    "IFRS 15.50–58 variable consideration (IFRIC Sept 2019): EU261 compensation is a reduction of passenger "
-    "revenue, estimated on € claim curves (expected ultimate claim rate, history to M18 + tail judgment) and "
-    "constrained under IFRS 15.56; held / needs-Legal items accrue at their segment rate until resolved."
-)
 _ACCR_SQL = "('owed','held','needs_ruling')"
 _REG_COLS = (
     "coupon_id", "flight_id", "cohort", "segment", "band_eur", "distance_km", "status", "compensation_cents",
@@ -116,8 +110,9 @@ class _FlightDelta:
         return self.after - self.before
 
 
-class Books:
-    """`Books(db_path, clock)`; `":memory:"` works for tests."""
+class Books(OpsMixin, ReportingMixin):
+    """`Books(db_path, clock)`; `":memory:"` works for tests. PSS postings live in `books.ops`, invariants / CFO view /
+    audit in `books.reporting`."""
 
     def __init__(self, db_path: str | Path = ":memory:", clock: Any = None, curves_path: str | Path | None = None):
         if clock is None or not callable(getattr(clock, "now", None)):
@@ -206,7 +201,7 @@ class Books:
                    estimate_ref: str | None = None, source_decision_id: str | None = None, built_from: int = 0,
                    ties_to: Iterable[str] = (), gated: bool = False, run_id: str | None = None,
                    cohort: str | None = None, flight_id: str | None = None, flags: dict[str, str] | None = None,
-                   period: str | None = None) -> str:
+                   period: str | None = None, external: bool = False) -> str:
         if kind not in JE_KINDS:
             raise BooksError(f"unknown JE kind {kind!r}")
         if ias8_class not in IAS8_CLASSES:
@@ -247,8 +242,10 @@ class Books:
             "VALUES (?,?,?,?,?,?,?,?,?)",
             [(je_id, i, a, d, c, dims.get("cohort"), dims.get("segment"), dims.get("flight"),
               json.dumps(dims, sort_keys=True)) for i, (a, d, c, dims) in enumerate(clean, start=1)])
+        role = preparer if preparer.startswith(("agent.", "system.")) else "human"
         conn.execute("INSERT INTO books_je_events(je_id, kind, principal, role, reason, at) VALUES (?,?,?,?,?,?)",
-                     (je_id, "drafted", preparer, preparer if preparer.startswith("agent.") else "human", None, now))
+                     (je_id, "posted" if external else "drafted", preparer, role,
+                      "external posting recorded by Books" if external else None, now))
         return je_id
 
     def post_entry(self, *, kind: str, event_date: date, lines: list[JournalLine | dict], memo: str,
@@ -295,7 +292,7 @@ class Books:
                     id=je_id, event_date=date.fromisoformat(h["event_date"]), period=h["period"], memo=h["memo"],
                     lines=lines[je_id], kind=h["kind"], ias8_class=h["ias8_class"], reverses=h["reverses"],
                     estimate_ref=h["estimate_ref"], source_decision_id=h["source_decision_id"],
-                    status="approved" if h["status"] == "approved" else "draft", preparer=h["preparer"],
+                    status=h["status"] if h["status"] in ("approved", "posted") else "draft", preparer=h["preparer"],
                     approver=h["approver"], built_from=h["built_from"], ties_to=json.loads(h["ties_to"])))
         return out
 
@@ -317,10 +314,8 @@ class Books:
             parse_period(period)
             sql += " AND j.period = ?"
             args.append(period)
-        if status:
-            if status == "posted":                 # StormCheck never posts beyond approved (parked)
-                return []
-            if status not in ("draft", "approved"):
+        if status:                                 # "posted": external postings only (StormCheck never posts)
+            if status not in ("draft", "approved", "posted"):
                 raise ValueError(f"status must be draft|approved|posted, got {status!r}")
             sql += " AND s.status = ?"
             args.append(status)
@@ -444,7 +439,7 @@ class Books:
             "je_ids": list(base.get("je_ids", [])) + [j for j in je_ids if j not in base.get("je_ids", [])],
         })
         if decision is not None:
-            base.update({"decision_commit": decision.commit, "cause": decision.cause.value,
+            base.update({"decision_commit": decision.commit, "cause": enum_value(decision.cause),
                          "recoded": bool(decision.recoded), "confidence": decision.confidence.score})
         if election is not None:
             base["election"] = election
@@ -487,7 +482,8 @@ class Books:
             s.book += int(r[3])
         for r in self._q(
                 "SELECT c.segment, SUM(c.amount_cents) FROM books_claim_events c JOIN books_je_status s "
-                "ON s.je_id = c.approval_je_id WHERE c.cohort = ? AND c.kind = 'approved' AND s.status != 'rejected' "
+                "ON s.je_id = c.approval_je_id WHERE c.cohort = ? AND c.kind IN ('approved', 'in_kind') "
+                "AND s.status != 'rejected' "
                 "AND c.event_date <= ? AND c.known_at <= ? GROUP BY c.segment", [cohort, pend, known_at_iso]):
             segs[r[0]].actual += int(r[1])
         for r in self._q("SELECT segment, SUM(cr_cents - dr_cents) FROM books_gl_lines WHERE account = '2140' "
@@ -497,7 +493,8 @@ class Books:
 
     def _months_since_last_claim(self, cohort: str, event: date, period: str, known_at_iso: str) -> int:
         pend = period_end(period).isoformat()
-        last = self._q1("SELECT MAX(event_date) FROM books_claim_events WHERE cohort = ? AND kind = 'approved' "
+        last = self._q1("SELECT MAX(event_date) FROM books_claim_events WHERE cohort = ? "
+                        "AND kind IN ('approved', 'in_kind') "
                         "AND event_date <= ? AND known_at <= ?", [cohort, pend, known_at_iso])
         refs = [date.fromisoformat(last)] if last else []
         for r in self._q("SELECT as_of FROM books_opening_balances WHERE cohort = ? AND claimed_cents > 0 "
@@ -537,14 +534,17 @@ class Books:
                      iso(ob.as_of), period_of(utc_date(ob.as_of)), self._now()))
 
     def post_storm(self, run_id: str, world: World, decisions: list[FlightDecision], ents: list[Entitlement],
-                   known_at: datetime) -> list[JournalEntry]:
-        """Day-1 EU261 compensation estimate per flight: Dr 4090 / Cr 2140 = Σ accruing entitlement × ultimate."""
+                   known_at: datetime, *, fim_values: dict[str, int] | None = None) -> list[JournalEntry]:
+        """Day 1 for a storm run, per flight: the PSS side (sale, refunds via 2125, vouchers, FIM reroutes), the EU261
+        compensation estimate (Dr 4090 / Cr 2140 = Σ accruing entitlement × ultimate), vouchers in lieu and care.
+        Returns every journal entry of the run's flights (idempotent: a re-run posts only what is new)."""
         known_at = to_utc(known_at)
         flights = {f.id: f for f in world.flights}
         dec = {d.flight_id: d for d in decisions}
         elections = {e.coupon_id: e.kind for e in world.elections}
         signed = {c.coupon_id: c.signed_acceptance_sha256 for c in world.crm
-                  if c.kind == "voucher_in_lieu_of_compensation" and c.signed_acceptance_sha256}
+                  if c.kind == "voucher_in_lieu_of_compensation" and c.signed_acceptance_sha256
+                  and to_utc(c.at) <= known_at}
         by_flight: dict[str, list[Entitlement]] = defaultdict(list)
         for e in sorted(ents, key=lambda e: e.coupon_id):
             by_flight[e.flight_id].append(e)
@@ -555,10 +555,14 @@ class Books:
         dates = [d for d in (flight_date(f) for f in by_flight) if d]
         cohort_date = date_in_id(run_id) or (min(dates) if dates else utc_date(known_at))
         out_ids: list[str] = []
+        run_flights = set(by_flight) | set(dec)
         with self._tx():
             if world.opening_balances:
                 self.post_opening_balances(world.opening_balances, known_at)
             self._ensure_cohort(run_id, cohort_date, "storm")
+            self._record_decisions(run_id, decisions, known_at)
+            self._record_run(run_id, world, run_flights, cohort_date, known_at)
+            new_flights: list[tuple[str, date, str | None]] = []   # (flight, event date, day-1 JE)
             for fid in sorted(by_flight):
                 done = self._q("SELECT je_id FROM books_storm_flights WHERE flight_id = ?", [fid])
                 if done:                                              # idempotent: re-runs go through post_recode
@@ -602,12 +606,25 @@ class Books:
                     out_ids.append(je_id)
                 self._conn.execute("INSERT INTO books_storm_flights(flight_id, run_id, je_id, known_at, recorded_at) "
                                    "VALUES (?,?,?,?,?)", (fid, run_id, je_id, iso(known_at), self._now()))
+                new_flights.append((fid, ev, je_id))
+            # the PSS side after the estimates, so each flight's EU261 estimate is its first journal entry
+            ops_ids, atl_by_coupon = self._post_atl(run_id, world, set(by_flight), known_at, fim_values, cohort_date)
+            fresh = {e.coupon_id for fid, _ev, _je in new_flights for e in by_flight[fid]}
+            for fid, ev, je_id in new_flights:
                 self._reg_insert([self._reg_from_ent(
                     e, cohort=run_id, event_date=ev, known_at=known_at, reason="post_storm",
-                    je_ids=[je_id] if je_id and _accrues(e.status, e.compensation_cents) else [],
+                    je_ids=([je_id] if je_id and _accrues(e.status, e.compensation_cents) else [])
+                    + atl_by_coupon.get(e.coupon_id, []),
                     prev=self._register_one(e.coupon_id), decision=dec.get(fid),
-                    election=elections.get(e.coupon_id), signed=signed.get(e.coupon_id)) for e in fents])
-        return self._je_many(out_ids)
+                    election=elections.get(e.coupon_id), signed=signed.get(e.coupon_id)) for e in by_flight[fid]])
+            self._reg_append({c: ids for c, ids in atl_by_coupon.items() if c not in fresh}, known_at, "pss")
+            ops_ids += self._post_in_lieu(run_id, world, set(by_flight), known_at)
+            ops_ids += self._post_care(run_id, world, set(by_flight), known_at)
+            fl = sorted(by_flight)
+            existing = [r[0] for r in self._q(
+                f"SELECT je_id FROM books_je WHERE run_id = ? AND kind != 'compensation_estimate' AND (flight_id IN "
+                f"({','.join('?' * len(fl))}) OR flight_id IS NULL)", [run_id, *fl])] if fl else []
+        return self._je_many(sorted(set(out_ids) | set(ops_ids) | set(existing)))     # JE-NNNNNN sorts by seq
 
     # ------------------------------------------------------------------ BooksAPI: claims
 
@@ -630,22 +647,44 @@ class Books:
                             "WHERE claim_id = ? AND kind = 'approved' ORDER BY seq LIMIT 1", [claim.id])
             if prior:                                               # idempotent per claim id
                 return self._je_many([i for i in tuple(prior[0]) if i])
+            self._conn.execute(
+                "INSERT OR IGNORE INTO books_claims(claim_id, coupon_id, channel, agency, authority, pnr_scope, regime, "
+                "amount_claimed_cents, received_at, known_at, recorded_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (claim.id, claim.coupon_id, claim.channel, claim.agency, claim.authority, claim.pnr_scope,
+                 claim.currency_regime, int(claim.amount_claimed_cents), iso(claim.received_at), iso(known_at),
+                 self._now()))
             reg = self._register_one(ent.coupon_id)
             cohort = (reg or {}).get("cohort") or self._cohort_of_flight(ent.flight_id) or UNASSIGNED
             seg = segment_of_band(ent.band_eur)
             today = utc_date(known_at)
-            amount = max(0, int(ent.compensation_cents) - int(ent.voucher_offset_cents))
+            signed = bool((reg or {}).get("voucher_signed_sha256"))
+            offset = int(ent.voucher_offset_cents) if signed else 0        # hard control: no offset without a signature
+            offset_denied = int(ent.voucher_offset_cents) > 0 and not signed
+            amount = max(0, int(ent.compensation_cents) - offset)
+
+            def reject(reason: str) -> list[JournalEntry]:
+                self._claim_event(claim, ent, cohort, seg, "rejected", 0, reason, today, known_at)
+                return []
+
             if ent.status in HELD:
                 self._claim_event(claim, ent, cohort, seg, "held", 0, f"pending_ruling:{ent.status}", today, known_at)
                 return []
             if ent.status != "owed" or amount <= 0:
-                self._claim_event(claim, ent, cohort, seg, "rejected", 0, ent.status if ent.status != "owed"
-                                  else "nil_compensation", today, known_at)
-                return []
+                return reject(ent.status if ent.status != "owed" else "nil_compensation")
+            if claim.channel == "agency" and claim.authority not in ("poa", "assignment"):
+                return reject("agency_without_authority")             # never pay a third party without authority
+            if claim.channel == "direct" and self._q(
+                    "SELECT 1 FROM books_claims WHERE coupon_id = ? AND authority = 'assignment' AND claim_id != ? "
+                    "AND received_at <= ? LIMIT 1", [claim.coupon_id, claim.id, iso(known_at)]):
+                return reject("assigned_to_agency")                   # pay the assignee; a direct payment won't discharge
+            if claim.authority == "assignment" and self._q(
+                    "SELECT 1 FROM books_claim_events c JOIN books_claims m ON m.claim_id = c.claim_id "
+                    "WHERE c.coupon_id = ? AND c.kind = 'approved' AND m.channel = 'direct' AND c.known_at >= ? LIMIT 1",
+                    [ent.coupon_id, iso(claim.received_at)]):
+                return reject("assignment_notified_direct_payment_not_discharged")
             if self._q("SELECT 1 FROM books_claim_events WHERE coupon_id = ? AND kind = 'approved' LIMIT 1",
                        [ent.coupon_id]):
-                self._claim_event(claim, ent, cohort, seg, "rejected", 0, "duplicate_payment_coupon", today, known_at)
-                return []
+                return reject("duplicate_payment_coupon")
             eff, flags = self._target(today, known_at)
             period = period_of(eff)
             dims = {"cohort": cohort, "segment": seg, "flight": ent.flight_id, "coupon": ent.coupon_id,
@@ -667,8 +706,10 @@ class Books:
                 kind="claim_approved", event_date=eff, known_at=known_at,
                 memo=self._flag_memo(
                     f"EU261 claim {claim.id} approved at face value {eur(amount)} ({ent.article}) · coupon "
-                    f"{ent.coupon_id} · utilises the EU261 compensation liability · drafted, pending Claims Lead "
-                    f"approval", flags, eff),
+                    f"{ent.coupon_id} · utilises the EU261 compensation liability"
+                    + (" · voucher offset denied: no signed acceptance (Art. 7(3))" if offset_denied else
+                       f" · net of the signed in-lieu voucher {eur(offset)}" if offset else "")
+                    + " · drafted, pending Claims Lead approval", flags, eff),
                 lines=[{"account": "2140", "dr": amount, "dims": dims}, {"account": "2141", "cr": amount, "dims": dims}],
                 cohort=cohort, flight_id=ent.flight_id, flags=flags, ties_to=["2140", "2141", f"claim:{claim.id}"],
                 built_from=1)
@@ -739,12 +780,19 @@ class Books:
                           locked_periods_untouched=self.locked_periods())
 
     def post_recode(self, before: list[Entitlement], after: list[Entitlement], known_at: datetime, *,
-                    evidence_received_at: datetime | None = None, rule_ref: str | None = None) -> list[JournalEntry]:
-        """Recode JE per flight for the liability delta, in the current open period (IAS 8.36 change in estimate).
-        Idempotent: the 'before' state is the obligation register where it knows the coupon."""
+                    evidence_received_at: datetime | None = None, rule_ref: str | None = None,
+                    decisions: list[FlightDecision] | None = None) -> list[JournalEntry]:
+        """Recode JE per flight for the liability delta (weather ↔ technical / extraordinary), in the current open
+        period: a change in estimate (IAS 8.36), or a prior-period error corrected in the current period when the
+        IAS 8.5 test says the evidence was available before the lock. Refunds and care are unaffected.
+        Idempotent: the 'before' state is the obligation register where it knows the coupon. `decisions` (the
+        engine's new decisions) update the register's cause / recode provenance."""
         known_at = to_utc(known_at)
         flights = {e.flight_id for e in before} | {e.flight_id for e in after}
+        dec = {d.flight_id: d for d in decisions or []}
         with self._tx():
+            if decisions:
+                self._record_decisions(None, decisions, known_at)
             reg = {r["coupon_id"]: r for r in self._register_rows(flight_ids=flights)}
             bmap = {c: self._state(r) for c, r in reg.items()}
             for e in before:
@@ -798,8 +846,18 @@ class Books:
                     ev = (date.fromisoformat(prev["event_date"]) if prev else
                           date_in_id(ent.flight_id) or self._cohort_date(fd.cohort) or eff)
                     reg_rows.append(self._reg_from_ent(ent, cohort=fd.cohort, event_date=ev, known_at=known_at,
-                                                       reason="recode", je_ids=[je_id] if je_id else [], prev=prev))
+                                                       reason="recode", je_ids=[je_id] if je_id else [], prev=prev,
+                                                       decision=dec.get(ent.flight_id)))
             self._reg_insert(reg_rows)
+            done = {r["coupon_id"] for r in reg_rows}
+            rest = [r for c, r in reg.items() if c not in done and r["flight_id"] in dec]
+            if rest:                                      # cause changed with no € effect: provenance only
+                d_rows = []
+                for r in rest:
+                    d = dec[r["flight_id"]]
+                    d_rows.append(dict(r, decision_commit=d.commit, cause=enum_value(d.cause), recoded=bool(d.recoded),
+                                       confidence=d.confidence.score, reason="recode", known_at=iso(known_at)))
+                self._reg_insert(d_rows)
         return self._je_many(out)
 
     # ------------------------------------------------------------------ BooksAPI: month end
@@ -807,9 +865,54 @@ class Books:
     def _month_end_jes(self, period: str) -> list[JournalEntry]:
         ids = [r[0] for r in self._q(
             "SELECT j.je_id FROM books_je j JOIN books_je_status s ON s.je_id = j.je_id WHERE j.period = ? "
-            "AND s.status != 'rejected' AND (j.estimate_ref LIKE 'BF:%' OR j.estimate_ref LIKE 'release:%') "
-            "ORDER BY j.seq", [period])]
+            "AND s.status != 'rejected' AND (j.estimate_ref LIKE 'BF:%' OR j.estimate_ref LIKE 'release:%' "
+            "OR j.estimate_ref LIKE 'derecognition:%') ORDER BY j.seq", [period])]
         return self._je_many(ids)
+
+    def _derecognition_je(self, cohort: str, event: date, eff: date, known_at: datetime,
+                          rule_ref: str | None, flags: dict[str, str] | None = None) -> str | None:
+        """Dr 2140 / Cr 4090 for the cohort's whole balance, once per cohort."""
+        ref = f"derecognition:{cohort}"
+        if self._q("SELECT 1 FROM books_je j JOIN books_je_status s ON s.je_id = j.je_id WHERE j.estimate_ref = ? "
+                   "AND s.status != 'rejected' LIMIT 1", [ref]):
+            return None
+        lines = []
+        for seg, bal in sorted(self.segment_balances(cohort, period_of(eff)).items()):
+            if bal > 0:
+                dims = {"cohort": cohort, "segment": seg}
+                lines += [{"account": "2140", "dr": bal, "dims": dims}, {"account": "4090", "cr": bal, "dims": dims}]
+        if not lines:
+            return None
+        total = sum(l["dr"] for l in lines if "dr" in l)
+        expiry = limitation_expiry(event)
+        why = (f"limitation (6 years, Ireland, C-139/11 Moré) expired {expiry.isoformat()}" if expiry <= eff else
+               f"before limitation ({expiry.isoformat()}) under Controller rule {rule_ref}")
+        memo = (f"Derecognition · cohort {cohort}: the remaining EU261 compensation liability {eur(total)} is "
+                f"derecognised, {why} · Dr 2140 / Cr 4090 · Controller approval required")
+        return self._insert_je(kind="derecognition", event_date=eff, memo=self._flag_memo(memo, flags or {}, eff),
+                               lines=lines, known_at=known_at, ias8_class="change_in_estimate", cohort=cohort,
+                               estimate_ref=ref, ties_to=["2140", f"cohort:{cohort}"], flags=flags)
+
+    def derecognise(self, cohort: str, known_at: datetime, session: Session | None = None,
+                    rule_ref: str | None = None) -> JournalEntry | None:
+        """Derecognise a cohort's remaining liability. At or after limitation no rule is needed; before limitation
+        only a Controller (session) citing a Controller rule may do it ("reduce to the expected tail at M12;
+        derecognise at limitation"). The JE is a draft that still needs Controller approval."""
+        known_at = to_utc(known_at)
+        event = self._cohort_date(cohort)
+        if event is None:
+            raise NotFound(f"cohort {cohort} not found", cohort=cohort)
+        eff, flags = self._target(utc_date(known_at), known_at)
+        early = limitation_expiry(event) > eff
+        if early and (session is None or Role(session.role) != Role.CONTROLLER or not rule_ref):
+            raise Forbidden(f"derecognition of {cohort} before limitation ({limitation_expiry(event)}) needs a "
+                                f"Controller rule", cohort=cohort)
+        with self._tx():
+            if early:
+                self._conn.execute("INSERT INTO books_policy_events(kind, cohort, rule_ref, known_at, recorded_at) "
+                                   "VALUES ('derecognise', ?, ?, ?, ?)", (cohort, rule_ref, iso(known_at), self._now()))
+            je_id = self._derecognition_je(cohort, event, eff, known_at, rule_ref, flags)
+        return self._je(je_id) if je_id else None
 
     def month_end(self, period: str, known_at: datetime) -> list[JournalEntry]:
         """BF true-up per cohort/segment (draft change_in_estimate) + release proposals (drafts, not posted)."""
@@ -825,6 +928,9 @@ class Books:
                     continue
                 age = age_months(event, period)
                 if age < 1:                                         # before M1 the day-1 estimate stands
+                    continue
+                if limitation_expiry(event) <= pend:                # time-barred: derecognise, no more BF
+                    self._derecognition_je(cohort, event, pend, known_at, rule_ref=None)
                     continue
                 keep = self._keeps_tail(cohort, k_iso)
                 closing: dict[str, int] = {}
@@ -918,6 +1024,10 @@ class Books:
                 raise
             if head["status"] == kind:
                 return self._je(je_id)
+            if head["status"] == "posted":
+                verb = "approve" if kind == "approved" else "reject"
+                raise BooksError(f"{je_id} is an external posting by {head['preparer']}; there is nothing to {verb}",
+                                 je_id=je_id)
             if head["status"] != "draft":
                 raise BooksError(f"{je_id} is {head['status']}; cannot mark it {kind}", je_id=je_id)
             if self._is_locked(head["period"]):
@@ -983,12 +1093,17 @@ class Books:
         pend = period_end(period)
         end_iso = end_of_day_iso(pend)
         out: list[RollforwardRow] = []
-        for cohort in sorted(rows):
+        newest = {c: -d.toordinal() for c, d in self._cohorts()}
+        # newest storm first (as expected/rollforward_2025-02.json), unassigned last
+        for cohort in sorted(rows, key=lambda c: (c == UNASSIGNED, newest.get(c, 0), c)):
             v = rows[cohort]
             closing = (v["opening"] + v["new"] - v["claims"] - v["settled"] - v["derecognised"] + v["cie"]
                        + v["recode"] + v["oop"])
             segs = self._cohort_segments(cohort, period, end_iso) if cohort != UNASSIGNED else {}
             unclaimed = sum(max(s.entitlement - s.actual, 0) for s in segs.values())
+            ev = self._cohort_date(cohort)
+            if ev is not None and limitation_expiry(ev) <= pend:      # time-barred: nothing left to claim
+                unclaimed = 0
             out.append(RollforwardRow(
                 cohort=cohort, opening_cents=v["opening"], new_cents=v["new"], claims_approved_cents=v["claims"],
                 settled_in_kind_cents=v["settled"], change_in_estimate_cents=v["cie"], recode_cents=v["recode"],
@@ -999,158 +1114,8 @@ class Books:
         return Rollforward(period=period, rows=out, closing_total_cents=closing_total, gl_balance_cents=gl,
                            ties_to_gl=closing_total == gl)
 
-    def _card_numbers(self, cohort: str, known_at: datetime) -> dict[str, Any]:
-        event = self._cohort_date(cohort)
-        if event is None:
-            raise NotFound(f"cohort {cohort} not found", cohort=cohort)
-        period = period_of(utc_date(known_at))
-        age = age_months(event, period)
-        k_iso = iso(known_at)
-        keep = self._keeps_tail(cohort, k_iso)
-        segs = self._cohort_segments(cohort, period, k_iso)
-        n = defaultdict(int)
-        exp_num = Fraction(0)
-        ult_num = Fraction(0)
-        used = []
-        for seg, s in sorted(segs.items()):
-            if s.entitlement <= 0:
-                continue
-            used.append(seg)
-            c = self._curves[seg]
-            r_age = c.rate_at(age)
-            unclaimed = max(s.entitlement - s.actual, 0)
-            n["E"] += s.entitlement
-            n["pax"] += s.pax
-            n["actual"] += s.actual
-            n["expected_loss"] += min(max(apply_rate(s.entitlement, c.ultimate) - s.actual, 0), unclaimed)
-            n["bf"] += self._bf_target(s, c, age, keep)
-            if r_age > 0:
-                cl = round_half_up(Fraction(s.actual) * c.ultimate / r_age) - s.actual
-            else:                                                   # no development yet: CL undefined
-                cl = apply_rate(s.entitlement, c.ultimate) - s.actual
-            n["chain_ladder"] += min(max(cl, 0), unclaimed)
-            n["sens"] += apply_rate(s.entitlement, SENSITIVITY)
-            exp_num += Fraction(s.entitlement) * r_age
-            ult_num += Fraction(s.entitlement) * c.ultimate
-        return {"event": event, "age": age, "used": used, "n": n, "expected": exp_num, "ultimate": ult_num,
-                "segs": segs}
-
-    def estimate_card(self, cohort: str, known_at: datetime) -> EstimateCard:
-        """Expected-loss / Bornhuetter-Ferguson / chain-ladder at the close of known_at's period; BF selected."""
-        known_at = to_utc(known_at)
-        x = self._card_numbers(cohort, known_at)
-        n, used, age = x["n"], x["used"], x["age"]
-        if len(used) == 1:
-            segment = used[0]
-        elif used:
-            segment = "mixed"
-        else:
-            segment = min(x["segs"], default="long_haul_gt3500")
-        version = "+".join(self._curves[s].version for s in used) or self._curve(segment).version
-        ae = round(float(Fraction(n["actual"]) / x["expected"]), 3) if x["expected"] > 0 else None
-        z = round(float(x["expected"] / x["ultimate"]), 3) if x["ultimate"] > 0 else None
-        approver = self._q1(
-            "SELECT s.approver FROM books_je j JOIN books_je_status s ON s.je_id = j.je_id WHERE j.cohort = ? "
-            "AND j.estimate_ref LIKE 'BF:%' AND s.status = 'approved' ORDER BY j.seq DESC LIMIT 1", [cohort])
-        return EstimateCard(
-            cohort=cohort, segment=segment, pax=n["pax"], entitlement_cents=n["E"], curve_version=version,
-            months_developed=age, expected_loss_cents=n["expected_loss"], bf_cents=n["bf"],
-            chain_ladder_cents=n["chain_ladder"], selected="bf", actual_vs_expected=ae, credibility_z=z,
-            sensitivity_5pp_cents=n["sens"], constraint_note=CONSTRAINT_NOTE, ias8_class="change_in_estimate",
-            preparer=PREPARER, approver=approver)
-
     def curve(self, segment: str) -> ClaimCurve:
         return self._curve(segment).to_model()
 
     def journal_entry(self, je_id: str) -> JournalEntry:
         return self._je(je_id)
-
-    def audit(self, je_id: str) -> dict:
-        je = self._je(je_id)
-        events = [dict(r) for r in self._q("SELECT kind, principal, role, reason, at FROM books_je_events "
-                                           "WHERE je_id = ? ORDER BY seq", [je_id])]
-        reg = [self._reg_decode(r) for r in self._q("SELECT * FROM books_register WHERE je_ids LIKE ? "
-                                                    "ORDER BY coupon_id", [f'%"{je_id}"%'])]
-        claims = [dict(r) for r in self._q("SELECT claim_id, coupon_id, kind, amount_cents, event_date FROM "
-                                           "books_claim_events WHERE approval_je_id = ? OR payment_je_id = ? "
-                                           "ORDER BY seq", [je_id, je_id])]
-        commits = sorted({c for c in [je.source_decision_id, *(r["decision_commit"] for r in reg)] if c})
-        return {"je": je.model_dump(mode="json"), "events": events, "register": reg[:50],
-                "register_count": len(reg), "claims": claims, "decision_commits": commits}
-
-    def invariants(self) -> list[InvariantResult]:
-        res: list[InvariantResult] = []
-        bad = [r[0] for r in self._q("SELECT je_id FROM books_je_lines GROUP BY je_id "
-                                     "HAVING SUM(dr_cents) != SUM(cr_cents) OR SUM(dr_cents) <= 0")]
-        res.append(InvariantResult(id="INV-2", description="Every JE balances", ok=not bad,
-                                   detail=", ".join(bad[:10])))
-        periods = sorted({r[0] for r in self._q("SELECT DISTINCT period FROM books_je")}
-                         | {period_of(utc_date(self.clock.now()))})
-        untied = [p for p in periods if not self.rollforward(p).ties_to_gl]
-        res.append(InvariantResult(id="INV-1", description="2140 rollforward foots and equals GL 2140",
-                                   ok=not untied, detail=", ".join(untied)))
-        sub = self._q1("SELECT COALESCE(SUM(c.amount_cents), 0) FROM books_claim_events c "
-                       "JOIN books_je_status a ON a.je_id = c.approval_je_id JOIN books_je_status p "
-                       "ON p.je_id = c.payment_je_id WHERE c.kind = 'approved' AND a.status != 'rejected' "
-                       "AND p.status != 'approved'")
-        gl2141 = self._liab("2141")
-        res.append(InvariantResult(id="INV-1b", description="2141 equals the approved-unpaid subledger",
-                                   ok=sub == gl2141, detail=f"subledger {sub} vs GL {gl2141}"))
-        latest = periods[-1]
-        bounds = [r.cohort for r in self.rollforward(latest).rows
-                  if not 0 <= r.closing_cents <= max(r.unclaimed_entitlement_cents, 0)
-                  and r.cohort != UNASSIGNED]
-        res.append(InvariantResult(id="INV-6", description="0 ≤ cohort liability ≤ unclaimed, unexpired entitlement",
-                                   ok=not bounds, detail=", ".join(bounds)))
-        sod = [r[0] for r in self._q("SELECT e.je_id FROM books_je_events e JOIN books_je j ON j.je_id = e.je_id "
-                                     "WHERE e.kind = 'approved' AND e.principal = j.preparer")]
-        res.append(InvariantResult(id="INV-9a", description="Preparer ≠ approver", ok=not sod,
-                                   detail=", ".join(sod)))
-        late = [r[0] for r in self._q(
-            "SELECT j.je_id FROM books_je j JOIN books_period_status p ON p.period = j.period "
-            "WHERE j.recorded_at > p.locked_at UNION SELECT e.je_id FROM books_je_events e JOIN books_je j "
-            "ON j.je_id = e.je_id JOIN books_period_status p ON p.period = j.period WHERE e.kind IN "
-            "('approved', 'rejected') AND e.at > p.locked_at")]
-        res.append(InvariantResult(id="INV-9b", description="Nothing written into a locked period", ok=not late,
-                                   detail=", ".join(late)))
-        cut = [r[0] for r in self._q("SELECT je_id FROM books_je WHERE period != substr(event_date, 1, 7)")]
-        res.append(InvariantResult(id="INV-11", description="Cut-off: JE.period follows event_date", ok=not cut,
-                                   detail=", ".join(cut)))
-        return res
-
-    def cfo_metrics(self, known_at: datetime) -> CfoMetrics:
-        known_at = to_utc(known_at)
-        period = period_of(utc_date(known_at))
-        rf = self.rollforward(period)
-        k_iso = iso(known_at)
-        cohorts = [c for c, ev in self._cohorts() if ev <= utc_date(known_at)]
-        full = sens = held = 0
-        methods = [0, 0, 0]
-        for c in cohorts:
-            x = self._card_numbers(c, known_at)
-            full += x["n"]["E"]
-            sens += x["n"]["sens"]
-            methods[0] += x["n"]["expected_loss"]
-            methods[1] += x["n"]["bf"]
-            methods[2] += x["n"]["chain_ladder"]
-        held_by_seg: dict[str, int] = defaultdict(int)
-        for r in self._register_rows(as_of=k_iso):
-            if r["status"] in HELD and r["compensation_cents"] > 0:
-                held_by_seg[r["segment"]] += r["compensation_cents"]
-        held = sum(apply_rate(v, self._curves[s].ultimate) for s, v in held_by_seg.items())
-        cash = int(self._q1("SELECT COALESCE(SUM(cr_cents - dr_cents), 0) FROM books_gl_lines WHERE account = '1000' "
-                            "AND kind = 'claim_paid'"))
-        recoded = self._q("SELECT DISTINCT r.flight_id, f.je_id FROM books_register r JOIN books_storm_flights f "
-                          "ON f.flight_id = r.flight_id WHERE r.recoded = 1")
-        rec_cents = 0
-        for r in recoded:
-            if r[1]:
-                rec_cents += int(self._q1("SELECT COALESCE(SUM(cr_cents), 0) FROM books_je_lines WHERE je_id = ? "
-                                          "AND account = '2140'", [r[1]]))
-        return CfoMetrics(
-            as_of=known_at, cash_basis_cents=cash, full_entitlement_cents=full,
-            drafted_liability_cents=rf.gl_balance_cents, sensitivity_5pp_cents=sens,
-            method_range_cents=(min(methods), max(methods)), held_for_legal_cents=held,
-            liability_bridge=rf.rows, recodes_count=len(recoded), recodes_cents=rec_cents,
-            refunds_within_7d_pct=0.0, vouchers_outstanding_cents=max(self._liab("2132"), 0),
-            care_accrued_cents=0, care_invoiced_cents=0)
