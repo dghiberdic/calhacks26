@@ -1,3 +1,4 @@
+import { preload } from "react-dom";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { DepartureBoard } from "@/components/landing/DepartureBoard";
 import { StormWindow } from "@/components/landing/StormWindow";
@@ -13,6 +14,10 @@ import { Interlude } from "@/components/landing/Interlude";
 import { ScrollProgress } from "@/components/landing/ScrollProgress";
 
 export default function Home() {
+  // Start the hero's data while the HTML is still parsing.
+  preload("/data/bram/storm-2025-12-09.json", { as: "fetch", crossOrigin: "anonymous" });
+  preload("/data/bram/frames.json", { as: "fetch", crossOrigin: "anonymous" });
+  preload("/data/bram/geo-0700.webp", { as: "image", fetchPriority: "low" });
   return (
     <SmoothScroll>
       <SiteNav />
