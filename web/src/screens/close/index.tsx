@@ -149,6 +149,7 @@ export default function CloseScreen() {
           onMonthEnd={setMonthEnd}
           onLocked={(p) => setLocalLocks((l) => (l.includes(p) ? l : [...l, p]))}
           pendingDrafts={(journal.data ?? []).filter((e) => e.status === "draft").length}
+          tiesToGl={rf.data ? rf.data.ties_to_gl : null}
         />
       </div>
 

@@ -26,11 +26,13 @@ export function CloseRail({
   onMonthEnd,
   onLocked,
   pendingDrafts,
+  tiesToGl,
 }: {
   period: string;
   locked: boolean;
   canAct: boolean;
   pendingDrafts: number;
+  tiesToGl: boolean | null;
   monthEnd: MonthEndResponse | null;
   onMonthEnd: (res: MonthEndResponse) => void;
   onLocked: (period: string) => void;
@@ -140,6 +142,8 @@ export function CloseRail({
 
       {!canAct ? <p className="mx-5 mt-3 text-[12.5px] text-slate-400">The Controller runs month-end and locks periods.</p> : null}
 
+      {!locked ? <ReadyToLock monthEnd={!!result} pendingDrafts={pendingDrafts} tiesToGl={tiesToGl} /> : null}
+
       <div className="pb-4" />
 
       <Dialog open={confirm} onOpenChange={(o) => busy === null && setConfirm(o)}>
@@ -166,6 +170,39 @@ export function CloseRail({
         </DialogContent>
       </Dialog>
     </section>
+  );
+}
+
+/** Before you lock: what the record says about this period, item by item. Green only for the GL tie and the invariants. */
+function ReadyToLock({ monthEnd, pendingDrafts, tiesToGl }: { monthEnd: boolean; pendingDrafts: number; tiesToGl: boolean | null }) {
+  const inv = useInvariants();
+  const failing = inv.data ? inv.data.filter((i) => !i.ok).length : null;
+  const items: { ok: boolean | null; text: string; green?: boolean }[] = [
+    { ok: monthEnd, text: monthEnd ? "Month-end drafted" : "Month-end not run yet" },
+    { ok: pendingDrafts === 0, text: pendingDrafts ? `${count(pendingDrafts)} ${pendingDrafts === 1 ? "entry" : "entries"} pending approval` : "No entries pending approval" },
+    { ok: tiesToGl, text: tiesToGl === false ? "2140 doesn't tie to the GL" : "2140 ties to GL 2140", green: true },
+    { ok: failing === null ? null : failing === 0, text: failing ? `${count(failing)} invariant${failing === 1 ? "" : "s"} failing` : "Every invariant holds", green: true },
+  ];
+  return (
+    <div className="mx-5 mt-4 border-t border-cloud-100 pt-4">
+      <h3 className="text-[13px] font-semibold text-navy-900">Before you lock</h3>
+      <ul className="mt-2 flex flex-col gap-1.5" data-testid="ready-to-lock">
+        {items.map((it) => (
+          <li key={it.text} className="flex items-center gap-2 text-[12.5px]">
+            {it.ok === null ? (
+              <span className="size-4 shrink-0 animate-pulse rounded-full bg-cloud-100" aria-hidden="true" />
+            ) : it.ok ? (
+              <span className={cn("inline-flex size-4 shrink-0 items-center justify-center rounded-full", it.green ? "bg-tie-wash" : "bg-cloud-100")} aria-label="done">
+                <Check className={cn("size-2.5", it.green ? "text-tie-ink" : "text-navy-900")} strokeWidth={3} />
+              </span>
+            ) : (
+              <span className="inline-flex size-4 shrink-0 rounded-full shadow-[inset_0_0_0_1.5px_var(--color-slate-400)]" aria-label="open" />
+            )}
+            <span className={it.ok === false ? "text-navy-900" : "text-slate-600"}>{it.text}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
