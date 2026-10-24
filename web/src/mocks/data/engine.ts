@@ -4,39 +4,51 @@
 //   NS31 entitlement 158 × €600 + 14 × €300 = 9,900,000c · day-1 liability 35% = 3,465,000c
 //   knock-on accruals (IFRS 15.56, segment rates) 178×€400×27% + 184×€400×27% + 168×€250×20%
 //     = 1,922,400 + 1,987,200 + 840,000 = 4,749,600c · storm day 1 = 8,214,600c
+//   StormRun.entitlement_cents = full Art. 7 entitlement of the owed + held flights (weather flights are 0):
+//     NS31 9,900,000 + NS113 178×€400 7,120,000 + NS115 184×€400 7,360,000 + NS117 168×€250 4,200,000 = 28,580,000c
+// Cause logic in the engine's priority order (THREAD_DAVID D2): an AOG inside the window → concurrent,
+// Legal; in window at either end → weather; a return of a storm-cancelled outbound, calm at both ends →
+// knock-on, Legal (unless R-LEG-1 is active); an AOG before the window, out at both ends → technical.
 import type { Confidence, Entitlement, Evidence, FlightDecision, InWindow } from "@/api/types";
 import { bandFor } from "./airports";
 import { electionsFor, fareFor, seatRefs, type FlightSpec } from "./flights";
 import * as T from "./texts";
-import { ev, mainWindow, metarEv, scheduleEv, type StormDef, type VoucherCase } from "./world";
-import { minutesBetween, position } from "./util";
+import { ev, hubOf, metarEv, scheduleEv, type StormDef, type VoucherCase } from "./world";
+import { position } from "./util";
+
+/** A tech-log line injected through POST /inject that grounds an aircraft inside the window. */
+export type InjectedAog = { logged_at: string; source_id: string; span: string; question_id: string };
 
 /** The active rules that change decisions or entitlements (derived from the rule store by state.ts). */
 export type RuleCtx = {
   /** R-LEG-1 (any version) active: how storm-cancelled return sectors settle. */
   knockOn: { ref: string; action: "set_extraordinary" | "set_not_extraordinary" } | null;
-  /** R-CL-1 active: unsigned in-lieu vouchers settle without offset; `allDepartures` once widened past `departs_eu`. */
+  /** R-CL-1 active: unsigned in-lieu vouchers settle without offset; `allDepartures` once it reaches non-EU departures. */
   voucher: { ref: string; action: "deny_offset" | "allow_offset"; allDepartures: boolean } | null;
   /** R-MIN-1 active: the Art. 7(2)(c) 50% cut on long-haul partner reroutes landing within 4 h. */
   reduction: { ref: string; support: string } | null;
   /** Per-flight decision metadata (known_at, commit), kept by state.ts. */
   meta: (flightId: string) => { known_at: string; commit: string | null };
+  /** Injected tier-1 facts that change a decision (an AOG inside the window). */
+  injected: (flightId: string) => InjectedAog | undefined;
+  /** Memo of decisions for this exact rule/fact state (state.ts keys it by a fingerprint). */
+  memo?: Map<string, FlightDecision | null>;
 };
 
 export const RATE_PCT = { long_haul_gt3500: 35, medium_1500_3500: 27, short_le1500: 20 } as const;
 export const CAL = "cal-v1";
 export const HERO_FLIGHT = "NS31@2025-01-24";
 /** NS31's 14 partner reroutes arrived +3 h 40 min: inside Art. 7(2)(c)'s 4 h, so the mined policy cuts 50%. */
-const NS31_REROUTES_WITHIN_4H = 14;
+export const NS31_REROUTE_SEATS = seatRefs(172).slice(118, 132);
 
 const isHero = (spec: FlightSpec) => spec.flight.id === HERO_FLIGHT;
 
-// ---------- positions against the storm window (both ends) ----------
+// ---------- positions against the storm window (both ends, at the storm's station) ----------
 export function positions(storm: StormDef, spec: FlightSpec) {
   const f = spec.flight;
-  const hub = "DUB";
+  const hub = hubOf(storm);
   const at = (iata: string, t: string) => (iata === hub ? position(storm.metar, storm.windows, t) : { pos: "out" as InWindow, margin_min: null });
-  return { dep: at(f.origin, f.sched_dep), arr: at(f.dest, f.sched_arr) };
+  return { dep: at(f.origin, f.sched_dep), arr: at(f.dest, f.sched_arr), hub };
 }
 
 function causeConfidence(score: number, f: Partial<Record<string, number>>, caps: string[] = []): Confidence {
@@ -49,32 +61,61 @@ function causeConfidence(score: number, f: Partial<Record<string, number>>, caps
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 /** Weather confidence grows with how deep inside the window the decisive end sits (0.90 → 0.97). */
-const weatherScore = (marginMin: number | null) => round2(Math.min(0.97, 0.9 + Math.min(marginMin ?? 0, 360) / 60 * 0.0117));
+const weatherScore = (marginMin: number | null) => round2(Math.min(0.97, 0.9 + (Math.min(marginMin ?? 0, 360) / 60) * 0.0117));
+const WEATHER_CODES = ["71", "72", "73", "75", "76", "77"];
 
-const SPARE_HOURS: Record<string, number> = { NS113: 5.75, NS115: 5.33, NS117: 4.33 };
-
-/** The engine's verdict for one cancelled flight (null for flights that operated). */
+/** The engine's verdict for one cancelled flight (null for flights that operated). Pure; memoised per rule state. */
 export function decide(storm: StormDef, spec: FlightSpec, ctx: RuleCtx): FlightDecision | null {
+  const key = spec.flight.id;
+  if (ctx.memo?.has(key)) return ctx.memo.get(key) ?? null;
+  const d = decideRaw(storm, spec, ctx);
+  ctx.memo?.set(key, d);
+  return d;
+}
+
+function decideRaw(storm: StormDef, spec: FlightSpec, ctx: RuleCtx): FlightDecision | null {
   const f = spec.flight;
   if (f.status === "operated") return null;
-  const { dep, arr } = positions(storm, spec);
+  const { dep, arr, hub } = positions(storm, spec);
   const meta = ctx.meta(f.id);
-  const occSource = `occ_log:${storm.id}`;
   const base = { flight_id: f.id, ops_cause_code: f.ops_cause_code ?? null, in_window_dep: dep.pos, in_window_arr: arr.pos, known_at: meta.known_at, commit: meta.commit };
-  const occ71 = storm.kind === "herminia" ? T.OCC_HERMINIA_71 : T.OCC_EOWYN_71;
+  const occCode = (code: string | null | undefined) => (code === "72" ? storm.occ.span72 : storm.occ.span71);
+  const atHubEnd = f.origin === hub ? { t: f.sched_dep, end: dep, field: "flight.in_window_dep" } : { t: f.sched_arr, end: arr, field: "flight.in_window_arr" };
+  const weatherAtEitherEnd = dep.pos === "in" || arr.pos === "in";
+
+  // An AOG logged inside the window (injected tech-log line): concurrent causes, Legal decides.
+  const aog = ctx.injected(f.id);
+  if (aog && weatherAtEitherEnd) {
+    return {
+      ...base,
+      cause: "concurrent",
+      extraordinary: "needs_legal",
+      recoded: false,
+      recode_label: null,
+      window_margin_min: atHubEnd.end.margin_min,
+      confidence: causeConfidence(0.55, { in_window_dep: dep.pos === "in" ? 1 : 0, in_window_arr: arr.pos === "in" ? 1 : 0, aog_inside_window: 1, root_cause_internal: 1, sources_disagree: 1 }, ["capped:concurrent-causes"]),
+      reason: "AOG inside the storm window: concurrent causes",
+      evidence: [
+        ev(aog.source_id, "aog.logged_at", aog.logged_at, aog.span, "contradicts", false, `aircraft:${f.aircraft}`),
+        metarEv(storm, atHubEnd.t, atHubEnd.field, atHubEnd.end.pos),
+        scheduleEv(spec),
+        ev(storm.occ.source, "flight.ops_cause_code", f.ops_cause_code, occCode(f.ops_cause_code), "context", false, `flight:${f.id}`),
+      ],
+      rules_applied: ["HC-CONC-1@1"],
+      legal_basis: ["EU261 Art.5(3)", "CJEU C-549/07", "CJEU C-74/19"],
+      outcome: "escalated",
+      routed_to: "legal",
+      question_id: aog.question_id,
+    };
+  }
 
   if (spec.group === "outbound_weather" || spec.group === "return_weather" || spec.group === "overnight_inbound") {
     const atArr = spec.group !== "outbound_weather";
     const end = atArr ? arr : dep;
     const t = atArr ? f.sched_arr : f.sched_dep;
     const field = atArr ? "flight.in_window_arr" : "flight.in_window_dep";
-    const occQuote = spec.group === "overnight_inbound" ? T.OCC_EOWYN_72 : occ71;
-    const evidence: Evidence[] = [
-      metarEv(storm, t, field, "in"),
-      scheduleEv(spec),
-      ev(occSource, "flight.ops_cause_code", f.ops_cause_code, occQuote, "supports", false, `flight:${f.id}`),
-    ];
-    const reason = spec.group === "outbound_weather" ? "inside the storm window at DUB" : spec.group === "return_weather" ? "STA inside the storm window at DUB" : "destination weather: STA inside the DUB window";
+    const evidence: Evidence[] = [metarEv(storm, t, field, "in"), scheduleEv(spec), ev(storm.occ.source, "flight.ops_cause_code", f.ops_cause_code, occCode(f.ops_cause_code), "supports", false, `flight:${f.id}`)];
+    const reason = spec.group === "outbound_weather" ? `inside the storm window at ${hub}` : f.ops_cause_code === "72" ? `destination weather: STA inside the ${hub} window` : `STA inside the storm window at ${hub}`;
     return {
       ...base,
       cause: "weather",
@@ -95,17 +136,22 @@ export function decide(storm: StormDef, spec: FlightSpec, ctx: RuleCtx): FlightD
 
   if (spec.group === "knock_on") {
     const n = f.number;
+    const k = storm.knockOn[n];
     const outbound = f.outbound_pair_id?.split("@")[0] ?? "";
-    const evidence: Evidence[] = [
-      metarEv(storm, f.sched_arr, "flight.in_window_arr", "out"),
-      ev(`spares:${storm.id}`, "spare.available_within_h", SPARE_HOURS[n] ?? 4, T.SPARES_KNOCK_ON[n], "supports", false, `flight:${f.id}`),
-      ev(`pss:${storm.id}`, "pax.reroute_earliest_offered", true, T.PSS_KNOCK_ON[n], "supports", false, `flight:${f.id}`),
-      ev(occSource, "rotation.prev_cancelled", true, `${outbound}/${n.slice(2)}`, "supports", false, `flight:${f.id}`),
+    const evidence: Evidence[] = [atHubEnd.end.pos === "out" ? metarEv(storm, atHubEnd.t, atHubEnd.field, "out") : scheduleEv(spec)];
+    if (k) {
+      evidence.push(
+        ev(`spares:${storm.id}`, "spare.available_within_h", k.hours, k.spares, "supports", false, `flight:${f.id}`),
+        ev(`pss:${storm.id}`, "pax.reroute_earliest_offered", true, k.pss, "supports", false, `flight:${f.id}`),
+      );
+    }
+    evidence.push(
+      ev(storm.occ.source, "rotation.prev_cancelled", true, `${outbound}/${n.slice(2)}`, "supports", false, `flight:${f.id}`),
       scheduleEv(spec),
-      ev(occSource, "flight.ops_cause_code", f.ops_cause_code, T.OCC_EOWYN_71, "context", false, `flight:${f.id}`),
-    ];
+      ev(storm.occ.source, "flight.ops_cause_code", f.ops_cause_code, occCode(f.ops_cause_code), "context", false, `flight:${f.id}`),
+    );
     const legal = ["EU261 Art.5(3)", "CJEU C-74/19", "CJEU C-549/07"];
-    const features = { in_window_dep: 0, in_window_arr: 0, window_margin_h: round2((arr.margin_min ?? 0) / 60), sources_disagree: 1, knock_on: 1 };
+    const features = { in_window_dep: 0, in_window_arr: 0, window_margin_h: round2((atHubEnd.end.margin_min ?? 0) / 60), sources_disagree: 1, knock_on: 1 };
     if (ctx.knockOn) {
       const extraordinary = ctx.knockOn.action === "set_extraordinary";
       return {
@@ -114,7 +160,7 @@ export function decide(storm: StormDef, spec: FlightSpec, ctx: RuleCtx): FlightD
         extraordinary: extraordinary ? "extraordinary" : "not_extraordinary",
         recoded: false,
         recode_label: null,
-        window_margin_min: arr.margin_min,
+        window_margin_min: atHubEnd.end.margin_min,
         confidence: causeConfidence(0.93, { ...features, sources_disagree: 0, precedent_count: 1 }),
         reason: extraordinary ? `storm-cancelled rotation · no spare within 3 h · earliest reroute offered · ${ctx.knockOn.ref}` : `knock-on return, not extraordinary · ${ctx.knockOn.ref}`,
         evidence,
@@ -131,7 +177,7 @@ export function decide(storm: StormDef, spec: FlightSpec, ctx: RuleCtx): FlightD
       extraordinary: "needs_legal",
       recoded: false,
       recode_label: null,
-      window_margin_min: arr.margin_min,
+      window_margin_min: atHubEnd.end.margin_min,
       confidence: causeConfidence(0.47, features, ["capped:no-precedent"]),
       reason: "knock-on return, calm at both ends",
       evidence,
@@ -145,8 +191,7 @@ export function decide(storm: StormDef, spec: FlightSpec, ctx: RuleCtx): FlightD
 
   // technical: AOG logged before the window, out of window at both ends
   const log = storm.techLogs[f.id];
-  const w = mainWindow(storm);
-  const recoded = (f.ops_cause_code ?? "41") !== "41";
+  const recoded = WEATHER_CODES.includes(f.ops_cause_code ?? "");
   const evidence: Evidence[] = [];
   if (log) {
     const subject = `aircraft:${f.aircraft}`;
@@ -164,15 +209,14 @@ export function decide(storm: StormDef, spec: FlightSpec, ctx: RuleCtx): FlightD
       metarEv(storm, "2025-01-23T21:40:00Z", "metar.sknt_at_aog", 14, "context"),
       scheduleEv(spec),
       ev(`spares:${storm.id}`, "spare.long_range_at_dub", false, T.SPARES_EOWYN, "context", false, `flight:${f.id}`),
-      ev(`occ_log:${storm.id}`, "flight.ops_cause_code", "71", T.OCC_EOWYN_71, "contradicts", true, `flight:${f.id}`),
+      ev(storm.occ.source, "flight.ops_cause_code", "71", storm.occ.span71, "contradicts", true, `flight:${f.id}`),
     );
-  } else if (f.origin === "DUB") {
-    evidence.push(metarEv(storm, f.sched_dep, "flight.in_window_dep", "out"), scheduleEv(spec), ev(`occ_log:${storm.id}`, "flight.ops_cause_code", f.ops_cause_code, occ71, "contradicts", true, `flight:${f.id}`));
   } else {
-    evidence.push(metarEv(storm, f.sched_arr, "flight.in_window_arr", "out"), scheduleEv(spec), ev("occ_log:NS30@2025-01-25", "flight.ops_cause_code", "41", T.OCC_NS30_HERMINIA, "supports", false, `flight:${f.id}`));
+    evidence.push(metarEv(storm, atHubEnd.t, atHubEnd.field, "out"), scheduleEv(spec));
+    if (log?.occ) evidence.push(ev(log.occ.source, "flight.ops_cause_code", f.ops_cause_code, log.occ.quote, recoded ? "contradicts" : "supports", recoded, `flight:${f.id}`));
+    else evidence.push(ev(storm.occ.source, "flight.ops_cause_code", f.ops_cause_code, occCode(f.ops_cause_code), recoded ? "contradicts" : "supports", recoded, `flight:${f.id}`));
   }
-  const decisive = f.origin === "DUB" ? dep : arr;
-  const margin = w ? (f.origin === "DUB" ? minutesBetween(w.end, f.sched_dep) : Math.abs(minutesBetween(f.sched_arr, w.start))) : decisive.margin_min;
+  const margin = atHubEnd.end.margin_min;
   const score = isHero(spec) ? 0.91 : recoded ? 0.92 : 0.95;
   return {
     ...base,
@@ -182,7 +226,7 @@ export function decide(storm: StormDef, spec: FlightSpec, ctx: RuleCtx): FlightD
     recode_label: recoded ? `${f.ops_cause_code} → 41` : null,
     window_margin_min: margin,
     confidence: causeConfidence(score, { window_margin_h: round2((margin ?? 0) / 60), aog_before_window: 1, root_cause_internal: 1, sources_disagree: recoded ? 1 : 0, precedent_count: 23 }),
-    reason: f.origin === "DUB" ? "fault logged before storm" : "fault logged at BOS, coded 41",
+    reason: log?.reason ?? "fault logged before storm",
     evidence,
     rules_applied: ["REG-C549-TECHNICAL@1"],
     legal_basis: ["EU261 Art.5(3)", "CJEU C-549/07", "CJEU C-257/14"],
@@ -201,7 +245,7 @@ export const ratePct = (spec: FlightSpec) => RATE_PCT[bandFor(spec.flight.origin
 export function fullEntitlementCents(spec: FlightSpec, d: FlightDecision | null, ctx: RuleCtx): number {
   if (!isOwed(d) && !isHeld(d)) return 0;
   const per = bandFor(spec.flight.origin, spec.flight.dest).band_eur * 100;
-  const cut = isHero(spec) && ctx.reduction ? NS31_REROUTES_WITHIN_4H : 0;
+  const cut = isHero(spec) && ctx.reduction ? NS31_REROUTE_SEATS.length : 0;
   return (spec.flight.pax - cut) * per + cut * (per / 2);
 }
 
@@ -236,7 +280,8 @@ export function entitlementFor(storm: StormDef, spec: FlightSpec, d: FlightDecis
     return { ...common, compensation_cents: 0, reduction: "none", status: "no_compensation", article: "Art. 5(3)", reason: "no compensation; refunds and care still due", rules_applied: d?.rules_applied ?? [] };
   }
   if (isHeld(d)) {
-    return { ...common, compensation_cents: band.band_eur * 100, reduction: "none", status: "held", article: band.article, reason: `held for Legal (${d?.question_id ?? "Q-2"}): knock-on return, C-74/19 pattern`, rules_applied: [] };
+    const why = d?.cause === "concurrent" ? "concurrent causes (AOG inside the window)" : "knock-on return, C-74/19 pattern";
+    return { ...common, compensation_cents: band.band_eur * 100, reduction: "none", status: "held", article: band.article, reason: `held for Legal (${d?.question_id ?? "Q-2"}): ${why}`, rules_applied: [] };
   }
   const vc = voucherCases(storm).find((c) => c.coupon_id === coupon_id);
   if (vc) {
@@ -260,7 +305,9 @@ export function entitlementFor(storm: StormDef, spec: FlightSpec, d: FlightDecis
       ? "technical fault, not extraordinary · refund already initiated by the CRM bot (not repeated)"
       : election === "voucher"
         ? `elected a refund voucher (ticket value €${(fare.fare_cents + fare.taxes_cents) / 100}); compensation still owed`
-        : "technical fault, not extraordinary: compensation owed";
+        : d?.cause === "knock_on"
+          ? `knock-on return, not extraordinary: compensation owed (${d.rules_applied.join(", ")})`
+          : "technical fault, not extraordinary: compensation owed";
   return {
     ...common,
     compensation_cents: cut ? (band.band_eur * 100) / 2 : band.band_eur * 100,
@@ -268,7 +315,7 @@ export function entitlementFor(storm: StormDef, spec: FlightSpec, d: FlightDecis
     status: "owed",
     article: cut ? "Art. 7(2)(c)" : band.article,
     reason,
-    rules_applied: cut && ctx.reduction ? [ctx.reduction.ref, "REG-C549-TECHNICAL@1"] : ["REG-C549-TECHNICAL@1"],
+    rules_applied: cut && ctx.reduction ? [ctx.reduction.ref, ...(d?.rules_applied ?? [])] : [...(d?.rules_applied ?? [])],
   };
 }
 
@@ -303,7 +350,7 @@ export function entitlementsSummary(storm: StormDef, spec: FlightSpec, d: Flight
   const vcs = voucherCases(storm).filter((c) => c.flight_id === f.id);
   const needsRuling = vcs.filter((c) => !voucherSettled(c, ctx)).length;
   const fare = fareFor(f.origin, f.dest);
-  const cut = isHero(spec) && ctx.reduction ? NS31_REROUTES_WITHIN_4H : 0;
+  const cut = isHero(spec) && ctx.reduction ? NS31_REROUTE_SEATS.length : 0;
   const statuses: Record<string, number> = owed ? { owed: f.pax - needsRuling, ...(needsRuling ? { needs_ruling: needsRuling } : {}) } : held ? { held: f.pax } : { no_compensation: f.pax };
   const summary: Record<string, unknown> = {
     coupons: f.pax,
@@ -365,7 +412,7 @@ export function rulesCited(storm: StormDef, ctx: RuleCtx): number {
   let n = 0;
   for (const spec of storm.flights) {
     const d = decide(storm, spec, ctx);
-    if (isHero(spec) && ctx.reduction && isOwed(d)) n += NS31_REROUTES_WITHIN_4H;
+    if (isHero(spec) && ctx.reduction && isOwed(d)) n += NS31_REROUTE_SEATS.length;
     if (spec.group === "knock_on" && ctx.knockOn) n += 1;
   }
   n += voucherCases(storm).filter((c) => voucherSettled(c, ctx)).length;
