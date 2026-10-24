@@ -10,6 +10,7 @@ fallback is either a static table or a number the UI can't get from the API, whi
 | 3 | `StormRun.name: str \| None` (e.g. "Storm Éowyn") — or `real_context.name` | The storm's name in the shell and on Storm Run | a static name lookup by station-day in `web/src/lib/storms.ts` |
 | 4 | `Question.others_settled: int = 0` (cases the same pattern settled automatically since it was asked) | The reminder chip: "Waiting on Claims Lead 3h · reminder sent · N others settled", with N from the API (THREAD_JUSTIN J3) | chip shows "reminder sent" without N |
 | 5 | `FlightFile.entitlements_summary` keys documented: `full_entitlement_cents`, `drafted_liability_cents`, `claim_rate`, `coupons`, `elections` | Storm Run's "€34,650 drafted: not €0, not €99,000" tile and the Flight File summary read them | reads `CfoMetrics` (`/books/cfo`) for the hero cohort |
+| 6 | `Rule.cases_settled_by_storm: dict[str, int] = {}` (or a count on `/rules`): cases each storm settled by citing this rule | `/pitch` business slide footer: "Next storm: 31 voucher cases settled, ruling cited", with 31 from the API | the footer reads "cases like hers settle on their own, ruling cited" with no number |
 
 ## Open questions (the demo script hedges on these until answered)
 
