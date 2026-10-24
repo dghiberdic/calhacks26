@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { line, curveMonotoneX, area } from "d3-shape";
 import { scaleLinear } from "d3-scale";
-import { LAND_ATLANTIC } from "@/data/geo/land";
+import { COAST_NEAR } from "@/data/geo/coast";
 import { AIRPORTS, K, toMap } from "@/lib/geo";
 import { FLIGHTS, METAR_HOURLY, NS31, OPERATED, STORM, fmtDuration, metarAt } from "@/data/scenario";
 import { gsap } from "@/components/motion/gsap";
@@ -171,7 +171,7 @@ export function MomentFilm() {
     <div ref={root} className="relative h-svh w-full cursor-none overflow-hidden bg-night text-[#f4f6f8]">
       <canvas ref={glRef} className="absolute inset-0 h-full w-full" aria-hidden="true" />
       <svg className="mf-map absolute inset-0 h-full w-full" viewBox="-14 -60 14 10" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style={{ ["--u" as string]: 0.01 }}>
-        <path d={LAND_ATLANTIC} fill="none" stroke="#e8eef4" strokeOpacity="0.35" style={{ strokeWidth: "calc(var(--u) * 1.2)" }} />
+        <path d={COAST_NEAR} fill="none" stroke="#e8eef4" strokeOpacity="0.35" style={{ strokeWidth: "calc(var(--u) * 1.2)" }} />
         <g transform={`translate(${DUB[0]} ${DUB[1]})`}>
           <circle fill="#ff7a5c" style={{ r: "calc(var(--u) * 7px)" } as React.CSSProperties} />
           <circle fill="none" stroke="#ff7a5c" strokeOpacity="0.5" style={{ r: "calc(var(--u) * 18px)", strokeWidth: "calc(var(--u) * 1.2)" } as React.CSSProperties} />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { LAND_ATLANTIC, GRATICULE } from "@/data/geo/land";
+import { COAST_NEAR, GRATICULE } from "@/data/geo/coast";
 import { AIRPORTS, K, greatCircle, pathOf, toMap, type View } from "@/lib/geo";
 import { FLIGHTS, OPERATED, STORM, metarAt } from "@/data/scenario";
 import { gsap, ScrollTrigger, useGSAP, prefersReducedMotion } from "@/components/motion/gsap";
@@ -294,7 +294,7 @@ export function StormDay() {
       <svg ref={svgRef} className="absolute inset-0 h-full w-full" viewBox="-20 -60 30 18" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style={{ ["--u" as string]: 0.02 }}>
         <g className="sd-lines" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path className="sd-grat" d={GRATICULE} stroke="#8e9aa8" strokeOpacity="0.18" style={{ strokeWidth: "calc(var(--u) * 1)" }} />
-          <path className="sd-land" d={LAND_ATLANTIC} stroke="#d5dde6" strokeOpacity="0.85" style={{ strokeWidth: "calc(var(--u) * 1.15)" }} />
+          <path className="sd-land" d={COAST_NEAR} stroke="#d5dde6" strokeOpacity="0.85" style={{ strokeWidth: "calc(var(--u) * 1.15)" }} />
           {hours.map((hr) => (
             <g key={hr.h} data-hour={hr.h} style={{ opacity: hr.h === T0 ? 1 : 0, visibility: hr.h === T0 ? "visible" : "hidden" }}>
               {hr.isobars.map((b, i) => (

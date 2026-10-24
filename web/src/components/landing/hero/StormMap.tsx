@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { LAND_ATLANTIC, GRATICULE } from "@/data/geo/land";
+import { LAND_ATLANTIC } from "@/data/geo/land";
+import { GRATICULE } from "@/data/geo/coast";
 import { AIRPORTS, K, greatCircle, pathOf, toMap, type View } from "@/lib/geo";
 import { gsap, ScrollTrigger, useGSAP } from "@/components/motion/gsap";
 import { SatelliteLayer } from "./SatelliteLayer";
