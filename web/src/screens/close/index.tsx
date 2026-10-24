@@ -63,7 +63,12 @@ export default function CloseScreen() {
   const [segmentChoice, setSegmentChoice] = useState<CurveSegment | null>(null);
 
   const invariants = useInvariants();
-  const locked = useMemo(() => lockedPeriods([...(trace.data ?? []), ...live], commits.data, localLocks, invariants.data), [trace.data, live, commits.data, localLocks, invariants.data]);
+  // The rollforward says so itself now (Rollforward.locked, #16); the trace and invariants cover older servers.
+  const rfLocked = rf.data?.locked ? rf.data.period : null;
+  const locked = useMemo(
+    () => lockedPeriods([...(trace.data ?? []), ...live], commits.data, rfLocked ? [...localLocks, rfLocked] : localLocks, invariants.data),
+    [trace.data, live, commits.data, localLocks, invariants.data, rfLocked],
+  );
   const isLocked = locked.has(period);
 
   const curves = useMemo(() => ({ long_haul_gt3500: long.data, medium_1500_3500: medium.data, short_le1500: short.data }), [long.data, medium.data, short.data]);

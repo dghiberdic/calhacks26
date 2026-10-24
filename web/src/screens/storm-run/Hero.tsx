@@ -45,7 +45,7 @@ export function Hero({ run, onSelectFlight }: { run: StormRun; onSelectFlight: (
   }, [run.id]);
 
   const c = run.counters ?? {};
-  const name = (run.real_context?.name as string | undefined) ?? stormName(run.id);
+  const name = run.name ?? (run.real_context?.storm_name as string | undefined) ?? (run.real_context?.name as string | undefined) ?? stormName(run.id);
   const focus = run.flights.find((r) => r.decision?.recoded);
   const window0 = mainWindowOf(run.windows);
   const knownAt = run.flights.find((r) => r.decision)?.decision?.known_at;

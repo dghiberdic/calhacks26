@@ -172,8 +172,9 @@ function Provenance({ rule, origin }: { rule: Rule; origin: Origin }) {
  * rule's blame (its ruling commit carries the quote); without it, the grounding phrases alone.
  */
 function RulerWords({ rule, origin }: { rule: Rule; origin: "ruled" | "rejected" }) {
-  const blame = useBlame(ruleRef(rule));
-  const ruling = blame.data?.steps.find((s) => s.commit.kind === "ruling" && s.quote);
+  // The rule carries the ruler's words itself now (origin_quote, #13); older servers only have them in blame.
+  const blame = useBlame(rule.origin_quote ? undefined : ruleRef(rule));
+  const quote = rule.origin_quote ?? blame.data?.steps.find((s) => s.commit.kind === "ruling" && s.quote)?.quote;
   const ruler = RULER[rule.tier] ?? rule.authority_required;
   const phrases = Object.values(rule.grounding ?? {}).filter(Boolean);
   const about = aboutText(rule);
@@ -189,8 +190,8 @@ function RulerWords({ rule, origin }: { rule: Rule; origin: "ruled" | "rejected"
         </span>
       </p>
       <div className="mt-2.5 rounded-lg bg-cloud-50 px-4 py-3">
-        {ruling?.quote ? (
-          <GroundedQuote text={ruling.quote} grounding={rule.grounding} className="text-[15px] leading-relaxed" />
+        {quote ? (
+          <GroundedQuote text={quote} grounding={rule.grounding} className="text-[15px] leading-relaxed" />
         ) : blame.isLoading ? (
           <span className="block h-5 w-4/5 animate-pulse rounded bg-cloud-100" aria-hidden="true" />
         ) : phrases.length ? (
