@@ -385,7 +385,7 @@ class Reader:
                            ("ata", "aog.ata_chapter"), ("mel_relief", "aog.mel_relief"), ("aog", "aog.aog"),
                            ("rts_est", "aog.rts_est"), ("defect_text", "aog.defect_text")):
             add(a_subj, fname, doc.get(key))
-        f_subj = f"flight:{doc_flight}" if doc_flight else (a_subj if tail else src_subj)
+        f_subj = f"flight:{doc_flight}" if doc_flight else src_subj      # registered subject kind: flight
         add(f_subj, "mcc.part_eta", doc.get("part_eta"))
         add(f_subj, "spare.available_within_h", doc.get("available_within_h"))
         # OCC cancel groups and cancel notes: one fact per flight, quoting the group
@@ -423,7 +423,7 @@ class Reader:
                     gbp = cur is not None and cur.value == "GBP"
                     add(subj, "claim.amount_claimed_gbp_pence" if gbp else "claim.amount_claimed_cents", amt)
         # coupon-level facts: CRM/BSP lines, vouchers, PNRs
-        c_subjs = [f"coupon:{c}" for c in coupons] or [f"flight:{doc_flight}" if doc_flight else src_subj]
+        c_subjs = [f"coupon:{c}" for c in coupons] or [src_subj]       # registered subject kind: coupon
         kind_v = doc.get("event_kind")
         for cs in c_subjs:
             if kind_v is not None and kind_v.value in CRM_AMOUNT_KINDS:
