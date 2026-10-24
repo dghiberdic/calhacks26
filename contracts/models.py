@@ -1,11 +1,32 @@
 """StormCheck contracts v2 — generated verbatim from CONTRACTS.md §1. Additive-only changes; log in contracts/CHANGELOG.md."""
 from __future__ import annotations
-from datetime import datetime, date
+import re as _re
+from datetime import datetime, date, timezone as _tz
 from enum import Enum
-from typing import Any, Literal
-from pydantic import BaseModel
+from typing import Annotated, Any, Literal
+from pydantic import AfterValidator, BaseModel, ConfigDict, Strict, WithJsonSchema
 
-Cents = int
+
+def _utc(v: datetime) -> datetime:
+    """Every model time is tz-aware and stored in UTC (the same instant always hashes the same)."""
+    if v.tzinfo is None or v.utcoffset() is None:
+        raise ValueError("naive datetime: StormCheck times are tz-aware UTC (ISO-8601 with Z)")
+    return v.astimezone(_tz.utc)
+
+
+_ID_RE = _re.compile(r"^[A-Za-z0-9@.:_-]+$")
+
+
+def _id(v: str) -> str:
+    if not _ID_RE.match(v):
+        raise ValueError(f"id {v[:60]!r} may use only [A-Za-z0-9@.:_-]")
+    return v
+
+
+# additive tightening (D0b-6): stricter validation, same JSON schema types
+Cents = Annotated[int, Strict()]                     # integer euro cents; no bool, float or numeric string
+UTCDateTime = Annotated[datetime, AfterValidator(_utc)]
+ID = Annotated[str, AfterValidator(_id)]
 
 class Role(str, Enum):
     CLAIMS_LEAD = "claims_lead"; LEGAL = "legal"; CONTROLLER = "controller"
@@ -13,7 +34,7 @@ class Role(str, Enum):
     READER = "agent.reader"; DRAFTER = "agent.drafter"; ENGINE = "agent.engine"; CRM_BOT = "agent.crm_bot"
 
 class Session(BaseModel):
-    principal: str; role: Role; name: str; issued_at: datetime
+    principal: str; role: Role; name: str; issued_at: UTCDateTime
 
 # ---------- raw world ----------
 class SourceKind(str, Enum):
@@ -23,31 +44,31 @@ class SourceKind(str, Enum):
     FINANCE = "finance"                     # additive (D0b): GL extracts, care accrual sheets, vendor invoices
 
 class Source(BaseModel):
-    id: str; kind: SourceKind; title: str
+    id: ID; kind: SourceKind; title: str
     text: str | None = None                 # raw text; Fact.span quotes from here
-    sha256: str; received_at: datetime
+    sha256: str; received_at: UTCDateTime
     trust_tier: int                         # 1 tech log/METAR/MCC · 2 schedule/manifest/PSS/BSP · 3 OCC batch code/CRM · 4 passenger/agency/challenge
     acl_tags: list[str] = []                # "pii" | "ops" | "finance" | "legal" | "maintenance"
     uri: str | None = None
 
 class Fact(BaseModel):
-    id: str; source_id: str
+    id: ID; source_id: ID
     subject: str                            # "flight:NS31@2025-01-24" | "aircraft:EI-NSB" | "coupon:NS31@2025-01-24:14C" | "storm:EIDW@2025-01-24"
     field: str                              # MUST be registered in contracts/fields.py
     value: Any
     span: str | None = None                 # verbatim substring of Source.text; contracts/parse.py re-parses value from it
     extractor: str                          # "parser:iem@1" | "normalize@1" | "llm:<response.model>@reader-v1" | "fallback:regex@1"
     extract_conf: float | None = None
-    valid_at: datetime | None = None; recorded_at: datetime
+    valid_at: UTCDateTime | None = None; recorded_at: UTCDateTime
     acl_tags: list[str] = []
 
 class MetarObs(BaseModel):
-    station: str; valid: datetime
+    station: str; valid: UTCDateTime
     sknt: int | None = None; gust: int | None = None; drct: int | None = None
     vsby_sm: float | None = None; wxcodes: str | None = None; raw: str
 
 class StormWindow(BaseModel):
-    station: str; start: datetime; end: datetime; peak_gust_kt: int
+    station: str; start: UTCDateTime; end: UTCDateTime; peak_gust_kt: int
     definition: str = "gust>=35kt or sknt>=30kt or vsby<0.5sm or wx in {SN,FZ,TS,GR}; gaps<2h merged"
     obs_count: int = 0
 
@@ -57,33 +78,33 @@ class Airport(BaseModel):
     tz: str                                 # IANA, e.g. "Europe/Dublin"
 
 class Flight(BaseModel):
-    id: str; number: str; date: date        # date = local departure date
+    id: ID; number: str; date: date        # date = local departure date
     origin: str; dest: str                  # IATA
-    sched_dep: datetime; sched_arr: datetime
+    sched_dep: UTCDateTime; sched_arr: UTCDateTime
     aircraft: str
     status: Literal["operated", "cancelled", "delayed"]
-    actual_dep: datetime | None = None; actual_arr: datetime | None = None
+    actual_dep: UTCDateTime | None = None; actual_arr: UTCDateTime | None = None
     pax: int                                # manifest wins over ops
     ops_cause_code: str | None = None       # IATA delay code as typed by OCC: "71","72","41","93","...". Never trusted alone.
-    inbound_flight_id: str | None = None    # previous rotation of the same tail
-    outbound_pair_id: str | None = None     # for a return sector, the outbound that positions the aircraft
-    notified_at: datetime | None = None     # when pax were told (Art. 5(1)(c))
+    inbound_flight_id: ID | None = None    # previous rotation of the same tail
+    outbound_pair_id: ID | None = None     # for a return sector, the outbound that positions the aircraft
+    notified_at: UTCDateTime | None = None     # when pax were told (Art. 5(1)(c))
     operating_carrier_eu: bool = True
 
 class TechLogEntry(BaseModel):
-    id: str; aircraft: str; logged_at: datetime; station: str
+    id: ID; aircraft: str; logged_at: UTCDateTime; station: str
     ata: str                                # "2913"
     text: str                               # raw AMOS-style line, e.g. "23JAN 21:40Z EI-NSB DUB N/S. HYD FLUID ENG 2 LWR COWL. ..."
     mel_relief: bool | None = None          # False = no-go
-    aog: bool; rts_est: datetime | None = None
+    aog: bool; rts_est: UTCDateTime | None = None
 
 class OpsLogEntry(BaseModel):
-    id: str; at: datetime; kind: Literal["occ", "mcc", "spares"]
-    flight_ids: list[str] = []; code: str | None = None; text: str; author: str
+    id: ID; at: UTCDateTime; kind: Literal["occ", "mcc", "spares"]
+    flight_ids: list[ID] = []; code: str | None = None; text: str; author: str
 
 class Coupon(BaseModel):
-    id: str; pnr: str; pax_ref: str         # pseudonymous; real name only in PII sources
-    flight_id: str; fare_cents: Cents; taxes_cents: Cents
+    id: ID; pnr: str; pax_ref: str         # pseudonymous; real name only in PII sources
+    flight_id: ID; fare_cents: Cents; taxes_cents: Cents
     channel: Literal["direct", "ota", "agency_gds"] = "direct"
     fare_type: Literal["revenue", "staff_id90"] = "revenue"
     lead_booker: bool = False
@@ -91,11 +112,11 @@ class Coupon(BaseModel):
 class Election(BaseModel):
     coupon_id: str
     kind: Literal["refund", "voucher", "reaccommodated_own", "reroute_partner", "none"]
-    new_arrival: datetime | None = None; arrival_delay_min: int | None = None
+    new_arrival: UTCDateTime | None = None; arrival_delay_min: int | None = None
     recorded_by: Literal["crm-bot", "service-desk", "web", "call-centre", "occ"]
 
 class CrmEvent(BaseModel):
-    id: str; coupon_id: str; at: datetime
+    id: ID; coupon_id: ID; at: UTCDateTime
     kind: Literal["refund_initiated", "bsp_refund", "chargeback", "voucher_issued",
                   "voucher_in_lieu_of_compensation", "care_issued", "rights_email_sent"]
     amount_cents: Cents = 0
@@ -103,7 +124,7 @@ class CrmEvent(BaseModel):
     actor: str; text: str
 
 class Claim(BaseModel):
-    id: str; coupon_id: str; received_at: datetime
+    id: ID; coupon_id: ID; received_at: UTCDateTime
     channel: Literal["direct", "agency"]; agency: str | None = None
     authority: Literal["poa", "assignment", "none"] | None = None
     pnr_scope: Literal["coupon", "pnr"] = "coupon"   # lead booker claiming for the whole PNR
@@ -112,16 +133,16 @@ class Claim(BaseModel):
     text: str                               # raw, PII, may contain injection attempts
 
 class CareCost(BaseModel):
-    id: str; flight_id: str; kind: Literal["hotel", "meal", "transport"]
-    amount_cents: Cents; vendor: str; at: datetime; invoiced: bool = False
+    id: ID; flight_id: ID; kind: Literal["hotel", "meal", "transport"]
+    amount_cents: Cents; vendor: str; at: UTCDateTime; invoiced: bool = False
 
 class HistoryCase(BaseModel):              # past human decision WITH its case features (for the miner)
-    ruling_id: str; case_ref: str; kind: str
-    features: dict[str, Any]; decision: str; at: datetime
+    ruling_id: ID; case_ref: ID; kind: str
+    features: dict[str, Any]; decision: str; at: UTCDateTime
 
 class OpeningBalance(BaseModel):            # e.g. the Isha 2024 cohort for Q3
     cohort: str; account: str; entitlement_cents: Cents; claimed_cents: Cents
-    balance_cents: Cents; curve_segment: str; as_of: datetime
+    balance_cents: Cents; curve_segment: str; as_of: UTCDateTime
 
 class World(BaseModel):
     meta: dict[str, Any]
@@ -144,7 +165,7 @@ class Extraordinary(str, Enum):
     YES = "extraordinary"; NO = "not_extraordinary"; NEEDS_LEGAL = "needs_legal"
 
 class Evidence(BaseModel):
-    fact_id: str; source_id: str; field: str; value: Any
+    fact_id: ID; source_id: ID; field: str; value: Any
     quote: str | None = None
     role: Literal["supports", "contradicts", "context"]
     trust_tier: int; struck: bool = False
@@ -156,9 +177,14 @@ class Confidence(BaseModel):
     features: dict[str, float]              # keys from contracts/calibration_schema.json
     caps: list[str] = []                    # shown as separate chips, e.g. "capped:sources-disagree"
     calibration_version: str
+    # additive (Justin #12): `features` holds the RAW model inputs, already encoded per calibration_schema.json
+    # x-encoding (flags 0/1, margin in hours, precedent count). `contributions` = coef × input per feature, in
+    # log-odds; score = logistic(intercept + Σ contributions). Empty / None when the kind is uncalibrated.
+    contributions: dict[str, float] = {}
+    intercept: float | None = None
 
 class FlightDecision(BaseModel):
-    flight_id: str
+    flight_id: ID
     cause: Cause; extraordinary: Extraordinary
     ops_cause_code: str | None; recoded: bool; recode_label: str | None = None   # "71 → 41"
     in_window_dep: Literal["in", "out", "unknown"]; in_window_arr: Literal["in", "out", "unknown"]
@@ -169,11 +195,11 @@ class FlightDecision(BaseModel):
     rules_applied: list[str]
     legal_basis: list[str]                  # ["EU261 Art.5(3)", "CJEU C-549/07", "CJEU C-257/14"]
     outcome: Literal["auto", "escalated", "human"]
-    routed_to: Role | None = None; question_id: str | None = None
-    known_at: datetime; commit: str | None = None
+    routed_to: Role | None = None; question_id: ID | None = None
+    known_at: UTCDateTime; commit: str | None = None
 
 class Entitlement(BaseModel):
-    coupon_id: str; flight_id: str
+    coupon_id: ID; flight_id: ID
     distance_km: float; band_eur: Literal[250, 400, 600]; band_margin_km: float
     regime: Literal["EU261_2004"] = "EU261_2004"
     compensation_cents: Cents
@@ -185,22 +211,28 @@ class Entitlement(BaseModel):
     article: str; reason: str; rules_applied: list[str] = []
 
 class Question(BaseModel):
-    id: str; case_refs: list[str]           # one question may cover a whole pattern (e.g. 3 knock-on flights)
+    id: ID; case_refs: list[ID]           # one question may cover a whole pattern (e.g. 3 knock-on flights)
     pattern: str                            # "knock_on_return" | "voucher_in_lieu_unsigned" | "cohort_release" | "new_legal_pattern" | ...
-    routed_to: Role; asked_at: datetime
+    routed_to: Role; asked_at: UTCDateTime
     title: str; found: str; why_flagged: str; recommends: str
     recommended_option: str; options: list[str]
     evidence: list[Evidence]; confidence: Confidence
     reason_tag: Literal["no-precedent", "sources-disagree", "out-of-scope", "release-proposal", "concurrent-causes", "new-legal-pattern"]
-    holds: list[str] = []; holds_cents: Cents = 0
+    holds: list[ID] = []; holds_cents: Cents = 0
     status: Literal["open", "answered", "reminded"] = "open"     # view over events
-    remind_at: datetime | None = None
+    remind_at: UTCDateTime | None = None
+    # additive (Justin #4): other cases in the same storm run settled automatically while this question waits
+    # ("Waiting on Claims Lead 3h · reminder sent · N others settled")
+    others_settled: int = 0
+    # additive (Justin #11): the rule or proposal a "Reject" on this question targets (POST /rules/{id}/reject);
+    # None → answer the question with its reject option instead
+    proposal_rule_id: ID | None = None
 
 class Ruling(BaseModel):
-    id: str; question_id: str | None = None
+    id: ID; question_id: ID | None = None
     author_role: Role; author: str
     kind: Literal["answer", "rejection", "override", "challenge_response"]
-    decision: str; explanation: str; at: datetime
+    decision: str; explanation: str; at: UTCDateTime
 
 class RuleAction(str, Enum):
     SET_EXTRAORDINARY = "set_extraordinary"; SET_NOT_EXTRAORDINARY = "set_not_extraordinary"
@@ -209,7 +241,7 @@ class RuleAction(str, Enum):
     APPLY_7_2_REDUCTION = "apply_7_2_reduction"; ROUTE_TO = "route_to"
 
 class Rule(BaseModel):
-    id: str; version: int
+    id: ID; version: int
     kind: Literal["cause", "entitlement", "voucher", "release", "routing", "regime", "mined_policy"]
     scope: dict[str, Any]                   # values grounded or tagged "case:<value>"
     condition: dict[str, Any]               # DSL (CONTRACTS §4)
@@ -219,19 +251,21 @@ class Rule(BaseModel):
     origin_ruling_id: str | None = None; origin_example: str | None = None
     grounding: dict[str, str] = {}          # literal value (condition AND scope) -> phrase in the ruling
     support: str | None = None              # mined: "41 of 42"
-    valid_from: datetime | None             # None = legal interpretation (applies to past flights)
-    recorded_at: datetime
+    valid_from: UTCDateTime | None             # None = legal interpretation (applies to past flights)
+    recorded_at: UTCDateTime
     status: Literal["proposed", "shadow", "active", "suspect", "retired"]   # view over events
     supersedes: str | None = None
     times_cited: int = 0                    # view over events
     static_card: bool = False               # e.g. Reg 2026/2202 (display only, no logic)
     title: str | None = None                # additive (D0a): plain-language card title, e.g. the ruling sentence or regulation name
+    origin_quote: str | None = None         # additive (Justin #13): the ruler's own words (or the regulation's text)
+    cases_settled_by_storm: dict[str, int] = {}   # additive (Justin #6): storm id → cases settled citing this rule
 
 class ReplayFlip(BaseModel):
     entity_id: str; field: str; before: Any; after: Any; delta_cents: Cents = 0
 
 class ReplayDiff(BaseModel):
-    rule_ref: str; known_at: datetime
+    rule_ref: str; known_at: UTCDateTime
     flips: list[ReplayFlip]; total_delta_cents: Cents
     locked_periods_untouched: list[str] = []; adjustment_je_ids: list[str] = []
 
@@ -250,10 +284,11 @@ class Commit(BaseModel):
     hash: str; parent: str | None
     kind: Literal["fact", "decision", "entitlement", "question", "ruling", "rule_event", "journal_event",
                   "period_lock", "revert", "access_denied", "llm_call", "clock"]
-    at: datetime; actor: str
+    at: UTCDateTime; actor: str
     payload_hash: str; payload_ref: str
     inputs: list[str] = []                  # fact/rule hashes + "engine@<git-sha>" + "cal@<version>"
     message: str
+    recorded_at: UTCDateTime | None = None  # additive (Justin #15): when the commit was written (`at` = event time)
 
 class BlameStep(BaseModel):
     commit: Commit; label: str; quote: str | None = None
@@ -268,7 +303,7 @@ class JournalLine(BaseModel):
     dims: dict[str, str] = {}               # storm, flight, segment, cohort
 
 class JournalEntry(BaseModel):
-    id: str; event_date: date; period: str  # period follows event_date (cut-off), not commit date
+    id: ID; event_date: date; period: str  # period follows event_date (cut-off), not commit date
     memo: str; lines: list[JournalLine]
     kind: Literal["sale", "refund", "voucher", "reroute_fim", "compensation_estimate", "claim_approved", "claim_paid",
                   "change_in_estimate", "derecognition", "care_accrual", "care_invoice", "recode",
@@ -286,11 +321,13 @@ class RollforwardRow(BaseModel):
     change_in_estimate_cents: Cents; recode_cents: Cents = 0; out_of_period_cents: Cents = 0
     derecognised_cents: Cents = 0; closing_cents: Cents
     unclaimed_entitlement_cents: Cents
+    je_ids: list[str] = []                  # additive (Justin #18): journal entries behind this row (may be empty)
 
 class Rollforward(BaseModel):
     period: str; account: Literal["2140"] = "2140"
     rows: list[RollforwardRow]; closing_total_cents: Cents
     gl_balance_cents: Cents; ties_to_gl: bool
+    locked: bool = False                    # additive (Justin #16): the period is locked
 
 class ClaimCurve(BaseModel):
     segment: Literal["long_haul_gt3500", "medium_1500_3500", "short_le1500"]
@@ -314,7 +351,7 @@ class InvariantResult(BaseModel):
     id: str; description: str; ok: bool; detail: str = ""
 
 class CfoMetrics(BaseModel):
-    as_of: datetime
+    as_of: UTCDateTime
     cash_basis_cents: Cents; full_entitlement_cents: Cents; drafted_liability_cents: Cents; sensitivity_5pp_cents: Cents
     method_range_cents: tuple[Cents, Cents]
     held_for_legal_cents: Cents
@@ -323,10 +360,11 @@ class CfoMetrics(BaseModel):
     refunds_within_7d_pct: float
     vouchers_outstanding_cents: Cents
     care_accrued_cents: Cents; care_invoiced_cents: Cents
+    cohort: str | None = None               # additive (Justin #19): the cohort the bridge describes (None = all)
 
 # ---------- API views ----------
 class TraceEvent(BaseModel):
-    seq: int; at: datetime
+    seq: int; at: UTCDateTime
     kind: Literal["fact", "decision", "entitlement", "question", "ruling", "rule", "journal", "replay",
                   "access_denied", "reminder", "llm_call", "info"]
     actor: str; summary: str                # past tense, "NS31 recoded 71 → 41 · 172 payouts drafted"
@@ -341,7 +379,7 @@ class LearnedItem(BaseModel):
     text: str; support: str | None = None; rule_ref: str | None = None
 
 class StormRun(BaseModel):
-    id: str; station: str; date: date
+    id: ID; station: str; date: date
     windows: list[StormWindow]; metar: list[MetarObs]
     flights: list[FlightRow]                # cancelled + operated
     counters: dict[str, int]                # passengers, cancelled, operated, drafted, held, questions, people, repeat_questions, rules_cited
@@ -351,12 +389,75 @@ class StormRun(BaseModel):
     real_context: dict[str, Any] = {}
     message: str | None = None              # e.g. "max gust 18 kt · no storm window"
     airports: list[Airport] = []            # additive (D0a): every airport referenced by flights (map coordinates, tz, eu)
+    name: str | None = None                 # additive (Justin #3): "Storm Éowyn" (from real_context.storm_name)
+
+TimelineKind = Literal["tech_log", "mcc", "occ", "spares", "metar", "window_start", "window_end",
+                       "metar_window_start", "metar_window_end", "crm", "operated", "schedule", "pss", "claim",
+                       "care", "warning", "email", "injection", "challenge", "ruling", "info"]
+
+
+class TimelineItem(BaseModel):              # additive (Justin #9): one mark on the Flight File timeline
+    model_config = ConfigDict(extra="allow")
+    at: UTCDateTime; kind: TimelineKind
+    label: str | None = None                # short UI label, e.g. "Tech log EI-NSB · AOG"
+    text: str | None = None                 # verbatim source text (METAR raw, log line) or a count summary
+    source_id: str | None = None            # the document it quotes
+    trust_tier: int | None = None
+
+
+class EntitlementsSummary(BaseModel):       # additive (Justin #5/#10): every key a Flight File summary may carry
+    model_config = ConfigDict(extra="allow")
+    coupons: int | None = None
+    distance_km: float | None = None; band_eur: int | None = None; band_margin_km: float | None = None
+    band_label: str | None = None           # "4,804 km · 1,304 km over the €600 threshold"
+    band_note: str | None = None            # same as band_label (D0a name)
+    compensation_cents: Cents | None = None         # Σ compensation on owed + needs_ruling coupons
+    full_entitlement_cents: Cents | None = None     # full Art. 7 entitlement if every passenger claims (owed + needs_ruling + held)
+    full_entitlement_label: str | None = None       # "€99,000 full Art. 7 entitlement if every passenger claims"
+    drafted_liability_cents: Cents | None = None    # Σ accruing entitlement × the segment's expected ultimate claim rate
+    liability_drafted_cents: Cents | None = None    # same (D0a name)
+    claim_rate: float | None = None                 # expected ultimate claim rate used, e.g. 0.35
+    expected_ultimate_claim_rate: float | None = None   # same (D0a name)
+    claim_rate_label: str | None = None             # "35% expected ultimate claim rate (history to M18 + tail judgment)"
+    status_counts: dict[str, int] | None = None     # {"owed": 171, "needs_ruling": 1}
+    statuses: list[dict[str, Any]] | None = None    # [{"status","count","label"}]
+    status_line: str | None = None                  # one sentence, plan §9 wording
+    elections: dict[str, int] | None = None         # {"refund": 32, "voucher": 14, ...}
+    compensation_breakdown: list[dict[str, Any]] | None = None  # [{"band_eur","reduction","count","each_cents","total_cents"}]
+    formula: str | None = None                      # "158 × €600 + 14 × €300 (Art. 7(2)(c))"
+    reduction_7_2: dict[str, Any] | None = None     # {"count","saved_cents","rules"}
+    reduced: int | None = None
+    refunds_already_initiated: int | None = None; refund_due_cents: Cents | None = None
+    voucher_offset_cents: Cents | None = None
+    claims_received: int | None = None; care_due: bool | None = None
+    accrued_cents: Cents | None = None; accrual_basis: str | None = None   # held flights: the IFRS 15.56 accrual
+    compensation_if_owed_cents: Cents | None = None; question_id: str | None = None
+    headline: str | None = None
+
+
+def _check_summary(v: dict[str, Any]) -> dict[str, Any]:
+    EntitlementsSummary.model_validate(v)   # documented keys must have their types; the dict itself is kept
+    return v
+
+
+def _check_timeline(v: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    for item in v:
+        TimelineItem.model_validate(item)
+    return v
+
+
+# Runtime stays a plain dict / list of dicts (readers index them); validation and the published JSON Schema are typed.
+SummaryDict = Annotated[dict[str, Any], AfterValidator(_check_summary),
+                        WithJsonSchema(EntitlementsSummary.model_json_schema(mode="serialization"))]
+TimelineList = Annotated[list[dict[str, Any]], AfterValidator(_check_timeline),
+                         WithJsonSchema({"type": "array", "items": TimelineItem.model_json_schema(mode="serialization")})]
+
 
 class FlightFile(BaseModel):
     flight: Flight; decision: FlightDecision
-    entitlements_summary: dict[str, Any]; sample_entitlements: list[Entitlement]
+    entitlements_summary: SummaryDict; sample_entitlements: list[Entitlement]   # keys: EntitlementsSummary
     journal_preview: list[JournalEntry]
-    timeline: list[dict[str, Any]]          # ordered: tech log, MCC, OCC, METAR marks, CRM
+    timeline: TimelineList                  # ordered marks; items: TimelineItem (typed, Justin #9)
     handoff: dict[str, Any] | None = None   # {"refunds_already_initiated":32,"not_repeated":true,"rights_notices_drafted":32,"drafter_pii_seen":0}
     explanation: Draft | None = None
 
@@ -384,13 +485,13 @@ class InjectResponse(BaseModel):
     fallback_used: bool = False; message: str | None = None
 
 class Injection(BaseModel):                 # rehearsed judge scenarios (GET /api/injections)
-    id: str; title: str; request: InjectRequest; expected: str
+    id: ID; title: str; request: InjectRequest; expected: str
 
 class DeskRequest(BaseModel):
     icao: str; date: date                   # local date at that airport
 
 class AccessDecision(BaseModel):
-    at: datetime; principal: str; action: str; resource: str; allowed: bool; reason: str
+    at: UTCDateTime; principal: str; action: str; resource: str; allowed: bool; reason: str
 
 class AccessMatrix(BaseModel):
     principals: list[str]; resources: list[str]
@@ -424,7 +525,7 @@ class Health(BaseModel):                    # GET /health
     impl: dict[str, str] = {}               # {"engine","world","reader","drafter","books"} -> "fake" | "real" | "stub"
 
 class StormSummary(BaseModel):              # GET /storms item
-    id: str; station: str; date: date
+    id: ID; station: str; date: date
     cancelled: int; questions: int; liability_drafted_cents: Cents
 
 class SessionRequest(BaseModel):            # POST /session
@@ -449,10 +550,10 @@ class LockResponse(BaseModel):
     locked: str                             # the period now locked, e.g. "2025-01"
 
 class ClockRequest(BaseModel):              # POST /clock (forward-only)
-    known_at: datetime
+    known_at: UTCDateTime
 
 class ClockResponse(BaseModel):
-    known_at: datetime
+    known_at: UTCDateTime
 
 class OkResponse(BaseModel):                # POST /reset
     ok: bool

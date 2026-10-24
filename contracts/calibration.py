@@ -22,6 +22,11 @@ def schema() -> dict[str, Any]:
     return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
 
 
+def _finite(x: Any) -> bool:
+    """A real number that isn't NaN or ±inf (json.loads reads NaN/Infinity literals; a NaN score would route 'auto')."""
+    return isinstance(x, int | float) and not isinstance(x, bool) and math.isfinite(x)
+
+
 def validate(doc: Any) -> list[str]:
     """Problems with a calibration document ([] = valid)."""
     errs: list[str] = []
@@ -46,11 +51,10 @@ def validate(doc: Any) -> list[str]:
             continue
         if len(set(feats)) != len(feats):
             errs.append(f"models.{kind}.features: duplicates")
-        if not isinstance(coef, list) or len(coef) != len(feats) or not all(
-                isinstance(c, int | float) and not isinstance(c, bool) for c in coef):
-            errs.append(f"models.{kind}.coef: one number per feature required")
-        if not isinstance(icpt, int | float) or isinstance(icpt, bool):
-            errs.append(f"models.{kind}.intercept: number required")
+        if not isinstance(coef, list) or len(coef) != len(feats) or not all(_finite(c) for c in coef):
+            errs.append(f"models.{kind}.coef: one finite number per feature required")
+        if not _finite(icpt):
+            errs.append(f"models.{kind}.intercept: finite number required")
         unknown = [f for f in feats if f not in allowed[kind]]
         if unknown:
             errs.append(f"models.{kind}.features: not in calibration_schema x-features: {unknown}")

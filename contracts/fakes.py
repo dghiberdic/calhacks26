@@ -803,15 +803,16 @@ class FakeEngine:
         return ev
 
     def _confidence(self, cause: str, e: dict[str, Any], aog_before: bool, disagree: bool,
-                    precedent: float) -> Confidence:
+                    precedent: float, aog_inside: bool = False) -> Confidence:
         m = e["margin"]
         feats = {"in_window_dep": 1.0 if e["dep"] == "in" else 0.0, "in_window_arr": 1.0 if e["arr"] == "in" else 0.0,
                  "window_margin_h": round(min(4.0, abs(m) / 60), 2) if m is not None else 0.0,
                  "aog_before_window": 1.0 if aog_before else 0.0,
-                 "aog_inside_window": 1.0 if cause == "concurrent" else 0.0,
+                 "aog_inside_window": 1.0 if aog_inside else 0.0,                 # literal: logged inside a window
                  "root_cause_internal": 1.0 if cause == "technical" else 0.0,
                  "sources_disagree": 1.0 if disagree else 0.0, "precedent_count": precedent,
-                 "knock_on": 1.0 if cause == "knock_on" else 0.0}
+                 "knock_on": 1.0 if cause == "knock_on" else 0.0,
+                 "concurrent_causes": 1.0 if cause == "concurrent" else 0.0}
         caps = ["capped:no-precedent"] if cause in ("knock_on", "unknown") and not precedent else []
         return Confidence(score=_cal.score(self.calibration, "cause", feats), kind="cause",
                           label="cause-finding confidence", features=feats, caps=caps,
@@ -839,7 +840,11 @@ class FakeEngine:
         disagree = row["cause"] == "concurrent"
         prec = 10.0 if rules_applied and row["cause"] == "knock_on" else (3.0 if row["cause"] in ("technical",
                                                                                                   "weather") else 0.0)
-        conf = self._confidence(row["cause"], e, aog_before, disagree, prec)
+        o_obs = e["o_obs"]
+        o_wins = storm_windows(o_obs)
+        aog_inside = any(t.aircraft == f.aircraft and t.aog and any(x.start <= t.logged_at <= x.end for x in o_wins)
+                         for t in w.tech_log)
+        conf = self._confidence(row["cause"], e, aog_before, disagree, prec, aog_inside)
         reason = self._reason(row, e)
         d = FlightDecision(
             flight_id=flight_id, cause=row["cause"], extraordinary=row["extraordinary"],
