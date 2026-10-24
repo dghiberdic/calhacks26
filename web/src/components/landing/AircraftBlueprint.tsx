@@ -7,6 +7,7 @@ import { hydraulicRoutes, A321NEO } from "@/lib/drawings/aircraft";
 import { SIDE_LINES, SIDE_VIEW, TOP_LINES, TOP_VIEW } from "@/data/geo/lineart";
 import { NS31 } from "@/data/scenario";
 import { gsap, PLOTTED, UNPLOTTED, useGSAP } from "@/components/motion/gsap";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 const LINE = "#e8f0fa";
 
@@ -115,7 +116,16 @@ export function AircraftBlueprint({ render }: { render?: { src: string; lines?: 
       <div className="relative mx-auto grid w-full max-w-[1500px] grid-cols-1 gap-10 px-5 max-lg:gap-6 md:px-12 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div ref={column} className="relative">
           <div className="bp-canvas pointer-events-none absolute inset-0 opacity-0">
-            {near && <AircraftScene progress={progress} className="!absolute inset-0" />}
+            {near && (
+              <ErrorBoundary
+                fallback={
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src="/renders/ns31-hero-render.webp" alt="Rendering of EI-NSA" className="absolute inset-0 h-full w-full object-contain" />
+                }
+              >
+                <AircraftScene progress={progress} className="!absolute inset-0" />
+              </ErrorBoundary>
+            )}
           </div>
           {/* side elevation */}
           <svg ref={sideRef} viewBox="-3 -13.4 53 15.6" className="bp-side relative w-full" role="img" aria-label="Side elevation of the Airbus A321neo EI-NSA, 44.51 metres long and 11.76 metres tall.">
