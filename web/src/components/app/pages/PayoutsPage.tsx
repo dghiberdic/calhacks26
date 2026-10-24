@@ -23,7 +23,11 @@ export function PayoutsPage() {
   const flightParam = searchParams.get("flight");
   const { role, openWhy, openLetter } = useApp();
 
-  const all = useMemo(() => payouts(), []);
+  // Work first: the open question, then what's held for approval; the 2,698 weather passengers last.
+  const all = useMemo(() => {
+    const rank: Record<Payout["status"], number> = { asked: 0, held: 1, drafted: 2, "not owed": 3 };
+    return payouts().sort((a, b) => rank[a.status] - rank[b.status]);
+  }, []);
   const heldIds = useMemo(() => all.filter((p) => p.status === "held").map((p) => p.id), [all]);
 
   // The flight filter lives in the URL, so "See payouts" from a flight sheet works even while this page is open.
