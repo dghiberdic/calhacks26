@@ -8,10 +8,34 @@ const SEATS: [RegExp, string][] = [
   [/\bops\b/i, "ops"],
 ];
 
+// These tests switch roles and click, so they run in order in one worker, after one warm-up: a cold Vite
+// server pre-bundles dependencies on the first load (and may reload the page once), which would eat a click.
+test.describe.configure({ mode: "default" });
+
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(180_000);
+  const page = await browser.newPage();
+  await page.goto("/close");
+  await expect(page.getByRole("heading", { name: "Liability & Close" })).toBeVisible({ timeout: 90_000 });
+  await expect(page.getByTestId("ties-to-gl")).toBeVisible({ timeout: 90_000 });
+  // Warm the role switcher too: its first use can trigger the one-time dependency reload.
+  await viewAs(page, "controller");
+  await page.close();
+});
+
 async function viewAs(page: Page, role: string) {
-  await page.getByTestId("role-switcher").click();
-  await page.getByTestId(`role-${role}`).click();
-  await expect(page.getByTestId("role-switcher")).toHaveAttribute("aria-label", new RegExp(`Viewing as ${role === "cfo" ? "CFO" : role.replace("_", " ")}`, "i"));
+  const label = new RegExp(`Viewing as ${role === "cfo" ? "CFO" : role.replace("_", " ")}`, "i");
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await page.getByTestId("role-switcher").click();
+    await page.getByTestId(`role-${role}`).click();
+    try {
+      await expect(page.getByTestId("role-switcher")).toHaveAttribute("aria-label", label, { timeout: 15_000 });
+      return;
+    } catch {
+      // a cold dev server can reload the page once while it pre-bundles; try the switch again
+    }
+  }
+  await expect(page.getByTestId("role-switcher")).toHaveAttribute("aria-label", label);
 }
 
 test("the CFO bridge, the 2140 rollforward and the estimate render from the API", async ({ page }) => {
@@ -24,6 +48,7 @@ test("the CFO bridge, the 2140 rollforward and the estimate render from the API"
 });
 
 test("the preparer approving their own entry is DENIED · SoD, in place", async ({ page }) => {
+  test.setTimeout(90_000);
   await page.goto("/close");
   // A draft prepared by a person (not an agent): that seat is the one to try approving it.
   const cards = page.locator('[data-testid^="je-"]');
@@ -48,6 +73,7 @@ test("the preparer approving their own entry is DENIED · SoD, in place", async 
 });
 
 test("month-end drafts the change in estimate: +€3,990", async ({ page }) => {
+  test.setTimeout(90_000);
   await page.goto("/close?period=2025-02");
   await viewAs(page, "controller");
   await page.getByTestId("month-end").click();
@@ -57,6 +83,7 @@ test("month-end drafts the change in estimate: +€3,990", async ({ page }) => {
 });
 
 test("other seats read the close; they don't act on it", async ({ page }) => {
+  test.setTimeout(90_000);
   await page.goto("/close");
   await viewAs(page, "ops");
   await expect(page.getByTestId("read-only-hint")).toBeVisible();

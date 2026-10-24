@@ -1,5 +1,16 @@
 import { expect, test } from "@playwright/test";
 
+// In order, after one warm-up: a cold Vite server pre-bundles dependencies on the first load.
+test.describe.configure({ mode: "default" });
+
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(120_000);
+  const page = await browser.newPage();
+  await page.goto("/proof");
+  await expect(page.getByTestId("proof-headline")).toBeVisible({ timeout: 90_000 });
+  await page.close();
+});
+
 test("the headline: plain Claude's different numbers against StormCheck's one, same hash", async ({ page }) => {
   await page.goto("/proof");
   const headline = page.getByTestId("proof-headline");
