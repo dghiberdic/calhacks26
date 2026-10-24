@@ -21,13 +21,13 @@ export function RunsHero({ report }: { report: EvalReport }) {
     <section aria-labelledby="proof-headline" className="relative overflow-hidden rounded-2xl bg-navy-900 text-cloud-50 shadow-[0_20px_60px_-20px_rgba(8,13,23,0.55)]">
       <div aria-hidden="true" className="pointer-events-none absolute -left-40 -top-48 size-[560px] rounded-full bg-[radial-gradient(closest-side,rgba(200,208,219,0.08),transparent)]" />
       <div className="relative px-5 pt-6 md:px-9 md:pt-8">
-        <p className="micro text-cloud-500">Same raw documents · {base.runs} runs each</p>
+        <p className="micro text-cloud-500">{base.runs ? `Same raw documents · ${base.runs} runs each` : "Same raw documents"}</p>
         <h2 id="proof-headline" className="display mt-4 text-[27px] leading-[1.08] text-pretty sm:text-[32px] md:text-[36px] xl:text-[40px]" data-testid="proof-headline">
           <span className="block text-balance text-cloud-500">{h.baseline}</span> <span className="mt-1 block text-cloud-50">{h.stormcheck}</span>
         </h2>
       </div>
       {base.values.length || sc.values.length ? <RunsPlot base={base} sc={sc} /> : <div className="h-6" />}
-      <div className="relative grid gap-px border-t border-white/[0.07] bg-white/[0.07] sm:grid-cols-2">
+      <div className="relative grid grid-cols-[minmax(0,1fr)] gap-px border-t border-white/[0.07] bg-white/[0.07] sm:grid-cols-2">
         <RunFacts title="Plain Claude" runs={base} note={base.model ? `${base.model} on the raw documents` : "the model on the raw documents"} />
         <RunFacts title="StormCheck" runs={sc} note="Reader facts, then the deterministic engine" strong />
       </div>

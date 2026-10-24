@@ -26,7 +26,7 @@ export default function ProofScreen() {
         Scored on storms it never saw, against an answer key built from ground truth, never from the engine.
       </PageHeader>
       {q.isError && q.error instanceof ApiError && q.error.status === 404 ? (
-        <Empty title={q.error.message || "The eval hasn't run yet"}>
+        <Empty title="The eval hasn't run yet">
           The plain-Claude baseline, the scorecard and the reliability bins show here once the eval has written its report.{" "}
           <button type="button" onClick={() => void q.refetch()} className="font-medium text-metar-ink hover:underline">
             Check again
