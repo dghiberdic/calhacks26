@@ -251,16 +251,26 @@ export function startCoverFlow(canvas: HTMLCanvasElement, src: string, opts: Flo
   };
   canvas.addEventListener("webglcontextlost", onLost);
 
+  /** Gives up: the last frame stays while the canvas fades out over the still image, then the GPU is freed. */
   function fail() {
-    if (stopped) return;
-    stop();
-    on.onFail();
-  }
-
-  function stop() {
     if (stopped) return;
     stopped = true;
     cancelAnimationFrame(raf);
+    on.onFail();
+    window.setTimeout(release, 1200);
+  }
+
+  /** The cover is leaving: stop and free everything now. */
+  function stop() {
+    stopped = true;
+    cancelAnimationFrame(raf);
+    release();
+  }
+
+  let released = false;
+  function release() {
+    if (released) return;
+    released = true;
     window.removeEventListener("resize", resize);
     canvas.removeEventListener("webglcontextlost", onLost);
     bitmap?.close();
