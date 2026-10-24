@@ -25,11 +25,11 @@
     "ops_cause_code": "71",
     "recoded": false,
     "recode_label": null,
-    "in_window_dep": "out",
+    "in_window_dep": "unknown",
     "in_window_arr": "in",
-    "window_margin_min": 40,
+    "window_margin_min": -40,
     "confidence": {
-      "score": 0.93,
+      "score": 0.94,
       "kind": "cause",
       "label": "cause-finding confidence",
       "features": {
@@ -40,17 +40,17 @@
         "aog_inside_window": 0.0,
         "root_cause_internal": 0.0,
         "sources_disagree": 0.0,
-        "precedent_count": 12.0,
+        "precedent_count": 3.0,
         "knock_on": 0.0
       },
       "caps": [],
-      "calibration_version": "cal-v1"
+      "calibration_version": "cal-plan-fixture"
     },
-    "reason": "Weather: DUB gusts 35 kt near STA 14:20Z, inside the 02:30Z–15:00Z storm window.",
+    "reason": "Weather: Dublin inside the storm window at STA 14:20Z.",
     "evidence": [
       {
-        "fact_id": "F-METAR-EIDW-20250124T1430Z",
-        "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+        "fact_id": "F:METAR-EIDW-20250124T1430Z:metar.gust_kt",
+        "source_id": "SRC-METAR-EIDW@2025-01-24",
         "field": "metar.gust_kt",
         "value": 35,
         "quote": "EIDW 241430Z 24016G35KT 200V270 9999 FEW012 BKN060 07/M04 Q0987 NOSIG",
@@ -59,27 +59,13 @@
         "struck": false
       },
       {
-        "fact_id": "F-OCC-NS111-code",
+        "fact_id": "F:NS111@2025-01-24:flight.ops_cause_code",
         "source_id": "SRC-OCC-2025-01-24T0512Z",
         "field": "flight.ops_cause_code",
         "value": "71",
-        "quote": "CNL LIST → NETLINE, RSN 71",
+        "quote": "RSN 71",
         "role": "supports",
         "trust_tier": 3,
-        "struck": false
-      },
-      {
-        "fact_id": "F-WINDOW-EIDW@2025-01-24",
-        "source_id": "SRC-METAR-EIDW-2025-01-23_25",
-        "field": "storm.window",
-        "value": {
-          "start": "2025-01-24T02:30:00Z",
-          "end": "2025-01-24T15:00:00Z",
-          "peak_gust_kt": 56
-        },
-        "quote": null,
-        "role": "context",
-        "trust_tier": 1,
         "struck": false
       }
     ],
@@ -95,7 +81,7 @@
     "routed_to": null,
     "question_id": null,
     "known_at": "2025-01-25T06:00:00Z",
-    "commit": "5bd5bd874b61cf7a0134f7954f5dae93bd30cea82b401db16aaa727bcd8dd879"
+    "commit": "f16271d4b7569f56f432716c33af3a3f07e9d4a520c0b9e5c3e861e98dfc9d56"
   },
   "entitlements_summary": {
     "coupons": 186,
@@ -108,29 +94,20 @@
     },
     "compensation_cents": 0,
     "care_due": true,
-    "headline": "No compensation; refunds and care still due"
+    "headline": "No compensation; refunds and care still due",
+    "elections": {
+      "reaccommodated_own": 116,
+      "refund": 44,
+      "reroute_partner": 7,
+      "voucher": 19
+    },
+    "refunds_already_initiated": 0,
+    "refund_due_cents": 643400,
+    "claims_received": 0
   },
   "sample_entitlements": [
     {
       "coupon_id": "NS111@2025-01-24:4A",
-      "flight_id": "NS111@2025-01-24",
-      "distance_km": 1452.0,
-      "band_eur": 250,
-      "band_margin_km": 48.0,
-      "regime": "EU261_2004",
-      "compensation_cents": 0,
-      "reduction": "none",
-      "refund_due_cents": 51000,
-      "refund_already_initiated": false,
-      "care_due": true,
-      "voucher_offset_cents": 0,
-      "status": "no_compensation",
-      "article": "Art. 5(3)",
-      "reason": "Extraordinary circumstances (storm window). No compensation; refunds and care still due.",
-      "rules_applied": []
-    },
-    {
-      "coupon_id": "NS111@2025-01-24:18E",
       "flight_id": "NS111@2025-01-24",
       "distance_km": 1452.0,
       "band_eur": 250,
@@ -144,8 +121,30 @@
       "voucher_offset_cents": 0,
       "status": "no_compensation",
       "article": "Art. 5(3)",
-      "reason": "Reaccommodated. No compensation; refunds and care still due.",
-      "rules_applied": []
+      "reason": "Extraordinary circumstances. No compensation; refunds and care still due.",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ]
+    },
+    {
+      "coupon_id": "NS111@2025-01-24:18E",
+      "flight_id": "NS111@2025-01-24",
+      "distance_km": 1452.0,
+      "band_eur": 250,
+      "band_margin_km": 48.0,
+      "regime": "EU261_2004",
+      "compensation_cents": 0,
+      "reduction": "none",
+      "refund_due_cents": 12500,
+      "refund_already_initiated": false,
+      "care_due": true,
+      "voucher_offset_cents": 0,
+      "status": "no_compensation",
+      "article": "Art. 5(3)",
+      "reason": "Extraordinary circumstances. No compensation; refunds and care still due.",
+      "rules_applied": [
+        "R-REG-ART5-3@1"
+      ]
     }
   ],
   "journal_preview": [],
@@ -155,13 +154,13 @@
       "kind": "window_start",
       "label": "Storm window opens",
       "text": "EIDW 240230Z 19024G39KT 160V220 9999 FEW011 SCT016 BKN022 12/09 Q0968 TEMPO 21030G48KT",
-      "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+      "source_id": "SRC-METAR-EIDW@2025-01-24",
       "trust_tier": 1
     },
     {
       "at": "2025-01-24T05:12:00Z",
       "kind": "occ",
-      "label": "OCC cancel list → NetLine",
+      "label": "OCC log",
       "text": "05:12Z OCC DM: STORM ÉOWYN CNL LIST → NETLINE, RSN 71. NS100/101 NS102/103 NS104/105 NS106/107 NS108/109 NS110/111 NS112/113 NS114/115 NS116/117 NS118 NS21 NS41 NS51 NS31. INBD NS20 NS30 NS40 NS50 RSN 72. ASM SENT. IROPS SMS 05:20Z.",
       "source_id": "SRC-OCC-2025-01-24T0512Z",
       "trust_tier": 3
@@ -171,7 +170,7 @@
       "kind": "schedule",
       "label": "NS111 STD 11:55Z MAD",
       "text": "Cancelled",
-      "source_id": "SRC-SCHEDULE-2025-01-24",
+      "source_id": "SRC-SCHEDULE-EIDW@2025-01-24",
       "trust_tier": 2
     },
     {
@@ -179,15 +178,15 @@
       "kind": "schedule",
       "label": "NS111 STA 14:20Z DUB",
       "text": "Cancelled",
-      "source_id": "SRC-SCHEDULE-2025-01-24",
+      "source_id": "SRC-SCHEDULE-EIDW@2025-01-24",
       "trust_tier": 2
     },
     {
       "at": "2025-01-24T14:30:00Z",
       "kind": "metar",
-      "label": "Weather at STA: 16 kt, gust 35 kt",
+      "label": "Weather at STA (DUB): 16 kt, gust 35 kt",
       "text": "EIDW 241430Z 24016G35KT 200V270 9999 FEW012 BKN060 07/M04 Q0987 NOSIG",
-      "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+      "source_id": "SRC-METAR-EIDW@2025-01-24",
       "trust_tier": 1
     },
     {
@@ -195,7 +194,7 @@
       "kind": "window_end",
       "label": "Storm window closes",
       "text": "EIDW 241500Z 26021G35KT 200V290 9999 -RA FEW012 SCT020 BKN050 04/M01 Q0988 NOSIG",
-      "source_id": "SRC-METAR-EIDW-2025-01-23_25",
+      "source_id": "SRC-METAR-EIDW@2025-01-24",
       "trust_tier": 1
     }
   ],
