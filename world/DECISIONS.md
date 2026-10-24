@@ -144,3 +144,35 @@ Judgment calls made while implementing, newest last. Each one says what we chose
 6. **Id and source conventions follow golden:** `TECHLOG-<tail>-<stamp>`, `MCC-<stamp>-<tail>`, `OCC-<stamp>[-<number>]`,
    `SPARES-<stamp>-<number>`, sources `SRC-<record id>`, METAR sources `SRC-METAR-<ICAO>@<day>` holding IEM CSV text,
    tech-log sources holding the AMOS export block. Fleet types follow golden's `meta.fleet`.
+
+## F3b · Passengers, claims, care
+
+1. **Coupons only on cancelled flights** (entitlements exist only for cancellations; delays are out of the demo's
+   scope, as in engine D3). One coupon per manifest passenger, seats `1A, 1B, …`, PNRs of 1–4 (lead booker = first of a
+   multi-pax PNR). Fares by band: €45–260 / €90–380 / €280–950 plus taxes; channel direct 70 %, OTA 20 %, GDS agency
+   10 %; ~1 % staff ID90 (Art. 3(3)).
+2. **Elections** (plan mix, per PNR with 15 % individual deviation): reaccommodated own 64 % (8 % arrive within the
+   Art. 7(2) limit, the rest 2 h–2 days late), refund 19 %, partner reroute 9 % (55 % within the limit), voucher 8 %.
+3. **CRM bot** initiates refunds only on direct-sold refund coupons, minutes to hours after the cancellation, with
+   "RSN WX CNL" and the "weather, no compensation" email when OCC typed 71/72 (the NS31 story: the bot trusts the
+   OCC code). Non-direct refunds come back via BSP 1–9 days later. Refund-voucher elections get `voucher_issued`.
+4. **Service-desk vouchers in lieu** on 3 % of revenue coupons, 60 % with a signed-acceptance hash (Art. 7(3)).
+5. **Raw sources are kept where they are evidence:** every claim, in-lieu voucher and BSP record has its
+   `SRC-<record id>`, every cancelled flight a `SRC-MANIFEST-<flight>`, and each flight one CRM-bot email template.
+   The bulk CRM records (bot refunds, bot emails, refund vouchers) carry their text on the `CrmEvent` itself, with
+   no duplicate Source, and there is no per-flight PSS CSV (the coupons are the PSS). This takes the full world from
+   77 MB to 58 MB of JSON. Golden keeps its own sources verbatim.
+6. **Coupon truth** (`world/pax.py::coupon_truth`, from the flight's latent truth, never the engine): staff ticket →
+   `staff_ticket`; notice ≥14 days → `exempt_notice`; extraordinary → `no_compensation` (refund and care still due);
+   otherwise `owed` at the band, halved when rerouted (own or partner) within 2/3/4 h (Northstar's mined policy).
+   A signed in-lieu voucher offsets; an unsigned one doesn't (Art. 7(3), R-CL-1), and the voucher stays goodwill.
+7. **Claims follow the € curves by quota.** Per cohort (world day) × segment, owed coupons are shuffled and walked in
+   order, accumulating entitlement €; each claimant lands in the curve interval where its cumulative € midpoint falls
+   (M1 = first month-end ≥28 days after the event), uniformly in that interval. 35 % of M1 claims arrive the night
+   after the storm. This reproduces `curves.json` to within half a coupon per point (test: ±1 pp on the learn split).
+   Claims stop at M18 (the tail to 35 % is judgment) and at a 2026-07-01 extract horizon. 30 % of valid claims come
+   via agencies (power of attorney 65 %, assignment 35 %), 10 % on UK routes cite UK261 (£220).
+8. **Invalid claims:** 4 % of passengers on no-compensation flights claim anyway (rejected: extraordinary, staff ticket,
+   notice). They don't count toward the curve.
+9. **Care:** per cancelled flight, an accrual row per kind (hotel for 35–55 % of passengers, meals for all, transport
+   for hotel guests) at 22:00Z on the day, plus a vendor invoice 18–30 days later at 94–102 % of the accrual.

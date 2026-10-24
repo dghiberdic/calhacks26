@@ -159,6 +159,7 @@ class DayOutput:
     sectors: dict[str, N.Sector] = field(default_factory=dict)
     cancels: dict[str, Cancel] = field(default_factory=dict)
     meta: dict[str, Any] = field(default_factory=dict)
+    pax: Any = None                      # world.pax.PaxOutput once populate_pax ran
 
 
 class DaySim:
@@ -639,6 +640,63 @@ class DaySim:
                 update={"uri": f"https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?station={icao}"})
 
 
+# ---------------------------------------------------------------- passengers, claims, care (F3b)
+
+def populate_pax(out: DayOutput, seed: int) -> None:
+    """Coupons/elections/CRM/care for every cancelled flight of the day, coupon truth, and the day's claims."""
+    from world import pax as P
+
+    po = P.PaxOutput()
+    ids: set[str] = set()
+    flights = {f.id: f for f in out.flights}
+    fps: dict[str, P.FlightPax] = {}
+    for f in out.flights:
+        if f.status == "cancelled":
+            fp = P.FlightPax(seed, f, out.truth[f.id].__dict__, po, ids)
+            fp.run()
+            fps[f.id] = fp
+    elections = {e.coupon_id: e for e in po.elections}
+    for c in po.coupons:
+        po.coupon_truth[c.id] = P.coupon_truth(flights[c.flight_id], out.truth[c.flight_id].__dict__, c,
+                                               elections.get(c.id), po.in_lieu.get(c.id))
+    day = out.meta["date"]
+    event = date.fromisoformat(day)
+    by_seg: dict[str, list] = {}
+    for c in po.coupons:
+        t = po.coupon_truth[c.id]
+        if t["status"] == "owed":
+            by_seg.setdefault(t["segment"], []).append((c, t["compensation_cents"]))
+    for seg in sorted(by_seg):
+        r = rng_for(seed, "claims", day, seg)
+        for c, comp, at in P.quota_claim_times(event, by_seg[seg], seg, r):
+            t = po.coupon_truth[c.id]
+            f = flights[c.flight_id]
+            spec = P.ClaimSpec(c, f, at, pay_cents=t["pay_cents"], reason="valid")
+            if r.random() < P.P_AGENCY:
+                spec.channel, spec.agency = "agency", r.choice(T.AGENCIES)
+                spec.authority = "poa" if r.random() < 0.65 else "assignment"
+            other = f.dest if f.origin == N.HUB else f.origin
+            if other in P.UK_ROUTES and r.random() < 0.1:
+                spec.regime = "UK261"
+            if t["voucher_offset_cents"] >= t["compensation_cents"] > 0:
+                spec.reason = "settled_in_kind_signed_voucher"
+            P.claim_record(po, spec, ids, r)
+    r = rng_for(seed, "claims-invalid", day)
+    for c in po.coupons:
+        t = po.coupon_truth[c.id]
+        if t["status"] in ("no_compensation", "staff_ticket", "exempt_notice") and r.random() < P.P_WEATHER_CLAIM:
+            f = flights[c.flight_id]
+            at = datetime.combine(event, datetime.min.time(), UTC) + timedelta(days=r.randint(1, 90),
+                                                                                minutes=r.randint(0, 1439))
+            reason = {"no_compensation": "extraordinary_circumstances", "staff_ticket": "staff_ticket_art3_3",
+                      "exempt_notice": "notice_14_days"}[t["status"]]
+            spec = P.ClaimSpec(c, f, at, valid=False, reason=reason)
+            if r.random() < P.P_AGENCY:
+                spec.channel, spec.agency, spec.authority = "agency", r.choice(T.AGENCIES), "poa"
+            P.claim_record(po, spec, ids, r)
+    out.pax = po
+
+
 # ---------------------------------------------------------------- the whole world
 
 STORM_NAMES = {  # display names for OCC batch messages (matched by date, as in data/pinned/STORM_DAYS.md)
@@ -665,6 +723,7 @@ def assemble(outputs: Sequence[DayOutput], seed: int, *, extra_meta: dict[str, A
     ops: list[OpsLogEntry] = []
     sources: list[Source] = []
     metar_: dict[str, list[MetarObs]] = {}
+    coupons, elections, crm, claims, care = [], [], [], [], []
     days_meta = []
     for o in outputs:
         flights += o.flights
@@ -673,6 +732,13 @@ def assemble(outputs: Sequence[DayOutput], seed: int, *, extra_meta: dict[str, A
         sources += o.sources
         metar_.update(o.metar)
         days_meta.append(o.meta)
+        if o.pax is not None:
+            coupons += o.pax.coupons
+            elections += o.pax.elections
+            crm += o.pax.crm
+            claims += o.pax.claims
+            care += o.pax.care
+            sources += o.pax.sources
     codes = sorted({f.origin for f in flights} | {f.dest for f in flights})
     meta = {"carrier": CARRIER, "generator": GENERATOR_VERSION, "seed": seed, "hub": N.HUB,
             "split": {"train": "2023-07-01..2024-12-31", "test": "2025-01-01..2025-06-30"},
@@ -682,15 +748,20 @@ def assemble(outputs: Sequence[DayOutput], seed: int, *, extra_meta: dict[str, A
     return World(meta=meta, airports=sorted((airport(c) for c in codes), key=lambda a: a.iata), flights=flights,
                  tech_log=sorted(tech, key=lambda e: (e.logged_at, e.id)),
                  ops_log=sorted(ops, key=lambda e: (e.at, e.id)),
-                 coupons=[], elections=[], crm=[], claims=[], care=[], metar=metar_,
+                 coupons=coupons, elections=elections, crm=sorted(crm, key=lambda e: (e.at, e.id)),
+                 claims=sorted(claims, key=lambda c: (c.received_at, c.id)), care=care, metar=metar_,
                  sources=sorted(sources, key=lambda s: (s.received_at, s.id)))
 
 
 def simulate_days(seed: int = 0, wdays: Sequence[WorldDay] | None = None) -> list[DayOutput]:
     from world.days import world_days
 
-    return [DaySim(w, seed, storm_name=STORM_NAMES.get(w.day.isoformat(), "")).run()
-            for w in (wdays if wdays is not None else world_days())]
+    outs = []
+    for w in (wdays if wdays is not None else world_days()):
+        o = DaySim(w, seed, storm_name=STORM_NAMES.get(w.day.isoformat(), "")).run()
+        populate_pax(o, seed)
+        outs.append(o)
+    return outs
 
 
 def generate_world(seed: int = 0, wdays: Sequence[WorldDay] | None = None, *,
@@ -708,6 +779,9 @@ def generate_world(seed: int = 0, wdays: Sequence[WorldDay] | None = None, *,
     truth = Truth()
     for o in outs:
         truth.flights.update(o.truth)
+        if o.pax is not None:
+            truth.coupons.update(o.pax.coupon_truth)
+            truth.claims.update(o.pax.claim_truth)
     world = assemble(outs, seed)
     if embed_golden:
         g = golden.load_golden()
