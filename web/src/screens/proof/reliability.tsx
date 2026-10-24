@@ -53,7 +53,7 @@ function Diagram({ bins, label }: { bins: CalibrationBin[]; label: string }) {
   const h = scaleLinear().domain([0, maxN]).range([0, HIST - 10]);
   const histTop = PH + 12;
   const H = MT + histTop + HIST + 22;
-  const b = hover === null ? null : bins[hover];
+  const b = hover === null || !bins[hover]?.n ? null : bins[hover];
 
   return (
     <div ref={ref} className="relative mt-3">
@@ -75,6 +75,7 @@ function Diagram({ bins, label }: { bins: CalibrationBin[]; label: string }) {
           <line x1={x(0)} y1={y(0)} x2={x(1)} y2={y(1)} stroke="var(--color-cloud-400)" strokeWidth={1} />
 
           {bins.map((bn, i) => {
+            if (!bn.n) return null;
             const cx = x((bn.lo + bn.hi) / 2);
             const on = hover === i;
             return (
@@ -154,10 +155,8 @@ function BinTable({ bins, label }: { bins: CalibrationBin[]; label: string }) {
                 {pct(bn.lo)}–{pct(bn.hi)}
               </th>
               <td className="py-1 text-right">{count(bn.n)}</td>
-              <td className={cn("py-1 text-right text-navy-900")}>{pct(bn.accuracy)}</td>
-              <td className="py-1 text-right">
-                {pct(bn.wilson_lo)}–{pct(bn.wilson_hi)}
-              </td>
+              <td className={cn("py-1 text-right text-navy-900")}>{bn.n ? pct(bn.accuracy) : "—"}</td>
+              <td className="py-1 text-right">{bn.n ? `${pct(bn.wilson_lo)}–${pct(bn.wilson_hi)}` : "—"}</td>
             </tr>
           ))}
         </tbody>
