@@ -2,16 +2,21 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 
 // J4 · Policies. Rules come only from history, rulings, rejections and regulation: there is no rule editor.
 
+// A cold dev server compiles each route on first visit, and other lanes share this machine: give the first
+// paint room, keep every other expectation at the config's default.
+test.describe.configure({ timeout: 60_000 });
+const FIRST_PAINT = { timeout: 25_000 };
+
 async function open(page: Page, hash = "") {
   await page.goto(`/policies${hash}`);
-  await expect(page.getByRole("heading", { name: "Policies", level: 1 })).toBeVisible();
-  await expect(page.locator('[data-testid^="rule-"]').first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Policies", level: 1 })).toBeVisible(FIRST_PAINT);
+  await expect(page.locator('[data-testid^="rule-"]').first()).toBeVisible(FIRST_PAINT);
 }
 
 /** A 403 offers the seat with the authority; take it, so the test reads the same in every role. */
 async function acceptRoleSwitch(dialog: Locator, done: Locator) {
   const retry = dialog.getByRole("button", { name: /^View as .+ and try again$/ });
-  await expect(done.or(retry)).toBeVisible();
+  await expect(done.or(retry)).toBeVisible(FIRST_PAINT);
   if (await retry.isVisible()) await retry.click();
   await expect(done).toBeVisible();
 }
@@ -56,9 +61,9 @@ test("revert replays history and shows the diff", async ({ page }) => {
 test("a deep link scrolls to its rule", async ({ page }) => {
   await page.goto("/policies");
   const first = page.locator('[data-testid^="rule-"]').last();
-  await expect(first).toBeAttached();
+  await expect(first).toBeAttached(FIRST_PAINT);
   const id = (await first.getAttribute("data-testid"))!.replace(/^rule-/, "");
   await page.goto("about:blank");
   await page.goto(`/policies#${id}`);
-  await expect(page.getByTestId(`rule-${id}`)).toBeInViewport();
+  await expect(page.getByTestId(`rule-${id}`)).toBeInViewport(FIRST_PAINT);
 });
