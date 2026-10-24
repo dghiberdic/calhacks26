@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from .fields import get as _spec
@@ -39,7 +39,7 @@ def fact_id(record: str, field: str) -> str:
 
 
 def metar_record(o: MetarObs) -> str:
-    return f"METAR-{o.station}-{o.valid.strftime('%Y%m%dT%H%MZ')}"
+    return f"METAR-{o.station}-{_utc(o.valid).strftime('%Y%m%dT%H%MZ')}"
 
 
 def metar_fact_id(o: MetarObs, field: str = "metar.gust_kt") -> str:
@@ -79,8 +79,15 @@ def cohort_fact_id(cohort: str, field: str, account: str = "2140") -> str:
     return fact_id(cohort_record(cohort, account), field)
 
 
+def _utc(t: datetime) -> datetime:
+    """Aware → UTC; naive is refused (a 'Z' must never be stamped on a local time)."""
+    if t.tzinfo is None or t.utcoffset() is None:
+        raise ValueError(f"naive datetime {t!r}: StormCheck times are tz-aware UTC")
+    return t.astimezone(timezone.utc)
+
+
 def _iso(t: datetime) -> str:
-    return t.strftime("%Y-%m-%dT%H:%M:%SZ")
+    return _utc(t).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _jsonable(v: Any) -> Any:
@@ -231,6 +238,7 @@ def _tech_log(b: _Builder, tails: set[str] | None) -> None:
 
 
 _ETA = re.compile(r"(?:\d{2}[A-Z]{3} )?ETA \d{2}:\d{2}Z")
+_RTS = re.compile(r"RTS EST (?:\d{2}[A-Z]{3} )?\d{2}:\d{2}Z")
 _STD_PLUS = re.compile(r"STD\+\d+h\d*")
 
 
@@ -247,12 +255,21 @@ def _ops_log(b: _Builder, flight_ids: set[str] | None) -> None:
             if e.kind == "mcc":
                 b.add(rec, subj, "mcc.text", e.text, s, span=e.text, valid_at=e.at)
                 m = _ETA.search(e.text)
+                eta = None
                 if m:
                     try:
                         eta = parse_time(m.group(0), e.at, not_before=e.at)
                     except ParseError:
                         eta = None
                     b.add(rec, subj, "mcc.part_eta", eta, s, span=m.group(0), valid_at=e.at)
+                r = _RTS.search(e.text)
+                if r:
+                    day = eta or e.at              # "ETA 14:00Z, RTS EST 20:00Z": the RTS is on the ETA's day
+                    try:
+                        rts = parse_time(r.group(0), day, not_before=day)
+                    except ParseError:
+                        rts = None
+                    b.add(rec, subj, "mcc.rts_est", rts, s, span=r.group(0), valid_at=day)
             else:
                 b.add(rec, subj, "spare.text", e.text, s, span=e.text, valid_at=e.at)
                 m = _STD_PLUS.search(e.text)
@@ -465,14 +482,15 @@ def world_to_facts(world: World, *, flight_ids: Iterable[str] | None = None, inc
 def resolve(facts: Iterable[Fact], sources: Iterable[Source] | dict[str, Source],
             known_at: datetime | None = None) -> dict[tuple[str, str], Fact]:
     """Plan §2 rule 7: keep facts with recorded_at ≤ known_at; per (subject, field) the lowest trust tier number
-    wins, then the latest recorded_at (then valid_at, then id, for determinism)."""
+    wins, then the latest recorded_at (then valid_at, then id, for determinism). A fact whose source is unknown
+    ranks as tier 4."""
     src = sources if isinstance(sources, dict) else {s.id: s for s in sources}
     best: dict[tuple[str, str], tuple[tuple, Fact]] = {}
     for f in facts:
         if known_at is not None and f.recorded_at > known_at:
             continue
         s = src.get(f.source_id)
-        tier = s.trust_tier if s is not None else 2
+        tier = s.trust_tier if s is not None else 4          # unknown document: lowest trust (fail closed)
         far_past = datetime.min.replace(tzinfo=f.recorded_at.tzinfo)
         key = (-tier, f.recorded_at, f.valid_at or far_past, f.id)
         k = (f.subject, f.field)

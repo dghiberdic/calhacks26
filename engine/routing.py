@@ -13,6 +13,8 @@ cause the engine cannot settle in law (``needs_legal``) is always escalated, wha
 """
 from __future__ import annotations
 
+import math
+
 from dataclasses import dataclass
 
 from contracts.models import Confidence, Extraordinary, Role
@@ -48,7 +50,7 @@ def route(*, extraordinary: Extraordinary, confidence: Confidence, pattern: str,
     if extraordinary == Extraordinary.NEEDS_LEGAL:
         return Route("escalated", who, "needs_legal")
     s = confidence.score
-    if s is None:
+    if s is None or not math.isfinite(s):          # NaN compares False to every threshold: fail closed
         return Route("human", who, "uncalibrated")
     if s < BATCH_THRESHOLD and not settled_by_rule:
         return Route("escalated", who, "low_confidence")
