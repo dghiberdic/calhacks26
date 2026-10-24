@@ -41,6 +41,8 @@ REASON_TAG = {
     "new_legal_pattern": "new-legal-pattern", "rule_conflict": "new-legal-pattern",
     "voucher_in_lieu_unsigned": "no-precedent",
     "cohort_release": "release-proposal",
+    "occ_code_in_window": "sources-disagree", "aog_unverified": "sources-disagree",
+    "airport_restriction": "out-of-scope",
 }
 
 TITLES = {
@@ -53,6 +55,10 @@ TITLES = {
     "technical_unverified": "OCC coded technical, but there is no tech-log entry: confirm the cause?",
     "crew": "Confirm the crew cause for these cancellations?",
     "atc": "Confirm the ATC restriction for these cancellations?",
+    "occ_code_in_window": ("OCC coded a non-weather cause inside the storm window, with no tech-log entry: "
+                           "which was it?"),
+    "airport_restriction": "Confirm the security, customs or airport restriction for these cancellations?",
+    "aog_unverified": "An AOG is claimed but no tech-log entry confirms it: verify before the cause is decided?",
 }
 
 OPTIONS = {

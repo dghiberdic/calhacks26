@@ -81,9 +81,16 @@ def score(kind: str, features: Mapping[str, float], cal: Mapping[str, Any] | Non
     if m is None:
         return Confidence(score=None, kind=kind, label=LABELS[kind], features=feats, caps=list(caps or []),
                           calibration_version=version)
-    z = float(m.get("intercept", 0.0)) + sum(float(c) * feats.get(f, 0.0) for f, c in zip(m["features"], m["coef"]))
-    if not math.isfinite(z):                         # a NaN/inf in the file: uncalibrated, never a NaN score
-        return Confidence(score=None, kind=kind, label=LABELS[kind], features=feats, caps=list(caps or []),
+    try:
+        z = float(m.get("intercept", 0.0)) + sum(float(c) * feats.get(f, 0.0)
+                                                 for f, c in zip(m["features"], m["coef"]))
+    except (TypeError, ValueError):
+        z = math.nan
+    if not math.isfinite(z) or not all(math.isfinite(v) for v in feats.values()):
+        # a NaN/inf coefficient or feature would make every score NaN, and NaN compares False to every threshold:
+        # fail closed to "uncalibrated" (score None, never automatic) with a chip saying so
+        return Confidence(score=None, kind=kind, label=LABELS[kind], features=feats,
+                          caps=list(dict.fromkeys([*(caps or []), "capped:uncalibrated"])),
                           calibration_version=version)
     return Confidence(score=round(logistic(z), 4), kind=kind, label=LABELS[kind], features=feats,
                       caps=list(dict.fromkeys(caps or [])), calibration_version=version)
