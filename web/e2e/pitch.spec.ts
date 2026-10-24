@@ -89,11 +89,16 @@ test("a click on the right half moves on, the left half goes back", async ({ pag
   await expect(page).toHaveURL(/\/pitch\/2$/);
 });
 
-test("the figures on the slides come from the API (golden numbers)", async ({ page }) => {
+test("the figures on the slides come from the API (golden numbers)", async ({ page, request }) => {
+  // The drafted count is the API's: 172 in the mock world, 171 on the real engine (14C's €600 is held for Q1).
+  const drafted =
+    (process.env.E2E_API_MODE ?? "mock") === "mock"
+      ? 172
+      : ((await (await request.get("/api/storms/EIDW%402025-01-24")).json()) as { counters: { drafted: number } }).counters.drafted;
   await page.goto("/pitch/1");
   await expect(page.getByText(/5,292\s+passengers, one storm/)).toBeVisible();
   await page.goto("/pitch/2");
-  await expect(page.getByText(/172\s+payouts drafted, pending Claims Lead approval/)).toBeVisible();
+  await expect(page.getByText(new RegExp(`${drafted.toLocaleString("en-US")}\\s+payouts drafted, pending Claims Lead approval`))).toBeVisible();
   await page.goto("/pitch/5");
   const bridge = page.getByTestId("cfo-bridge");
   await expect(bridge).toContainText("€34,650");
