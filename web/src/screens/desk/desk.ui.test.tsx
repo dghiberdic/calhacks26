@@ -52,6 +52,9 @@ describe("the day form", () => {
     expect(alert).toHaveTextContent("1 Jan 2099 hasn't happened yet at Dublin, so there's no METAR to read.");
     expect(alert).toHaveAttribute("data-code", "future_date");
     expect(date).toHaveAttribute("aria-invalid", "true");
+    // Leaving the field without changing it keeps the message: it's still true.
+    await user.tab();
+    expect(screen.getByRole("alert")).toHaveTextContent("hasn't happened yet");
   });
 
   it("the airport list is keyboard-driven: arrows move, Enter picks, an unlisted ICAO can be used as typed", async () => {

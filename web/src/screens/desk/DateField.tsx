@@ -51,7 +51,8 @@ export const DateField = forwardRef<
                 }}
                 onBlur={() => {
                   setFocused(false);
-                  if (value) onChange(value, editLabel(value));
+                  // Tidy "21/01/2024" into "21 Jan 2024"; an unchanged field leaves any message standing.
+                  if (value && text !== editLabel(value)) onChange(value, editLabel(value));
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
