@@ -17,16 +17,69 @@ CATEGORIES = (
     "agency_without_authority", "assignment_then_direct_payment", "duplicate_refund", "notice_14_days",
     "manifest_mismatch", "prompt_injection", "claim_after_limitation", "staff_id90", "wrong_regime",
 )
+KNOCK_ON_HOURS = (5, 20)        # the outbound leaves DUB inside a storm window, in operating hours (UTC)
+WINDOW_EDGE = timedelta(hours=1)
+MERGE_GAP = timedelta(hours=2)
+REPORT_NEAR = timedelta(hours=1)
+
+
+def _midnight(d: date) -> datetime:
+    return datetime.combine(d, datetime.min.time(), UTC)
+
+
+def _windows(obs) -> list[tuple[datetime, datetime]]:
+    """Storm windows as plan §1.2 defines them: reports with storm conditions less than 2 h apart merge into one
+    window from the first to the last such report."""
+    out: list[list[datetime]] = []
+    for t in sorted(o.valid for o in obs if storm_conditions(o)):
+        if out and t - out[-1][1] < MERGE_GAP:
+            out[-1][1] = t
+        else:
+            out.append([t, t])
+    return [(a, b) for a, b in out]
+
+
+def _clear(t: datetime, obs, windows) -> bool:
+    """Observed (a report within ±1 h) and at least an hour outside every window."""
+    return any(abs(o.valid - t) <= REPORT_NEAR for o in obs) and not any(
+        a - WINDOW_EDGE < t < b + WINDOW_EDGE for a, b in windows)
+
+
+def _knock_on_slot(day: date) -> tuple[date, datetime, datetime]:
+    """(day, outbound STD, return STD) for a knock-on return. The DUB→CDG outbound leaves inside a Dublin storm
+    window. Its CDG→DUB return, the same day, is observed and at least an hour outside every window at both ends,
+    so the only link to the storm is the cancelled outbound. Isha's 21 Jan has no such slot (Dublin's window runs
+    into the 22nd), so the first later day of the split that has one is used (train: Jocelyn, 23 Jan 2024)."""
+    for k in range(7):
+        d = day + timedelta(days=k)
+        dub, cdg = ([o for x in (d - timedelta(days=1), d, d + timedelta(days=1)) for o in (pinned_day(st, x) or [])]
+                    for st in ("EIDW", "LFPG"))
+        if not dub or not cdg:
+            continue
+        w_dub, w_cdg = _windows(dub), _windows(cdg)
+        root = next((o.valid for o in pinned_day("EIDW", d) or []
+                     if storm_conditions(o) and KNOCK_ON_HOURS[0] <= o.valid.hour < KNOCK_ON_HOURS[1]), None)
+        if root is None:
+            continue
+        t = root + timedelta(hours=3)
+        while t + timedelta(hours=2) <= _midnight(d) + timedelta(hours=22):
+            if _clear(t, cdg, w_cdg) and _clear(t + timedelta(hours=2), dub, w_dub):
+                return d, root, t
+            t += timedelta(minutes=30)
+    raise ValueError(f"No knock-on return slot out of every storm window within a week of {day}")
 
 
 def _case(split: str, category: str, variant: int) -> dict:
     day = date(2024, 1, 21) if split == "train" else date(2025, 1, 24)
     dest = "LHR" if category == "wrong_regime" else "BOS"
     block = timedelta(hours=1 if dest == "LHR" else 7)
+    knock = _knock_on_slot(day) if category == "knock_on_return" else None
+    if knock is not None:
+        day = knock[0]
     # Positive calm observations at both ends, independent of the engine's window implementation.
     # This keeps a synthetic internal fault outside weather, rather than relabelling concurrent causes.
-    dep = None
-    for hour in (16, 6, 1, 22, 4, 8, 10, 12, 14, 18, 20):
+    dep = knock[2] if knock is not None else None
+    for hour in (16, 6, 1, 22, 4, 8, 10, 12, 14, 18, 20) if knock is None else ():
         candidate = datetime.combine(day, datetime.min.time(), UTC) + timedelta(hours=hour, minutes=30 + variant)
         calm = True
         for station, at in (("EIDW", candidate), (airport(dest).icao, candidate + block)):
@@ -83,13 +136,14 @@ def _case(split: str, category: str, variant: int) -> dict:
             "text": f"{windy.valid:%d%b %H:%MZ} {tail} DUB HYD PUMP LEAK. NO MEL RELIEF. A/C AOG."})]
         expected.update(cause="concurrent", handling="hold_for_legal_concurrent_causes")
     elif category == "knock_on_return":
+        # the outbound leaves inside Dublin's storm window; the return is out of every window at both ends
+        _, root_dep, ret_dep = knock
         root_id = f"NS{8000 + variant}@{day}"
-        windy = next(o for o in (pinned_day("EIDW", day) or []) if (o.gust or 0) >= 35)
         root = flight.model_copy(update={"id": root_id, "number": f"NS{8000 + variant}", "dest": "CDG",
-            "sched_dep": windy.valid, "sched_arr": windy.valid + timedelta(hours=2), "pax": 0})
+            "sched_dep": root_dep, "sched_arr": root_dep + timedelta(hours=2), "pax": 0})
         flight = flight.model_copy(update={"origin": "CDG", "dest": "DUB", "inbound_flight_id": root_id,
-            "outbound_pair_id": root_id, "ops_cause_code": "93", "sched_dep": windy.valid + timedelta(hours=5),
-            "sched_arr": windy.valid + timedelta(hours=7)})
+            "outbound_pair_id": root_id, "ops_cause_code": "93", "sched_dep": ret_dep,
+            "sched_arr": ret_dep + timedelta(hours=2)})
         flights, tech = [root, flight], []
         text = (f"{fid} rotation unavailable after weather cancellation {root_id}. "
                 "No aircraft and crew within 3 h of STD; earliest reroute on any carrier offered.")
