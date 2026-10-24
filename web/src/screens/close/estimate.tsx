@@ -54,9 +54,9 @@ export function EstimateCardView({ est, curve }: { est: Estimate; curve?: ClaimC
         </h2>
         <p className="figure mt-1 text-[12.5px] leading-relaxed text-slate-500">
           {header.map((h, i) => (
-            <span key={h} className="whitespace-nowrap">
+            <span key={h}>
               {i ? " · " : ""}
-              {h}
+              <span className="whitespace-nowrap">{h}</span>
             </span>
           ))}
         </p>

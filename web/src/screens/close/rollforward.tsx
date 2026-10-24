@@ -10,7 +10,7 @@ import { cohortName, cohortParts, footRow, isNilLine, type journalTies, monthBou
 import { Nil } from "./ui";
 
 const cell = "px-3 py-[7px] text-right align-baseline md:px-4";
-const label = "sticky left-0 z-[1] bg-card py-[7px] pl-5 pr-3 text-left align-baseline font-normal md:pl-6";
+const label = "sticky left-0 z-[1] min-w-[156px] bg-card py-[7px] pl-5 pr-3 text-left align-baseline font-normal md:pl-6";
 
 function Amount({ cents, strong, quiet }: { cents: Cents; strong?: boolean; quiet?: boolean }) {
   if (!cents) return <Nil />;
@@ -66,7 +66,7 @@ export function RollforwardTable({ rf, highlight, ties = {}, segments = {} }: { 
         <thead>
           <tr className="border-b border-cloud-200">
             <th scope="col" className={cn(label, "pb-2.5 pt-1 align-bottom")}>
-              <span className="micro text-slate-400">€ · movement</span>
+              <span className="micro whitespace-nowrap text-slate-400">€ · movement</span>
             </th>
             {rf.rows.map((r) => (
               <th key={r.cohort} scope="col" className={cn(cell, "pb-2.5 pt-1 align-bottom font-normal")}>
