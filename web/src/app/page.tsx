@@ -9,6 +9,7 @@ import { AskOnce } from "@/components/landing/AskOnce";
 import { Closing } from "@/components/landing/Closing";
 import { SiteNav } from "@/components/landing/SiteNav";
 import { MorningAfter } from "@/components/landing/MorningAfter";
+import { Interlude } from "@/components/landing/Interlude";
 
 export default function Home() {
   return (
@@ -34,6 +35,8 @@ export default function Home() {
         </section>
 
         <AircraftBlueprint />
+
+        <Interlude />
 
         <MorningAfter />
 

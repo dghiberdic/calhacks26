@@ -118,12 +118,15 @@ export function MomentFilm() {
       .to(q(".mf-s3"), { autoAlpha: 0, duration: 0.3 }, 10.6)
       .fromTo(q(".mf-fault"), { drawSVG: "100% 100%" }, { drawSVG: "0% 100%", duration: 0.6, ease: "power2.inOut" }, 10.8)
       .to(q(".mf-log"), { autoAlpha: 1, x: 0, duration: 0.6 }, 10.9)
+      .to(q(".mf-plane, .mf-plane-shade"), { autoAlpha: 1, duration: 0.6 }, 12.0)
+      .fromTo(q(".mf-plane"), { scale: 1.08 }, { scale: 1, duration: 2.4, ease: "power2.out" }, 12.0)
+      .to(q(".mf-chart"), { autoAlpha: 0, duration: 0.4 }, 12.0)
       .to(q(".mf-verdict"), { autoAlpha: 1, duration: 0.4 }, 12.2)
       .to(q(".mf-owed-a"), { opacity: 0, duration: 0.3 }, 12.6)
       .to(q(".mf-owed-b"), { opacity: 1, duration: 0.3 }, 12.7)
       .from(q(".mf-verdict .mf-line"), { yPercent: 110, duration: 0.7, stagger: 0.25 }, 12.2)
       // 14–17s: the money
-      .to(q(".mf-chart, .mf-log, .mf-verdict"), { autoAlpha: 0, duration: 0.4 }, 14.0)
+      .to(q(".mf-log, .mf-verdict, .mf-plane, .mf-plane-shade"), { autoAlpha: 0, duration: 0.5 }, 14.0)
       .to(q(".mf-s4"), { autoAlpha: 1, duration: 0.4 }, 14.1)
       .to(counter, { owed: NS31.exposure, duration: 1.1, ease: "power2.out", onUpdate: paint }, 14.2)
       .to(q(".mf-prov"), { autoAlpha: 1, y: 0, duration: 0.5 }, 15.3)
@@ -170,6 +173,9 @@ export function MomentFilm() {
         </g>
       </svg>
       <div className="absolute inset-0 bg-gradient-to-r from-night/85 via-night/40 to-night/10" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/renders/ns31-side-render.webp" alt="" aria-hidden="true" className="mf-plane invisible absolute inset-0 h-full w-full object-cover opacity-0" />
+      <div className="mf-plane-shade invisible absolute inset-0 bg-gradient-to-b from-night/70 via-transparent to-night/80 opacity-0" />
 
       <header className="absolute left-[5vw] top-[5vh] flex items-center gap-3 text-[clamp(14px,1.1vw,20px)]">
         <Logo className="h-[1.1em] w-auto" />

@@ -22,7 +22,7 @@ export function MorningAfter() {
       ref={root}
       aria-label="The morning after"
       className="relative h-[170vh]"
-      style={{ background: "linear-gradient(to bottom, var(--color-cyanotype) 0%, #0d1c2c 22%, #3b4652 50%, #c9ccc8 78%, var(--color-chart) 100%)" }}
+      style={{ background: "linear-gradient(to bottom, var(--color-night) 0%, #101722 22%, #3b4652 50%, #c9ccc8 78%, var(--color-chart) 100%)" }}
     >
       <div className="sticky top-0 flex h-svh items-center justify-center px-5">
         <p className="ma-text display text-center text-[clamp(40px,6.4vw,112px)]">

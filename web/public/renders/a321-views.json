@@ -1,0 +1,58 @@
+{
+  "top": {
+    "res": [
+      2000,
+      1600
+    ],
+    "metres_per_pixel": 0.025,
+    "nose_tip_px": [
+      109.8,
+      800.0
+    ],
+    "centreline_y_px": 800.0,
+    "ground_line_y_px": null,
+    "axes": "x_px = nose_x + x_m/mpp (aft), y_px = centre_y - y_m/mpp (starboard up, port down)",
+    "file": "a321-top.svg"
+  },
+  "_aircraft": {
+    "type": "A321-271NX (A321neo)",
+    "length_m": 44.51,
+    "span_m": 35.8,
+    "height_m": 11.76,
+    "fuselage_width_m": 3.95,
+    "fuselage_height_m": 4.14,
+    "wheelbase_m": 16.9,
+    "track_m": 7.6,
+    "origin": "ground point under the radome tip; x aft, y starboard, z up"
+  },
+  "front": {
+    "res": [
+      1600,
+      640
+    ],
+    "metres_per_pixel": 0.025,
+    "nose_tip_px": [
+      800.0,
+      394.0
+    ],
+    "centreline_x_px": 800.0,
+    "ground_line_y_px": 536.0,
+    "axes": "x_px = centre_x - y_m/mpp (port to the right), y_px = ground_y - z_m/mpp",
+    "file": "a321-front.svg"
+  },
+  "side": {
+    "res": [
+      2000,
+      640
+    ],
+    "metres_per_pixel": 0.025,
+    "nose_tip_px": [
+      109.8,
+      394.0
+    ],
+    "ground_line_y_px": 536.0,
+    "centreline_y_px": null,
+    "axes": "x_px = nose_x + x_m/mpp (aft), y_px = ground_y - z_m/mpp (up)",
+    "file": "a321-side.svg"
+  }
+}
