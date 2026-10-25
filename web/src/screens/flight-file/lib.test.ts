@@ -73,6 +73,11 @@ describe("flight file helpers", () => {
       ["owed", 171],
       ["needs_ruling", 1],
     ]);
+    // The real server sends a list with labels.
+    expect(statusesOf({ statuses: [{ status: "needs_ruling", count: 1, label: "waits on a ruling" }, { status: "owed", count: 171, label: "owed" }] })).toEqual([
+      ["owed", 171],
+      ["needs_ruling", 1],
+    ]);
     expect(breakdownText(summary)).toBe("158 × €600 + 14 × €300");
     expect(reductionOf(summary)).toEqual({ coupons: 14, ruleRef: "R-MIN-1@1", support: "41 of 42", label: "Art. 7(2)(c) 50% cut" });
   });
