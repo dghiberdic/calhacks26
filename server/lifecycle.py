@@ -391,6 +391,19 @@ class Lifecycle:
         return rule.model_copy(update={"status": "proposed", "origin_ruling_id": rule.origin_ruling_id or ruling.id,
                                        "recorded_at": max(rule.recorded_at, rt.now)})
 
+    def no_wider(self, drafted: Rule, scripted: Rule, q: Question, ruling: Ruling) -> Rule | None:
+        """A draft keeps every case-scoped key of its pattern's scripted rule (in its scope or its condition): it is
+        never wider than the case that was ruled on, because widening is explicit (`widen`, "All storm cohorts?").
+        A wider draft is recorded as rejected and the scripted rule stands."""
+        keys = [k for k, v in scripted.scope.items() if isinstance(v, str) and v.startswith("case:")]
+        have = set(drafted.scope) | {c.get("f") for c in drafted.condition.get("all", []) if isinstance(c, dict)}
+        dropped = [k for k in keys if k not in have]
+        if not dropped:
+            return drafted
+        self.rt.store.put("draft_rejected", f"{q.id}:{ruling.id}", {"problems": [
+            f"wider than the ruled case: drops {k} (widening is explicit)" for k in dropped]}, self.rt.now)
+        return None
+
     def draft_proposal(self, q: Question, ruling: Ruling, principal: str) -> RuleProposal | None:
         """Drafter's rule → engine checks → replay. If the draft fails any check (or there is none), the scripted
         rule for the known patterns stands in; for other patterns the ruling is applied to its cases directly."""
@@ -400,6 +413,8 @@ class Lifecycle:
         canned_id = next((rid for rid, qid in stub.RULE_TO_QUESTION.items() if qid == canned), None)
         if self.world is not None:
             drafted = self.drafted_rule(q, ruling, canned_id)
+            if drafted is not None and canned is not None:
+                drafted = self.no_wider(drafted, stub.canned_proposal(canned, ruling, rt.now).rule, q, ruling)
             if drafted is not None:
                 p = self.build_proposal(drafted, cases=q.case_refs, author_role=ruling.author_role, actor=principal)
                 if all(p.checks.values()):
