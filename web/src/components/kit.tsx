@@ -3,6 +3,7 @@ import { AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import type { Cents, Confidence, Role, TraceEvent } from "@/api/types";
 import { ApiError } from "@/api/client";
 import { eur, pct, ROLE_INITIALS, ROLE_LABEL, routedTo, shortId, zulu } from "@/lib/format";
+import { plainIds } from "@/lib/plain";
 import { cn } from "@/lib/utils";
 import { StatusChip, TraceChip } from "./chips";
 
@@ -82,7 +83,7 @@ export function FeedRow({ event, className, dark }: { event: TraceEvent; classNa
     <li className={cn("grid grid-cols-[52px_minmax(0,1fr)_auto] items-start gap-3 py-2.5", className)}>
       <span className={cn("pt-0.5 font-mono text-[11px] tabular-nums", dark ? "text-cloud-500" : "text-slate-400")}>{zulu(event.at)}</span>
       <span className="min-w-0">
-        <span className={cn("block text-[13.5px] leading-snug", dark ? "text-cloud-100" : "text-navy-900")}>{event.summary}</span>
+        <span className={cn("block text-[13.5px] leading-snug", dark ? "text-cloud-100" : "text-navy-900")}>{plainIds(event.summary)}</span>
         <span className={cn("mt-0.5 block font-mono text-[11px]", dark ? "text-cloud-500" : "text-slate-400")}>
           {[event.ref ? shortId(event.ref) : null, event.amount_cents !== null && event.amount_cents !== undefined ? eur(event.amount_cents) : null, event.actor].filter(Boolean).join(" · ")}
         </span>
