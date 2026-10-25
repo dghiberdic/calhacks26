@@ -131,3 +131,13 @@ def test_golden_scripted_flow_ends_on_expected_feb_rollforward(day1):
     assert (card.bf_cents, card.actual_vs_expected, card.sensitivity_5pp_cents) == (2_574_000, 1.448, 495_000)
     bad = [r for r in books.invariants() if not r.ok]
     assert not bad, bad
+
+
+def test_lean_register_rows_match_the_full_decode(day1):
+    """The month-end/CFO hot path reads plain register columns only; same rows as the full JSON-decoded read."""
+    b, clock, _ = day1
+    k_iso = ts("2025-01-25T12:00:00Z").isoformat().replace("+00:00", "Z")
+    cols = ("coupon_id", "status", "compensation_cents", "flight_id", "segment")
+    for as_of in (None, k_iso):
+        full = [{c: r[c] for c in cols} for r in b._register_rows(cohort=EOWYN, as_of=as_of)]
+        assert full and b._register_rows(cohort=EOWYN, as_of=as_of, columns=cols) == full

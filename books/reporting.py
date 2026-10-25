@@ -101,7 +101,8 @@ class ReportingMixin:
         legal = self._legal_flights(k_iso)
         owed: dict[str, _S] = defaultdict(_S)
         held: dict[str, _S] = defaultdict(_S)
-        for r in self._register_rows(cohort=cohort, as_of=k_iso):
+        for r in self._register_rows(cohort=cohort, as_of=k_iso,
+                                     columns=("coupon_id", "status", "compensation_cents", "flight_id", "segment")):
             if r["status"] not in ACCRUING or r["compensation_cents"] <= 0:
                 continue
             is_legal = r["status"] == "held" or (r["status"] in HELD and r["flight_id"] in legal)
