@@ -601,7 +601,9 @@ class Runtime:
         `normalize` ids, so without this blame would stop at the decision."""
         new = []
         for e in d.evidence:
-            if self.store.get("ev_fact", e.fact_id) is not None:
+            # a fact already on the chain (cited before, or injected) is linked by the decision commit, never
+            # re-recorded: the trace reads the latest version of a fact id
+            if any(self.store.get(kind, e.fact_id) is not None for kind in ("ev_fact", "injected_fact")):
                 continue
             self.store.put("ev_fact", e.fact_id, {"flight": d.flight_id}, at)
             real = self.normalize_fact(e.fact_id)
