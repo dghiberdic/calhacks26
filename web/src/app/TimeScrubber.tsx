@@ -2,19 +2,23 @@ import { useState } from "react";
 import { Clock3 } from "lucide-react";
 import { toast } from "sonner";
 import { create } from "zustand";
-import { ApiError, api } from "@/api/client";
+import { ApiError, api, type ClockMark } from "@/api/client";
 import { invalidateAfterWrite, qk, queryClient, useServerClock } from "@/api/queries";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { zuluDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-/** Moments the demo moves through. The server clock is forward-only, so earlier ones disable once passed. */
-export const MOMENTS: { at: string; label: string; note: string }[] = [
+/**
+ * Moments the demo moves through, for a server that doesn't serve its own marks (GET /clock → marks). The
+ * server clock is forward-only, so earlier ones disable once passed.
+ */
+export const MOMENTS: ClockMark[] = [
   { at: "2025-01-24T05:12:00Z", label: "OCC cancel list", note: "All 27 coded weather" },
   { at: "2025-01-25T09:00:00Z", label: "The morning after", note: "Storm run done" },
   { at: "2025-01-26T13:00:00Z", label: "Storm Herminia", note: "Same ruling, next storm" },
   { at: "2025-01-31T23:59:00Z", label: "January close", note: "6 claims approved" },
   { at: "2025-02-28T23:59:00Z", label: "February month-end", note: "Bornhuetter-Ferguson true-up" },
+  { at: "2025-04-29T06:00:00Z", label: "Iberian blackout · 28 Apr 2025", note: "A power cut, not a storm: asks Legal once" },
 ];
 
 type ClockState = { knownAt: string | null; setKnownAt: (at: string | null) => void };
@@ -26,6 +30,7 @@ export function TimeScrubber({ className }: { className?: string }) {
   const { knownAt: local, setKnownAt } = useClock();
   const server = useServerClock();
   const knownAt = server.data?.known_at ?? local;
+  const moments = server.data?.marks?.length ? server.data.marks : MOMENTS;
   const [open, setOpen] = useState(false);
   const [custom, setCustom] = useState("");
   const [busy, setBusy] = useState(false);
@@ -61,7 +66,7 @@ export function TimeScrubber({ className }: { className?: string }) {
       <PopoverContent align="end" className="w-[320px] p-2">
         <p className="micro px-2 pb-1 pt-1 text-slate-400">Known at</p>
         <ul className="flex flex-col">
-          {MOMENTS.map((m) => (
+          {moments.map((m) => (
             <li key={m.at}>
               <button
                 type="button"

@@ -9,15 +9,17 @@ import { useLiveFeed } from "@/api/stream";
 import type { CurveSegment, EstimateCard, MonthEndResponse, Role, Rollforward } from "@/api/types";
 import { useSession } from "@/app/session";
 import { MicroLabel, TiesChip } from "@/components/chips";
-import { Empty, ErrorNote, PageHeader, RoleAvatar, Shimmer } from "@/components/kit";
-import { eur, periodLabel, ROLE_LABEL } from "@/lib/format";
+import { Explain } from "@/components/explain";
+import { Details, Empty, ErrorNote, PageHeader, RoleAvatar, Shimmer } from "@/components/kit";
+import { periodLabel, ROLE_LABEL } from "@/lib/format";
 import { HERO_STORM, stormName } from "@/lib/storms";
+import { cn } from "@/lib/utils";
 import { CfoBridge } from "./bridge";
 import { ClaimCurveChart, type CohortActual } from "./curve";
 import { JournalDrafts } from "./drafts";
 import { EstimateCardView } from "./estimate";
-import { bridgeToGl, isSegment, journalTies, lockedPeriods, rollforwardCsv, rollforwardTotals, SEGMENTS } from "./model";
-import { CloseRail, InvariantsPanel } from "./rail";
+import { bridgeToGl, invariantsSummary, isSegment, journalTies, lockedPeriods, METHOD_NAME, rollforwardCsv, rollforwardTotals, SEGMENTS } from "./model";
+import { CloseRail, InvariantsList } from "./rail";
 import { FootingNotes, RollforwardTable } from "./rollforward";
 import { SectionHead, Segmented } from "./ui";
 
@@ -61,6 +63,7 @@ export default function CloseScreen() {
   const [localLocks, setLocalLocks] = useState<string[]>([]);
   const [monthEnd, setMonthEnd] = useState<MonthEndResponse | null>(null);
   const [segmentChoice, setSegmentChoice] = useState<CurveSegment | null>(null);
+  const [rfView, setRfView] = useState<"summary" | "detail">("summary");
 
   const invariants = useInvariants();
   // The rollforward says so itself now (Rollforward.locked, #16); the trace and invariants cover older servers.
@@ -120,7 +123,7 @@ export default function CloseScreen() {
           />
         }
       >
-        The EU261 compensation liability, a reduction of passenger revenue: drafted, rolled forward by cohort and tied to GL 2140.
+        What Northstar expects to pay passengers in EU261 compensation, drafted for approval and checked against the ledger before the month closes.
       </PageHeader>
 
       {!canAct ? <ReadOnlyHint role={role} /> : null}
@@ -142,11 +145,27 @@ export default function CloseScreen() {
           <div className="px-5 pt-4 md:px-6">
             <SectionHead
               id="rollforward-title"
-              eyebrow={<MicroLabel>2140 · rollforward by cohort</MicroLabel>}
-              title="EU261 compensation liability (estimated)"
-              actions={rf.data?.rows.length ? <RollforwardChips rf={rf.data} /> : null}
+              eyebrow={<MicroLabel>EU261 compensation liability · 2140</MicroLabel>}
+              title={`How the liability moved in ${periodLabel(period)}`}
+              actions={
+                rf.data?.rows.length ? (
+                  <>
+                    <Segmented
+                      label="Rollforward view"
+                      size="sm"
+                      value={rfView}
+                      onChange={setRfView}
+                      options={[
+                        { value: "summary", label: "Summary" },
+                        { value: "detail", label: "Rollforward detail", title: "By storm and segment, every line with its accounts" },
+                      ]}
+                    />
+                    <RollforwardChips rf={rf.data} />
+                  </>
+                ) : null
+              }
             >
-              {periodLabel(period)} · {isLocked ? "locked" : "open"} · € · negatives in parentheses
+              Opening balance, what changed, closing balance. It has to equal the general ledger before the month is locked. Reductions in parentheses.
             </SectionHead>
           </div>
           <div className="px-5 pb-4 pt-4 md:px-6">
@@ -158,14 +177,14 @@ export default function CloseScreen() {
               <Empty title={`No 2140 movements in ${periodLabel(period)}`}>Nothing was drafted to the EU261 compensation liability in this period.</Empty>
             ) : (
               <>
-                <RollforwardTable rf={rf.data} highlight={justRan ? "change_in_estimate_cents" : null} ties={ties} segments={est ? { [est.cohort]: est.segment } : undefined} />
+                <RollforwardTable rf={rf.data} detail={rfView === "detail"} highlight={justRan ? "change_in_estimate_cents" : null} ties={ties} segments={est ? { [est.cohort]: est.segment } : undefined} />
                 <FootingNotes rf={rf.data} />
               </>
             )}
           </div>
           {rf.data?.rows.length ? (
-            <RollforwardFooter period={period} locked={locked} cie={rollforwardTotals(rf.data).movements.change_in_estimate_cents}>
-              <IntegrityLine rf={rf.data} ties={ties} />
+            <RollforwardFooter period={period} locked={locked} detail={rfView === "detail"}>
+              {rfView === "detail" ? <IntegrityLine rf={rf.data} ties={ties} /> : null}
             </RollforwardFooter>
           ) : null}
         </section>
@@ -182,47 +201,58 @@ export default function CloseScreen() {
         />
       </div>
 
-      <InvariantsPanel />
+      <section aria-label="How the estimate works" className={cn(PANEL, "px-5 py-3.5")}>
+        <Details summary={<DetailsTitle title="How the estimate works" note={est ? `${METHOD_NAME[est.selected] ?? est.selected} selected` : null} />}>
+          <p className="max-w-[86ch] text-[13.5px] leading-relaxed text-slate-600">
+            On day 1 the liability is the full entitlement times the <Explain term="claim-rate">expected ultimate claim rate</Explain>, learned from Northstar's own claims by distance band. At each month-end the claims that came in are compared with what the curve expected; when they come in faster or slower, the estimate is redone (<Explain term="bornhuetter-ferguson">Bornhuetter-Ferguson</Explain>) and the difference is drafted as a <Explain term="change-in-estimate">change in estimate</Explain>. A mistake found in a locked month is a <Explain term="prior-period-error">prior-period error</Explain> instead, corrected in the open month.
+          </p>
+          <div className="mt-4 grid grid-cols-[minmax(0,1fr)] items-stretch gap-3 xl:grid-cols-2">
+            {estimate.isError ? (
+              <ErrorNote error={estimate.error} onRetry={() => void estimate.refetch()} />
+            ) : !est ? (
+              <Shimmer className="h-[440px] rounded-xl" />
+            ) : (
+              <EstimateCardView est={est} curve={cohortCurve} />
+            )}
 
-      <div className="grid grid-cols-[minmax(0,1fr)] items-stretch gap-3 xl:grid-cols-2">
-        {estimate.isError ? (
-          <ErrorNote error={estimate.error} onRetry={() => void estimate.refetch()} />
-        ) : !est ? (
-          <Shimmer className="h-[440px] rounded-xl" />
-        ) : (
-          <EstimateCardView est={est} curve={cohortCurve} />
-        )}
+            <section aria-labelledby="curve-title" className={PANEL}>
+              <div className="px-5 pt-4">
+                <SectionHead
+                  id="curve-title"
+                  eyebrow={<MicroLabel>Claim curves · € basis</MicroLabel>}
+                  title="Expected vs actual, by distance band"
+                  actions={
+                    <Segmented
+                      label="Segment"
+                      size="sm"
+                      value={focus}
+                      onChange={(s) => setSegmentChoice(s)}
+                      options={SEGMENTS.map((s) => ({ value: s.id, label: s.name.replace(" haul", ""), title: `${s.name} · ${s.band}` }))}
+                    />
+                  }
+                >
+                  Share of passengers who have claimed, by months since the storm{curves[focus] ? ` · curve ${curves[focus]!.version}` : ""}
+                </SectionHead>
+              </div>
+              <div className="px-5 pb-4 pt-4">
+                {(() => {
+                  const q = { long_haul_gt3500: long, medium_1500_3500: medium, short_le1500: short }[focus];
+                  if (q.isError) return <ErrorNote error={q.error} onRetry={() => void q.refetch()} />;
+                  if (!q.data) return <Shimmer className="h-[300px]" />;
+                  if (!q.data.points.length) return <Empty title="No claim history for this segment" />;
+                  return <ClaimCurveChart curves={curves} focus={focus} actual={actual} />;
+                })()}
+              </div>
+            </section>
+          </div>
+        </Details>
+      </section>
 
-        <section aria-labelledby="curve-title" className={PANEL}>
-          <div className="px-5 pt-4">
-            <SectionHead
-              id="curve-title"
-              eyebrow={<MicroLabel>Claim curves · € basis</MicroLabel>}
-              title="Expected vs actual, by segment"
-              actions={
-                <Segmented
-                  label="Segment"
-                  size="sm"
-                  value={focus}
-                  onChange={(s) => setSegmentChoice(s)}
-                  options={SEGMENTS.map((s) => ({ value: s.id, label: s.name.replace(" haul", ""), title: `${s.name} · ${s.band}` }))}
-                />
-              }
-            >
-              Cumulative valid-claim rate by months since the event{curves[focus] ? ` · curve ${curves[focus]!.version}` : ""}
-            </SectionHead>
-          </div>
-          <div className="px-5 pb-4 pt-4">
-            {(() => {
-              const q = { long_haul_gt3500: long, medium_1500_3500: medium, short_le1500: short }[focus];
-              if (q.isError) return <ErrorNote error={q.error} onRetry={() => void q.refetch()} />;
-              if (!q.data) return <Shimmer className="h-[300px]" />;
-              if (!q.data.points.length) return <Empty title="No claim history for this segment" />;
-              return <ClaimCurveChart curves={curves} focus={focus} actual={actual} />;
-            })()}
-          </div>
-        </section>
-      </div>
+      <section aria-label="Controls checks" className={cn(PANEL, "px-5 py-3.5")}>
+        <Details key={invariants.data?.some((i) => !i.ok) ? "failing" : "ok"} defaultOpen={invariants.data?.some((i) => !i.ok)} summary={<DetailsTitle title="Controls checks" note={invariantsSummary(invariants.data)} />}>
+          <InvariantsList />
+        </Details>
+      </section>
 
       <JournalDrafts
         period={period}
@@ -267,6 +297,16 @@ function RollforwardChips({ rf }: { rf: Rollforward }) {
   );
 }
 
+/** A Details summary that reads as a panel heading: the title in ink, a quiet note after it. */
+function DetailsTitle({ title, note }: { title: string; note?: string | null }) {
+  return (
+    <span className="text-[14.5px]">
+      <span className="font-semibold text-navy-900">{title}</span>
+      {note ? <span className="font-normal text-slate-500"> · {note}</span> : null}
+    </span>
+  );
+}
+
 /** "foots · cross-foots · J agrees to its journals": said only when true; FootingNotes says what isn't. */
 function IntegrityLine({ rf, ties }: { rf: Rollforward; ties: ReturnType<typeof journalTies> }) {
   const t = rollforwardTotals(rf);
@@ -282,18 +322,22 @@ function IntegrityLine({ rf, ties }: { rf: Rollforward; ties: ReturnType<typeof 
   );
 }
 
-function RollforwardFooter({ period, locked, cie, children }: { period: string; locked: Set<string>; cie: number; children?: ReactNode }) {
+function RollforwardFooter({ period, locked, detail, children }: { period: string; locked: Set<string>; detail: boolean; children?: ReactNode }) {
   const isLocked = locked.has(period);
   const prior = [...locked].filter((p) => p < period).sort();
   const parts: string[] = [];
   if (isLocked) parts.push(`${periodLabel(period)} locked: never written again`);
-  else if (cie) parts.push(`${eur(cie, { signed: true })} change in estimate, applied prospectively (IAS 8.36)`);
   if (prior.length) parts.push(`${prior.map(periodLabel).join(", ")} locked, untouched`);
+  if (!parts.length && !detail) return null;
   return (
     <div className="flex flex-col gap-1 border-t border-cloud-100 px-5 py-3 text-[12.5px] leading-relaxed text-slate-500 md:px-6">
       {parts.length ? <p className="text-navy-900">{parts.join(" · ")}</p> : null}
       {children}
-      <p>Each cohort: reduce to the expected tail at M12; derecognise at limitation.</p>
+      {detail ? (
+        <p>
+          <Explain term="dr-cr">Dr / Cr</Explain> name the accounts each line moves. Each storm's liability is reduced to the expected tail at M12 and derecognised at limitation.
+        </p>
+      ) : null}
     </div>
   );
 }

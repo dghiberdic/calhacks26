@@ -6,7 +6,7 @@ import type { StormRun } from "@/api/types";
 import { zulu, zuluDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { verdictChip, type VerdictKind } from "../verdict";
-import { mainWindowOf, metarSeries, stormFacts, type Tick } from "./model";
+import { isOutage, mainWindowOf, metarSeries, stormFacts, windowName, type Tick } from "./model";
 import { useWidth } from "./useWidth";
 
 type Props = {
@@ -32,6 +32,10 @@ const PALETTE = {
     operated: "var(--color-slate-400)",
     band: "rgba(79,159,224,0.16)",
     bandEdge: "rgba(79,159,224,0.55)",
+    // A grid outage isn't weather: calm slate hatching, not the METAR blue.
+    outage: "rgba(200,208,219,0.16)",
+    outageEdge: "rgba(200,208,219,0.5)",
+    outageText: "var(--color-cloud-300)",
   },
   light: {
     text: "var(--color-slate-500)",
@@ -45,6 +49,9 @@ const PALETTE = {
     operated: "var(--color-slate-500)",
     band: "rgba(79,159,224,0.14)",
     bandEdge: "rgba(37,101,163,0.5)",
+    outage: "rgba(51,68,94,0.12)",
+    outageEdge: "rgba(51,68,94,0.45)",
+    outageText: "var(--color-slate-600)",
   },
 };
 
@@ -130,6 +137,10 @@ export function StormTimeline({ run, compact, animate = true, tone = "dark", cla
             <stop offset="0" stopColor={c.fillTop} />
             <stop offset="1" stopColor="transparent" />
           </linearGradient>
+          <pattern id={`outage-hatch-${tone}`} width={6} height={6} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect width={6} height={6} fill={c.outage} />
+            <line x1={0} x2={0} y1={0} y2={6} stroke={c.outageEdge} strokeWidth={1} strokeOpacity={0.5} />
+          </pattern>
         </defs>
 
         {/* grid + y axis (knots) */}
@@ -160,31 +171,32 @@ export function StormTimeline({ run, compact, animate = true, tone = "dark", cla
           </text>
         </motion.g>
 
-        {/* storm window(s), computed from data by the engine */}
+        {/* storm window(s), computed from data by the engine; a grid outage (an external event) is hatched slate */}
         {facts.windows.map((w, i) => {
           const x0 = Math.max(M.l, x(w.start));
           const x1 = Math.min(W - M.r, x(w.end));
           if (x1 <= x0) return null;
-          const isMain = w === mainWindow;
+          const outage = isOutage(w.raw);
+          const labelled = (w === mainWindow || outage) && !compact;
           return (
-            <motion.g key={i} initial={{ opacity: play ? 0 : 1 }} animate={{ opacity: phase >= 1 ? 1 : 0 }} transition={{ duration: 0.6 }}>
+            <motion.g key={i} initial={{ opacity: play ? 0 : 1 }} animate={{ opacity: phase >= 1 ? 1 : 0 }} transition={{ duration: 0.6 }} data-window={outage ? "grid_outage" : "weather"}>
               <motion.rect
                 x={x0}
                 y={M.t - 4}
                 width={x1 - x0}
                 height={plotBottom - M.t + 4}
-                fill={c.band}
+                fill={outage ? `url(#outage-hatch-${tone})` : c.band}
                 initial={{ scaleX: play ? 0 : 1 }}
                 animate={{ scaleX: phase >= 1 ? 1 : 0 }}
                 transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
                 style={{ originX: 0 }}
               />
-              <line x1={x0} x2={x0} y1={M.t - 4} y2={plotBottom} stroke={c.bandEdge} strokeWidth={1} />
-              <line x1={x1} x2={x1} y1={M.t - 4} y2={plotBottom} stroke={c.bandEdge} strokeWidth={1} />
-              {isMain && !compact ? (
-                <text x={x0 + 8} y={M.t + 10} fontSize={10.5} fill="var(--color-metar)" className="font-mono">
-                  storm window {zulu(w.raw.start)}–{zulu(w.raw.end)}
-                  <title>{w.raw.definition}</title>
+              <line x1={x0} x2={x0} y1={M.t - 4} y2={plotBottom} stroke={outage ? c.outageEdge : c.bandEdge} strokeWidth={1} strokeDasharray={outage ? "3 3" : undefined} />
+              <line x1={x1} x2={x1} y1={M.t - 4} y2={plotBottom} stroke={outage ? c.outageEdge : c.bandEdge} strokeWidth={1} strokeDasharray={outage ? "3 3" : undefined} />
+              {labelled ? (
+                <text x={x0 + 8} y={M.t + 10} fontSize={10.5} fill={outage ? c.outageText : "var(--color-metar)"} className="font-mono">
+                  {windowName(w.raw).replace(/^\w/, (ch) => ch.toLowerCase())} {zulu(w.raw.start)}–{zulu(w.raw.end)}
+                  <title>{outage ? (w.raw.label ?? windowName(w.raw)) : w.raw.definition}</title>
                 </text>
               ) : null}
             </motion.g>

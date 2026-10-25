@@ -1,0 +1,1145 @@
+{
+  "plain-2025-01-24-run-1": {
+    "completed": true,
+    "error": null,
+    "record": {
+      "batch_custom_id": "plain-2025-01-24-run-1",
+      "cache_hit": false,
+      "cost_usd": 0.464552,
+      "effort": "medium",
+      "fallback": false,
+      "id": "LLM:fe12be594785df87",
+      "input_fact_ids": [],
+      "message_id": "msg_011CgNA8PMaBPTPTpqqaT2QF",
+      "mode": "cache",
+      "model": "claude-opus-5-5",
+      "model_requested": "claude-opus-5-5",
+      "principal": "eval:plain-baseline",
+      "prompt_hash": "fe12be594785df87816b26fbd1bfd207fcce5ee07c8636983ea3ac26aee971b7",
+      "prompt_version": "plain-baseline-v2-run-1",
+      "provenance": "live-batch",
+      "recorded_at": "2026-10-25T02:28:15.059954Z",
+      "refused": false,
+      "request_id": null,
+      "role": "eval_baseline",
+      "schema_name": "BaselineResult",
+      "stop_reason": "end_turn",
+      "usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "input_tokens": 200976,
+        "output_tokens": 6260
+      }
+    },
+    "result": {
+      "flights": [
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS100@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS101@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS102@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS103@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS104@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS105@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS106@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS107@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS108@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS109@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS110@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS111@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS112@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS113@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS114@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS115@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS116@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS117@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS118@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS20@2025-01-23",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS21@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS30@2025-01-23",
+          "liability_cents": 0
+        },
+        {
+          "cause": "technical",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS31@2025-01-24",
+          "liability_cents": 3465000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS40@2025-01-23",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS41@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS50@2025-01-23",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS51@2025-01-24",
+          "liability_cents": 0
+        }
+      ]
+    }
+  },
+  "plain-2025-01-24-run-2": {
+    "completed": true,
+    "error": null,
+    "record": {
+      "batch_custom_id": "plain-2025-01-24-run-2",
+      "cache_hit": false,
+      "cost_usd": 0.471452,
+      "effort": "medium",
+      "fallback": false,
+      "id": "LLM:f7a205b873481407",
+      "input_fact_ids": [],
+      "message_id": "msg_011CgNA8PdSe5r5PvGNqaECj",
+      "mode": "cache",
+      "model": "claude-opus-5-5",
+      "model_requested": "claude-opus-5-5",
+      "principal": "eval:plain-baseline",
+      "prompt_hash": "f7a205b873481407f0c8b15e978e36bd547cdf04f9c31c79fac931bad3d1c01d",
+      "prompt_version": "plain-baseline-v2-run-2",
+      "provenance": "live-batch",
+      "recorded_at": "2026-10-25T02:28:15.059954Z",
+      "refused": false,
+      "request_id": null,
+      "role": "eval_baseline",
+      "schema_name": "BaselineResult",
+      "stop_reason": "end_turn",
+      "usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "input_tokens": 200976,
+        "output_tokens": 6950
+      }
+    },
+    "result": {
+      "flights": [
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS100@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS101@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS102@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS103@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS104@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS105@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS106@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS107@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS108@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS109@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS110@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS111@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS112@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "needs_legal",
+          "flight_id": "NS113@2025-01-24",
+          "liability_cents": 1922400
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS114@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "needs_legal",
+          "flight_id": "NS115@2025-01-24",
+          "liability_cents": 1987200
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS116@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "needs_legal",
+          "flight_id": "NS117@2025-01-24",
+          "liability_cents": 840000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS118@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS20@2025-01-23",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS21@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS30@2025-01-23",
+          "liability_cents": 0
+        },
+        {
+          "cause": "technical",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS31@2025-01-24",
+          "liability_cents": 3465000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS40@2025-01-23",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS41@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS50@2025-01-23",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS51@2025-01-24",
+          "liability_cents": 0
+        }
+      ]
+    }
+  },
+  "plain-2025-01-24-run-3": {
+    "completed": true,
+    "error": null,
+    "record": {
+      "batch_custom_id": "plain-2025-01-24-run-3",
+      "cache_hit": false,
+      "cost_usd": 0.452802,
+      "effort": "medium",
+      "fallback": false,
+      "id": "LLM:c02178d17385ab36",
+      "input_fact_ids": [],
+      "message_id": "msg_011CgNA8PH7RncFG86xTN3Rf",
+      "mode": "cache",
+      "model": "claude-opus-5-5",
+      "model_requested": "claude-opus-5-5",
+      "principal": "eval:plain-baseline",
+      "prompt_hash": "c02178d17385ab366ba547ddc24c3d8ebe9305c00acb99013728bc569634c10d",
+      "prompt_version": "plain-baseline-v2-run-3",
+      "provenance": "live-batch",
+      "recorded_at": "2026-10-25T02:28:15.059954Z",
+      "refused": false,
+      "request_id": null,
+      "role": "eval_baseline",
+      "schema_name": "BaselineResult",
+      "stop_reason": "end_turn",
+      "usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "input_tokens": 200976,
+        "output_tokens": 5085
+      }
+    },
+    "result": {
+      "flights": [
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS100@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS101@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS102@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS103@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS104@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS105@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS106@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS107@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS108@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS109@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS110@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS111@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS112@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS113@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS114@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS115@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS116@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS117@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS118@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS20@2025-01-23",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS21@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS30@2025-01-23",
+          "liability_cents": 0
+        },
+        {
+          "cause": "technical",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS31@2025-01-24",
+          "liability_cents": 3465000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS40@2025-01-23",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS41@2025-01-24",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS50@2025-01-23",
+          "liability_cents": 0
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "extraordinary",
+          "flight_id": "NS51@2025-01-24",
+          "liability_cents": 0
+        }
+      ]
+    }
+  },
+  "plain-2025-01-26-run-1": {
+    "completed": true,
+    "error": null,
+    "record": {
+      "batch_custom_id": "plain-2025-01-26-run-1",
+      "cache_hit": false,
+      "cost_usd": 0.180754,
+      "effort": "medium",
+      "fallback": false,
+      "id": "LLM:085735df7c0ef783",
+      "input_fact_ids": [],
+      "message_id": "msg_011CgNA8a9U1c7k3Mi9jXRZ9",
+      "mode": "cache",
+      "model": "claude-opus-5-5",
+      "model_requested": "claude-opus-5-5",
+      "principal": "eval:plain-baseline",
+      "prompt_hash": "085735df7c0ef783cdedca5a9f2638d2db89d271ae62dc03c6a540249252ed38",
+      "prompt_version": "plain-baseline-v2-run-1",
+      "provenance": "live-batch",
+      "recorded_at": "2026-10-25T02:28:15.059954Z",
+      "refused": false,
+      "request_id": null,
+      "role": "eval_baseline",
+      "schema_name": "BaselineResult",
+      "stop_reason": "end_turn",
+      "usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "input_tokens": 73367,
+        "output_tokens": 3402
+      }
+    },
+    "result": {
+      "flights": [
+        {
+          "cause": "technical",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS106@2025-01-26",
+          "liability_cents": 940000
+        },
+        {
+          "cause": "technical",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS110@2025-01-26",
+          "liability_cents": 950000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "needs_legal",
+          "flight_id": "NS114@2025-01-26",
+          "liability_cents": 1987200
+        },
+        {
+          "cause": "technical",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS30@2025-01-25",
+          "liability_cents": 3528000
+        }
+      ]
+    }
+  },
+  "plain-2025-01-26-run-2": {
+    "completed": true,
+    "error": null,
+    "record": {
+      "batch_custom_id": "plain-2025-01-26-run-2",
+      "cache_hit": false,
+      "cost_usd": 0.175624,
+      "effort": "medium",
+      "fallback": false,
+      "id": "LLM:4cd0a5ac4d2da021",
+      "input_fact_ids": [],
+      "message_id": "msg_011CgNA8PJqw5rJX5HytZHST",
+      "mode": "cache",
+      "model": "claude-opus-5-5",
+      "model_requested": "claude-opus-5-5",
+      "principal": "eval:plain-baseline",
+      "prompt_hash": "4cd0a5ac4d2da0210ba379598fb40bcfb157f9276e793ac34e0a614686b4ff09",
+      "prompt_version": "plain-baseline-v2-run-2",
+      "provenance": "live-batch",
+      "recorded_at": "2026-10-25T02:28:15.059954Z",
+      "refused": false,
+      "request_id": null,
+      "role": "eval_baseline",
+      "schema_name": "BaselineResult",
+      "stop_reason": "end_turn",
+      "usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "input_tokens": 73367,
+        "output_tokens": 2889
+      }
+    },
+    "result": {
+      "flights": [
+        {
+          "cause": "technical",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS106@2025-01-26",
+          "liability_cents": 940000
+        },
+        {
+          "cause": "technical",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS110@2025-01-26",
+          "liability_cents": 950000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "needs_legal",
+          "flight_id": "NS114@2025-01-26",
+          "liability_cents": 1987200
+        },
+        {
+          "cause": "technical",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS30@2025-01-25",
+          "liability_cents": 3528000
+        }
+      ]
+    }
+  },
+  "plain-2025-01-26-run-3": {
+    "completed": true,
+    "error": null,
+    "record": {
+      "batch_custom_id": "plain-2025-01-26-run-3",
+      "cache_hit": false,
+      "cost_usd": 0.176224,
+      "effort": "medium",
+      "fallback": false,
+      "id": "LLM:34039d6326b03ed0",
+      "input_fact_ids": [],
+      "message_id": "msg_011CgNA8Qsbvb2SYitRVHeG2",
+      "mode": "cache",
+      "model": "claude-opus-5-5",
+      "model_requested": "claude-opus-5-5",
+      "principal": "eval:plain-baseline",
+      "prompt_hash": "34039d6326b03ed04db9ec2876087574d4f9f218e7e2bd0b3aae0bddb68843df",
+      "prompt_version": "plain-baseline-v2-run-3",
+      "provenance": "live-batch",
+      "recorded_at": "2026-10-25T02:28:15.059954Z",
+      "refused": false,
+      "request_id": null,
+      "role": "eval_baseline",
+      "schema_name": "BaselineResult",
+      "stop_reason": "end_turn",
+      "usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "input_tokens": 73367,
+        "output_tokens": 2949
+      }
+    },
+    "result": {
+      "flights": [
+        {
+          "cause": "technical",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS106@2025-01-26",
+          "liability_cents": 940000
+        },
+        {
+          "cause": "technical",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS110@2025-01-26",
+          "liability_cents": 950000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "needs_legal",
+          "flight_id": "NS114@2025-01-26",
+          "liability_cents": 1987200
+        },
+        {
+          "cause": "technical",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS30@2025-01-25",
+          "liability_cents": 3528000
+        }
+      ]
+    }
+  },
+  "plain-2025-02-26-run-1": {
+    "completed": true,
+    "error": null,
+    "record": {
+      "batch_custom_id": "plain-2025-02-26-run-1",
+      "cache_hit": false,
+      "cost_usd": 0.442438,
+      "effort": "medium",
+      "fallback": false,
+      "id": "LLM:cf2a597ecc10445e",
+      "input_fact_ids": [],
+      "message_id": "msg_011CgNA8PGsFhAdJruHYF3nJ",
+      "mode": "cache",
+      "model": "claude-opus-5-5",
+      "model_requested": "claude-opus-5-5",
+      "principal": "eval:plain-baseline",
+      "prompt_hash": "cf2a597ecc10445e6d0ff06b169bd43b385b163541aa90219e49770bb16cefe3",
+      "prompt_version": "plain-baseline-v2-run-1",
+      "provenance": "live-batch",
+      "recorded_at": "2026-10-25T02:28:15.059954Z",
+      "refused": false,
+      "request_id": null,
+      "role": "eval_baseline",
+      "schema_name": "BaselineResult",
+      "stop_reason": "end_turn",
+      "usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "input_tokens": 156454,
+        "output_tokens": 12953
+      }
+    },
+    "result": {
+      "flights": [
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS113@2025-02-26",
+          "liability_cents": 1905000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS120@2025-02-26",
+          "liability_cents": 780000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS121@2025-02-26",
+          "liability_cents": 870000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS122@2025-02-26",
+          "liability_cents": 822500
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS123@2025-02-26",
+          "liability_cents": 867500
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS132@2025-02-26",
+          "liability_cents": 750000
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS133@2025-02-26",
+          "liability_cents": 765000
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS134@2025-02-26",
+          "liability_cents": 752500
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS135@2025-02-26",
+          "liability_cents": 875000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS151@2025-02-26",
+          "liability_cents": 1935000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS153@2025-02-26",
+          "liability_cents": 922500
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS164@2025-02-26",
+          "liability_cents": 2040000
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS166@2025-02-26",
+          "liability_cents": 1955800
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS167@2025-02-26",
+          "liability_cents": 1979400
+        }
+      ]
+    }
+  },
+  "plain-2025-02-26-run-2": {
+    "completed": true,
+    "error": null,
+    "record": {
+      "batch_custom_id": "plain-2025-02-26-run-2",
+      "cache_hit": false,
+      "cost_usd": 0.471138,
+      "effort": "medium",
+      "fallback": false,
+      "id": "LLM:a0019a3702d48500",
+      "input_fact_ids": [],
+      "message_id": "msg_011CgNA8PJrDaci55FcVPaA6",
+      "mode": "cache",
+      "model": "claude-opus-5-5",
+      "model_requested": "claude-opus-5-5",
+      "principal": "eval:plain-baseline",
+      "prompt_hash": "a0019a3702d485000f9094208d545129000c27f98475f8ef96ec0bb1be64fb51",
+      "prompt_version": "plain-baseline-v2-run-2",
+      "provenance": "live-batch",
+      "recorded_at": "2026-10-25T02:28:15.059954Z",
+      "refused": false,
+      "request_id": null,
+      "role": "eval_baseline",
+      "schema_name": "BaselineResult",
+      "stop_reason": "end_turn",
+      "usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "input_tokens": 156454,
+        "output_tokens": 15823
+      }
+    },
+    "result": {
+      "flights": [
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS113@2025-02-26",
+          "liability_cents": 1905000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS120@2025-02-26",
+          "liability_cents": 780000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS121@2025-02-26",
+          "liability_cents": 870000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS122@2025-02-26",
+          "liability_cents": 822500
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS123@2025-02-26",
+          "liability_cents": 867500
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS132@2025-02-26",
+          "liability_cents": 750000
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS133@2025-02-26",
+          "liability_cents": 765000
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS134@2025-02-26",
+          "liability_cents": 752500
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS135@2025-02-26",
+          "liability_cents": 875000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS151@2025-02-26",
+          "liability_cents": 1935000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS153@2025-02-26",
+          "liability_cents": 922500
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS164@2025-02-26",
+          "liability_cents": 2040000
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS166@2025-02-26",
+          "liability_cents": 1955800
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS167@2025-02-26",
+          "liability_cents": 1979400
+        }
+      ]
+    }
+  },
+  "plain-2025-02-26-run-3": {
+    "completed": true,
+    "error": null,
+    "record": {
+      "batch_custom_id": "plain-2025-02-26-run-3",
+      "cache_hit": false,
+      "cost_usd": 0.568818,
+      "effort": "medium",
+      "fallback": false,
+      "id": "LLM:405bfc3c8fc9f92e",
+      "input_fact_ids": [],
+      "message_id": "msg_011CgNADa1faNvJyjcPNzvAo",
+      "mode": "cache",
+      "model": "claude-opus-5-5",
+      "model_requested": "claude-opus-5-5",
+      "principal": "eval:plain-baseline",
+      "prompt_hash": "405bfc3c8fc9f92eb1ef81d8ab3f8251c3e807593443deed15577a13d0d27845",
+      "prompt_version": "plain-baseline-v2-run-3",
+      "provenance": "live-batch",
+      "recorded_at": "2026-10-25T02:28:15.059954Z",
+      "refused": false,
+      "request_id": null,
+      "role": "eval_baseline",
+      "schema_name": "BaselineResult",
+      "stop_reason": "end_turn",
+      "usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "input_tokens": 156454,
+        "output_tokens": 25591
+      }
+    },
+    "result": {
+      "flights": [
+        {
+          "cause": "weather",
+          "extraordinary": "needs_legal",
+          "flight_id": "NS113@2025-02-26",
+          "liability_cents": 1905000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "needs_legal",
+          "flight_id": "NS120@2025-02-26",
+          "liability_cents": 780000
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "needs_legal",
+          "flight_id": "NS121@2025-02-26",
+          "liability_cents": 870000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "needs_legal",
+          "flight_id": "NS122@2025-02-26",
+          "liability_cents": 822500
+        },
+        {
+          "cause": "knock_on",
+          "extraordinary": "needs_legal",
+          "flight_id": "NS123@2025-02-26",
+          "liability_cents": 867500
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS132@2025-02-26",
+          "liability_cents": 3670000
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS133@2025-02-26",
+          "liability_cents": 3525000
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS134@2025-02-26",
+          "liability_cents": 3502500
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS135@2025-02-26",
+          "liability_cents": 4035000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "needs_legal",
+          "flight_id": "NS151@2025-02-26",
+          "liability_cents": 1935000
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "needs_legal",
+          "flight_id": "NS153@2025-02-26",
+          "liability_cents": 922500
+        },
+        {
+          "cause": "weather",
+          "extraordinary": "needs_legal",
+          "flight_id": "NS164@2025-02-26",
+          "liability_cents": 2060000
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS166@2025-02-26",
+          "liability_cents": 7105000
+        },
+        {
+          "cause": "concurrent",
+          "extraordinary": "not_extraordinary",
+          "flight_id": "NS167@2025-02-26",
+          "liability_cents": 7250000
+        }
+      ]
+    }
+  }
+}

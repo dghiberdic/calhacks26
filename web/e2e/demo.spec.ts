@@ -77,7 +77,7 @@ test("the demo, clicked through", async ({ page }) => {
 
   // 1:50 · Liability & Close, still as the Controller: the CFO bridge, and 2140 ties to the GL.
   await go(page, "Liability & Close");
-  await expect(page.getByRole("heading", { name: /Cash basis .* full entitlement .* drafted .*±5pp/ })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: /What we owe after .*: €[\d,]+ drafted\. Not €[\d,]+ \(cash basis\)/ })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("ties-to-gl").first()).toBeVisible();
 
   // 2:00 · Judge's Desk: a day of the judge's choosing (here, the next storm).
