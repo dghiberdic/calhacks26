@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown } from "lucide-react";
 import type { JournalEntry } from "@/api/types";
 import { MicroLabel } from "@/components/chips";
+import { Explain } from "@/components/explain";
 import { JournalCard, statusLabel } from "@/components/journal";
 import { Money } from "@/components/kit";
 import { count } from "@/lib/format";
@@ -25,27 +26,25 @@ const KIND: Partial<Record<JournalEntry["kind"], string>> = {
 const total = (je: JournalEntry) => je.lines.reduce((s, l) => s + (l.dr_cents ?? 0), 0);
 
 /**
- * The flight's parked journal drafts: the compensation estimate as a full card (Dr/Cr lines), the rest as
- * one-line rows that open into the same card. StormCheck never posts beyond approval.
+ * The flight's journal entries, one line each (what, status, amount); a row opens into the full card with its
+ * Dr/Cr lines. StormCheck drafts and parks them: a person approves, and it never posts on its own.
  */
 export function JournalDrafts({ entries }: { entries: JournalEntry[] }) {
-  const [lead, ...rest] = entries;
   return (
     <section aria-labelledby="journals-title">
-      <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-x-4 px-1">
+      <div className="mb-2.5 px-1">
         <h2 id="journals-title" className="text-[14.5px] font-semibold text-navy-900">
-          Journal drafts <span className="figure font-normal text-slate-400">{count(entries.length)}</span>
+          Journal entries <span className="figure font-normal text-slate-400">{count(entries.length)}</span>
         </h2>
-        <p className="text-[12.5px] text-slate-500">Parked for approval. StormCheck never posts.</p>
+        <p className="mt-0.5 text-[12.5px] text-slate-500">
+          The bookkeeping behind this flight. Drafts are parked for approval: StormCheck never posts. Open a row for its <Explain term="dr-cr">Dr / Cr</Explain> lines.
+        </p>
       </div>
-      <JournalCard entry={lead} />
-      {rest.length ? (
-        <ul className="mt-3 overflow-hidden rounded-xl bg-card shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04)]">
-          {rest.map((je) => (
-            <DraftRow key={je.id} entry={je} />
-          ))}
-        </ul>
-      ) : null}
+      <ul className="overflow-hidden rounded-xl bg-card shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04)]">
+        {entries.map((je) => (
+          <DraftRow key={je.id} entry={je} />
+        ))}
+      </ul>
     </section>
   );
 }

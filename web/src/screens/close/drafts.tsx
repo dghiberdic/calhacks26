@@ -170,7 +170,7 @@ export function JournalDrafts({
   );
 }
 
-/** "EU261 compensation liability · 4 entries · €82,146", what the kind is in words, and a toggle. */
+/** "EU261 compensation liability · 4 entries · +€82,146 on 2140" (other kinds: their total), what the kind is in words, and a toggle. */
 function GroupHead({ group: g, open, onToggle }: { group: JournalGroup; open: boolean; onToggle: () => void }) {
   const name = KIND_LABEL[g.kind] ?? g.kind.replace(/_/g, " ");
   const note = KIND_NOTE[g.kind];
@@ -185,7 +185,7 @@ function GroupHead({ group: g, open, onToggle }: { group: JournalGroup; open: bo
       <ChevronRight className={cn("size-3.5 shrink-0 self-center text-slate-400 transition-transform", open && "rotate-90")} aria-hidden="true" />
       <span className="text-[13.5px] font-semibold text-navy-900 first-letter:uppercase">{name}</span>
       <span className="figure text-[13px] text-slate-600">
-        {count(g.entries.length)} {g.entries.length === 1 ? "entry" : "entries"} · {eur(g.cents)}
+        {count(g.entries.length)} {g.entries.length === 1 ? "entry" : "entries"} · {g.moves2140 ? `${eur(g.net2140, { signed: true })} on 2140` : eur(g.cents)}
       </span>
       {note ? <span className="min-w-0 basis-full pl-[26px] text-[12.5px] leading-snug text-slate-500 sm:basis-auto sm:pl-0">{note}</span> : null}
     </button>
@@ -304,13 +304,13 @@ function EntryLines({ entry }: { entry: JournalEntry }) {
             <span className={cn("min-w-0", !l.dr_cents && "pl-4")}>
               <span className="font-mono text-[11.5px] text-slate-500">{l.account}</span> <span className="text-navy-900">{l.account_name}</span>
             </span>
-            <Money cents={l.dr_cents || l.cr_cents || 0} withCents className={cn("text-[13px]", l.dr_cents ? "text-navy-900" : "text-slate-600")} />
+            <Money cents={l.dr_cents || l.cr_cents || 0} className={cn("text-[13px]", l.dr_cents ? "text-navy-900" : "text-slate-600")} />
           </li>
         ))}
         <li className="flex items-baseline justify-between gap-3 border-t border-cloud-200 px-4 py-2 text-[12.5px] text-slate-500">
           <span>{dr === cr ? "Balanced" : "Out of balance"}</span>
           <span>
-            Dr <Money cents={dr} withCents /> · Cr <Money cents={cr} withCents />
+            Dr <Money cents={dr} /> · Cr <Money cents={cr} />
           </span>
         </li>
       </ul>

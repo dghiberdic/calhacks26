@@ -4,7 +4,8 @@ import { ChevronRight } from "lucide-react";
 import { useStormRun, useStorms } from "@/api/queries";
 import type { FlightRow, StormRun } from "@/api/types";
 import { MicroLabel, StatusChip } from "@/components/chips";
-import { ConfidenceLine, Empty, ErrorNote, PageHeader, Shimmer } from "@/components/kit";
+import { Explain } from "@/components/explain";
+import { ConfidenceLine, Details, Empty, ErrorNote, PageHeader, Shimmer } from "@/components/kit";
 import { VERDICT_COLOR, verdictChip, verdictOf, type VerdictKind } from "@/components/verdict";
 import { count, longDate, routedTo, zulu } from "@/lib/format";
 import { stormName } from "@/lib/storms";
@@ -72,14 +73,12 @@ function IndexBody({ run }: { run: StormRun }) {
   const groups = useMemo(() => groupFlights(run), [run]);
   const name = stormName(run.id);
   const cancelled = run.counters.cancelled ?? run.flights.filter((r) => r.flight.status === "cancelled").length;
-  const operated = run.counters.operated ?? run.flights.filter((r) => r.flight.status === "operated").length;
-  const passengers = run.counters.passengers;
 
   return (
     <Frame>
       <PageHeader eyebrow={<MicroLabel>{[name, run.station, longDate(run.date)].filter(Boolean).join(" · ")}</MicroLabel>} title="Flight File">
-        Why each flight got its verdict. {count(cancelled)} cancelled, {count(operated)} operated
-        {passengers ? <>, {count(passengers)} passengers</> : null}.
+        {count(cancelled)} cancelled flights, and what really caused each one. Open a flight for its evidence. The code in each row is the{" "}
+        <Explain term="delay-codes">delay code</Explain> ops control typed (RSN).
       </PageHeader>
 
       {run.flights.length ? (
@@ -148,18 +147,33 @@ function FlightGroup({ group, runDate }: { group: Group; runDate: string }) {
         </h2>
         {groupNote(group) ? <p className="text-[13px] text-slate-500">{groupNote(group)}</p> : null}
       </div>
-      <ul
-        className={cn(
-          "overflow-hidden rounded-xl bg-card shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04)]",
-          group.kind === "notweather" && "shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04),inset_3px_0_0_var(--color-notweather)]",
-          group.kind === "held" && "shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04),inset_3px_0_0_var(--color-held)]",
-        )}
-      >
-        {group.rows.map((row) => (
-          <FlightRowLink key={row.flight.id} row={row} runDate={runDate} expanded={expanded} />
-        ))}
-      </ul>
+      {expanded ? (
+        <FlightList group={group} runDate={runDate} expanded />
+      ) : (
+        // The routine groups (weather, operated) fold away: the ones that needed judgment lead.
+        <Details summary={`Show ${count(group.rows.length)} ${group.rows.length === 1 ? "flight" : "flights"}`} className="px-1">
+          <div className="-mx-1">
+            <FlightList group={group} runDate={runDate} expanded={false} />
+          </div>
+        </Details>
+      )}
     </section>
+  );
+}
+
+function FlightList({ group, runDate, expanded }: { group: Group; runDate: string; expanded: boolean }) {
+  return (
+    <ul
+      className={cn(
+        "overflow-hidden rounded-xl bg-card shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04)]",
+        group.kind === "notweather" && "shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04),inset_3px_0_0_var(--color-notweather)]",
+        group.kind === "held" && "shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04),inset_3px_0_0_var(--color-held)]",
+      )}
+    >
+      {group.rows.map((row) => (
+        <FlightRowLink key={row.flight.id} row={row} runDate={runDate} expanded={expanded} />
+      ))}
+    </ul>
   );
 }
 

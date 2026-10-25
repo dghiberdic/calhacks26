@@ -189,13 +189,14 @@ export function summaryText(summary: Record<string, unknown> | null | undefined,
   return typeof v === "string" && v.trim() ? v : null;
 }
 
-/** `statuses` ({owed: 171, needs_ruling: 1}) as pairs, largest first. */
+/** `statuses` ({owed: 171, needs_ruling: 1}, or [{status, count}] as the server sends it) as pairs, largest first. */
 export function statusesOf(summary: Record<string, unknown> | null | undefined): [string, number][] {
   const s = summary?.statuses;
-  if (!s || typeof s !== "object" || Array.isArray(s)) return [];
-  return Object.entries(s as Record<string, unknown>)
-    .filter((p): p is [string, number] => typeof p[1] === "number" && p[1] > 0)
-    .sort((a, b) => b[1] - a[1]);
+  if (!s || typeof s !== "object") return [];
+  const pairs: [string, unknown][] = Array.isArray(s)
+    ? s.filter((r): r is { status: string; count: unknown } => !!r && typeof r === "object" && typeof (r as { status?: unknown }).status === "string").map((r) => [r.status, r.count])
+    : Object.entries(s as Record<string, unknown>);
+  return pairs.filter((p): p is [string, number] => typeof p[1] === "number" && p[1] > 0).sort((a, b) => b[1] - a[1]);
 }
 
 /** `compensation_breakdown` ([{count, band_eur}]) as "158 × €600 + 14 × €300". */

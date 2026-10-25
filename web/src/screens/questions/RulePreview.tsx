@@ -2,7 +2,7 @@ import { Check, Loader2, X } from "lucide-react";
 import type { AnswerResponse, Question } from "@/api/types";
 import { MicroLabel, StatusChip } from "@/components/chips";
 import { ReplayFlips, ReplaySummary } from "@/components/journal";
-import { ErrorNote } from "@/components/kit";
+import { Details, ErrorNote } from "@/components/kit";
 import { GroundedQuote, RuleSentence, ruleRef, TIER_LABEL } from "@/components/rule-sentence";
 import { count, eur } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -56,24 +56,22 @@ export function RulePreview({
         {Object.keys(rule.grounding ?? {}).length ? <p className="mt-1.5 text-[12px] text-slate-500">Highlighted words ground the rule&rsquo;s values. Nothing in it comes from anywhere else.</p> : null}
       </div>
 
+      {/* Checks: one line when they all pass (the list behind Details), the failing ones spelled out when not. */}
       <div>
         <MicroLabel>Checks</MicroLabel>
-        <ul className="mt-2 grid gap-x-6 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-1">
-          {keys.map((k) => {
-            const ok = checks[k];
-            return (
-              <li key={k} className="flex items-start gap-2 text-[13px] leading-snug">
-                <span className={cn("mt-px inline-flex size-4 shrink-0 items-center justify-center rounded-full", ok ? "bg-navy-900 text-cloud-50" : "bg-held-wash text-held-ink")} aria-hidden="true">
-                  {ok ? <Check className="size-2.5" strokeWidth={3} /> : <X className="size-2.5" strokeWidth={3} />}
-                </span>
-                <span className={ok ? "text-slate-600" : "font-medium text-held-ink"}>
-                  {checkLabel(k)}
-                  <span className="sr-only">{ok ? ": passed" : ": failed"}</span>
-                </span>
-              </li>
-            );
-          })}
-        </ul>
+        {failing.length ? (
+          <CheckList keys={keys} checks={checks} className="mt-2" />
+        ) : (
+          <>
+            <p className="mt-1.5 flex items-center gap-2 text-[13.5px] text-navy-900">
+              <Tick ok />
+              All {count(keys.length)} checks pass.
+            </p>
+            <Details summary="Which checks" className="mt-1.5">
+              <CheckList keys={keys} checks={checks} />
+            </Details>
+          </>
+        )}
       </div>
 
       <div>
@@ -88,12 +86,14 @@ export function RulePreview({
             "Changes no past decision. It applies from the next case on."
           )}
         </p>
+        <ReplaySummary diff={flip} className="mt-1 text-[11.5px] text-slate-500" />
         {n ? (
-          <div className="mt-2 rounded-lg bg-card px-3.5 py-1 shadow-[0_0_0_1px_var(--color-cloud-200)]">
-            <ReplayFlips diff={flip} limit={4} className="[&_li>span:first-child]:whitespace-normal" />
-          </div>
+          <Details summary="Which decisions" className="mt-1.5">
+            <div className="rounded-lg bg-card px-3.5 py-1 shadow-[0_0_0_1px_var(--color-cloud-200)]">
+              <ReplayFlips diff={flip} limit={4} className="[&_li>span:first-child]:whitespace-normal" />
+            </div>
+          </Details>
         ) : null}
-        <ReplaySummary diff={flip} className="mt-2 text-[11.5px] text-slate-500" />
       </div>
 
       {error ? <ErrorNote error={error} /> : null}
@@ -117,5 +117,32 @@ export function RulePreview({
         </p>
       </div>
     </div>
+  );
+}
+
+function Tick({ ok }: { ok: boolean }) {
+  return (
+    <span className={cn("mt-px inline-flex size-4 shrink-0 items-center justify-center rounded-full", ok ? "bg-navy-900 text-cloud-50" : "bg-held-wash text-held-ink")} aria-hidden="true">
+      {ok ? <Check className="size-2.5" strokeWidth={3} /> : <X className="size-2.5" strokeWidth={3} />}
+    </span>
+  );
+}
+
+function CheckList({ keys, checks, className }: { keys: string[]; checks: Record<string, boolean>; className?: string }) {
+  return (
+    <ul className={cn("grid gap-x-6 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-1", className)}>
+      {keys.map((k) => {
+        const ok = checks[k];
+        return (
+          <li key={k} className="flex items-start gap-2 text-[13px] leading-snug">
+            <Tick ok={ok} />
+            <span className={ok ? "text-slate-600" : "font-medium text-held-ink"}>
+              {checkLabel(k)}
+              <span className="sr-only">{ok ? ": passed" : ": failed"}</span>
+            </span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
