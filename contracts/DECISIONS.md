@@ -177,3 +177,9 @@ Every AOG is logged before the window with no MEL relief, and both ends are calm
   - injection 06 no longer asserts the limitation period;
   - stub commits carry `recorded_at = at`;
   - the CFO fixture has `cohort: EIDW@2025-01-24`.
+
+## Blackout v1: external events (Iberian blackout, 28 Apr 2025)
+- **`World.events` is left out of dumps while empty** (`Field(exclude_if=...)`). A plain `= []` default would add `"events": []` to every World dump, which changes golden/world.json and the full world's canonical hash (the answer key's `world_hash`). With the exclusion, every existing world serialises and hashes byte-for-byte as before; a world with an event carries it.
+- **The 3 event DSL features live in `fields.EVENT_DSL_FEATURES`, not `DSL_FEATURES`.** llm/drafter.py builds its structured-output schema from `DSL_FEATURES`, and the recorded demo LLM cache keys hash that schema: growing it made `test_every_demo_scenario_is_served_from_its_recording[rule:Q-1]` miss offline. The event rule is templated from the Legal ruling (no LLM), so the drafter never needs them. The engine's allowlist is `fields.ALL_DSL_FEATURES` (41).
+- **Cause features `in_event_window` (+4.0) and `internal_cause_logged` (+4.0)** in calibration_schema.json and calibration_default.json are **hand-set priors, not fitted** (no labelled external-event history exists). `in_event_window` = 1.0 if either end is "in" an external-event window; `internal_cause_logged` = 1.0 if Northstar's own OCC/crew log records an internal cause (crew out of duty hours, aircraft out of position). data/calibration.json (fitted) stays valid: a model may use a subset of x-features.
+- Event window times come from tier-1 notices; an end that is an estimate says so in `EventAirportWindow.note` ("approximate: ...").
