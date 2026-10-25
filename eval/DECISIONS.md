@@ -76,3 +76,34 @@ The exact cause-and-extraordinary accuracy compares the initial output to final 
     - Known case-design issue: the `knock_on_return` cases put the return's STA inside the DUB window, so the engine calls it weather. The case is not "calm at both ends" as its docstring claims. It is reported, not fixed (world/ is not this lane).
 14. **`--check`** = manifest freshness (now also llm/ and the demo recordings) plus a byte-compare of `proof.json`/`NUMBERS.md` against a rebuild from the cache. It is fast, and smoke-3 can call it. `--check --full` also reruns everything and byte-compares. pytest does not fail on an engine change, so David's agents are not blocked.
 15. **Legacy shim.** `report_from_cache` reproduces an `eval-v1` cache with Filip's original equal-width bins, so the committed v1 proof stays reproducible until the single final regeneration (eval-v2).
+
+## Live Claude runs and the final proof (filip-agent/live-proof), 24–25 October 2026
+
+1. **`--check` never crashes.** A cache that predates the code (no `version`, `eval-v1`, or an `eval-v2` tag with an
+   older shape), a missing cache or a missing manifest is reported as "stale proof: regenerate" with exit 1. So is
+   `--from-cache` on such a cache. Only the first 10 changed inputs are listed.
+2. **Plain-Claude baseline, run live** (`eval.baseline --live`, one capped batch, 9/9 genuine `live-batch`
+   results, about $3.40). `max_tokens` went from 16,000 to 32,000 before the run, because adaptive thinking counts
+   toward it. One 2025-02-26 run used 25,591 output tokens and would have been cut off at 16,000. `max_tokens` is not
+   in the cache key.
+3. **Baseline scoring.** One function (`baseline.right`) scores plain Claude and StormCheck's initial held-out output
+   on the same flights. Per storm, the summary also carries StormCheck's preview € and the key's latent entitlement ×
+   expected ultimate claim rate. StormCheck's accuracy comes from the held-out replay, which on later storms already
+   applies earlier rulings; NUMBERS.md says so. `baseline.hash_identical` in proof.json is the Éowyn value (F9 spec);
+   every storm's value is in `baseline.storms` and the NUMBERS table. The result is reported whatever it is.
+4. **`test_proof`** asserted the pending state (`runs == 0`, `hash_identical is None`). It now asserts what makes a
+   published baseline legitimate: either nothing is claimed, or status complete with 3 runs, a boolean
+   `hash_identical` and 9 genuine `live-batch` records (`claude-opus-5-5`, a real message id, output tokens > 0).
+5. **Live Reader/Drafter recordings were not adopted.** Re-recorded live into a scratch dir (32 Reader + persona, 11
+   Drafter; under $1). With them swapped into `data/cache/demo/`, 20 llm tests fail, so the hand-written recordings
+   stay. The live outputs and fact-level comparisons are kept in `cache/live_recordings/` for reference:
+   - Reader: 23 of 29 documents give exactly the hand-written facts, and every kept span is verbatim. The 8 golden
+     documents also fail `provenance == "hand-written"`. Real differences: `techlog_ns31` and inj01 lose `station`
+     (live span "STN DUB" fails the verifier, so it is dropped), `defect_text` keeps a trailing period, `bot_mail_3a`
+     misses `crm.rights_email_sent`, the MCC forward quotes a different verbatim defect phrase, the OCC handover adds
+     two warning facts, and the CRM bot template quotes the refund sentence too.
+   - Drafter: every draft is `numbers_verified`, with no template fallback. It still differs from the tests: Q-1's rule
+     drops the `voucher.in_lieu` condition, Q-2's condition differs, the challenge reply omits "16:30Z", the explain
+     test fails, and the corrected rights notice lacks "That was wrong".
+   - Personas: Q-1 and Q-3 chose options other than the scripted ones.
+   - No test was changed to fit. No recorded file contains an API key (grep `sk-ant-`: 0 files).

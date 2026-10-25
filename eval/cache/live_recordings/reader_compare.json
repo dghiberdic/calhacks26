@@ -1,0 +1,347 @@
+{
+  "bot_mail_3a": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [
+      [
+        "coupon:NS31@2025-01-24:3A",
+        "crm.rights_email_sent",
+        "\"Your flight NS31 on 24 Jan was cancelled due to weather (extraordinary circumstances). No compensation is payable under EU261.\""
+      ]
+    ],
+    "only_live": [],
+    "same_facts": false
+  },
+  "bot_refund_3a": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "bsp_duplicate_26e": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "chargeback_5b": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "claim_14c": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "crm_14c_voucher": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "herminia_voucher_ns106_12d": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "inj01_aog_inside_window": {
+    "live_dropped_unverifiable": 1,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [
+      [
+        "aircraft:EI-NSH",
+        "aog.defect_text",
+        "\"BIRD STRIKE ENG 1 ON TAXI-IN. BORESCOPE REQD\""
+      ],
+      [
+        "aircraft:EI-NSH",
+        "aog.station",
+        "\"DUB\""
+      ]
+    ],
+    "only_live": [
+      [
+        "aircraft:EI-NSH",
+        "aog.defect_text",
+        "\"BIRD STRIKE ENG 1 ON TAXI-IN. BORESCOPE REQD.\""
+      ]
+    ],
+    "same_facts": false
+  },
+  "inj01_aog_inside_window_0805": {
+    "live_dropped_unverifiable": 0,
+    "live_error": "offline_miss",
+    "live_fallback": true,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "inj02_duplicate_direct_plus_agency": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "inj03_prompt_injection_email": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "inj04_chargeback_after_bot_refund": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "inj05_airbus_hidden_defect_notice": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "inj06_claim_after_limitation": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "inj07_challenge_storm_anyway": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "inj08_uk261_520_on_dub_lhr": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "mcc_ns31": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "messy_agency_letter": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "messy_call_note_14c": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "messy_crm_bot_template": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [
+      [
+        "source:SRC-EMAIL-CRM-BOT-TEMPLATE-NS31-2025-01-24T0602Z",
+        "crm.rights_email_sent",
+        "\"Your flight NS31 on 24 Jan was cancelled due to weather (extraordinary circumstances). No compensation is payable under EU261.\""
+      ]
+    ],
+    "only_live": [
+      [
+        "source:SRC-EMAIL-CRM-BOT-TEMPLATE-NS31-2025-01-24T0602Z",
+        "crm.rights_email_sent",
+        "\"Your flight NS31 on 24 Jan was cancelled due to weather (extraordinary circumstances). No compensation is payable under EU261. Your refund of EUR {{amount}} has been initiated.\""
+      ]
+    ],
+    "same_facts": false
+  },
+  "messy_hotel_invoice": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "messy_injection_email": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "messy_mcc_forward": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [
+      [
+        "aircraft:EI-NSB",
+        "aog.defect_text",
+        "\"edp leak eng2, beyond amm\""
+      ]
+    ],
+    "only_live": [
+      [
+        "aircraft:EI-NSB",
+        "aog.defect_text",
+        "\"EXT LEAK EDP CASE DRAIN PORT, EXCEEDS AMM LIMIT. EDP RPLCMT REQD.\""
+      ]
+    ],
+    "same_facts": false
+  },
+  "messy_met_eireann_forward": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "messy_occ_handover": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [
+      [
+        "source:SRC-EMAIL-OCC-HANDOVER-2025-01-24T1405Z",
+        "storm.orange_warning",
+        "\"til 16:00\""
+      ],
+      [
+        "source:SRC-EMAIL-OCC-HANDOVER-2025-01-24T1405Z",
+        "storm.red_warning",
+        "\"til 11:00\""
+      ]
+    ],
+    "same_facts": false
+  },
+  "occ_eowyn": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "occ_herminia": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "refund_voucher_11d": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "spares_ns117": {
+    "live_dropped_unverifiable": 0,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [],
+    "only_live": [],
+    "same_facts": true
+  },
+  "techlog_ns31": {
+    "live_dropped_unverifiable": 1,
+    "live_error": null,
+    "live_fallback": false,
+    "non_verbatim_spans": [],
+    "only_hand_written": [
+      [
+        "aircraft:EI-NSB",
+        "aog.defect_text",
+        "\"HYD FLUID ENG 2 LWR COWL. GND RUN: ECAM HYD Y ENG 2 PUMP LO PR. EXT LEAK EDP CASE DRAIN PORT, EXCEEDS AMM LIMIT. EDP RPLCMT REQD\""
+      ],
+      [
+        "aircraft:EI-NSB",
+        "aog.station",
+        "\"DUB\""
+      ]
+    ],
+    "only_live": [
+      [
+        "aircraft:EI-NSB",
+        "aog.defect_text",
+        "\"HYD FLUID ENG 2 LWR COWL. GND RUN: ECAM HYD Y ENG 2 PUMP LO PR. EXT LEAK EDP CASE DRAIN PORT, EXCEEDS AMM LIMIT. EDP RPLCMT REQD.\""
+      ]
+    ],
+    "same_facts": false
+  }
+}
