@@ -142,8 +142,9 @@ def _baseline_headline(base: dict, storms: dict) -> str:
             f"{_storm(first)} it scored {' / '.join(_pct(a) for a in s['cause_accuracy'])} and estimated "
             f"{_eur(s['liability_eur'])}, `hash_identical={str(s['hash_identical']).lower()}`. StormCheck on the "
             f"same flights: {_pct(s['stormcheck_accuracy'])}, {_eur(sc.get('liability_eur', []))}, "
-            f"`hash_identical={str(sc.get('hash_identical')).lower()}`. Every storm is in “Plain Claude vs "
-            "StormCheck” below.")
+            f"`hash_identical={str(sc.get('hash_identical')).lower()}`. The answer key's latent entitlement × "
+            f"expected ultimate claim rate is €{s['key_ultimate_expected_eur']:,.0f}; StormCheck's initial estimate "
+            "accrues the flights it holds for a ruling. Every storm is in “Plain Claude vs StormCheck” below.")
 
 
 def _baseline_section(base: dict, storms: dict) -> list[str]:
