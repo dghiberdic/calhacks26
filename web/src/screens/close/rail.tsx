@@ -6,16 +6,15 @@ import { api } from "@/api/client";
 import { invalidateAfterWrite, useInvariants } from "@/api/queries";
 import type { InvariantResult, MonthEndResponse } from "@/api/types";
 import { MicroLabel, StatusChip, TiesChip } from "@/components/chips";
+import { Explain } from "@/components/explain";
 import { Empty, ErrorNote, Shimmer } from "@/components/kit";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { count, eur, periodLabel } from "@/lib/format";
 import { stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
-import { cohortName, liabilityChange } from "./model";
+import { effectOn2140, liabilityChange, METHOD_NAME, monthEndReason, releaseProposals } from "./model";
 import { Denied } from "./ui";
-
-const METHOD: Record<string, string> = { bf: "Bornhuetter-Ferguson", expected_loss: "Expected loss", chain_ladder: "Chain ladder" };
 
 /** A rail block after the first: ruled above when stacked, ruled at the left when side by side. */
 const BLOCK = "mx-5 mt-4 border-t border-cloud-100 pt-4 md:mx-0 md:mt-0 md:border-l md:border-t-0 md:px-5 md:pt-0 min-[87.5rem]:mx-5 min-[87.5rem]:mt-4 min-[87.5rem]:border-l-0 min-[87.5rem]:border-t min-[87.5rem]:px-0 min-[87.5rem]:pt-4";
@@ -107,7 +106,7 @@ export function CloseRail({
               <MonthEndResult key="result" res={result} />
             ) : (
               <motion.p key="what" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[13px] leading-relaxed text-slate-500">
-                Re-estimates every cohort on its claim curve and drafts the change in estimate for approval: prospective, per IAS 8.36.
+                Re-estimates every storm on its claim curve and drafts the <Explain term="change-in-estimate">change in estimate</Explain> for approval.
               </motion.p>
             )}
           </AnimatePresence>
@@ -129,11 +128,13 @@ export function CloseRail({
         <div className={BLOCK}>
           {locked ? (
             <p className="text-[13px] leading-relaxed text-slate-500">
-              <span className="font-medium text-navy-900">{label} is locked.</span> Nothing is written to it again; anything found later is corrected in the open period.
+              <span className="font-medium text-navy-900">{label} is locked.</span> Nothing is written to it again; anything found later is corrected in the open month.
             </p>
           ) : (
             <>
-              <p className="text-[13px] leading-relaxed text-slate-500">Lock {label} once it ties. Locked periods are never written; anything found later is corrected in the open period.</p>
+              <p className="text-[13px] leading-relaxed text-slate-500">
+                Lock {label} once it ties. A <Explain term="period-lock">locked month</Explain> is never written again; anything found later is corrected in the open month.
+              </p>
               {canAct ? (
                 <Button variant="outline" onClick={() => setConfirm(true)} disabled={busy !== null} className="mt-3 h-9 w-full rounded-lg text-[13.5px]" data-testid="lock-period">
                   <Lock className="size-3.5" aria-hidden="true" />
@@ -158,7 +159,7 @@ export function CloseRail({
           <DialogHeader>
             <DialogTitle className="text-[16px] font-semibold text-navy-900">Lock {label}?</DialogTitle>
             <DialogDescription className="text-[13.5px] leading-relaxed text-slate-500">
-              Nothing is written to a locked period again. A later claim or ruling becomes a change in estimate (IAS 8.36) in the open period; evidence that was available and missed becomes a prior-period error, corrected in current period (immaterial).
+              Nothing is written to {label} again. A later claim or ruling becomes a change in estimate (IAS 8.36) in the open month; evidence we had and missed becomes a prior-period error, corrected in current period (immaterial).
             </DialogDescription>
             {pendingDrafts > 0 ? (
               <p className="rounded-lg bg-cloud-50 px-3 py-2 text-[13px] leading-snug text-navy-900 shadow-[inset_0_0_0_1px_var(--color-cloud-200)]">
@@ -213,11 +214,10 @@ function ReadyToLock({ monthEnd, pendingDrafts, tiesToGl }: { monthEnd: boolean;
   );
 }
 
-/** "+€3,990 change in estimate", read off what the month-end returned. */
+/** "+€3,990 change in estimate", read off what the month-end returned, with why it moved. */
 function MonthEndResult({ res }: { res: MonthEndResponse }) {
   const change = liabilityChange(res);
   const est = res.estimate;
-  const cohortRow = est ? res.rollforward?.rows.find((r) => r.cohort === est.cohort) : undefined;
   const drafted = res.entries?.filter((e) => e.status === "draft").length ?? 0;
   return (
     <motion.div key="result" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }} data-testid="month-end-result">
@@ -227,24 +227,25 @@ function MonthEndResult({ res }: { res: MonthEndResponse }) {
         <span className="text-[13.5px] text-navy-900">change in estimate (IAS 8.36)</span>
       </p>
       <p className="mt-1 text-[12.5px] text-slate-500">Drafted, pending approval.</p>
-      <ul className="mt-2.5 flex flex-col gap-1 text-[13px] leading-snug text-slate-600">
+      <p className="mt-2.5 text-[13px] leading-relaxed text-slate-600">
+        {monthEndReason(est?.actual_vs_expected, change)}
         {est ? (
-          <li>
-            {METHOD[est.selected] ?? est.selected} selected
-            {est.actual_vs_expected !== null ? <> · A/E {est.actual_vs_expected.toFixed(2)}</> : null}
-          </li>
+          <>
+            {" "}
+            Method: <Explain term="bornhuetter-ferguson">{METHOD_NAME[est.selected] ?? est.selected}</Explain>.
+          </>
         ) : null}
-        {cohortRow ? (
-          <li>
-            {cohortName(cohortRow.cohort, est?.cohort === cohortRow.cohort ? est.segment : null, stormName)} closes at {eur(cohortRow.closing_cents)}
-          </li>
-        ) : null}
-        {res.rollforward ? (
-          <li className="flex flex-wrap items-center gap-2">
-            2140 closes at {eur(res.rollforward.closing_total_cents)} <TiesChip ok={res.rollforward.ties_to_gl} />
-          </li>
-        ) : null}
-      </ul>
+      </p>
+      {releaseProposals(res.entries).map((je) => (
+        <p key={je.id} className="mt-2 text-[13px] leading-relaxed text-slate-600">
+          Also proposed: reduce {stormName(je.estimate_ref!.slice("release:".length)) ?? "a cohort"}'s {eur(-effectOn2140(je))} to nil. It stays in 2140 unless the Controller approves it.
+        </p>
+      ))}
+      {res.rollforward ? (
+        <p className="mt-2 flex flex-wrap items-center gap-2 text-[13px] text-slate-600">
+          2140 closes at {eur(res.rollforward.closing_total_cents)} <TiesChip ok={res.rollforward.ties_to_gl} />
+        </p>
+      ) : null}
       {drafted ? (
         <a href="#journal" className="mt-2.5 inline-flex items-center gap-1 text-[12.5px] font-medium text-metar-ink hover:underline">
           {drafted === 1 ? "See the drafted entry" : `See the ${count(drafted)} drafted entries`} <ArrowDown className="size-3.5" aria-hidden="true" />
@@ -254,22 +255,15 @@ function MonthEndResult({ res }: { res: MonthEndResponse }) {
   );
 }
 
-/** The close checklist, checked on every read. ok uses the one green; a failure is said plainly, with its detail, in ink. */
-export function InvariantsPanel() {
+/** The close checklist, recomputed from the journal on every read. ok uses the one green; a failure is said plainly, with its detail, in ink. */
+export function InvariantsList() {
   const q = useInvariants();
   const items = q.data ?? [];
-  const failing = items.filter((i) => !i.ok).length;
   return (
-    <section aria-labelledby="invariants-title" className="rounded-xl bg-card px-5 pb-3 pt-4 shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04)]">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <div>
-          <MicroLabel>Invariants · checked on every read</MicroLabel>
-          <h2 id="invariants-title" className="mt-1 text-[15.5px] font-semibold text-navy-900">
-            {q.data && items.length ? (failing ? `${count(failing)} of ${count(items.length)} failing` : `All ${count(items.length)} hold`) : "Invariants"}
-          </h2>
-        </div>
-        <p className="text-[12.5px] text-slate-500">The books are re-checked from the journal each time this page reads them.</p>
-      </div>
+    <div className="px-5 pb-3 pt-3">
+      <p className="text-[13px] leading-relaxed text-slate-500">
+        Rules the books must always obey, recomputed from the journal every time this page reads it. They are code, not settings.
+      </p>
       {q.isError ? (
         <ErrorNote error={q.error} onRetry={() => void q.refetch()} className="mt-3 mb-1" />
       ) : !q.data ? (
@@ -287,7 +281,7 @@ export function InvariantsPanel() {
           ))}
         </ul>
       )}
-    </section>
+    </div>
   );
 }
 
