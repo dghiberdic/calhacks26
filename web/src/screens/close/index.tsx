@@ -10,7 +10,7 @@ import type { CurveSegment, EstimateCard, MonthEndResponse, Role, Rollforward } 
 import { useSession } from "@/app/session";
 import { MicroLabel, TiesChip } from "@/components/chips";
 import { Explain } from "@/components/explain";
-import { Details, Empty, ErrorNote, PageHeader, RoleAvatar, Shimmer } from "@/components/kit";
+import { Details, DetailsTitle, Empty, ErrorNote, PageHeader, RoleAvatar, Shimmer } from "@/components/kit";
 import { periodLabel, ROLE_LABEL } from "@/lib/format";
 import { HERO_STORM, stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
@@ -21,7 +21,7 @@ import { EstimateCardView } from "./estimate";
 import { bridgeToGl, closePeriods, invariantsSummary, isSegment, journalTies, lockedPeriods, METHOD_NAME, rollforwardCsv, rollforwardTotals, SEGMENTS } from "./model";
 import { CloseRail, InvariantsList } from "./rail";
 import { FootingNotes, RollforwardTable } from "./rollforward";
-import { DetailsTitle, SectionHead, Segmented } from "./ui";
+import { SectionHead, Segmented } from "./ui";
 
 /** February runs the BF true-up: the default when nothing is pending. */
 const DEFAULT_PERIOD = "2025-02";

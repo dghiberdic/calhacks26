@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { count, duration, eur, pct, routedTo, shortId, zulu, zuluDay } from "./format";
+import { count, duration, eur, flightLabel, pct, routedTo, shortId, zulu, zuluDay } from "./format";
 
 describe("format", () => {
   it("writes cents as euros, negatives in parentheses", () => {
@@ -20,6 +20,8 @@ describe("format", () => {
   it("shortens IDs and routes", () => {
     expect(shortId("NS31@2025-01-24")).toBe("NS31");
     expect(shortId("NS31@2025-01-24:14C")).toBe("NS31 · 14C");
+    expect(flightLabel("NS31@2025-01-24")).toBe("NS31 · 24 Jan");
+    expect(flightLabel("NS31@2025-01-24:14C")).toBe("NS31 · 24 Jan · 14C");
     expect(routedTo("claims_lead")).toBe("Routed to the Claims Lead");
     expect(duration(90)).toBe("1 h 30 min");
   });

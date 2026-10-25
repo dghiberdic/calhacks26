@@ -61,6 +61,19 @@ export function shortId(id: string | null | undefined): string {
   return coupon && /^\d/.test(coupon) ? `${flight} · ${coupon}` : flight;
 }
 
+/** "2025-01-24" → "24 Jan". */
+export function dayMonth(isoDate: string | null | undefined): string {
+  return longDate(isoDate).replace(/ \d{4}$/, "");
+}
+
+/** "NS31@2025-01-24" → "NS31 · 24 Jan"; "NS31@2025-01-24:14C" → "NS31 · 24 Jan · 14C". */
+export function flightLabel(id: string | null | undefined): string {
+  if (!id) return "—";
+  const [head, coupon] = id.split(":");
+  const [flight, date] = head.split("@");
+  return [flight, date ? dayMonth(date) : "", coupon && /^\d/.test(coupon) ? coupon : ""].filter(Boolean).join(" · ");
+}
+
 /** "2025-01-24" part of an ID like "NS31@2025-01-24". */
 export const idDate = (id: string) => id.split("@")[1]?.slice(0, 10) ?? "";
 

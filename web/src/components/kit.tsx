@@ -144,6 +144,16 @@ export function Details({ summary = "Details", children, className, defaultOpen,
   );
 }
 
+/** A Details summary that reads as a panel heading: the title in ink, a quiet note after it (the bare summary is a small link). */
+export function DetailsTitle({ title, note }: { title: string; note?: string | null }) {
+  return (
+    <span className="text-[14.5px]">
+      <span className="font-semibold text-navy-900">{title}</span>
+      {note ? <span className="font-normal text-slate-500"> · {note}</span> : null}
+    </span>
+  );
+}
+
 /** "↻ Next storm: 31 voucher cases settled, ruling cited" footers. */
 export function LoopFooter({ children, className }: { children: ReactNode; className?: string }) {
   return (

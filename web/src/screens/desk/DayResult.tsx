@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { airportByIcao } from "./airports";
 import { dayLabel } from "./dates";
 import { flightOf, useDesk } from "./state";
-import { collapseRuns } from "@/screens/trace/model";
+import { collapseRuns } from "@/lib/feed";
 import { useBringIntoView } from "./useBringIntoView";
 import { isOutage, windowChip } from "./windows";
 

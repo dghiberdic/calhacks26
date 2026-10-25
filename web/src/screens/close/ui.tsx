@@ -48,19 +48,6 @@ export function Segmented<T extends string>({
   );
 }
 
-/**
- * A Details summary that reads as a panel heading: the title in ink, a quiet note after it. Local to the
- * finance screens; the shared Details summary is a small link.
- */
-export function DetailsTitle({ title, note }: { title: string; note?: string | null }) {
-  return (
-    <span className="text-[14.5px]">
-      <span className="font-semibold text-navy-900">{title}</span>
-      {note ? <span className="font-normal text-slate-500"> · {note}</span> : null}
-    </span>
-  );
-}
-
 /** Nil in an accounts table: an en dash, quiet. */
 export function Nil() {
   return (
