@@ -86,7 +86,7 @@ def run_injections(fuzz: list[tuple[str, str]] | None = None) -> tuple[dict[str,
                 res = reader.read(src, ReaderContext(**(ctx or {})))
                 if fid not in before:
                     before[fid] = engine.decide(fid, [], rules, KNOWN_AT)
-                after = engine.decide(fid, res.facts, rules, KNOWN_AT)
+                after = engine.decide(fid, res.facts, rules, KNOWN_AT, sources=[src])   # the Reader's source is known
                 changed = _key(before[fid])[:2] != _key(after)[:2]
                 row.update(facts=len(res.facts), dropped=res.dropped_unverifiable, fallback=res.fallback_used,
                            fields=sorted({f.field for f in res.facts}), before="/".join(_key(before[fid])),

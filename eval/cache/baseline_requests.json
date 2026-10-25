@@ -1,0 +1,142 @@
+{
+  "days": [
+    "2025-01-24",
+    "2025-01-26",
+    "2025-02-26"
+  ],
+  "effort": "medium",
+  "inputs": {
+    "2025-01-24": {
+      "chars": 330045,
+      "input_sha256": "f9a0e58eb0bc1dac38d2b9df2eb2c6877b4a3847d727c25a1c8d0c1db8a7fe29",
+      "targets": [
+        "NS100@2025-01-24",
+        "NS101@2025-01-24",
+        "NS102@2025-01-24",
+        "NS103@2025-01-24",
+        "NS104@2025-01-24",
+        "NS105@2025-01-24",
+        "NS106@2025-01-24",
+        "NS107@2025-01-24",
+        "NS108@2025-01-24",
+        "NS109@2025-01-24",
+        "NS110@2025-01-24",
+        "NS111@2025-01-24",
+        "NS112@2025-01-24",
+        "NS113@2025-01-24",
+        "NS114@2025-01-24",
+        "NS115@2025-01-24",
+        "NS116@2025-01-24",
+        "NS117@2025-01-24",
+        "NS118@2025-01-24",
+        "NS20@2025-01-23",
+        "NS21@2025-01-24",
+        "NS30@2025-01-23",
+        "NS31@2025-01-24",
+        "NS40@2025-01-23",
+        "NS41@2025-01-24",
+        "NS50@2025-01-23",
+        "NS51@2025-01-24"
+      ]
+    },
+    "2025-01-26": {
+      "chars": 109416,
+      "input_sha256": "a1c6fcb6bd7f9c9aa31c0f4f621832e5f2f52f3c5a5e32487a295e32d6ea8076",
+      "targets": [
+        "NS106@2025-01-26",
+        "NS110@2025-01-26",
+        "NS114@2025-01-26",
+        "NS30@2025-01-25"
+      ]
+    },
+    "2025-02-26": {
+      "chars": 247075,
+      "input_sha256": "3694d41870eb079ba6242af21bfadd9799accb97ad18ef62b2259ac5532dc8e1",
+      "targets": [
+        "NS113@2025-02-26",
+        "NS120@2025-02-26",
+        "NS121@2025-02-26",
+        "NS122@2025-02-26",
+        "NS123@2025-02-26",
+        "NS132@2025-02-26",
+        "NS133@2025-02-26",
+        "NS134@2025-02-26",
+        "NS135@2025-02-26",
+        "NS151@2025-02-26",
+        "NS153@2025-02-26",
+        "NS164@2025-02-26",
+        "NS166@2025-02-26",
+        "NS167@2025-02-26"
+      ]
+    }
+  },
+  "model": "claude-opus-5-5",
+  "phase": "initial estimate before human rulings",
+  "pii": "none: no PNR, pax_ref, claim/email/CRM free text or pii-tagged source",
+  "requests": [
+    {
+      "custom_id": "plain-2025-01-24-run-1",
+      "day": "2025-01-24",
+      "input_sha256": "f9a0e58eb0bc1dac38d2b9df2eb2c6877b4a3847d727c25a1c8d0c1db8a7fe29",
+      "prompt_version": "plain-baseline-v2-run-1",
+      "run": 1
+    },
+    {
+      "custom_id": "plain-2025-01-24-run-2",
+      "day": "2025-01-24",
+      "input_sha256": "f9a0e58eb0bc1dac38d2b9df2eb2c6877b4a3847d727c25a1c8d0c1db8a7fe29",
+      "prompt_version": "plain-baseline-v2-run-2",
+      "run": 2
+    },
+    {
+      "custom_id": "plain-2025-01-24-run-3",
+      "day": "2025-01-24",
+      "input_sha256": "f9a0e58eb0bc1dac38d2b9df2eb2c6877b4a3847d727c25a1c8d0c1db8a7fe29",
+      "prompt_version": "plain-baseline-v2-run-3",
+      "run": 3
+    },
+    {
+      "custom_id": "plain-2025-01-26-run-1",
+      "day": "2025-01-26",
+      "input_sha256": "a1c6fcb6bd7f9c9aa31c0f4f621832e5f2f52f3c5a5e32487a295e32d6ea8076",
+      "prompt_version": "plain-baseline-v2-run-1",
+      "run": 1
+    },
+    {
+      "custom_id": "plain-2025-01-26-run-2",
+      "day": "2025-01-26",
+      "input_sha256": "a1c6fcb6bd7f9c9aa31c0f4f621832e5f2f52f3c5a5e32487a295e32d6ea8076",
+      "prompt_version": "plain-baseline-v2-run-2",
+      "run": 2
+    },
+    {
+      "custom_id": "plain-2025-01-26-run-3",
+      "day": "2025-01-26",
+      "input_sha256": "a1c6fcb6bd7f9c9aa31c0f4f621832e5f2f52f3c5a5e32487a295e32d6ea8076",
+      "prompt_version": "plain-baseline-v2-run-3",
+      "run": 3
+    },
+    {
+      "custom_id": "plain-2025-02-26-run-1",
+      "day": "2025-02-26",
+      "input_sha256": "3694d41870eb079ba6242af21bfadd9799accb97ad18ef62b2259ac5532dc8e1",
+      "prompt_version": "plain-baseline-v2-run-1",
+      "run": 1
+    },
+    {
+      "custom_id": "plain-2025-02-26-run-2",
+      "day": "2025-02-26",
+      "input_sha256": "3694d41870eb079ba6242af21bfadd9799accb97ad18ef62b2259ac5532dc8e1",
+      "prompt_version": "plain-baseline-v2-run-2",
+      "run": 2
+    },
+    {
+      "custom_id": "plain-2025-02-26-run-3",
+      "day": "2025-02-26",
+      "input_sha256": "3694d41870eb079ba6242af21bfadd9799accb97ad18ef62b2259ac5532dc8e1",
+      "prompt_version": "plain-baseline-v2-run-3",
+      "run": 3
+    }
+  ],
+  "runs": 3
+}
