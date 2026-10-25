@@ -85,7 +85,9 @@
       "sources_disagree",
       "precedent_count",
       "knock_on",
-      "concurrent_causes"
+      "concurrent_causes",
+      "in_event_window",
+      "internal_cause_logged"
     ],
     "voucher": [
       "in_lieu",
@@ -132,6 +134,8 @@
     "after_limitation": "1.0 if received after the limitation date",
     "regime_uk261": "1.0 if the claim cites UK261",
     "age_months": "months between the flight and the claim",
-    "concurrent_causes": "1.0 when the finding is concurrent causes (a decisive no-MEL-relief AOG and the flight in a storm window); aog_inside_window keeps its literal meaning"
+    "concurrent_causes": "1.0 when the finding is concurrent causes (a decisive no-MEL-relief AOG and the flight in a storm window); aog_inside_window keeps its literal meaning",
+    "in_event_window": "1.0 if either end is \"in\" an external-event window (e.g. a grid outage), else 0.0",
+    "internal_cause_logged": "1.0 if the carrier's own OCC/crew log records an internal cause for the flight (crew out of duty hours, aircraft out of position)"
   }
 }

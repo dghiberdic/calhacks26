@@ -20,7 +20,8 @@ def test_schema_lists_every_confidence_kind_and_encodes_every_feature():
     assert feats <= set(s["x-encoding"]), feats - set(s["x-encoding"])
     assert s["x-features"]["cause"] == ["in_window_dep", "in_window_arr", "window_margin_h", "aog_before_window",
                                         "aog_inside_window", "root_cause_internal", "sources_disagree",
-                                        "precedent_count", "knock_on", "concurrent_causes"]   # CONTRACTS §6 (+D0b-6)
+                                        "precedent_count", "knock_on", "concurrent_causes",   # CONTRACTS §6 (+D0b-6)
+                                        "in_event_window", "internal_cause_logged"]           # + blackout v1
     assert s["x-features"]["voucher"] == ["in_lieu", "signed", "sources_disagree", "precedent_count"]
 
 

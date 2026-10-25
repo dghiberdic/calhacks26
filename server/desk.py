@@ -68,8 +68,14 @@ def metar_source(icao: str, day: date) -> str:
 def generate_day(rt: "Runtime", icao: str, day: date, seed: int = 0) -> World:
     """WorldAPI.generate_day, or the server's adapter over `world.generator.generate_world` for one day."""
     gen = rt.impls.generate_day
+    err = rt.impls.world_error
     if gen is not None:
-        return call(gen, icao, day, seed=seed)
+        try:
+            return call(gen, icao, day, seed=seed)
+        except Exception as exc:
+            if err is not None and isinstance(exc, err):
+                raise DeskError(exc.code, exc.message) from exc
+            raise
     with _CACHE_LOCK:
         if day in _CACHE:
             _CACHE.move_to_end(day)
@@ -84,7 +90,6 @@ def generate_day(rt: "Runtime", icao: str, day: date, seed: int = 0) -> World:
         wday = days.WorldDay(day, "storm" if storm else "background", days.split_of(day), summary)
         world = generator.generate_world(seed, [wday]).world
     except Exception as exc:
-        err = rt.impls.world_error
         if err is not None and isinstance(exc, err):
             raise DeskError(exc.code, exc.message) from exc
         raise DeskError("no_metar", f"There is no usable weather for {day.isoformat()}: the METAR for that day "

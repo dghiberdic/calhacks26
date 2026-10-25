@@ -59,5 +59,7 @@
   "vouchers_outstanding_cents": 744000,
   "care_accrued_cents": 22700000,
   "care_invoiced_cents": 0,
-  "cohort": "EIDW@2025-01-24"
+  "cohort": "EIDW@2025-01-24",
+  "refund_vouchers_outstanding_cents": 0,
+  "compensation_vouchers_outstanding_cents": 0
 }

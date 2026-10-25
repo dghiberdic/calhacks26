@@ -255,7 +255,9 @@
       "built_from": 5,
       "ties_to": [
         "2140"
-      ]
+      ],
+      "approver_role": null,
+      "period_locked": false
     }
   ],
   "timeline": [
