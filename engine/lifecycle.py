@@ -40,7 +40,7 @@ from contracts.models import (
 )
 from engine import controls, dsl, eu261
 from engine import rules as rb
-from engine.case import overlay_facts, stations_for
+from engine.case import EVENT_KIND_LABEL, overlay_facts, stations_for
 from engine.engine import Engine
 from engine.questions import cohort_age_months, cohort_event_date
 from engine.trace import TraceStore
@@ -48,7 +48,8 @@ from engine.trace import TraceStore
 PREFIX = {Role.CLAIMS_LEAD: "R-CL", Role.LEGAL: "R-LEG", Role.CONTROLLER: "R-CTL"}
 NO_RULE_PATTERNS = frozenset({"window_unknown", "weather_code_contradicted", "cause_unknown", "technical_unverified",
                               "crew", "atc", "challenge_new_fact", "unresolved_subject", "occ_code_in_window",
-                              "airport_restriction", "aog_unverified"})
+                              "airport_restriction", "aog_unverified", "internal_cause_logged"})
+TEMPLATE_ONLY = frozenset({"external_event_window"})   # templated from the ruling's chosen option, never LLM-drafted
 WIDEN_QUESTION = {
     "cohort": "All storm cohorts?",
     "flight.departs_eu": "Also flights arriving into the EU (e.g. BOS→DUB)?",
@@ -120,6 +121,19 @@ def template_rule(ruling: Ruling, question: Question, case: Mapping[str, Any]) -
         keep = bool(re.search(r"\btail\b|\bkeep\b", text, re.I))
         return Rule(**{**base, "valid_from": ruling.at}, kind="release", scope={"cohort": case.get("cohort")},
                     condition={"all": clauses}, action=RuleAction.KEEP_TAIL if keep else RuleAction.DENY_RELEASE)
+    if p == "external_event_window":
+        # Legal's answer to "is the <event> extraordinary inside its outage window?": one rule for the event kind
+        # and both ends' event-window positions; "decide flight by flight" makes no rule
+        if re.search(r"\bflight by flight\b|\bcase by case\b", text, re.I):
+            return None
+        neg = _says_not_extraordinary(text)
+        kind = str(case.get("event.kind") or "grid_outage")
+        label = EVENT_KIND_LABEL.get(kind, kind.replace("_", " ")).lower()
+        inside = [{"f": f"flight.in_event_window_{end}", "op": "eq", "v": "in"} for end in ("dep", "arr")]
+        return Rule(**{**base, "title": f"{'Not extraordinary' if neg else 'Extraordinary'} inside the {label} window"},
+                    kind="cause", scope={},
+                    condition={"all": [{"f": "event.kind", "op": "eq", "v": kind}, {"any": inside}]},
+                    action=RuleAction.SET_NOT_EXTRAORDINARY if neg else RuleAction.SET_EXTRAORDINARY)
     if p in ("concurrent_causes", "external_event", "new_legal_pattern", "rule_conflict"):
         keys = {"concurrent_causes": ["aog.inside_window", "aog.root_cause_internal"],
                 "external_event": ["aog.root_cause_internal", "aog.before_window"],
@@ -276,7 +290,7 @@ class Lifecycle:
     def propose(self, ruling: Ruling, question: Question, at: datetime) -> RuleProposal | None:
         case = self.case_features(question, at)
         draft = None
-        if self.drafter is not None:
+        if self.drafter is not None and question.pattern not in TEMPLATE_ONLY:
             facts = [f for f in self.trace.facts_known_at(at)
                      if any(f.subject.endswith(r) for r in question.case_refs)]
             try:

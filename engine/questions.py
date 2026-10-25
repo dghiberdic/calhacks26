@@ -43,6 +43,7 @@ REASON_TAG = {
     "cohort_release": "release-proposal",
     "occ_code_in_window": "sources-disagree", "aog_unverified": "sources-disagree",
     "airport_restriction": "out-of-scope",
+    "external_event_window": "no-precedent", "internal_cause_logged": "out-of-scope",
 }
 
 TITLES = {
@@ -59,6 +60,10 @@ TITLES = {
                            "which was it?"),
     "airport_restriction": "Confirm the security, customs or airport restriction for these cancellations?",
     "aog_unverified": "An AOG is claimed but no tech-log entry confirms it: verify before the cause is decided?",
+    # {event} = the external event's title, from the decision's event.window evidence
+    "external_event_window": ("Is the {event} an extraordinary circumstance for flights scheduled inside its outage "
+                              "window?"),
+    "internal_cause_logged": "Confirm the internal cause the OCC log records for these cancellations?",
 }
 
 OPTIONS = {
@@ -70,6 +75,7 @@ OPTIONS = {
     "concurrent_causes": ["The storm governs: extraordinary", "The defect governs: not extraordinary",
                           "Decide flight by flight"],
     "external_event": ["Extraordinary (outside the carrier's control)", "Not extraordinary", "Decide flight by flight"],
+    "external_event_window": ["Extraordinary inside the outage window", "Not extraordinary", "Decide flight by flight"],
 }
 OPS_OPTIONS = ["Confirm weather", "Technical: attach the tech-log entry", "Other cause: attach the log"]
 
@@ -78,7 +84,23 @@ RECOMMENDS = {
                         "passengers were offered the earliest reroute on any carrier (C-74/19)."),
     "concurrent_causes": "Ask Legal which cause governs; hold compensation until then (IFRS 15.56 constraint).",
     "external_event": "Ask Legal whether the external event is extraordinary (C-549/07).",
+    "external_event_window": ("Ask Legal whether the {event} is extraordinary for flights inside its outage window "
+                              "(C-549/07). Care and re-routing are owed either way (C-12/11 McDonagh)."),
 }
+WHY = {   # pattern-specific "why flagged", over the reason tag's
+    "external_event_window": ("No precedent: the engine has never seen this kind of event, so it asks rather than "
+                              "guess (C-549/07: an event not inherent in normal activity and beyond the carrier's "
+                              "control)."),
+}
+
+
+def event_title(decisions: Iterable[FlightDecision]) -> str:
+    """The external event named in the decisions' ``event.window`` evidence ('Iberian Peninsula blackout')."""
+    for d in decisions:
+        for e in d.evidence:
+            if e.field == "event.window" and isinstance(e.value, dict) and e.value.get("title"):
+                return str(e.value["title"])
+    return "external event"
 
 
 def remind_at(asked_at: datetime) -> datetime:
@@ -132,11 +154,14 @@ def flight_questions(decisions: Sequence[FlightDecision], ents: Sequence[Entitle
             "out-of-scope": "The evidence needed to decide is missing.",
             "new-legal-pattern": "A new legal pattern beyond the precedents on file.",
         }[tag]
+        why = WHY.get(pattern, why)
         options = OPTIONS.get(pattern, OPS_OPTIONS)
-        recommends = RECOMMENDS.get(pattern, "Ops to confirm the cause from the logs.")
+        event = event_title(ds)
+        recommends = RECOMMENDS.get(pattern, "Ops to confirm the cause from the logs.").format(event=event)
+        title = TITLES[pattern].format(event=event) if pattern in TITLES else f"How should {_numbers(refs)} be decided?"
         out.append(Question(
             id=qid, case_refs=refs, pattern=pattern, routed_to=ds[0].routed_to or Role.OPS, asked_at=asked_at,
-            title=TITLES.get(pattern, f"How should {_numbers(refs)} be decided?"),
+            title=title,
             found=found, why_flagged=why, recommends=recommends, recommended_option=options[0], options=options,
             evidence=[e for d in ds for e in d.evidence if e.role != "context"][:12],
             confidence=weakest.confidence, reason_tag=tag, holds=refs,

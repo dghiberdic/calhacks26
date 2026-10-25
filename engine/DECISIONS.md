@@ -282,3 +282,29 @@ The checks themselves are code in `controls.py`:
 - **A METAR citation without a gust now cites `metar.sknt`** (the value is the sustained wind). Before, it cited `metar.gust_kt` with the sustained value, which has no matching fact.
 - Claim and cohort evidence now name their real documents: `SRC-<claim id>`, and the finance source that holds the cohort line, replacing `SRC-CLAIM-…` and `SRC-OB-…`. CRM evidence names `SRC-<event id>`.
 - Checked on golden after the change: `expected/` acceptance passes, `make verify` reports 414 commits with replay identical, and `make smoke-1` passes 12/12.
+
+## Blackout v1 · external events (`World.events`, the Iberian grid outage of 28 Apr 2025)
+
+Tests: `engine/tests/test_blackout.py`, on a small hand-made world. Golden has no events, so its behaviour is unchanged (`expected/`, NS31 9,900,000, day 1 8,214,600).
+
+- **Windows.** Each event's airport window becomes a `StormWindow(kind=<event kind>, label="Grid outage (<title>)")` at that station (`StationView.events`).
+  - The engine's cause logic keeps the storm windows (`dep`/`arr`) and the event windows (`dep_event`/`arr_event`) apart. The decision's `in_window_*` is `in` if the flight sits in either kind of window. `window_margin_min` and the margin feature count both kinds.
+  - Positions use the same ±60 min METAR band as storms, so an event end with no METAR near it is `unknown` (spec).
+  - `run_storm` lists the day's event windows with the storm windows and sets `event_id` (and `name` to the event's title when no storm name exists). The message names the outage window, then "max gust N kt · no storm window".
+- **An event counts only once an operator notice is on file:** a source in `event.source_ids` of tier ≤ 2, received by `known_at`. A passenger saying the power went out (tier 4), or an event with no notice, never opens a window. The `note` stays on the window's `definition`, and "(end approximate)" goes into every reason that quotes the window, so an estimate is never presented as a fact.
+- **Inside an event window at either end, with no decisive AOG:** `external_event` / `needs_legal`, pattern `external_event_window`, Legal, reason tag `no-precedent`.
+  - The question id is per **event**, not per station run (`Q-<event id>:external_event_window`), so the LPPT, LEMD and LEBL runs share one question. It is never a short id.
+  - The question text and options are as in the spec. Its `{event}` title is read from the decision's `event.window` evidence.
+  - Evidence: `event.kind` and `event.window_start` quote the notice's own sentence and use the `normalize.event_fact_id` ids, so blame reaches the normalized event facts and the notice. `event.window_end` is context. `event.window` is engine context, with the title, label and note, like `storm.window`; the field is not registered in `contracts/fields.py` yet.
+  - Legal basis adds `CJEU C-12/11` (McDonagh): care and re-routing are owed either way.
+- **A decisive AOG inside an event window is concurrent causes**, exactly as in a storm window. The spec's "no decisive internal cause" carve-out is read as "the AOG case is not this pattern". Two overlapping causes stay a Legal question, and the event rule can't settle them, because AOG patterns need an `aog.*` clause.
+- **Cancelled after a window closed (< 24 h, at origin or destination):** judged on the flight's own evidence (rule 4c). The rule is limited to flights after an event, so storm days and the held-out eval worlds keep their behaviour.
+  - Carrier's own OCC/MCC line naming crew out of duty hours (FDP) → `crew`, not extraordinary, recoded to 64.
+  - Aircraft out of position → `technical`, not extraordinary, recoded to 93.
+  - Both use pattern `internal_cause_logged`; the confidence feature `internal_cause_logged` (+4.0) puts them at about 0.94, so they are automatic and the payouts are drafted (owed).
+  - A crew line wins over a positioning one. Statements against the carrier's own interest are what make this safe to automate; Claims Lead still approves every payout.
+  - With no such line, a return whose outbound sat in the window is the existing knock-on (following the outbound's open question to Legal).
+- **Confidence features** `in_event_window` (+4.0) and `internal_cause_logged` (+4.0) are appended to `engine/default_calibration.json`, which again equals `contracts/calibration_default.json`. They are hand-set priors. After the ruling, an event flight scores about 0.998 and goes automatic.
+- **Legal's ruling is templated, never LLM-drafted** (`lifecycle.TEMPLATE_ONLY`). It produces `legal_ruling` SET_EXTRAORDINARY (or SET_NOT_EXTRAORDINARY for "Not extraordinary") with `event.kind == <kind>` AND (`flight.in_event_window_dep == "in"` OR `flight.in_event_window_arr == "in"`), and empty scope, so a later outage of the same kind is settled too. "Decide flight by flight" makes no rule.
+  - The rule's title, "Extraordinary inside the grid outage window", names what the question asked. Grounding finds the event kind ("outage", "blackout", "grid outage") and the in-window literal ("inside the … window") in the ruling plus that title.
+  - `dsl.FEATURES` now equals `contracts.fields.ALL_DSL_FEATURES` (41), tested.

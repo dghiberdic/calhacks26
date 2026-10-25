@@ -41,7 +41,7 @@ KIND = {"tech_log": (SourceKind.TECH_LOG, 1, ["maintenance"]), "occ_log": (Sourc
         "crm": (SourceKind.CRM, 3, ["pii", "finance"]), "claim": (SourceKind.CLAIM, 4, ["pii"]),
         "email": (SourceKind.EMAIL, 4, ["pii"]), "manufacturer": (SourceKind.MANUFACTURER, 2, ["maintenance"])}
 CAUSE_PATTERN = {"knock_on": "knock_on_return", "concurrent": "concurrent_causes", "unknown": "cause_unknown",
-                 "crew": "crew", "atc": "atc"}
+                 "crew": "crew", "atc": "atc", "external_event": "external_event_window"}
 INJECTION_RE = re.compile(r"ignore (all |any )?(previous|prior) instructions|^\s*SYSTEM\s*:|you are now|"
                           r"disregard the above", re.IGNORECASE | re.MULTILINE)
 APPROVED_RE = re.compile(r"\bapprov(?:e|ed|al|es|ing)\b", re.IGNORECASE)

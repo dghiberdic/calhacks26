@@ -87,9 +87,13 @@ def merge_worlds(base: World, part: World) -> World:
     return base.model_copy(update=update)
 
 
-def runs(part: World, hub: str) -> list[tuple[str, date]]:
-    """The station-days to run for a slice: its listed storms, its hub METAR days with cancellations, else each
-    event's day at the hub."""
+def runs(part: World, hub: str, run_id: str | None = None) -> list[tuple[str, date]]:
+    """The station-days to run for a slice: the loader's own `RUN_ID` when its module names one (the blackout runs
+    Dublin's day; its `meta.storms` also lists each Iberian station's day, for the Desk), else its listed storms,
+    its hub METAR days with cancellations, else each event's day at the hub."""
+    if run_id and "@" in run_id:
+        station, day = run_id.split("@", 1)
+        return [(station, date.fromisoformat(day[:10]))]
     listed = compose.storm_days(part, hub)
     if listed:
         return listed
