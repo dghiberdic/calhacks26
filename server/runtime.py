@@ -875,7 +875,8 @@ class Runtime:
         self.emit("info", "agent.reader", f"Read {sc.label}: {getattr(event, 'title', sc.label)} · "
                   f"{len(part.flights)} flights, {cancelled} cancelled · {len(new_sources)} sources", "INFO", sc.id)
         ran = []
-        for station, day in scenario.runs(part, self.hub(base)):
+        run_id = find([(sc.loader[0], "RUN_ID")])
+        for station, day in scenario.runs(part, self.hub(base), run_id if isinstance(run_id, str) else None):
             res = self.run_and_store(self.world, station, day, now, source="scenario")
             run = scenario.decorate(res.run, part, self.world)
             if run is not res.run:
