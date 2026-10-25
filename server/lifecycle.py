@@ -528,7 +528,11 @@ class Lifecycle:
             except Exception:
                 compiles = False
         changed = set(run.changed_flights()) | set(run.changed_coupons()) if run is not None else set()
-        reproduces = rule.action in COHORT_ACTIONS or not cases or bool(set(cases) & changed) or run is None
+        # A widened version only drops a case-copied scope key, so it still covers the ruled case even though
+        # replaying it changes nothing there (the case already settled under the narrower version).
+        widened = bool(rule.supersedes) and rule.version > 1
+        reproduces = (rule.action in COHORT_ACTIONS or not cases or bool(set(cases) & changed) or run is None
+                      or widened)
         grounded = bool(rule.grounding) or all(isinstance(v, str) and v.startswith("case:")
                                                for v in rule.scope.values())
         authority = rule.kind in AUTHORITY.get(author_role, set()) and rule.authority_required == author_role
