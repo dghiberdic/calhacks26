@@ -375,15 +375,20 @@ class Books(OpsMixin, ReportingMixin):
         return d
 
     def _register_rows(self, *, flight_ids: Iterable[str] | None = None, cohort: str | None = None,
-                       as_of: str | None = None) -> list[dict[str, Any]]:
+                       as_of: str | None = None, columns: tuple[str, ...] | None = None) -> list[dict[str, Any]]:
+        """`columns` selects plain columns only (no JSON decode): the per-coupon decode is the month-end hot path."""
+        if columns is not None:
+            assert set(columns) <= set(_REG_COLS) and not set(columns) & set(_REG_JSON), columns
         if as_of is None:
-            sql, args = "SELECT * FROM books_register WHERE 1=1", []
+            sel = "*" if columns is None else ", ".join(columns)
+            sql, args = f"SELECT {sel} FROM books_register WHERE 1=1", []
         else:
-            sql = ("SELECT r.* FROM books_register_events r JOIN (SELECT coupon_id, MAX(seq) AS seq "
+            sel = "r.*" if columns is None else ", ".join(f"r.{c} AS {c}" for c in columns)
+            sql = (f"SELECT {sel} FROM books_register_events r JOIN (SELECT coupon_id, MAX(seq) AS seq "
                    "FROM books_register_events WHERE known_at <= ? GROUP BY coupon_id) m ON m.seq = r.seq WHERE 1=1")
             args = [as_of]
         if cohort is not None:
-            sql += " AND cohort = ?"
+            sql += " AND cohort = ?" if as_of is None else " AND r.cohort = ?"
             args.append(cohort)
         if flight_ids is not None:
             fl = sorted(set(flight_ids))
@@ -391,7 +396,8 @@ class Books(OpsMixin, ReportingMixin):
                 return []
             sql += f" AND flight_id IN ({','.join('?' * len(fl))})"
             args += fl
-        return [self._reg_decode(r) for r in self._q(sql + " ORDER BY coupon_id", args)]
+        rows = self._q(sql + " ORDER BY coupon_id", args)
+        return [dict(r) for r in rows] if columns is not None else [self._reg_decode(r) for r in rows]
 
     def _register_one(self, coupon_id: str) -> dict[str, Any] | None:
         rows = self._q("SELECT * FROM books_register_events WHERE coupon_id = ? ORDER BY seq DESC LIMIT 1",
