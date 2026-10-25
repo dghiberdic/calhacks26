@@ -13,8 +13,8 @@ export const GLOSSARY = {
     plain: "The EU rule on cancelled flights. Each passenger is owed €250, €400 or €600 in cash, depending on distance, unless the cause was extraordinary. Refunds or rebooking, and care, are owed either way.",
   },
   extraordinary: {
-    term: "Extraordinary circumstances",
-    plain: "A cause the airline couldn't control, such as a storm. It removes the cash compensation, not refunds or care. A broken plane isn't extraordinary: keeping planes fit to fly is the airline's job.",
+    term: "Extraordinary circumstance",
+    plain: "A cause the airline couldn't control, such as a storm or a national power cut. It removes the cash compensation, not refunds, rerouting or care. A broken plane isn't extraordinary: keeping planes fit to fly is the airline's job.",
   },
   metar: {
     term: "METAR",
@@ -23,6 +23,10 @@ export const GLOSSARY = {
   "storm-window": {
     term: "Storm window",
     plain: "The hours the airport's weather reports show storm conditions (gusts of 35 kt or more, snow, ice, thunder). Worked out from the reports, never typed in. A flight is only 'weather' if it was due to leave or land inside it.",
+  },
+  "grid-outage": {
+    term: "Grid outage window",
+    plain: "The hours an airport had no mains power, taken from the grid operator's and the airport's own notices rather than from the weather. A flight due to leave or land inside it was stopped by the outage; one cancelled after power came back is judged on its own logs.",
   },
   "tech-log": {
     term: "Tech log",
@@ -101,8 +105,8 @@ export const GLOSSARY = {
     plain: "Ticket money for flights not yet flown. It becomes revenue when the passenger flies, or goes back to them as a refund.",
   },
   care: {
-    term: "Care",
-    plain: "Meals, hotels and transport for stranded passengers (Art. 9). Owed even when the cause was extraordinary.",
+    term: "Care (hotels, meals)",
+    plain: "Meals, hotels and transport for stranded passengers (Art. 9). Owed even when the cause was extraordinary (CJEU C-12/11 McDonagh), so it's booked either way.",
   },
   "ties-to-gl": {
     term: "Ties to GL",

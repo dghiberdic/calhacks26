@@ -87,6 +87,10 @@ export type StormWindow = {
   peak_gust_kt: number;
   definition?: string;
   obs_count?: number;
+  /** Additive (blackout spec): "grid_outage" windows come from an external event, not METAR. Default "weather". */
+  kind?: "weather" | "grid_outage" | (string & {});
+  /** "Grid outage (Iberian blackout)" */
+  label?: string | null;
 };
 
 export type Airport = { icao: string; iata: string; name: string; lat: number; lon: number; country: string; eu: boolean; tz: string };
@@ -522,6 +526,8 @@ export type StormRun = {
   airports?: Airport[];
   /** Additive (#3): "Storm Éowyn", from real_context.storm_name. */
   name?: string | null;
+  /** Additive (blackout spec): the external event this run is about, e.g. "EVT-IBERIA-BLACKOUT@2025-04-28". */
+  event_id?: string | null;
 };
 
 export type StormSummary = { id: string; station: string; date: ISODate; cancelled: number; questions: number; liability_drafted_cents: Cents };
