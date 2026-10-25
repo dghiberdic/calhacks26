@@ -1,6 +1,6 @@
-import type { Role, Rule, RuleStatus, RuleTier } from "@/api/types";
+import type { LearningStep, Role, Rule, RuleStatus, RuleTier } from "@/api/types";
 import { clauseText } from "@/components/rule-sentence";
-import { longDate, zulu } from "@/lib/format";
+import { count, longDate, zulu } from "@/lib/format";
 import { stormName } from "@/lib/storms";
 
 /**
@@ -229,4 +229,15 @@ export function familyFromHash(hash: string): string | null {
 export function flightOf(example: string | null | undefined): string | null {
   const m = example?.match(/\b([A-Z]{2}\d{1,4}@\d{4}-\d{2}-\d{2})\b/);
   return m ? m[1] : null;
+}
+
+// ---------- learned and reused ----------
+
+/** The plain sentence above the timeline: how questions fell as answers became rules. */
+export function learningLead(steps: LearningStep[]): string {
+  const [first] = steps;
+  if (steps.length < 2) return `${first.name.split(" · ")[0]} asked ${count(first.questions_asked)} ${first.questions_asked === 1 ? "question" : "questions"}. Each answer becomes a rule that later runs reuse.`;
+  const asked = steps.map((s) => count(s.questions_asked)).join(" → ");
+  const settled = steps.reduce((sum, s) => sum + s.cases_settled_by_reused_rules, 0);
+  return `Each answer becomes a rule that later runs reuse: questions asked went ${asked}, and ${count(settled)} ${settled === 1 ? "case was" : "cases were"} settled without asking.`;
 }

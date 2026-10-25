@@ -29,8 +29,8 @@ export function WithoutStormCheck({ effort, noun = "storm" }: { effort: EffortEs
               <thead>
                 <tr className="text-[11.5px] text-slate-400">
                   <th scope="col" className="py-1.5 pr-4 font-medium">Task</th>
-                  <th scope="col" className="py-1.5 pr-4 font-medium">Basis</th>
                   <th scope="col" className="whitespace-nowrap py-1.5 pr-4 text-right font-medium">By hand → with StormCheck</th>
+                  <th scope="col" className="py-1.5 pr-4 font-medium">Basis</th>
                   <th scope="col" className="py-1.5 font-medium">Who</th>
                 </tr>
               </thead>
@@ -38,10 +38,10 @@ export function WithoutStormCheck({ effort, noun = "storm" }: { effort: EffortEs
                 {effort.lines.map((l) => (
                   <tr key={l.task} className="border-t border-cloud-100 align-top">
                     <td className="py-2 pr-4 font-medium text-navy-900">{l.task}</td>
-                    <td className="py-2 pr-4 text-slate-500">{l.basis}</td>
                     <td className="figure whitespace-nowrap py-2 pr-4 text-right text-navy-900">
                       {hoursCell(l.manual_hours)} → {hoursCell(l.with_stormcheck_hours)}
                     </td>
+                    <td className="py-2 pr-4 text-slate-500">{l.basis}</td>
                     <td className="whitespace-nowrap py-2 text-slate-500">
                       {l.role} <span className="figure text-slate-400">· €{l.rate_eur_per_hour}/h</span>
                     </td>

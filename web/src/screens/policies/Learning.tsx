@@ -2,8 +2,7 @@ import { Link } from "react-router";
 import type { LearningStep, Rule } from "@/api/types";
 import { count } from "@/lib/format";
 import { cn } from "@/lib/utils";
-
-const plural = (n: number, one: string, many: string) => `${count(n)} ${n === 1 ? one : many}`;
+import { learningLead } from "./model";
 
 /** "R-CL-1@1" → the rule's own title, from GET /rules; the ref itself when the rule isn't listed. */
 function titleOf(ref: string, rules: Rule[] | undefined): string {
@@ -11,15 +10,6 @@ function titleOf(ref: string, rules: Rule[] | undefined): string {
   const family = (rules ?? []).filter((r) => r.id === id);
   const hit = family.find((r) => String(r.version) === version) ?? family[family.length - 1];
   return hit?.title ?? ref;
-}
-
-/** The plain sentence above the timeline: how questions fell as answers became rules. */
-export function learningLead(steps: LearningStep[]): string {
-  const [first] = steps;
-  if (steps.length < 2) return `${first.name.split(" · ")[0]} asked ${plural(first.questions_asked, "question", "questions")}. Each answer becomes a rule that later runs reuse.`;
-  const asked = steps.map((s) => count(s.questions_asked)).join(" → ");
-  const settled = steps.reduce((sum, s) => sum + s.cases_settled_by_reused_rules, 0);
-  return `Each answer becomes a rule that later runs reuse: questions asked went ${asked}, and ${plural(settled, "case was", "cases were")} settled without asking.`;
 }
 
 const chip = "inline-flex h-6 max-w-full items-center gap-1.5 rounded-md px-2 text-[12px] leading-none transition-colors";
@@ -41,16 +31,20 @@ export function LearnedAndReused({ steps, rules }: { steps: LearningStep[]; rule
       </p>
       <ol className="mt-3 flex flex-col">
         {steps.map((s, i) => (
-          <li key={s.run_id} data-testid="learning-step" className="relative grid gap-x-6 gap-y-1.5 pb-4 pl-6 last:pb-0 md:grid-cols-[200px_minmax(0,1fr)]">
+          <li key={s.run_id} data-testid="learning-step" className="relative grid gap-x-6 gap-y-1.5 pb-4 pl-6 last:pb-0 md:grid-cols-[230px_minmax(0,1fr)]">
             {/* the timeline rail: a dot per step, a line to the next */}
             <span aria-hidden="true" className={cn("absolute left-[3px] top-[7px] size-2 rounded-full", i === 0 ? "bg-navy-800" : "bg-metar")} />
             {i < steps.length - 1 ? <span aria-hidden="true" className="absolute bottom-0 left-[6.5px] top-[19px] w-px bg-cloud-200" /> : null}
             <div className="min-w-0">
               <p className="text-[13.5px] font-medium leading-snug text-navy-900">{s.name}</p>
               <p className="mt-0.5 text-[12.5px] text-slate-500">
-                <span className="figure font-semibold text-navy-900">{count(s.questions_asked)}</span> {s.questions_asked === 1 ? "question" : "questions"} asked
-                <span className="text-slate-300"> · </span>
-                <span className="figure font-semibold text-navy-900">{count(s.cases_settled_by_reused_rules)}</span> settled without asking
+                <span className="whitespace-nowrap">
+                  <span className="figure font-semibold text-navy-900">{count(s.questions_asked)}</span> {s.questions_asked === 1 ? "question" : "questions"} asked
+                </span>
+                <span className="text-slate-400"> · </span>
+                <span className="whitespace-nowrap">
+                  <span className="figure font-semibold text-navy-900">{count(s.cases_settled_by_reused_rules)}</span> settled without asking
+                </span>
               </p>
             </div>
             <div className="min-w-0">

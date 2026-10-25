@@ -3,7 +3,8 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import type { LearningStep, Rule } from "@/api/types";
 import { LEARNING } from "@/mocks/data/insights";
-import { LearnedAndReused, learningLead } from "./Learning";
+import { LearnedAndReused } from "./Learning";
+import { learningLead } from "./model";
 
 afterEach(cleanup);
 
