@@ -1,0 +1,162 @@
+{
+  "01a49f2a4346fad6f7bf9a6c4cbac5e8490c505412ae52c6dd1cca12ad772c2c": {
+    "label": "messy_injection_email",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "279a7874022c40bcf579ed7d3258ea77fa6706d3b89ca10e10594d47e65eefba": {
+    "label": "inj03_prompt_injection_email",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "3a60981600b0449abd4e3c38184a02d66e32c20bba607be40cde5d64c64ed3a5": {
+    "label": "messy_agency_letter",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "3f1a6990a32d3bcbc93c14aa121fa429f92a41eec076567befd67a4571217013": {
+    "label": "messy_occ_handover",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "41e78cf822cda6d4572d7435b6cde4e2bb98ed71af9f3c64dfd2867b744bc4ce": {
+    "label": "occ_herminia",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "4e26093ab15b3ae8837fc46d5c151504fa87a8cf178c509dd4eb4082093265d5": {
+    "label": "inj05_airbus_hidden_defect_notice",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "51e42176e0ac228a48f5d895e04b653b7aba7d576098d0c405465050b3ff061c": {
+    "label": "messy_hotel_invoice",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "63d765705c203019ed54cc79a6576e57d93447eb7b656ee9c55dac6eec5aa928": {
+    "label": "refund_voucher_11d",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "66c2043eb585a4a467cb50025e1781ef6fe279c323190ae1e935fab4e12365a2": {
+    "label": "inj02_duplicate_direct_plus_agency",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "6f7ce37e6769e9283bb0d1dbd98f1adc279744dc90ac64a94a429c58bd84df6a": {
+    "label": "inj06_claim_after_limitation",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "6fa38f2d3b28e9c37b24a69b57e2de1843374aba87c49c18b7fb6beb87f292b9": {
+    "label": "persona_Q-2",
+    "provenance": "live",
+    "role": "persona"
+  },
+  "71e3452b95dd0e751ae767a650c3abc98e300b0e7cecd72829be720005226b03": {
+    "label": "crm_14c_voucher",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "7f79785e478da9590516ec2f98b9d313226b7fd908fbc6d6283e71b1487bde64": {
+    "label": "claim_14c",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "87bdeafe0d62217d21c29e11225fa4d21ead360971e8be8219c0eefddc061783": {
+    "label": "occ_eowyn",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "880aec6e2a1c0c4987ae1c37d261c6f3667b3bfb5c1d4bbcf4c9e46933cde31b": {
+    "label": "chargeback_5b",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "9867015be51189d98fbd57942ad9f08ddd93b14fc23a2c6bfbb1721e3c818611": {
+    "label": "messy_call_note_14c",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "9ae181e3c75bbd88fd8f517deed3ce77289bc5a84d9774235b1128b1cb78c6ca": {
+    "label": "spares_ns117",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "9dc5fa3da69e4fd21a9f46a32d25483e0cca6d1828bc6c87443621304eb14453": {
+    "label": "inj04_chargeback_after_bot_refund",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "9dfe8527c2404115362a2a663dbd71f9cf6346d406d071a0dc9ca5de690a1630": {
+    "label": "messy_met_eireann_forward",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "af1b167cc014243e68fa22f098f329ebf545ddb589939f7bfe30bc83f3376477": {
+    "label": "inj07_challenge_storm_anyway",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "b0dea3a32d57085471eadc192aa9926afe00c8d37c55d9f2d091a0584a9776e3": {
+    "label": "herminia_voucher_ns106_12d",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "b5fe9cc9be97bf78c430c73cadcb7c67d3f30785ae60269ee30d99106c7e9350": {
+    "label": "inj08_uk261_520_on_dub_lhr",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "b64982ba05e89d1d9412eeae3888a6286395ea1e7901814daccc68d7cbe42898": {
+    "label": "bot_refund_3a",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "c0deb979957099c5ae989e3739911ccecee38669291c855353bfe38c6f15f730": {
+    "label": "techlog_ns31",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "c425a10e13df845e64a4b9bab8bc5432afbd4010e171edd836c9b3c5bc3bd30b": {
+    "label": "messy_mcc_forward",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "ca3599c011b9198d74fcb2d7b4b076e811cb2653e47c7bdf80ee09980344ac06": {
+    "label": "mcc_ns31",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "cc477f3db520f277b9aa6f45095448403dd7dfaf29bcf1bcf5e1e147c31df00a": {
+    "label": "bot_mail_3a",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "cdef8e9f17e032e9dda09374faf4d075bc06c182ee1e441873efa83716090789": {
+    "label": "bsp_duplicate_26e",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "ed0dbb5ea48fb2077ad5a085dcd0a4f87c56f76216a9fb688a7f887231c5927c": {
+    "label": "messy_crm_bot_template",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "f1f15c3848b5b18d471ce9a445ba63e51036a988dbb2ec3ebc181e0fe0120ff1": {
+    "label": "persona_Q-3",
+    "provenance": "live",
+    "role": "persona"
+  },
+  "f7fd6f14ba7c61d66b3835d072df045c19234a5e12bece30661936dc71fb9883": {
+    "label": "inj01_aog_inside_window",
+    "provenance": "live",
+    "role": "reader"
+  },
+  "ffe4c77fc02863a08b452723b721a0a4ac59a559f8807b911a3781c7f3e8d964": {
+    "label": "persona_Q-1",
+    "provenance": "live",
+    "role": "persona"
+  }
+}

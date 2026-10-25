@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Commit, InvariantResult, JournalEntry, MonthEndResponse, Rollforward, RollforwardRow, TraceEvent } from "@/api/types";
-import { bridgeScale, bridgeToGl, cohortParts, footRow, invariantsSummary, isRateTimesEntitlement, isReleaseProposal, journalGroups, journalTies, liabilityChange, lockedPeriods, monthBounds, monthEndReason, movementCents, newStorms, preparerRole, releaseProposals, rollforwardCsv, rollforwardTotals } from "./model";
+import { bridgeScale, bridgeToGl, closePeriods, cohortParts, cohortTitle, footRow, invariantsSummary, isRateTimesEntitlement, isReleaseProposal, journalGroups, journalTies, liabilityChange, lockedPeriods, monthBounds, monthEndReason, movementCents, newStorms, preparerRole, releaseProposals, rollforwardCsv, rollforwardTotals } from "./model";
 
 const row = (over: Partial<RollforwardRow> = {}): RollforwardRow => ({
   cohort: "EIDW@2025-01-24",
@@ -90,6 +90,19 @@ describe("tick and tie to the journal", () => {
     expect(csv).toContain("Claims approved,-9300.00,-9300.00");
     expect(csv).toContain("Closing,25740.00,25740.00");
     expect(csv).toContain("GL 2140 balance,,25740.00");
+  });
+});
+
+describe("close periods and cohort names", () => {
+  it("adds any later month the journal has entries in, never an earlier one", () => {
+    expect(closePeriods([{ period: "2025-04" }, { period: "2024-12" }, { period: "2025-02" }, { period: "junk" }])).toEqual(["2025-01", "2025-02", "2025-04"]);
+    expect(closePeriods(undefined)).toEqual(["2025-01", "2025-02"]);
+  });
+  it("names a storm, the blackout and anything else in words", () => {
+    const names = (b: string) => ({ "EIDW@2025-01-24": "Storm Éowyn" })[b] ?? null;
+    expect(cohortTitle("EIDW@2025-01-24", names)).toBe("Storm Éowyn");
+    expect(cohortTitle("LPPT@2025-04-28", names)).toBe("Iberian blackout");
+    expect(cohortTitle("EIDW@2025-04-28", names)).toBe("Iberian blackout");
   });
 });
 

@@ -245,7 +245,7 @@ def test_blame_walks_to_the_metar(golden):
     je = ns31_je(golden)
     b = Blame.model_validate(golden.get(f"/api/blame?target={je.id}:2").json())
     labels = [s.label for s in b.steps]
-    assert labels[0].startswith(f"{je.id}:2 · Cr 2140")
+    assert labels[0].startswith("€34,650 · Dr 4090 ") and " / Cr 2140 " in labels[0] and f" {je.id}:2 · " in labels[0]
     assert any(lbl.startswith("Entitlements NS31@2025-01-24") for lbl in labels)
     assert any("R-MINED-REDUCE@1" in lbl for lbl in labels)
     assert any(lbl.startswith("Decision NS31@2025-01-24 · technical") for lbl in labels)

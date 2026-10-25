@@ -1,0 +1,13 @@
+{
+ "challenge_reply:NS31:assertion": "3e7b4b50768dd9abb6fc9de00d7e3ddae21aa56fa6187d3bcdd843cb498476db",
+ "challenge_reply:NS31:new_legal_pattern": "aea494f35203f49a262162e51d9dba3ca885ed52c321d55af0468d8c07eec615",
+ "classify:NS31:airbus_hidden_defect": "764fdfb98770d9b3c1a6655c340633ce604a5122028422faf58fc1a79f7916d6",
+ "classify:NS31:storm_anyway": "02d236713f1cad7da794f71e255f6eb596d0686b15df892041eef94b1c5191ab",
+ "explain:NS31": "4c69bc76edf48df300d98a668340140661abef949bd8f5f9e30e361c27892623",
+ "je_memo:JE-000101": "d1fbb5f13e8bda84a104ca7e279a371ba224215ca2ece56d1868d233bbdfd536",
+ "rights_notice:NS108:weather": "2f9106a231a851e112cdc7c21d45909aea1e470fd5bd5d15779c4d0b9184d7b9",
+ "rights_notice:NS31:refund_initiated_corrected": "44c8858edf6c46559051463e1e55dea0279bf9e327c8ce2f08a454a6fae30054",
+ "rule:Q-1": "fa085c81ad9b7ebb0de29056d35444d503a25ebf5402b8ea5e6de2c6c568176a",
+ "rule:Q-2": "e7ba8edb4a23890e2fecaa6ba15805f4f42a2db55f4b471968a66d697263ddec",
+ "rule:Q-3": "a87f10425e62815f87511f39d688548fa6adadf4c303441176da673073c9f30d"
+}

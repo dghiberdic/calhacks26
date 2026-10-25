@@ -20,7 +20,7 @@ from contracts.models import (
 )
 from contracts.stub_app import ERRORS, ERRORS_AUTH, ApiError
 
-from . import compose
+from . import compose, ledger
 from .auth import AGENT_ROLES
 from .blame import audit as audit_je
 from .config import ROOT
@@ -122,7 +122,8 @@ def install(app: FastAPI, rt: Any) -> None:
         if stubbed():
             return stub.rollforward(period)
         try:
-            return need_books().rollforward(period)
+            books = need_books()
+            return ledger.rollforward(books, books.rollforward(period))
         except ApiError:
             raise
         except Exception as exc:
@@ -146,7 +147,8 @@ def install(app: FastAPI, rt: Any) -> None:
         if stubbed():
             return stub.journal(period, status)
         try:
-            return need_books().journal(period, status)
+            books = need_books()
+            return ledger.entries(books.journal(period, status), ledger.locked_periods(books))
         except ApiError:
             raise
         except Exception as exc:
@@ -165,12 +167,13 @@ def install(app: FastAPI, rt: Any) -> None:
             raise ApiError(422, "validation", f"Unknown segment {segment}. Use one of: long_haul_gt3500, "
                                               "medium_1500_3500, short_le1500.") from exc
 
-    @app.get("/api/books/cfo", response_model=CfoMetrics)
-    def cfo() -> CfoMetrics:
+    @app.get("/api/books/cfo", response_model=CfoMetrics, responses=ERRORS)
+    def cfo(cohort: str | None = Query(None, description="one storm cohort, e.g. EIDW@2025-01-24 (default: every "
+                                                         "storm that has happened)")) -> CfoMetrics:
         if stubbed():
             return stub.cfo()
         try:
-            return need_books().cfo_metrics(rt.now)
+            return ledger.cfo(need_books(), rt.now, rt.storm_cohorts(), cohort)
         except ApiError:
             raise
         except Exception as exc:
@@ -318,7 +321,7 @@ def install(app: FastAPI, rt: Any) -> None:
                 rt.advance(end, "month-end")
             try:
                 entries = list(books.month_end(req.period, rt.now))
-                rf = books.rollforward(req.period)
+                rf = ledger.rollforward(books, books.rollforward(req.period))
                 est = books.estimate_card(primary_cohort(rt), rt.now)
             except Exception as exc:
                 raise books_error(exc) from exc
@@ -328,7 +331,8 @@ def install(app: FastAPI, rt: Any) -> None:
                         f"{'+' if amt >= 0 else '−'}{compose.eur(abs(amt))} change in estimate · Controller "
                         "approval required", "DRAFTED", je.id, amt)
             lc.refresh_runs()
-        return MonthEndResponse(entries=entries, rollforward=rf, estimate=est)
+        return MonthEndResponse(entries=ledger.entries(entries, ledger.locked_periods(books)), rollforward=rf,
+                                estimate=est)
 
     @app.post("/api/books/lock", response_model=LockResponse, responses=ERRORS_AUTH)
     def lock(req: PeriodRequest, request: Request) -> LockResponse:
@@ -399,7 +403,7 @@ def approve_je(rt: Any, s: Session, je_id: str) -> JournalEntry:
         head = books.journal_entry(je_id)
     except Exception as exc:
         raise books_error(exc) from exc
-    action = "approve_payout" if head.kind in ("claim_approved", "claim_paid") else "approve_je"
+    action = "approve_payout" if head.kind in ledger.PAYOUT_KINDS else "approve_je"
     with rt.lock:
         check_approval(rt, s, action, je_id, preparer=head.preparer)
         try:
@@ -415,7 +419,7 @@ def approve_je(rt: Any, s: Session, je_id: str) -> JournalEntry:
                 "APPLIED", je.id, sum(line.dr_cents for line in je.lines))
         for fid in {line.dims.get("flight") for line in je.lines} - {None}:
             rt.lifecycle.refresh_flight(fid)
-    return je
+    return ledger.entries([je], ledger.locked_periods(books))[0]
 
 
 def with_challenge_row(m: AccessMatrix) -> AccessMatrix:

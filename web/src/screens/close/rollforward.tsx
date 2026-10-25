@@ -7,7 +7,7 @@ import { Money } from "@/components/kit";
 import { eur, longDate, periodLabel } from "@/lib/format";
 import { stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
-import { cohortName, cohortParts, footRow, isNilLine, type journalTies, monthBounds, MOVEMENTS, movementCents, rollforwardTotals, segmentName, type MovementKey } from "./model";
+import { cohortName, cohortParts, cohortTitle, footRow, isNilLine, type journalTies, monthBounds, MOVEMENTS, movementCents, rollforwardTotals, segmentName, type MovementKey } from "./model";
 import { Nil } from "./ui";
 
 const cell = "px-3 py-[7px] text-right align-baseline md:px-4";
@@ -42,11 +42,11 @@ function Ruled({ children }: { children: ReactNode }) {
 /** "EIDW@2025-01-24:medium_1500_3500" → Storm Éowyn / medium haul; a cohort without a segment shows its date. */
 function CohortHead({ cohort, segment }: { cohort: string; segment?: string | null }) {
   const p = cohortParts(cohort);
-  const name = stormName(p.base);
+  const name = cohortTitle(p.base, stormName);
   const seg = p.segment ?? segment ?? null;
   return (
     <span title={`${cohort}${p.date ? ` · ${p.station} · ${longDate(p.date)}` : ""}`}>
-      <span className="block whitespace-nowrap text-[13px] font-semibold text-navy-900">{name ?? p.base}</span>
+      <span className="block whitespace-nowrap text-[13px] font-semibold text-navy-900">{name}</span>
       <span className="mt-0.5 block whitespace-nowrap font-mono text-[10.5px] font-normal text-slate-400">{seg ? segmentName(seg).toLowerCase() : p.date ? longDate(p.date) : cohort}</span>
     </span>
   );
@@ -189,7 +189,7 @@ export function RollforwardTable({ rf, detail = false, highlight, ties = {}, seg
 export function FootingNotes({ rf }: { rf: Rollforward }) {
   const totals = rollforwardTotals(rf);
   const broken = rf.rows.map((r) => ({ r, f: footRow(r) })).filter((x) => !x.f.foots);
-  const notes: string[] = broken.map(({ r, f }) => `${cohortName(r.cohort, null, stormName)} doesn't foot: closing is ${eur(f.difference, { signed: true })} off its movements.`);
+  const notes: string[] = broken.map(({ r, f }) => `${cohortName(r.cohort, null, (b) => cohortTitle(b, stormName))} doesn't foot: closing is ${eur(f.difference, { signed: true })} off its movements.`);
   if (!totals.crossFoots) notes.push(`Cohorts sum to ${eur(totals.closing)}; the closing total says ${eur(rf.closing_total_cents)}.`);
   if (!rf.ties_to_gl) notes.push(`Closing ${eur(rf.closing_total_cents)} doesn't tie to GL 2140 ${eur(rf.gl_balance_cents)}: ${eur(rf.gl_balance_cents - rf.closing_total_cents, { signed: true })}.`);
   if (!notes.length) return null;
