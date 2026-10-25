@@ -4,13 +4,14 @@ import { ApiError } from "@/api/client";
 import { useEvalReport } from "@/api/queries";
 import type { EvalReport } from "@/api/types";
 import { MicroLabel, StatusChip } from "@/components/chips";
-import { Empty, ErrorNote, PageHeader, Shimmer } from "@/components/kit";
+import { Details, Empty, ErrorNote, PageHeader, Shimmer } from "@/components/kit";
 import { count, eur, idDate, pct } from "@/lib/format";
 import { HERO_STORM, stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
 import { asFraction } from "@/screens/close/model";
+import { DetailsTitle } from "@/screens/close/ui";
 import { RunsHero } from "./hero";
-import { injectionSummary, orderedKinds, rangeIncludes, ratioText, splitText } from "./model";
+import { injectionSummary, liabilityVsActual, measures, orderedKinds, rangeIncludes, splitText } from "./model";
 import { ReliabilityCard } from "./reliability";
 
 const PANEL = "rounded-xl bg-card shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04)]";
@@ -52,7 +53,8 @@ export default function ProofScreen() {
 
 function Report({ report: r }: { report: EvalReport }) {
   const straight = asFraction(r.straight_through_pct);
-  const lva = Object.entries(r.liability_vs_actual ?? {}).sort(([a], [b]) => Number(a.replace(/\D/g, "")) - Number(b.replace(/\D/g, "")));
+  const lva = liabilityVsActual(r.liability_vs_actual);
+  const all = measures(r.liability_vs_actual);
   const kinds = orderedKinds(r.calibration ?? {});
   const inj = injectionSummary(r.injections);
   const columns = Object.entries(r.real_vs_simulated ?? {});
@@ -62,125 +64,113 @@ function Report({ report: r }: { report: EvalReport }) {
       <RunsHero report={r} />
       <RunContext report={r} />
 
-      {/* scorecard */}
-      <section aria-labelledby="scorecard" className="mt-6">
-        <SectionTitle id="scorecard" eyebrow="Scorecard" title="On the scored storms">
-          Every number against the answer key.
-        </SectionTitle>
-        <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <Tile label="Straight-through" value={straight === null ? "—" : pct(straight)} sub="of passengers settled with no person in the loop" />
-          <Tile label="Miscodes caught" value={`${count(r.miscodes_caught)} of ${count(r.miscodes_total)}`} sub={`planted cause miscodes, worth ${eur(r.miscodes_eur_cents)} in compensation`} />
-          <Tile label="False holds" value={count(r.false_holds)} sub="held for a person when the answer key needed none" />
-          <Tile label="Repeat questions" value={count(r.repeat_questions)} sub="asked again after a ruling" target="target 0" />
-          <Tile label="Out-of-scope automated" value={count(r.out_of_scope_auto)} sub="cases outside EU261 decided without a person" target="target 0" />
-          <Tile
-            label="Liability vs actual"
-            value={
-              lva.length ? (
-                <span className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                  {lva.map(([k, v]) => (
-                    <span key={k} className="whitespace-nowrap">
-                      <span className="mr-1.5 text-[13px] font-medium text-slate-400 [font-stretch:100%]">{k.toUpperCase()}</span>
-                      {ratioText(v).split(" ")[0]}
-                    </span>
-                  ))}
-                </span>
-              ) : (
-                "—"
-              )
-            }
-            sub={lva.length && Math.abs(lva[0][1]) >= 0.3 ? "drafted liability as a share of the claims that actually came" : "drafted liability against the claims that actually came"}
-          />
-        </div>
-      </section>
-
-      {/* reliability */}
-      <section aria-labelledby="reliability" className="mt-6">
-        <SectionTitle id="reliability" eyebrow="Reliability" title="How often each confidence level was right">
-          Per decision kind: stated confidence against how often it was right, a dot per bin with its Wilson 95% interval and n. The diagonal is perfect calibration; coverage@0.9 is the share decided at 90% or more.
-        </SectionTitle>
-        <div className="mt-3 flex items-start gap-3 rounded-xl bg-white px-4 py-3.5 shadow-[inset_0_0_0_1.5px_var(--color-navy-900)]" data-testid="honest-label">
+      {/* the honest framing stays in view: what is real, what is simulated, and what the calibration validates */}
+      <section aria-labelledby="real-sim" className={cn(PANEL, "mt-3 px-5 pb-5 pt-4")}>
+        <div className="flex items-start gap-3 rounded-lg bg-white px-4 py-3 shadow-[inset_0_0_0_1.5px_var(--color-navy-900)]" data-testid="honest-label">
           <Info className="mt-0.5 size-[18px] shrink-0 text-navy-900" aria-hidden="true" />
           <p className="text-[15px] font-medium leading-snug text-navy-900 first-letter:uppercase">{r.label ?? HONEST_LABEL}</p>
         </div>
-        {kinds.length ? (
-          <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {kinds.map((k) => (
-              <ReliabilityCard key={k} kind={k} bins={r.calibration[k] ?? []} coverage={r.coverage_at_90?.[k]} />
+        <h2 id="real-sim" className="mt-4 text-[15.5px] font-semibold text-navy-900">
+          Real vs simulated
+        </h2>
+        {columns.length ? (
+          <div className={cn("mt-2 grid gap-x-6 gap-y-4", columns.length > 1 && "sm:grid-cols-2", columns.length > 2 && "lg:grid-cols-3")}>
+            {columns.map(([key, items]) => (
+              <div key={key}>
+                <h3 className="flex items-center gap-2 text-[13px] font-semibold capitalize text-navy-900">
+                  <span className={cn("size-2 rounded-full", /real/i.test(key) ? "bg-navy-900" : "shadow-[inset_0_0_0_1.5px_var(--color-slate-400)]")} aria-hidden="true" />
+                  {key.replace(/_/g, " ")}
+                </h3>
+                <ul className="mt-1.5 flex flex-col">
+                  {items.map((item) => (
+                    <li key={item} className="border-t border-cloud-100 py-1.5 text-[13.5px] leading-snug text-slate-600 first:border-t-0">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
           </div>
         ) : (
-          <Empty title="No calibration reported" className="mt-3">
-            Every decision kind is uncalibrated until the eval writes its bins.
-          </Empty>
+          <p className="mt-2 text-[13.5px] text-slate-500">Not reported.</p>
         )}
       </section>
 
-      {/* real vs simulated, injections */}
-      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] items-start gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <section aria-labelledby="real-sim" className={cn(PANEL, "px-5 pb-5 pt-4")}>
-          <MicroLabel>Honest framing</MicroLabel>
-          <h2 id="real-sim" className="mt-1 text-[15.5px] font-semibold text-navy-900">
-            Real vs simulated
-          </h2>
-          {columns.length ? (
-            <div className={cn("mt-3 grid gap-x-6 gap-y-5", columns.length > 1 && "sm:grid-cols-2", columns.length > 2 && "lg:grid-cols-3")}>
-              {columns.map(([key, items]) => (
-                <div key={key}>
-                  <h3 className="flex items-center gap-2 text-[13px] font-semibold capitalize text-navy-900">
-                    <span className={cn("size-2 rounded-full", /real/i.test(key) ? "bg-navy-900" : "shadow-[inset_0_0_0_1.5px_var(--color-slate-400)]")} aria-hidden="true" />
-                    {key.replace(/_/g, " ")}
-                  </h3>
-                  <ul className="mt-2 flex flex-col">
-                    {items.map((item) => (
-                      <li key={item} className="border-t border-cloud-100 py-2 text-[13.5px] leading-snug text-slate-600 first:border-t-0">
-                        {item}
-                      </li>
+      {/* the scorecard, the reliability bins and every measure: one click away */}
+      <section aria-label="Detailed scorecard" className={cn(PANEL, "mt-3 px-5 py-3.5")}>
+        <Details summary={<DetailsTitle title="Detailed scorecard" note="every number against the answer key" />}>
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <Tile label="Straight-through" value={straight === null ? "—" : pct(straight)} sub="of passengers settled with no person in the loop" />
+            <Tile label="Miscodes caught" value={`${count(r.miscodes_caught)} of ${count(r.miscodes_total)}`} sub={`planted cause miscodes, worth ${eur(r.miscodes_eur_cents)} in compensation`} />
+            <Tile label="False holds" value={count(r.false_holds)} sub="held for a person when the answer key needed none" />
+            <Tile label="Repeat questions" value={count(r.repeat_questions)} sub="asked again after a ruling" target="target 0" />
+            <Tile label="Out-of-scope automated" value={count(r.out_of_scope_auto)} sub="cases outside EU261 decided without a person" target="target 0" />
+            <Tile
+              label="Liability vs actual"
+              value={
+                lva ? (
+                  <span className="flex flex-col gap-1 text-[22px]">
+                    {lva.value.map((v) => (
+                      <span key={v}>{v}</span>
                     ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-2 text-[13.5px] text-slate-500">Not reported.</p>
-          )}
-        </section>
+                  </span>
+                ) : (
+                  "—"
+                )
+              }
+              sub={lva?.sub ?? "drafted liability against the claims that actually came"}
+            />
+          </div>
 
-        <section aria-labelledby="injections" className={cn(PANEL, "px-5 pb-5 pt-4")}>
-          <MicroLabel>Prompt injection</MicroLabel>
-          <h2 id="injections" className="mt-1 text-[15.5px] font-semibold text-navy-900">
-            Injections blocked
-          </h2>
-          {inj ? (
-            <>
-              <p className="display-tight mt-3 text-[34px] leading-none text-navy-900" data-testid="injections-blocked">
-                {count(inj.blocked)}{" "}
-                <span className="text-[17px] font-medium text-slate-400 [font-stretch:100%]">{inj.total !== null ? `of ${count(inj.total)} blocked` : "blocked"}</span>
-              </p>
-              <p className="mt-2 text-[13px] leading-relaxed text-slate-500">Prompt-injection attempts planted in claims and emails. The Reader only extracts facts, each quoting its source.</p>
-              {inj.rest.length ? (
-                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 border-t border-cloud-100 pt-3 text-[12.5px]">
-                  {inj.rest.map((x) => (
-                    <div key={x.key} className="flex items-baseline justify-between gap-2">
-                      <dt className="text-slate-500">{x.label}</dt>
-                      <dd className="figure text-navy-900">{count(x.value)}</dd>
-                    </div>
-                  ))}
-                </dl>
-              ) : null}
-            </>
-          ) : (
-            <dl className="mt-3 flex flex-col gap-1.5 text-[13px]">
-              {Object.entries(r.injections ?? {}).map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-3">
-                  <dt className="text-slate-500">{k.replace(/_/g, " ")}</dt>
-                  <dd className="figure text-navy-900">{count(v)}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-        </section>
-      </div>
+          {all.length ? (
+            <div className="mt-5">
+              <h3 className="text-[13.5px] font-semibold text-navy-900">Every measure</h3>
+              <dl className="mt-1.5 grid grid-cols-[minmax(0,1fr)] gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
+                {all.map((m) => (
+                  <div key={m.key} className="flex items-baseline justify-between gap-3 border-t border-cloud-100 py-1.5 text-[12.5px]">
+                    <dt className="min-w-0 text-slate-500 first-letter:uppercase">{m.label}</dt>
+                    <dd className="figure shrink-0 text-navy-900">{m.text}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ) : null}
+
+          <div className="mt-6">
+            <h3 id="reliability" className="text-[15.5px] font-semibold text-navy-900">
+              How often each confidence level was right
+            </h3>
+            <p className="mt-0.5 max-w-[86ch] text-[13px] leading-relaxed text-slate-500">
+              Per decision kind: stated confidence against how often it was right, a dot per bin with its Wilson 95% interval and n. The diagonal is perfect calibration; coverage@0.9 is the share decided at 90% or more.
+            </p>
+            {kinds.length ? (
+              <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {kinds.map((k) => (
+                  <ReliabilityCard key={k} kind={k} bins={r.calibration[k] ?? []} coverage={r.coverage_at_90?.[k]} />
+                ))}
+              </div>
+            ) : (
+              <Empty title="No calibration reported" className="mt-3">
+                Every decision kind is uncalibrated until the eval writes its bins.
+              </Empty>
+            )}
+          </div>
+
+          {inj?.rest.length ? (
+            <div className="mt-6">
+              <h3 className="text-[13.5px] font-semibold text-navy-900">Prompt injection, by count</h3>
+              <dl className="mt-1.5 grid grid-cols-2 gap-x-6 sm:grid-cols-4" data-testid="injections-blocked">
+                {inj.rest.map((x) => (
+                  <div key={x.key} className="flex items-baseline justify-between gap-2 border-t border-cloud-100 py-1.5 text-[12.5px]">
+                    <dt className="text-slate-500">{x.label}</dt>
+                    <dd className="figure text-navy-900">{count(x.value)}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ) : null}
+        </Details>
+      </section>
     </>
   );
 }
@@ -205,18 +195,6 @@ function RunContext({ report: r }: { report: EvalReport }) {
       {split.length ? " · " : ""}
       <span className="text-navy-900">{count(r.n_storms)}</span> storms · <span className="text-navy-900">{count(r.n_passengers)}</span> passengers
     </p>
-  );
-}
-
-function SectionTitle({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: string; children?: ReactNode }) {
-  return (
-    <div className="px-1">
-      <MicroLabel>{eyebrow}</MicroLabel>
-      <h2 id={id} className="mt-1 text-[17px] font-semibold text-navy-900">
-        {title}
-      </h2>
-      {children ? <p className="mt-0.5 max-w-[86ch] text-[13px] leading-relaxed text-slate-500">{children}</p> : null}
-    </div>
   );
 }
 

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Search, X } from "lucide-react";
+import { ArrowRight, ChevronRight, Search, X } from "lucide-react";
 import { useTrace } from "@/api/queries";
 import { mergeFeed, useLiveFeed, type StreamStatus } from "@/api/stream";
 import type { TraceChip as TraceChipKind, TraceEvent } from "@/api/types";
@@ -9,7 +9,7 @@ import { TraceChip } from "@/components/chips";
 import { Empty, ErrorNote, Money, Shimmer } from "@/components/kit";
 import { longDate, zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { eventRef, matchesTarget, timeOrdered } from "./model";
+import { collapseRuns, eventRef, matchesTarget, timeOrdered, type FeedItem } from "./model";
 import { FilterChip, Principal } from "./parts";
 
 const CHIP_ORDER: TraceChipKind[] = ["APPLIED", "DRAFTED", "HELD", "ASKED", "RULED", "LEARNED", "CITED", "DENIED", "LOCKED", "INFO"];
@@ -29,6 +29,7 @@ export function LiveTab() {
   const [chip, setChip] = useState<TraceChipKind | "all">("all");
   const [grep, setGrep] = useState("");
   const [limit, setLimit] = useState(PAGE);
+  const [openRuns, setOpenRuns] = useState<ReadonlySet<string>>(new Set());
 
   const counts = useMemo(() => {
     const m = new Map<TraceChipKind, number>();
@@ -49,6 +50,22 @@ export function LiveTab() {
     );
   const shown = filtered.slice(0, limit);
   const headed = timeOrdered(shown);
+  const items = useMemo(() => collapseRuns(shown), [shown]);
+  const toggleRun = (key: string) =>
+    setOpenRuns((open) => {
+      const next = new Set(open);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  // A day header before the first event of each day, whether the event shows alone or heads a folded run.
+  let lastDay: string | null = null;
+  const dayBreak = (e: TraceEvent) => {
+    const day = longDate(e.at);
+    const isBreak = headed && day !== lastDay;
+    lastDay = day;
+    return isBreak;
+  };
 
   if (trace.isLoading && !live.length) return <LiveSkeleton />;
   if (trace.isError && !live.length) return <ErrorNote error={trace.error} onRetry={() => void trace.refetch()} />;
@@ -102,9 +119,16 @@ export function LiveTab() {
         ) : (
           <ol aria-label="Trace events, newest first" aria-live="polite" aria-relevant="additions" className="relative">
             <AnimatePresence initial={false}>
-              {shown.map((e, i) => (
-                <LiveRow key={e.seq} event={e} dated={!headed} dayBreak={headed && (i === 0 || longDate(shown[i - 1].at) !== longDate(e.at))} />
-              ))}
+              {items.flatMap((it) =>
+                it.kind === "one"
+                  ? [<LiveRow key={it.event.seq} event={it.event} dated={!headed} dayBreak={dayBreak(it.event)} />]
+                  : openRuns.has(it.key)
+                    ? [
+                        <RunRow key={it.key} run={it} open onToggle={() => toggleRun(it.key)} dayBreak={dayBreak(it.events[0])} />,
+                        ...it.events.map((e) => <LiveRow key={e.seq} event={e} dated={!headed} dayBreak={dayBreak(e)} />),
+                      ]
+                    : [<RunRow key={it.key} run={it} open={false} onToggle={() => toggleRun(it.key)} dayBreak={dayBreak(it.events[0])} />],
+              )}
             </AnimatePresence>
           </ol>
         )}
@@ -196,6 +220,45 @@ function LiveRow({ event: e, dayBreak, dated }: { event: TraceEvent; dayBreak: b
             {ref || (e.amount_cents !== null && e.amount_cents !== undefined) ? <span aria-hidden="true">·</span> : null}
             <Principal principal={e.actor} className="[&>span:last-child]:text-[11px] [&>span:last-child]:text-slate-400" />
             <span className="font-mono text-cloud-400">#{e.seq}</span>
+          </p>
+        </div>
+        <TraceChip chip={e.chip} className="mt-0.5" />
+      </div>
+    </motion.li>
+  );
+}
+
+/** A folded run: the newest event's words, how many more like it, their total, and a toggle. */
+function RunRow({ run, open, onToggle, dayBreak }: { run: Extract<FeedItem, { kind: "run" }>; open: boolean; onToggle: () => void; dayBreak: boolean }) {
+  const e = run.events[0];
+  const n = run.events.length;
+  return (
+    <motion.li layout="position" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }} className="border-t border-cloud-100 first:border-t-0" data-testid="live-run">
+      {dayBreak ? (
+        <div className="border-b border-cloud-100 bg-cloud-25 px-5 py-1.5" aria-hidden="true">
+          <span className="micro text-slate-400">{longDate(e.at)}</span>
+        </div>
+      ) : null}
+      <div className={cn("grid grid-cols-[52px_minmax(0,1fr)_auto] items-start gap-3 px-5 py-2.5 md:grid-cols-[60px_minmax(0,1fr)_auto]", open && "bg-cloud-25")}>
+        <span className="figure pt-0.5 text-[12px] leading-tight text-slate-400">{zulu(e.at)}</span>
+        <div className="min-w-0">
+          <p className="text-[13.5px] leading-snug text-navy-900">
+            {e.summary} <span className="text-slate-500">and {n - 1} more like it</span>
+          </p>
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-slate-400">
+            <button type="button" onClick={onToggle} aria-expanded={open} className="inline-flex items-center gap-1 font-medium text-metar-ink hover:underline">
+              <ChevronRight className={cn("size-3.5 transition-transform", open && "rotate-90")} aria-hidden="true" />
+              {open ? "Fold them" : `Show all ${n}`}
+            </button>
+            {run.cents !== null ? (
+              <>
+                <span aria-hidden="true">·</span>
+                <Money cents={run.cents} className="text-[12px] text-slate-600" />
+                <span>in all</span>
+              </>
+            ) : null}
+            <span aria-hidden="true">·</span>
+            <Principal principal={e.actor} className="[&>span:last-child]:text-[11px] [&>span:last-child]:text-slate-400" />
           </p>
         </div>
         <TraceChip chip={e.chip} className="mt-0.5" />
