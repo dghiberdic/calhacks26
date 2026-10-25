@@ -704,7 +704,7 @@ export interface components {
          * Cause
          * @enum {string}
          */
-        Cause: "weather" | "technical" | "knock_on" | "crew" | "atc" | "concurrent" | "unknown";
+        Cause: "weather" | "technical" | "knock_on" | "crew" | "atc" | "concurrent" | "unknown" | "external_event";
         /** CfoMetrics */
         CfoMetrics: {
             /**
@@ -743,6 +743,16 @@ export interface components {
             care_invoiced_cents: number;
             /** Cohort */
             cohort?: string | null;
+            /**
+             * Refund Vouchers Outstanding Cents
+             * @default 0
+             */
+            refund_vouchers_outstanding_cents: number;
+            /**
+             * Compensation Vouchers Outstanding Cents
+             * @default 0
+             */
+            compensation_vouchers_outstanding_cents: number;
         };
         /** ChallengeRequest */
         ChallengeRequest: {
@@ -797,6 +807,18 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** ClockMark */
+        ClockMark: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Label */
+            label: string;
+            /** Note */
+            note?: string | null;
+        };
         /** ClockRequest */
         ClockRequest: {
             /**
@@ -812,6 +834,11 @@ export interface components {
              * Format: date-time
              */
             known_at: string;
+            /**
+             * Marks
+             * @default []
+             */
+            marks: components["schemas"]["ClockMark"][];
         };
         /** Commit */
         Commit: {
@@ -1409,6 +1436,12 @@ export interface components {
             impl: {
                 [key: string]: string;
             };
+            anchor?: components["schemas"]["TraceAnchor"] | null;
+            /**
+             * Trace Write Failures
+             * @default 0
+             */
+            trace_write_failures: number;
         };
         /** InjectRequest */
         InjectRequest: {
@@ -1516,6 +1549,12 @@ export interface components {
              * @default []
              */
             ties_to: string[];
+            approver_role?: components["schemas"]["Role"] | null;
+            /**
+             * Period Locked
+             * @default false
+             */
+            period_locked: boolean;
         };
         /** JournalLine */
         JournalLine: {
@@ -1944,7 +1983,7 @@ export interface components {
          * SourceKind
          * @enum {string}
          */
-        SourceKind: "metar" | "schedule" | "occ_log" | "mcc_log" | "tech_log" | "spares" | "manifest" | "pss" | "crm" | "bsp" | "claim" | "email" | "regulation" | "ruling" | "manufacturer" | "challenge" | "finance";
+        SourceKind: "metar" | "schedule" | "occ_log" | "mcc_log" | "tech_log" | "spares" | "manifest" | "pss" | "crm" | "bsp" | "claim" | "email" | "regulation" | "ruling" | "manufacturer" | "challenge" | "finance" | "external_event";
         /** StormRun */
         StormRun: {
             /** Id */
@@ -1992,6 +2031,8 @@ export interface components {
             airports: components["schemas"]["Airport"][];
             /** Name */
             name?: string | null;
+            /** Event Id */
+            event_id?: string | null;
         };
         /** StormSummary */
         StormSummary: {
@@ -2037,6 +2078,22 @@ export interface components {
              * @default 0
              */
             obs_count: number;
+            /**
+             * Kind
+             * @default weather
+             */
+            kind: string;
+            /** Label */
+            label?: string | null;
+        };
+        /** TraceAnchor */
+        TraceAnchor: {
+            /** Head */
+            head: string | null;
+            /** Count */
+            count: number;
+            /** Text */
+            text: string;
         };
         /** TraceEvent */
         TraceEvent: {

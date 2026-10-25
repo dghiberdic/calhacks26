@@ -310,6 +310,26 @@ def test_inject_commits_an_llm_call_and_facts_cite_it(golden, golden_app):
     assert facts and all(llm.hash in c.inputs for c in facts)
 
 
+def test_a_decision_citing_an_injected_fact_never_re_records_it(golden, golden_app):
+    """The trace reads the latest version of a fact id: re-recording an injected fact as decision evidence would
+    drop its llm_call link and its subject (and replay would lose it)."""
+    from contracts.models import Evidence, FlightDecision
+    rt = golden_app.state.runtime
+    resp = inject(golden, INJECTIONS["01_aog_inside_window"].request.model_dump(mode="json"))
+    llm = rt.trace.log(None, kind="llm_call")[0]
+    fact = resp.facts[0]
+    before = [c for c in rt.trace.log(None, kind="fact") if c.payload_ref == fact.id]
+    assert before and llm.hash in before[0].inputs
+    d = FlightDecision.model_validate(rt.store.get("decision", "NS110@2025-01-24"))
+    cites = d.model_copy(update={"evidence": [*d.evidence, Evidence(
+        fact_id=fact.id, source_id=fact.source_id, field=fact.field, value=fact.value, quote=fact.span,
+        role="supports", trust_tier=1)]})
+    rt.commit_decision(cites, "agent.engine", rt.now)
+    after = [c for c in rt.trace.log(None, kind="fact") if c.payload_ref == fact.id]
+    assert [c.hash for c in after] == [c.hash for c in before]
+    assert rt.trace.payload(after[0].hash)["subject"] == fact.subject
+
+
 # ---------------------------------------------------------------- personas never approve or pay
 def test_persona_principals_never_approve_or_pay(golden, golden_app):
     from datetime import UTC, datetime
