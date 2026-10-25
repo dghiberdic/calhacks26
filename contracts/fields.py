@@ -26,6 +26,12 @@ DSL_FEATURES: tuple[str, ...] = (
     "cohort.age_months", "cohort.months_since_last_claim", "cohort.limitation_expired",
     "sources.disagree", "precedent.count",
 )
+# additive (blackout v1): external-event features (grid outage). in_event_window_* take "in" | "out" | "unknown".
+# Kept OUT of DSL_FEATURES on purpose: llm/drafter.py builds its structured-output schema from DSL_FEATURES and the
+# recorded demo LLM cache keys include that schema, so growing it would break offline replay of rule drafting. The
+# event rule is templated from the Legal ruling (no LLM). The engine's allowlist is ALL_DSL_FEATURES.
+EVENT_DSL_FEATURES: tuple[str, ...] = ("flight.in_event_window_dep", "flight.in_event_window_arr", "event.kind")
+ALL_DSL_FEATURES: tuple[str, ...] = DSL_FEATURES + EVENT_DSL_FEATURES
 DSL_OPS: tuple[str, ...] = ("eq", "ne", "lt", "le", "gt", "ge", "in", "nin", "exists")
 # DSL context keys usable in Rule.scope besides the features (engine/dsl.py)
 SCOPE_CONTEXT_KEYS: tuple[str, ...] = ("storm", "cohort", "flight", "station", "segment", "coupon")
@@ -39,10 +45,14 @@ ENGINE_DERIVED: frozenset[str] = frozenset({
     "claim.duplicate", "claim.age_months", "claim.after_limitation",
     "cohort.age_months", "cohort.months_since_last_claim", "cohort.limitation_expired",
     "sources.disagree", "precedent.count",
+    "flight.in_event_window_dep", "flight.in_event_window_arr",     # additive (blackout v1)
 })
+# values of the event-window features (as for the storm windows: ±60 min around an edge is "unknown")
+EVENT_WINDOW_VALUES: tuple[str, ...] = ("in", "out", "unknown")
 
 TYPES = ("str", "int", "float", "bool", "cents", "datetime", "date", "enum", "json")
-SUBJECTS = ("flight", "aircraft", "coupon", "claim", "station", "storm", "care", "cohort", "source")
+SUBJECTS = ("flight", "aircraft", "coupon", "claim", "station", "storm", "care", "cohort", "source",
+            "event")                        # additive (blackout v1): "event:<ExternalEvent.id>"
 
 
 @dataclass(frozen=True)
@@ -147,6 +157,15 @@ _f("storm.reported_cancellations_arr", "int", "storm", "Reported arrival cancell
 _f("storm.red_warning", "str", "storm", "Met Éireann red warning hours")
 _f("storm.orange_warning", "str", "storm", "Met Éireann orange warning hours")
 _f("storm.peak_gust_kt", "int", "storm", "Peak gust", unit="kt", parse="int")
+
+# ---------------------------------------------------------------- external events — subject event:<id> (blackout v1)
+# One event.kind fact per event; one window_start/window_end pair per airport window (the fact's record names the
+# ICAO: normalize.event_fact_id(event_id, field, icao)). Values are UTC times from a tier-1 operator notice.
+_f("event.kind", "str", "event", "Kind of external event, e.g. grid_outage", feeds=("event.kind",))
+_f("event.window_start", "datetime", "event", "Outage window start at one airport (UTC)", parse="time",
+   feeds=("flight.in_event_window_dep", "flight.in_event_window_arr"))
+_f("event.window_end", "datetime", "event", "Normal operations resumed at that airport (UTC)", parse="time",
+   feeds=("flight.in_event_window_dep", "flight.in_event_window_arr"))
 
 # ---------------------------------------------------------------- PSS — subject coupon:<id>
 _f("coupon.flight_id", "str", "coupon", "Flight the coupon is for")
