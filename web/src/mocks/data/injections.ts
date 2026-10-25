@@ -6,7 +6,7 @@ export const INJECTIONS: Injection[] = [
   {
     id: "01_aog_inside_window",
     title: "An AOG logged inside the storm window",
-    request: { kind: "tech_log", flight_id: "NS110@2025-01-24", text: "24JAN 08:20Z EI-NSH DUB. L/H MLG BRAKE 2 TEMP HI ON TAXI-IN, BRAKE WORN BEYOND LIMIT. BRAKE CHANGE REQD. NO MEL RELIEF. A/C AOG." },
+    request: { kind: "tech_log", flight_id: "NS110@2025-01-24", text: "24JAN 04:05Z EI-NSH DUB. L/H MLG BRAKE 2 TEMP HI ON TAXI-IN, BRAKE WORN BEYOND LIMIT. BRAKE CHANGE REQD. NO MEL RELIEF. A/C AOG." },
     expected: "AOG inside the storm window → concurrent causes · routed to Legal (confidence 55%) · NS110 held, not flipped",
   },
   {

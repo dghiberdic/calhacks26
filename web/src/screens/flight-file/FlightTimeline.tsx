@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { scaleLinear, scaleUtc } from "d3-scale";
 import { area, curveMonotoneX, line } from "d3-shape";
 import type { Flight, MetarObs, StormWindow, TimelineMark } from "@/api/types";
-import { gustThreshold } from "@/components/storm/model";
+import { gustThreshold, isOutage, windowName } from "@/components/storm/model";
 import { useWidth } from "@/components/storm/useWidth";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { VERDICT_COLOR, type VerdictKind } from "@/components/verdict";
@@ -115,7 +115,7 @@ function Track({ items, width, kind, windows, metar, flightDate }: { items: Item
         <rect x={pad} y={bandTop} width={width - pad * 2} height={BAND_H} rx={6} fill="var(--color-cloud-50)" />
         <g clipPath="url(#tl-band)">
           {bands.map(({ w, a, b }) => (
-            <rect key={w.start} x={x(new Date(a))} y={bandTop} width={x(new Date(b)) - x(new Date(a))} height={BAND_H} fill="var(--color-metar-wash)" />
+            <rect key={w.start} x={x(new Date(a))} y={bandTop} width={x(new Date(b)) - x(new Date(a))} height={BAND_H} fill={isOutage(w) ? "var(--color-cloud-200)" : "var(--color-metar-wash)"} />
           ))}
           {gustArea ? <path d={gustArea} fill="var(--color-metar)" fillOpacity={0.12} /> : null}
           {gustLine ? <path d={gustLine} fill="none" stroke="var(--color-metar)" strokeWidth={1.4} strokeOpacity={0.9} /> : null}
@@ -123,8 +123,8 @@ function Track({ items, width, kind, windows, metar, flightDate }: { items: Item
         </g>
         {bands.map(({ w, a, b }) =>
           x(new Date(b)) - x(new Date(a)) > 170 ? (
-            <text key={w.start} x={x(new Date(b)) - 7} y={bandTop + 14} textAnchor="end" className="fill-metar-ink text-[10.5px] font-medium tabular-nums" stroke="var(--color-metar-wash)" strokeWidth={3} paintOrder="stroke">
-              Storm window {zulu(w.start)}–{zulu(w.end)}
+            <text key={w.start} x={x(new Date(b)) - 7} y={bandTop + 14} textAnchor="end" className={cn("text-[10.5px] font-medium tabular-nums", isOutage(w) ? "fill-slate-600" : "fill-metar-ink")} stroke={isOutage(w) ? "var(--color-cloud-200)" : "var(--color-metar-wash)"} strokeWidth={3} paintOrder="stroke">
+              {windowName(w)} {zulu(w.start)}–{zulu(w.end)}
             </text>
           ) : null,
         )}
@@ -207,8 +207,8 @@ function VerticalList({ items, kind, windows, flightDate }: { items: Item[]; kin
     for (const w of windows) {
       const a = Date.parse(w.start);
       const b = Date.parse(w.end);
-      if (a > first && a < last) rows.push({ at: a, iso: w.start, key: "window", kind: "Window", label: "Storm window opens", text: "", machine: false, tone: "metar" });
-      if (b > first && b < last) rows.push({ at: b, iso: w.end, key: "window", kind: "Window", label: "Storm window closes", text: "", machine: false, tone: "metar", edge: "close" });
+      if (a > first && a < last) rows.push({ at: a, iso: w.start, key: "window", kind: "Window", label: `${windowName(w)} opens`, text: "", machine: false, tone: "metar" });
+      if (b > first && b < last) rows.push({ at: b, iso: w.end, key: "window", kind: "Window", label: `${windowName(w)} closes`, text: "", machine: false, tone: "metar", edge: "close" });
     }
   }
   rows.sort((p, q) => p.at - q.at);
