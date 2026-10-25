@@ -1,7 +1,9 @@
 import { Fragment } from "react";
 import { Check, Minus, X } from "lucide-react";
 import type { Evidence } from "@/api/types";
+import { zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { Details } from "./kit";
 
 /** Trust tiers (CONTRACTS Source.trust_tier). Lower number wins. */
 export const TIER_NAME: Record<number, string> = {
@@ -11,23 +13,46 @@ export const TIER_NAME: Record<number, string> = {
   4: "passenger · agency · challenge",
 };
 
-/** Guess the source's kind from its id ("src:tech_log:…", "metar:EIDW@…") for the label; never used for logic. */
+/** Source kinds in plain words, matched against the source id ("SRC-TECHLOG-EI-NSB-…", "src:tech_log:…", "SRC-METAR-EIDW@…"). */
+const SOURCE_NAME: [RegExp, string][] = [
+  [/tech_?log/, "Tech log"],
+  [/mcc/, "Maintenance control (MCC)"],
+  [/occ/, "Ops control (OCC) batch code"],
+  [/metar/, "METAR weather report"],
+  [/spares/, "Spare aircraft log"],
+  [/manifest/, "Passenger manifest"],
+  [/schedule/, "Schedule"],
+  [/pss/, "Reservations (PSS)"],
+  [/bsp/, "Ticket settlement (BSP)"],
+  [/crm/, "CRM"],
+  [/claim/, "Passenger claim"],
+  [/email/, "Email"],
+  [/regulation/, "Regulation"],
+  [/ruling/, "Ruling"],
+  [/manufacturer/, "Manufacturer notice"],
+  [/challenge/, "Challenge"],
+  [/event|entso|grid/, "Grid operator notice"],
+];
+
+/** Name the source's kind from its id, for the label; never used for logic. */
 export function sourceKind(sourceId: string): string {
   const s = sourceId.toLowerCase();
-  for (const k of ["tech_log", "mcc_log", "occ_log", "metar", "spares", "manifest", "schedule", "pss", "bsp", "crm", "claim", "email", "regulation", "ruling", "manufacturer", "challenge"]) {
-    if (s.includes(k)) return k.replace("_log", " log").replace("_", " ");
-  }
-  return sourceId.split(":")[0] ?? sourceId;
+  return SOURCE_NAME.find(([re]) => re.test(s))?.[1] ?? sourceId.split(":")[0] ?? sourceId;
 }
 
-const MACHINE = /tech log|mcc|occ|metar|spares|bsp/;
+const MACHINE = /tech log|mcc|occ|metar|spare|bsp/i;
 
 function display(value: unknown) {
   if (value === null || value === undefined) return "—";
   if (typeof value === "string") return value;
   if (typeof value === "number" || typeof value === "boolean") return String(value);
+  // A computed window: "02:30Z–15:00Z · peak gust 56 kt".
+  const w = value as { start?: unknown; end?: unknown; peak_gust_kt?: unknown };
+  if (typeof w.start === "string" && typeof w.end === "string") return `${zulu(w.start)}–${zulu(w.end)}${typeof w.peak_gust_kt === "number" && w.peak_gust_kt > 0 ? ` · peak gust ${w.peak_gust_kt} kt` : ""}`;
   return JSON.stringify(value);
 }
+
+const ROLE_WORD: Record<Evidence["role"], string> = { supports: "supports", contradicts: "contradicts", context: "context" };
 
 const MASK = /\[redacted\]/gi;
 
@@ -51,45 +76,57 @@ export function MaskedText({ text }: { text: string }) {
   );
 }
 
-/** Evidence ranked by trust tier, verbatim quotes, the losing source struck through (Flight File, Questions). */
-export function EvidenceList({ evidence, className, compact }: { evidence: Evidence[]; className?: string; compact?: boolean }) {
+/**
+ * Evidence ranked by trust tier, verbatim quotes, the losing source struck through (Flight File, Questions).
+ * With `foldContext`, rows that are only context fold behind "Details", so the rows that decide lead.
+ */
+export function EvidenceList({ evidence, className, compact, foldContext }: { evidence: Evidence[]; className?: string; compact?: boolean; foldContext?: boolean }) {
   const ranked = [...evidence].sort((a, b) => a.trust_tier - b.trust_tier || Number(a.struck ?? false) - Number(b.struck ?? false));
+  const lead = foldContext ? ranked.filter((e) => e.role !== "context" || e.struck) : ranked;
+  const context = foldContext ? ranked.filter((e) => !lead.includes(e)) : [];
+  const rows = (list: Evidence[]) => list.map((e, i) => <EvidenceRow key={`${e.fact_id}-${i}`} e={e} compact={compact} />);
   return (
-    <ol className={cn("flex flex-col", className)}>
-      {ranked.map((e, i) => {
-        const kind = sourceKind(e.source_id);
-        const machine = MACHINE.test(kind);
-        const RoleIcon = e.role === "supports" ? Check : e.role === "contradicts" ? X : Minus;
-        return (
-          <li key={`${e.fact_id}-${i}`} className={cn("grid grid-cols-[44px_minmax(0,1fr)] gap-3 border-t border-cloud-100 py-3 first:border-t-0", compact && "py-2")}>
-            <div className="flex flex-col items-start gap-1 pt-0.5">
-              <span className={cn("inline-flex h-5 items-center rounded px-1.5 font-mono text-[10px] font-bold", e.trust_tier === 1 ? "bg-navy-900 text-cloud-50" : "bg-cloud-100 text-slate-600")} title={TIER_NAME[e.trust_tier]}>
-                T{e.trust_tier}
-              </span>
-            </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-slate-500">
-                <span className="font-medium capitalize text-slate-600">{kind}</span>
-                <span className="font-mono text-[11px] text-slate-400">{e.field}</span>
-                <span className={cn("inline-flex items-center gap-1", e.role === "contradicts" ? "text-slate-600" : "text-slate-500")}>
-                  <RoleIcon className="size-3" aria-hidden="true" />
-                  {e.role}
-                </span>
-                {e.struck ? <span className="micro text-slate-400">outranked · not used</span> : null}
-              </div>
-              <div
-                className={cn(
-                  "mt-1 break-words",
-                  machine ? "font-mono text-[12.5px] leading-relaxed" : "text-[14px] leading-relaxed",
-                  e.struck ? "text-slate-400 line-through decoration-slate-400" : "text-navy-900",
-                )}
-              >
-                {e.quote ? <MaskedText text={e.quote} /> : display(e.value)}
-              </div>
-            </div>
-          </li>
-        );
-      })}
-    </ol>
+    <>
+      <ol className={cn("flex flex-col", className)}>{rows(lead.length ? lead : context)}</ol>
+      {lead.length && context.length ? (
+        <Details summary={`${context.length} more for context`} className="mt-1 border-t border-cloud-100 pt-2.5">
+          <ol className="flex flex-col">{rows(context)}</ol>
+        </Details>
+      ) : null}
+    </>
+  );
+}
+
+function EvidenceRow({ e, compact }: { e: Evidence; compact?: boolean }) {
+  const kind = sourceKind(e.source_id);
+  const machine = MACHINE.test(kind);
+  const RoleIcon = e.role === "supports" ? Check : e.role === "contradicts" ? X : Minus;
+  return (
+    <li className={cn("grid grid-cols-[44px_minmax(0,1fr)] gap-3 border-t border-cloud-100 py-3 first:border-t-0", compact && "py-2")}>
+      <div className="flex flex-col items-start gap-1 pt-0.5">
+        <span className={cn("inline-flex h-5 items-center rounded px-1.5 font-mono text-[10px] font-bold", e.trust_tier === 1 ? "bg-navy-900 text-cloud-50" : "bg-cloud-100 text-slate-600")} title={`Trust tier ${e.trust_tier}: ${TIER_NAME[e.trust_tier] ?? ""}`}>
+          T{e.trust_tier}
+        </span>
+      </div>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-slate-500" title={`${e.source_id} · ${e.field}`}>
+          <span className="font-medium text-slate-600">{kind}</span>
+          <span className={cn("inline-flex items-center gap-1", e.role === "contradicts" ? "text-slate-600" : "text-slate-500")}>
+            <RoleIcon className="size-3" aria-hidden="true" />
+            {ROLE_WORD[e.role]}
+          </span>
+          {e.struck ? <span className="micro text-slate-400">outranked · not used</span> : null}
+        </div>
+        <div
+          className={cn(
+            "mt-1 break-words",
+            machine ? "font-mono text-[12.5px] leading-relaxed" : "text-[14px] leading-relaxed",
+            e.struck ? "text-slate-400 line-through decoration-slate-400" : "text-navy-900",
+          )}
+        >
+          {e.quote ? <MaskedText text={e.quote} /> : display(e.value)}
+        </div>
+      </div>
+    </li>
   );
 }

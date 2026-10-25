@@ -5,6 +5,7 @@ import { useCfo, useStormRun, useStorms } from "@/api/queries";
 import { ErrorNote, Panel, Shimmer } from "@/components/kit";
 import { RouteLegend, RouteMap } from "@/components/storm/RouteMap";
 import { airport, iataOf } from "@/lib/airports";
+import { count } from "@/lib/format";
 import { HERO_STORM } from "@/lib/storms";
 import { Hero } from "./Hero";
 import { FeedPanel, LearnsStrip, LiabilityTiles, QuestionsPreview } from "./Sections";
@@ -64,6 +65,9 @@ export default function StormRunScreen() {
             </Link>
           }
         >
+          <p className="-mt-1 mb-3 text-[13px] text-slate-500">
+            {count(data.questions.length)} {data.questions.length === 1 ? "question" : "questions"}, each to the person who owns the answer. Everything else it decided on its own.
+          </p>
           <QuestionsPreview questions={data.questions} />
         </Panel>
         <FeedPanel events={feed} />
@@ -73,7 +77,7 @@ export default function StormRunScreen() {
         <div className="flex flex-wrap items-end justify-between gap-3 px-1">
           <div>
             <h2 className="text-[15px] font-semibold">Every route leaves {airportName(data.station)}</h2>
-            <p className="mt-0.5 text-[12.5px] text-cloud-500">Great-circle distance from the hub, the one Art. 7(4) measures. Hover a route for its flights.</p>
+            <p className="mt-0.5 text-[12.5px] text-cloud-500">Coloured by what StormCheck found. The distance sets the EU261 amount (€250, €400 or €600). Hover a route for its flights.</p>
           </div>
           <RouteLegend tone="dark" />
         </div>
