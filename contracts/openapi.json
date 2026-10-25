@@ -1764,6 +1764,39 @@
         ],
         "title": "AnswerResponse"
       },
+      "AskedAgain": {
+        "properties": {
+          "rule_ref": {
+            "type": "string",
+            "title": "Rule Ref"
+          },
+          "rule_title": {
+            "type": "string",
+            "title": "Rule Title"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "widen": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WidenOffer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule_ref",
+          "rule_title",
+          "reason"
+        ],
+        "title": "AskedAgain"
+      },
       "Blame": {
         "properties": {
           "target": {
@@ -2094,6 +2127,17 @@
               }
             ],
             "title": "Note"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
           }
         },
         "type": "object",
@@ -4723,6 +4767,16 @@
               }
             ],
             "title": "Proposal Rule Id"
+          },
+          "asked_again": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AskedAgain"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -5849,6 +5903,24 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WidenOffer": {
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "title": "Rule Id"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule_id",
+          "question"
+        ],
+        "title": "WidenOffer"
       }
     }
   }

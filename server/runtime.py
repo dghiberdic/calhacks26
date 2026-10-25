@@ -959,7 +959,7 @@ class Runtime:
         run = StormRun.model_validate(data)
         ids = {x.id for x in run.questions}
         refs = {r.flight.id for r in run.flights}
-        live = {q.id: q for q in self.questions()}
+        live = {q.id: q for q in self.question_views()}
         qs = [live.get(x.id, x) for x in run.questions]          # desk questions live in their run only
         qs += [q for q in live.values() if q.id not in ids and set(q.case_refs) & refs]
         return run.model_copy(update={"questions": qs, "feed": self.store.trace()})
@@ -1029,6 +1029,20 @@ class Runtime:
             q = Question.model_validate(data)
             out.append(q.model_copy(update={"status": self.question_status(q),
                                             "proposal_rule_id": self.lifecycle.reject_target(q)}))
+        return out
+
+    def question_views(self) -> list[Question]:
+        """`questions()` plus the read-time `asked_again` view (asked-again-v1): a ruled pattern asked again because
+        its case is outside the rule's scope reads "out-of-scope". Served only, never committed: the trace keeps
+        the question as it was raised."""
+        out = []
+        for q in self.questions():
+            try:
+                aa = self.lifecycle.asked_again(q)
+            except Exception:                                   # a view never fails a read
+                log.exception("asked_again view failed for %s", q.id)
+                aa = None
+            out.append(q.model_copy(update={"asked_again": aa, "reason_tag": "out-of-scope"}) if aa else q)
         return out
 
     def health_impl(self) -> dict[str, str]:

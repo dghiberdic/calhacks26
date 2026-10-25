@@ -237,6 +237,22 @@ class Entitlement(BaseModel):
     status: Literal["owed", "no_compensation", "held", "needs_ruling", "exempt_notice", "out_of_scope", "staff_ticket"]
     article: str; reason: str; rules_applied: list[str] = []
 
+class WidenOffer(BaseModel):               # additive (asked-again-v1): one rung wider (POST /rules/{rule_id}/widen)
+    rule_id: ID
+    question: str                           # "Also cover flights arriving into the EU (e.g. BOS→DUB)?"
+
+
+class AskedAgain(BaseModel):                # additive (asked-again-v1): why a ruled pattern is asked again
+    rule_ref: str                           # "R-CL-1@1"
+    rule_title: str
+    reason: str                             # plain words: the rule's scope, and how this case falls outside it
+    widen: WidenOffer | None = None
+
+
+def _is_none(v: Any) -> bool:
+    return v is None
+
+
 class Question(BaseModel):
     id: ID; case_refs: list[ID]           # one question may cover a whole pattern (e.g. 3 knock-on flights)
     pattern: str                            # "knock_on_return" | "voucher_in_lieu_unsigned" | "cohort_release" | "new_legal_pattern" | ...
@@ -254,6 +270,10 @@ class Question(BaseModel):
     # additive (Justin #11): the rule or proposal a "Reject" on this question targets (POST /rules/{id}/reject);
     # None → answer the question with its reject option instead
     proposal_rule_id: ID | None = None
+    # additive (asked-again-v1): read-time view only, never committed. Set when the case falls outside the SCOPE of
+    # an active rule for the same pattern ("asks instead of stretching your ruling"); left out of dumps while None,
+    # so every committed question payload and hash is byte-identical.
+    asked_again: AskedAgain | None = _Field(default=None, exclude_if=_is_none)
 
 class Ruling(BaseModel):
     id: ID; question_id: ID | None = None
@@ -594,6 +614,8 @@ class ClockRequest(BaseModel):              # POST /clock (forward-only)
 class ClockMark(BaseModel):                 # additive (server, Justin #2): a named moment the demo moves through
     at: UTCDateTime; label: str             # "Iberian blackout · 28 Apr 2025"
     note: str | None = None
+    # additive (asked-again-v1): the storm run this mark runs ("EIDW@2025-01-26"); left out of dumps while None
+    run_id: ID | None = _Field(default=None, exclude_if=_is_none)
 
 class ClockResponse(BaseModel):
     known_at: UTCDateTime

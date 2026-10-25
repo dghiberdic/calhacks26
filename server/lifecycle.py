@@ -21,8 +21,8 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Iterator
 
 from contracts.models import (
-    Entitlement, Extraordinary, FlightDecision, FlightFile, JournalEntry, Question, ReplayDiff, ReplayFlip, Role,
-    Rule, RuleAction, RuleProposal, Ruling, StormRun, World,
+    AskedAgain, Entitlement, Extraordinary, FlightDecision, FlightFile, JournalEntry, Question, ReplayDiff, ReplayFlip, Role,
+    Rule, RuleAction, RuleProposal, Ruling, StormRun, WidenOffer, World,
 )
 
 from . import compose
@@ -38,6 +38,16 @@ COHORT_ACTIONS = {RuleAction.KEEP_TAIL, RuleAction.DENY_RELEASE}
 BASE_EXTRACTORS = frozenset({"normalize@1", "engine:evidence@1"})   # facts that restate the base world
 TEMPLATE_ONLY = frozenset({"external_event_window"})   # engine.lifecycle.TEMPLATE_ONLY when importable
 PATTERN_TO_CANNED = {"voucher_in_lieu_unsigned": "Q-1", "knock_on_return": "Q-2", "cohort_release": "Q-3"}
+# asked-again-v1: a case-scoped key in plain words: what the rule covers, what a case outside it is, what one rung
+# wider would also cover
+SCOPE_WORDS: dict[str, dict[Any, tuple[str, str, str]]] = {
+    "flight.departs_eu": {True: ("flights leaving the EU", "arrives into the EU", "flights arriving into the EU"),
+                          False: ("flights that do not leave the EU", "leaves the EU", "flights leaving the EU")},
+    "flight.arrives_eu": {True: ("flights arriving into the EU", "does not arrive into the EU",
+                                 "flights leaving the EU"),
+                          False: ("flights that do not arrive into the EU", "arrives into the EU",
+                                  "flights arriving into the EU")},
+}
 AUTHORITY = {  # THREAD D4: who may author what
     Role.CLAIMS_LEAD: {"voucher", "entitlement", "routing"},
     Role.LEGAL: {"cause", "entitlement", "regime", "routing"},
@@ -679,7 +689,9 @@ class Lifecycle:
         if "all" in cond:
             cond = {**cond, "all": [c for c in cond["all"] if c.get("f") != key]}
         title = {"R-CTL-1": "Never release the tail, for all storm cohorts: keep (ultimate − M12 rate) × entitlement "
-                            "until the six-year limitation"}.get(rid, latest.title)
+                            "until the six-year limitation",
+                 "R-CL-1": "No signed acceptance, no offset: pay cash; the voucher stays as goodwill (flights leaving "
+                           "or arriving into the EU)"}.get(rid, latest.title)
         wider = latest.model_copy(update={"version": latest.version + 1, "scope": scope, "condition": cond,
                                           "status": "proposed", "supersedes": ref(latest), "recorded_at": rt.now,
                                           "title": title})
@@ -692,6 +704,107 @@ class Lifecycle:
                 f"{len({f.entity_id for f in prop.would_flip.flips})}", "INFO", ref(wider),
                 prop.would_flip.total_delta_cents or None)
         return prop
+
+    # ---- asked again (asked-again-v1): a ruled pattern, a case outside the rule's scope -------------------
+    def rule_pattern(self, rule: Rule) -> str | None:
+        """The question pattern a rule settles: the scripted rules by their canned question, else the pattern of the
+        question its origin ruling answered."""
+        from contracts import stub_app as stub
+        canned = stub.RULE_TO_QUESTION.get(rule.id)
+        if canned is not None:
+            return next((p for p, c in PATTERN_TO_CANNED.items() if c == canned), None)
+        ruling = self.rt.store.get("ruling", rule.origin_ruling_id) if rule.origin_ruling_id else None
+        q = self.rt.store.get("question", ruling["question_id"]) if ruling and ruling.get("question_id") else None
+        return q["pattern"] if q else None
+
+    @staticmethod
+    def _fid(case_ref: str) -> str:
+        return case_ref.rsplit(":", 1)[0] if ":" in case_ref.split("@", 1)[-1] else case_ref
+
+    def case_value(self, case_ref: str, key: str) -> Any:
+        """A case's value for a scope key: the engine's features for its flight, else the world's airports."""
+        fid = self._fid(case_ref)
+        feats = self.features().get(fid) or {}
+        if key in feats:
+            return feats[key]
+        fl = next((f for f in (self.world.flights if self.world else []) if f.id == fid), None)
+        if fl is None:
+            return None
+        if key in ("flight.departs_eu", "flight.arrives_eu"):
+            ap = compose.airport_by(self.world, fl.origin if key == "flight.departs_eu" else fl.dest)
+            return ap.eu if ap else None
+        return None
+
+    def _flight_words(self, case_ref: str) -> tuple[str, str, str]:
+        """("NS30", "Boston → Dublin", "BOS→DUB") for a case."""
+        fid = self._fid(case_ref)
+        fl = next((f for f in (self.world.flights if self.world else []) if f.id == fid), None)
+        if fl is None:
+            return fid.split("@")[0], "", ""
+
+        def city(code: str) -> str:
+            ap = compose.airport_by(self.world, code)
+            return ap.name.split()[0] if ap and ap.name else code
+        return fl.number, f"{city(fl.origin)} → {city(fl.dest)}", f"{fl.origin}→{fl.dest}"
+
+    def asked_again(self, q: Question) -> AskedAgain | None:
+        """Why an unanswered question asks again although its pattern has an active rule: its case falls outside
+        that rule's case-scoped keys (the rule is never stretched; widening is explicit). A read-time view only."""
+        if q.status == "answered" or not q.case_refs:
+            return None
+        for rule in sorted(self.rt.rules(), key=lambda r: r.id):
+            if rule.status != "active" or rule.recorded_at > q.asked_at or self.rule_pattern(rule) != q.pattern:
+                continue
+            for key, v in rule.scope.items():
+                if not (isinstance(v, str) and v.startswith("case:")):
+                    continue
+                raw = v.split(":", 1)[1]
+                want: Any = {"true": True, "false": False}.get(raw.lower(), raw)
+                outside = [c for c in q.case_refs if (got := self.case_value(c, key)) is not None and got != want]
+                if not outside:
+                    continue
+                num, route, pair = self._flight_words(outside[0])
+                covers, case_is, wider = SCOPE_WORDS.get(key, {}).get(want, (
+                    f"cases where {key} is {raw}", f"has {key} = {self.case_value(outside[0], key)}",
+                    f"cases where {key} is anything"))
+                more = f" (and {len(outside) - 1} more)" if len(outside) > 1 else ""
+                subject = f"{num} {route}".strip()
+                reason = (f"Your rule {rule.id} covers {covers}. {subject}{more} {case_is}, so it asks instead of "
+                          "stretching your ruling.")
+                p = self.proposal(rule.id)
+                nxt = p.widen_next if p and p.widen_next and p.widen_next.get("remove") == key else None
+                if key in SCOPE_WORDS:
+                    question = f"Also cover {wider}" + (f" (e.g. {pair})" if pair else "") + "?"
+                else:
+                    question = (nxt or {}).get("question") or f"Widen {rule.id} (drop {key})?"
+                return AskedAgain(rule_ref=ref(rule), rule_title=rule.title, reason=reason,
+                                  widen=WidenOffer(rule_id=rule.id, question=question))
+        return None
+
+    def asked_again_for(self, rule_id: str) -> list[tuple[Question, AskedAgain]]:
+        rid = base_id(rule_id)
+        out = []
+        for q in self.rt.questions():
+            aa = self.asked_again(q)
+            if aa is not None and aa.widen is not None and aa.widen.rule_id == rid:
+                out.append((q, aa))
+        return out
+
+    def widen_and_apply(self, rule_id: str, role: Role, author: str, principal: str) -> RuleProposal:
+        """One-click widen from an asked-again question, by the rule's authority: propose one rung wider, confirm
+        it (replay re-decides the cases now in scope, recorded like any confirm), then close each asked-again
+        question with a ruling that says so."""
+        asks = self.asked_again_for(rule_id)
+        prop = self.widen(rule_id, principal)
+        rule, diff = self.confirm(rule_id, principal)
+        for q, aa in asks:
+            self.record_ruling(question=q, role=role, author=author, principal=principal, kind="answer",
+                               decision=aa.widen.question if aa.widen else f"Widen {rule.id}",
+                               explanation=f"Widened {aa.rule_ref} to {ref(rule)}: {rule.title}")
+            self.rt.emit("ruling", principal, f"{compose.label(role)} widened {aa.rule_ref} → {ref(rule)} from {q.id}"
+                         f" · {len({f.entity_id for f in diff.flips})} settled", "RULED", q.id,
+                         diff.total_delta_cents or None)
+        return prop.model_copy(update={"rule": rule, "would_flip": diff})
 
     def reject(self, rule_id: str, role: Role, author: str, principal: str,
                explanation: str) -> tuple[Ruling, RuleProposal | None]:

@@ -80,7 +80,7 @@ def install(app: FastAPI, rt: Any) -> None:
                                                                     "open also returns reminded (both unanswered)")
                        ) -> list[Question]:
         s = sess(request)
-        qs = rt.questions()
+        qs = rt.question_views()
         if s.role in SCOPED_ROLES:
             qs = [q for q in qs if q.routed_to == s.role]
         if status == "open":
@@ -285,8 +285,15 @@ def install(app: FastAPI, rt: Any) -> None:
         return AnswerResponse(ruling=ruling, proposal=proposal)
 
     @app.post("/api/rules/{rule_id}/widen", response_model=RuleProposal, responses=ERRORS)
-    def widen(rule_id: str) -> RuleProposal:
+    def widen(rule_id: str, request: Request) -> RuleProposal:
+        """One rung wider, proposed (shadow until confirmed). asked-again-v1: the rule's own authority widening from
+        an open asked-again question applies it at once (widen → confirm → the question is answered)."""
+        s = sess(request)
         with rt.lock:
+            rule = lc.rules().get(base_id(rule_id))
+            if rule is not None and rule.status == "active" and s.role == rule.authority_required \
+                    and lc.asked_again_for(rule_id):
+                return guarded(lambda: lc.widen_and_apply(rule_id, s.role, s.name, s.principal))
             return guarded(lambda: lc.widen(rule_id))
 
     @app.post("/api/rules/{rule_id}/revert", response_model=ReplayDiff, responses=ERRORS)

@@ -30,11 +30,12 @@ class Scenario:
     note: str
     at: datetime                  # the clock mark: reaching it runs the scenario once
     loader: tuple[str, str]       # (module, function) returning the World slice
+    run_id: str | None = None     # the run its clock mark lands on (`world.events.RUN_ID`), for the UI's jump
 
 
 BLACKOUT = Scenario(id="EVT-IBERIA-BLACKOUT@2025-04-28", label="Iberian blackout · 28 Apr 2025",
                     note="A power cut, not a storm: asks Legal once", at=datetime(2025, 4, 29, 6, 0, tzinfo=UTC),
-                    loader=("world.events", "blackout_world"))
+                    loader=("world.events", "blackout_world"), run_id="EIDW@2025-04-28")
 SCENARIOS: tuple[Scenario, ...] = (BLACKOUT,)
 
 # the golden demo's moments (Justin #2); the storm runs' own marks come from `meta.storms[].known_at`
@@ -58,8 +59,9 @@ def marks(world: World | None, run_at: Any) -> list[ClockMark]:
         info = compose.storm_meta(world, sid)
         if info:
             station, day = sid.split("@", 1)
-            out.append(ClockMark(at=run_at(world, station, date.fromisoformat(day)), label=label, note=note))
-    out += [ClockMark(at=s.at, label=s.label, note=s.note) for s in SCENARIOS]
+            out.append(ClockMark(at=run_at(world, station, date.fromisoformat(day)), label=label, note=note,
+                                 run_id=sid))
+    out += [ClockMark(at=s.at, label=s.label, note=s.note, run_id=s.run_id) for s in SCENARIOS]
     return sorted(out, key=lambda m: m.at)
 
 
