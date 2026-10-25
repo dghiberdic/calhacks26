@@ -61,6 +61,7 @@ const TIER: Record<SourceKind, number> = {
   metar: 1, tech_log: 1, mcc_log: 1, schedule: 2, manifest: 2, pss: 2, bsp: 2, spares: 2, manufacturer: 2,
   occ_log: 3, crm: 3, claim: 4, email: 4, challenge: 4, regulation: 1, ruling: 1,
   finance: 2, // GL extracts, care accrual sheets, vendor invoices (D0b): system records, like BSP
+  external_event: 1, // a grid operator's or airport operator's notice (blackout spec)
 };
 const ACL: Partial<Record<SourceKind, string[]>> = {
   tech_log: ["maintenance", "ops"], mcc_log: ["maintenance", "ops"], spares: ["ops"], occ_log: ["ops"], schedule: ["ops"], manifest: ["ops", "pii"],
