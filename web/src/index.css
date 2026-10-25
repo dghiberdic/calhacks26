@@ -206,6 +206,15 @@ body:has(.app-shell) {
   background: radial-gradient(ellipse at 85% 0%, rgb(34 67 105 / 14%), transparent 55%), var(--background);
 }
 
+.app-evidence-link {
+  background: #d6ebfa;
+  color: #102033;
+}
+
+.app-evidence-link:hover {
+  background: #eef7ff;
+}
+
 /* Existing components use explicit utility colours. Map surface and text roles
    separately: changing the shared navy/cloud palette would invert the hero,
    status chips and charts that are already designed for dark backgrounds. */

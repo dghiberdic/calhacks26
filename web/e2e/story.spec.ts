@@ -36,14 +36,14 @@ test.describe("story, reduced motion", () => {
     await expect(recode).toContainText("71 → 41");
     await expect(recode).toContainText("cause-finding confidence 91%");
     await expect(page.locator('[data-section="verdict"]')).toContainText("€34,650");
-    await expect(page.locator('[data-section="trace"]')).toContainText(/€34,650 traces back to a log line in \d+ steps\./);
+    await expect(page.locator('[data-section="trace"]')).toContainText("The evidence behind €34,650.");
 
     const closing = page.getByTestId("story-closing");
     await closing.scrollIntoViewIfNeeded();
-    const run = closing.getByRole("link", { name: /Open the storm run/ });
+    const run = closing.getByRole("link", { name: /Open the results/ });
     await expect(run).toHaveAttribute("href", "/");
     await expect(closing.getByRole("link", { name: "See the pitch" })).toHaveAttribute("href", "/pitch");
-    await expect(closing.getByRole("link", { name: "Bring your own storm" })).toHaveAttribute("href", "/desk");
+    await expect(closing.getByRole("link", { name: "Test a scenario" })).toHaveAttribute("href", "/desk");
     expect(errors).toEqual([]);
   });
 
@@ -72,9 +72,9 @@ test.describe("story, reduced motion", () => {
     const closing = page.getByTestId("story-closing");
     await closing.scrollIntoViewIfNeeded();
     await expect(closing).toBeVisible(LOADED);
-    await closing.getByRole("link", { name: /Open the storm run/ }).click();
+    await closing.getByRole("link", { name: /Open the results/ }).click();
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByTestId("storm-headline")).toContainText("5,292");
+    await expect(page.getByTestId("storm-summary")).toContainText("5,292");
   });
 });
 

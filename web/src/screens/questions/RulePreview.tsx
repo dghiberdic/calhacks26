@@ -53,7 +53,7 @@ export function RulePreview({
         <div className="mt-1.5 rounded-lg bg-card px-4 py-3 shadow-[0_0_0_1px_var(--color-cloud-200)]">
           <GroundedQuote text={answer.ruling.explanation} grounding={rule.grounding} />
         </div>
-        {Object.keys(rule.grounding ?? {}).length ? <p className="mt-1.5 text-[12px] text-slate-500">Highlighted words ground the rule&rsquo;s values. Nothing in it comes from anywhere else.</p> : null}
+        {Object.keys(rule.grounding ?? {}).length ? <p className="mt-1.5 text-[12px] text-slate-500">Highlights link the proposed policy to your wording. Any remaining scope is limited to this case.</p> : null}
       </div>
 
       {/* Checks: one line when they all pass (the list behind Details), the failing ones spelled out when not. */}
@@ -75,7 +75,7 @@ export function RulePreview({
       </div>
 
       <div>
-        <MicroLabel>Replay before you confirm</MicroLabel>
+        <MicroLabel>Effect on past decisions</MicroLabel>
         <p className="mt-1.5 text-[14px] text-navy-900">
           {n ? (
             <>
@@ -83,7 +83,7 @@ export function RulePreview({
               <span className="figure font-semibold">{eur(flip.total_delta_cents, { signed: true })}</span>
             </>
           ) : (
-            "Changes no past decision. It applies from the next case on."
+            "No past decisions change. Future cases must match this policy’s scope."
           )}
         </p>
         <ReplaySummary diff={flip} className="mt-1 text-[11.5px] text-slate-500" />
@@ -112,8 +112,8 @@ export function RulePreview({
           {failing.length
             ? `It can't become a policy while ${failing.length === 1 ? "a check fails" : `${count(failing.length)} checks fail`}. Your ruling stands for this case only; the next case like it will be asked again.`
             : question.case_refs.length > 1
-              ? `Settles all ${count(question.case_refs.length)} cases, then every match after them.`
-              : "Nothing changes until you confirm."}
+              ? `Review the effect on these ${count(question.case_refs.length)} cases before confirming.`
+              : "The policy takes effect only after confirmation."}
         </p>
       </div>
     </div>

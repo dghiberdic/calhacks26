@@ -60,11 +60,11 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
       <div className="mx-3 my-3 h-px bg-navy-700/70" />
       <NavLink to="/pitch" onClick={onNavigate} className="app-nav-item flex h-10 items-center gap-3 rounded-lg px-3 text-[13.5px] text-cloud-400 transition-colors hover:bg-navy-850 hover:text-cloud-100">
         <Presentation className="size-[17px] shrink-0" strokeWidth={1.65} aria-hidden="true" />
-        Pitch
+        Presentation
       </NavLink>
       <NavLink to="/story" onClick={onNavigate} className="app-nav-item flex h-10 items-center gap-3 rounded-lg px-3 text-[13.5px] text-cloud-400 transition-colors hover:bg-navy-850 hover:text-cloud-100">
         <Clapperboard className="size-[17px] shrink-0" strokeWidth={1.65} aria-hidden="true" />
-        The story
+        Guided demo
       </NavLink>
     </nav>
   );
@@ -170,13 +170,14 @@ export function AppShell() {
       <a href="#main" className="app-skip-link">Skip to content</a>
       {/* Sidebar (desktop) */}
       <aside className="app-sidebar sticky top-0 hidden h-svh flex-col bg-navy-900 px-3 pb-4 pt-6 lg:flex">
-        <NavLink to="/" className="app-wordmark mb-8 flex items-center gap-3 rounded-md px-3 py-2 text-cloud-50" aria-label="StormCheck, Storm Run">
+        <NavLink to="/" className="app-wordmark mb-1 flex items-center gap-3 rounded-md px-3 py-2 text-cloud-50" aria-label="StormCheck, Storm Run">
           <Logo className="h-[19px] w-auto" />
           <span className="text-[17px] font-semibold tracking-[-0.025em] [font-stretch:108%]">StormCheck</span>
         </NavLink>
+        <p className="mb-7 px-3 text-[12px] leading-relaxed text-cloud-400">Flight compensation review</p>
         <NavItems />
         <div className="mt-auto flex flex-col gap-3 border-t border-navy-700/70 pt-5">
-          <p className="px-3 text-[11.5px] leading-relaxed text-cloud-400">Northstar Air · drafts only, never pays</p>
+          <p className="px-3 text-[11.5px] leading-relaxed text-cloud-400">Fictional airline demo.<br />Drafts only. Human approval.</p>
           <SourceStatus />
           <ResetButton />
         </div>

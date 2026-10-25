@@ -13,11 +13,11 @@ export type Origin = "learned" | "ruled" | "rejected" | "regulation" | "hard";
 export const ORIGIN_ORDER: Origin[] = ["learned", "ruled", "rejected", "regulation", "hard"];
 
 export const ORIGIN_COPY: Record<Origin, { title: string; blurb: string }> = {
-  learned: { title: "Learned", blurb: "Mined from past decisions at onboarding. Each shows its support." },
-  ruled: { title: "Ruled", blurb: "A person ruled once. The ruling became a scoped, versioned rule." },
-  rejected: { title: "Rejected", blurb: "A rejection, kept as a rule so the proposal never comes back." },
-  regulation: { title: "Regulation", blurb: "Versions of the law, each with its dates." },
-  hard: { title: "Hard controls are code", blurb: "Not rules: nothing can widen, revert or override them." },
+  learned: { title: "Learned", blurb: "Patterns in past decisions, with supporting cases." },
+  ruled: { title: "Ruled", blurb: "Human decisions saved with a defined scope and version." },
+  rejected: { title: "Rejected", blurb: "Rejected proposals become constraints on matching cases." },
+  regulation: { title: "Regulation", blurb: "Legal sources and their effective dates." },
+  hard: { title: "Hard controls are code", blurb: "Approval, access and accounting checks that policies cannot override." },
 };
 
 /** Precedence, highest first (plan §2 rule 4). */

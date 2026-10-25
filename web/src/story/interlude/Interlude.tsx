@@ -108,10 +108,10 @@ export function Interlude() {
       <div className="il-copy absolute inset-x-0 bottom-0 px-5 pb-16 md:px-16 md:pb-24">
         <p className="font-mono text-[12px] text-cloud-400 md:text-[13.5px]">{obs ? obs.raw : <Pending ch={36} />}</p>
         <h2 className="text-balance display mt-5 max-w-[18ch] text-[clamp(38px,5.2vw,92px)] text-cloud-50">
-          At {std ? zulu(std) : <Pending ch={5} />}, {f?.aircraft ?? "the aircraft"} was still on stand.
+          At {std ? zulu(std) : <Pending ch={5} />}, the aircraft was still grounded.
         </h2>
         <p className="mt-5 max-w-[50ch] text-[16.5px] leading-relaxed text-cloud-300 md:text-[19px]">
-          The storm window had closed at {win ? zulu(win.end) : <Pending ch={5} />}, and {operated !== undefined ? count(operated) : <Pending ch={2} />} Northstar departures flew after it. {f?.aircraft ?? "The aircraft"} needed a new pump, so {f?.number ?? "the flight"} was cancelled and its {f ? count(f.pax) : <Pending ch={3} />} passengers are owed compensation.
+          {operated !== undefined ? count(operated) : <Pending ch={2} />} Northstar departures flew after the storm window ended at {win ? zulu(win.end) : <Pending ch={5} />}. {f?.number ?? "This flight"} could not: its aircraft needed a replacement hydraulic pump.
         </p>
       </div>
     </section>

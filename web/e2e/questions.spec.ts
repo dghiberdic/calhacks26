@@ -3,7 +3,7 @@ import { expect, serverMasksPii, test, type Page } from "./fixtures";
 const LABEL: Record<string, string> = { claims_lead: "Claims Lead", ops: "Ops", legal: "Legal", controller: "Controller" };
 
 async function viewAs(page: Page, role: keyof typeof LABEL) {
-  await expect(page.getByRole("heading", { name: "Questions", level: 1 })).toBeVisible(LOADED);
+  await expect(page.getByRole("heading", { name: "Human review", level: 1 })).toBeVisible(LOADED);
   await page.getByTestId("role-switcher").click();
   await page.getByTestId(`role-${role}`).click();
   await expect(page.getByTestId("role-switcher")).toHaveAccessibleName(new RegExp(`Viewing as ${LABEL[role]}`));
@@ -36,7 +36,7 @@ test("the Claims Lead rules on Q1 with the recommended option, and it is never a
   await card.getByRole("button", { name: "Submit ruling" }).click();
   await expect(card.getByTestId("rule-preview")).toBeVisible();
   await card.getByRole("button", { name: "Confirm as policy" }).click();
-  await expect(card.getByText("Never asked again")).toBeVisible();
+  await expect(card.getByText("Policy saved for matching cases")).toBeVisible();
 });
 
 test("passenger data shows only to the Claims Lead; other seats get it masked", async ({ page, request }) => {
@@ -46,6 +46,6 @@ test("passenger data shows only to the Claims Lead; other seats get it masked", 
   await expect(q1(page).first().getByTitle(/visible to the Claims Lead only/)).toBeVisible(LOADED);
   await expect(q1(page).first().getByRole("button", { name: /View as Claims Lead to answer/ })).toBeVisible();
   await viewAs(page, "claims_lead");
-  await expect(q1(page).first().getByText("PII visible to this role")).toBeVisible();
+  await expect(q1(page).first().getByText("Passenger details visible")).toBeVisible();
   await expect(q1(page).first().getByTitle(/visible to the Claims Lead only/)).toHaveCount(0);
 });

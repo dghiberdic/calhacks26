@@ -5,7 +5,7 @@ import { useControls } from "@/api/queries";
 import { Empty, ErrorNote, Shimmer } from "@/components/kit";
 import { compareFrameworkRef, evidenceTarget } from "./model";
 
-/** J5 · Controls: SOC 2 is the floor. A mapping of each control to the code and evidence behind it; not a certification. */
+/** J5 · Controls: a mapping to the code and evidence behind each control; not a certification. */
 export function ControlsTab() {
   const controls = useControls();
   const rows = useMemo(() => [...(controls.data ?? [])].sort((a, b) => compareFrameworkRef(a.framework_ref, b.framework_ref)), [controls.data]);
@@ -14,8 +14,8 @@ export function ControlsTab() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
         <div>
-          <h2 className="display-tight text-[24px] leading-tight text-navy-900">SOC 2 is the floor</h2>
-          <p className="mt-1 max-w-[62ch] text-[14px] text-slate-500">Each control, the code that enforces it, and the evidence you can open.</p>
+          <h2 className="display-tight text-[24px] leading-tight text-navy-900">Controls and evidence</h2>
+          <p className="mt-1 max-w-[62ch] text-[14px] text-slate-500">Implemented checks mapped to SOC 2 criteria. This is not a certification.</p>
         </div>
         <span className="inline-flex h-7 items-center rounded-md px-2.5 font-mono text-[11.5px] text-slate-600 shadow-[inset_0_0_0_1px_var(--color-cloud-300)]">mapping · not a certification</span>
       </div>

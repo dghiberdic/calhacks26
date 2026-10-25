@@ -25,8 +25,8 @@ export default function DeskScreen() {
 
   return (
     <div className="mx-auto flex max-w-[1280px] flex-col gap-3">
-      <PageHeader eyebrow={<MicroLabel>Judge&rsquo;s Desk · real METAR</MicroLabel>} title="Name an airport and a date." className="mb-2">
-        Any airport, any date, real weather. StormCheck pulls that day&rsquo;s <Explain term="metar">METAR</Explain>, flies Northstar&rsquo;s flights through it with the same engine, and drafts what&rsquo;s owed. Then hand it a document of your own.
+      <PageHeader eyebrow={<MicroLabel>Judge&rsquo;s Desk</MicroLabel>} title="Try a different scenario." className="mb-2">
+        Choose an airport and date with available <Explain term="metar">weather reports</Explain>. Test simulated flights, then add a document to see what changes.
       </PageHeader>
 
       <DayForm />
@@ -107,10 +107,10 @@ function Idle() {
     <section className="relative overflow-hidden rounded-2xl bg-navy-900 px-5 py-8 text-cloud-50 md:px-8" aria-label="No run yet" data-testid="desk-idle">
       <IdleTrace />
       <div className="relative max-w-[56ch]">
-        <p className="micro text-cloud-500">Readout</p>
-        <p className="display-tight mt-2 text-[22px] text-cloud-100 md:text-[26px]">Your day lands here.</p>
+        <p className="micro text-cloud-500">Scenario results</p>
+        <p className="display-tight mt-2 text-[22px] text-cloud-100 md:text-[26px]">Choose a day to begin.</p>
         <p className="mt-2 text-[14px] leading-relaxed text-cloud-400">
-          The wind from that airport&rsquo;s METAR, any storm window it meets, every Northstar flight that day with its verdict, and the EU261 compensation liability drafted. Try a quick pick if you&rsquo;re short of a date.
+          The result shows the weather, each flight&rsquo;s cancellation cause, and the drafted compensation liability. Start with a suggested date below the form.
         </p>
       </div>
     </section>

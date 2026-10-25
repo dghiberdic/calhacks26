@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { ArrowRight } from "lucide-react";
-import { useCfo, useEffort, useLearning, useStormRun, useStorms } from "@/api/queries";
+import { useCfo, useEffort, useFlightFile, useLearning, useStormRun, useStorms } from "@/api/queries";
 import { ErrorNote, Panel, Shimmer } from "@/components/kit";
 import { RouteLegend, RouteMap } from "@/components/storm/RouteMap";
 import { isOutage, mainWindowOf } from "@/components/storm/model";
@@ -12,15 +12,18 @@ import { reuseFor } from "./effort";
 import { Hero } from "./Hero";
 import { FeedPanel, LearnsStrip, LiabilityTiles, QuestionsPreview } from "./Sections";
 import { WithoutStormCheck } from "./WithoutStormCheck";
+import { draftedLiability } from "@/screens/flight-file/lib";
 
 const airportName = (station: string) => airport(iataOf(station))?.name.replace(/ Airport$/, "") ?? station;
 
-/** Storm Run (home): what StormCheck did overnight, and the 1% it asked about. */
+/** Storm Run: results first, then the cases needing a human decision. */
 export default function StormRunScreen() {
   const params = useParams();
   const storms = useStorms();
   const stormId = params.stormId ? decodeURIComponent(params.stormId) : (storms.data?.find((s) => s.id === HERO_STORM)?.id ?? storms.data?.[0]?.id);
   const run = useStormRun(stormId);
+  const recodedRow = run.data?.flights.find((row) => row.decision?.recoded);
+  const focusFile = useFlightFile(recodedRow?.flight.id);
   const cfo = useCfo();
   // Pitch insights (additive routes): a server or recording without them answers 404 and they stay hidden.
   const effort = useEffort(run.data && !run.data.effort ? run.data.id : undefined);
@@ -57,7 +60,7 @@ export default function StormRunScreen() {
   const estimate = data.effort ?? effort.data ?? null;
   return (
     <div className="mx-auto flex max-w-[1280px] flex-col gap-3">
-      <Hero run={data} onSelectFlight={openFlight} reuse={reuseFor(learning.data, data.id)} />
+      <Hero run={data} onSelectFlight={openFlight} reuse={reuseFor(learning.data, data.id)} focusLiability={focusFile.data ? draftedLiability(focusFile.data.journal_preview ?? []) : null} />
 
       <LiabilityTiles run={data} cfo={cfo.data} recodedFlight={recoded} />
 
@@ -67,15 +70,15 @@ export default function StormRunScreen() {
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
         <Panel
-          title="The 1% it asked about"
+          title="Needs a human decision"
           actions={
             <Link to="/questions" className="inline-flex items-center gap-1 text-[12.5px] font-medium text-metar-ink hover:underline">
-              Questions <ArrowRight className="size-3.5" aria-hidden="true" />
+              Review questions <ArrowRight className="size-3.5" aria-hidden="true" />
             </Link>
           }
         >
           <p className="-mt-1 mb-3 text-[13px] text-slate-500">
-            {count(data.questions.length)} {data.questions.length === 1 ? "question" : "questions"}, each to the person who owns the answer. Everything else it decided on its own.
+            {count(data.questions.length)} {data.questions.length === 1 ? "question" : "questions"} routed to Claims, Legal or Finance. Their approved rulings can be reused for matching cases.
           </p>
           <QuestionsPreview questions={data.questions} />
         </Panel>
@@ -85,8 +88,8 @@ export default function StormRunScreen() {
       <section className="rounded-2xl bg-navy-900 p-4 text-cloud-50 shadow-[0_0_0_1px_var(--color-navy-800)] md:p-6" aria-label="Routes">
         <div className="flex flex-wrap items-end justify-between gap-3 px-1">
           <div>
-            <h2 className="text-[15px] font-semibold">Every route leaves {airportName(data.station)}</h2>
-            <p className="mt-0.5 text-[12.5px] text-cloud-500">Coloured by what StormCheck found. The distance sets the EU261 amount (€250, €400 or €600). Hover a route for its flights.</p>
+            <h2 className="text-[15px] font-semibold">Routes connected to {airportName(data.station)}</h2>
+            <p className="mt-0.5 text-[12.5px] text-cloud-500">Select a route to inspect its flights. Colours show the review outcome.</p>
           </div>
           <RouteLegend tone="dark" />
         </div>

@@ -51,19 +51,19 @@ export function Closing() {
       <div className="relative mx-auto max-w-[1280px]">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           <div>
-            <h2 className="text-balance cl-reveal display max-w-[17ch] text-[clamp(38px,4.8vw,84px)]">Every count and euro on this page comes from the storm run.</h2>
+            <h2 className="text-balance cl-reveal display max-w-[17ch] text-[clamp(38px,4.8vw,84px)]">The case is ready for review.</h2>
             <p className="cl-reveal mt-6 max-w-[52ch] text-[16.5px] leading-relaxed text-slate-600 md:text-[19px]">
-              StormCheck fills two seats at Northstar Air: the Passenger Claims Accountant and the Revenue Accountant. Both jobs depend on what really caused each cancellation. StormCheck drafts every payout and the EU261 compensation liability, and the Claims Lead approves every payment.
+              Claims and finance teams get the cause, the evidence and draft amounts in one place. The Claims Lead approves payouts; finance reviews the journal drafts. StormCheck does not release payments.
             </p>
             <div className="cl-reveal mt-10 flex flex-wrap gap-3">
               <Link to="/" className="inline-flex items-center gap-2 rounded-full bg-navy-900 px-6 py-3.5 text-[15.5px] font-medium text-cloud-50 transition-colors hover:bg-navy-800">
-                Open the storm run <ArrowRight className="size-4" aria-hidden="true" />
+                Open the results <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
               <Link to="/pitch" className="rounded-full px-6 py-3.5 text-[15.5px] font-medium shadow-[inset_0_0_0_1.5px_var(--color-navy-900)] transition-colors hover:bg-cloud-100">
                 See the pitch
               </Link>
               <Link to="/desk" className="rounded-full px-6 py-3.5 text-[15.5px] font-medium text-slate-600 transition-colors hover:bg-cloud-100 hover:text-navy-900">
-                Bring your own storm
+                Test a scenario
               </Link>
             </div>
           </div>
@@ -78,11 +78,11 @@ export function Closing() {
             </div>
             <div>
               <dt className="display-tight text-[clamp(32px,3.4vw,52px)]">{stat(c?.questions)}</dt>
-              <dd className="mt-2 text-[14.5px] text-slate-500">questions, to {c?.people !== undefined ? count(c.people) : "the right"} people</dd>
+              <dd className="mt-2 text-[14.5px] text-slate-500">questions for {c?.people !== undefined ? count(c.people) : "the relevant"} reviewers</dd>
             </div>
             <div>
               <dt className="display-tight text-[clamp(32px,3.4vw,52px)]">{stat(c?.repeat_questions)}</dt>
-              <dd className="mt-2 text-[14.5px] text-slate-500">questions asked twice</dd>
+              <dd className="mt-2 text-[14.5px] text-slate-500">repeat questions in this run</dd>
             </div>
           </dl>
         </div>
@@ -99,7 +99,7 @@ export function Closing() {
           </div>
           <div className="space-y-1">
             <p className="text-navy-900">Simulated</p>
-            <p>Northstar Air is not a real airline. Its schedule, logs, passengers and claims are simulated on top of real Dublin weather, traffic and EU law, with the mess left in.</p>
+            <p>Northstar Air is fictional. Its schedule, logs, passengers and claims are simulated, including conflicting records and missing signatures.</p>
             <p className="pt-2">Built at Cal Hacks 13.0.</p>
           </div>
         </footer>

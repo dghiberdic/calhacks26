@@ -77,8 +77,7 @@ function IndexBody({ run }: { run: StormRun }) {
   return (
     <Frame>
       <PageHeader eyebrow={<MicroLabel>{[name, run.station, longDate(run.date)].filter(Boolean).join(" · ")}</MicroLabel>} title="Flight File">
-        {count(cancelled)} cancelled flights, and what really caused each one. Open a flight for its evidence. The code in each row is the{" "}
-        <Explain term="delay-codes">delay code</Explain> ops control typed (RSN).
+        Review the cause and compensation decision for {count(cancelled)} cancelled flights. Open a flight for the source evidence; RSN is the recorded <Explain term="delay-codes">cancellation code</Explain>.
       </PageHeader>
 
       {run.flights.length ? (

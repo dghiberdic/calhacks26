@@ -4,6 +4,7 @@ Judgment calls, newest first within each task. One line each, with the why. Requ
 `contracts/requests/justin.md`.
 
 ## Across the app
+- **Judge clarity pass (25 Oct):** lead with what StormCheck does, show the corrected cause and flight-specific draft estimate immediately, then expose source records and accounting detail on demand. Use concise task headings, preserve real/simulated disclosures and approval gates, and describe rule reuse as scope-limited rather than “never asked again.” Review workload is explicitly modelled, not measured savings.
 - **Copy reads like a person who knows the job wrote it.** Justin's call (24 Oct): no words that sound generated. The learns strip's workshop tags from FINAL_IDEA (`self-learning`, `ai-automated`, `needs-review`, `new-policy`) show as plain ones: "from its own history", "overnight", "asks a person", "becomes policy"; the four steps (Learns → Runs → Escalates → Improves) stay. No rhetorical questions in headings.
 - **SEO and link previews:** each route sets its own title ("NS31 · Flight File · StormCheck"); index.html carries Open Graph and Twitter cards with `og.jpg` (1200×630, the real Éowyn MODIS image with "Not weather. Broken plane.") and an Apple touch icon. Absolute URLs come from `SITE_URL`, else Vercel's production host.
 - **J0 · Geist Mono for machine text; B612 Mono only as `font-cockpit`.** B612 sets ":" "," "." at the left of a full cell, so running text read "09: 00Z" and "€227, 000". The Airbus cockpit face stays for display imitations (the split-flap board).

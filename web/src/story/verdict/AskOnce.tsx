@@ -19,8 +19,8 @@ const TAG: Record<string, string> = {
 };
 
 /**
- * The 1%: one question, to one person, once. Q1 (the service-desk voucher, from the API), the rule its
- * ruling became, and the next storm, Herminia, where the same pattern settles itself, ruling cited.
+ * Q1 (the service-desk voucher, from the API), the rule its ruling became, and the next storm,
+ * Herminia, where matching cases reuse the ruling and out-of-scope cases still ask.
  */
 export function AskOnce() {
   const story = useStory();
@@ -54,13 +54,14 @@ export function AskOnce() {
             {c ? count(c.questions) : <Pending ch={1} tone="light" />} {c?.questions === 1 ? "question" : "questions"} for {c ? count(c.passengers) : <Pending ch={5} tone="light" />} passengers.
           </h2>
           <p className="mt-6 max-w-[50ch] text-[16.5px] leading-relaxed text-slate-600 md:text-[19px]">
-            When sources disagree, StormCheck sends one question to the person who can rule on it, with the evidence attached. Their answer becomes a rule with a scope and a version.
+            Unclear cases go to the Claims Lead, Legal or the Controller with the evidence attached. A confirmed ruling can be reused for matching cases.
           </p>
         </div>
 
         <div className="ao-cards mt-16 grid grid-cols-1 gap-4 md:mt-20 lg:grid-cols-3">
           {/* 1 · the question */}
           <article className="ao-card flex flex-col rounded-2xl bg-white p-6 shadow-[0_0_0_1px_var(--color-cloud-200)]">
+            <p className="micro mb-4 text-slate-500">1 / Review the conflict</p>
             <header className="flex flex-wrap items-center justify-between gap-2 text-[13.5px]">
               {q ? (
                 <span className="flex items-center gap-2 font-medium">
@@ -106,13 +107,13 @@ export function AskOnce() {
                       <span className="relative inline-flex size-2 rounded-full bg-held" />
                     </span>
                     <span>
-                      Holds <Money cents={q.holds_cents} /> until answered · {q.case_refs.map(shortId).join(", ")}
+                      <Money cents={q.holds_cents} /> awaiting a ruling · {q.case_refs.map(shortId).join(", ")}
                     </span>
                   </p>
                 ) : null}
               </>
             ) : story.questionsLoaded ? (
-              <p className="mt-5 text-[15px] leading-relaxed text-slate-500">This question is routed to the Claims Lead, and this role doesn&rsquo;t see it. Switch roles in the app to read it.</p>
+              <p className="mt-5 text-[15px] leading-relaxed text-slate-500">This case is assigned to the Claims Lead. Switch to that role in the app to read it.</p>
             ) : (
               <div className="mt-5 flex flex-col gap-2" aria-hidden="true">
                 <span className="h-5 w-11/12 animate-pulse rounded bg-navy-900/[0.06]" />
@@ -124,8 +125,9 @@ export function AskOnce() {
 
           {/* 2 · the rule */}
           <article className="ao-card flex flex-col rounded-2xl bg-white p-6 shadow-[0_0_0_1px_var(--color-cloud-200)]">
+            <p className="micro mb-4 text-slate-500">2 / Confirm a policy</p>
             <header className="flex flex-wrap items-center justify-between gap-2 text-[13.5px]">
-              <span className="font-medium">{rule ? `${TIER_LABEL[rule.tier]} → policy` : "The ruling becomes a rule"}</span>
+              <span className="font-medium">{rule ? `${TIER_LABEL[rule.tier]} → policy` : "Turn the answer into a policy"}</span>
               {rule ? <span className="font-mono text-[12.5px] text-slate-500">{ruleRef(rule)}</span> : null}
             </header>
             {rule ? (
@@ -154,7 +156,7 @@ export function AskOnce() {
             ) : q ? (
               <>
                 <p className="mt-5 text-[16px] leading-relaxed">
-                  If the Claims Lead answers <strong className="font-semibold">&ldquo;{shortOption}&rdquo;</strong>, StormCheck drafts a rule from that wording, checks it and replays it before it goes live.
+                  If the Claims Lead chooses <strong className="font-semibold">&ldquo;{shortOption}&rdquo;</strong>, StormCheck drafts a policy and shows its effect on past cases before confirmation.
                 </p>
                 <p className="mt-auto pt-6 text-[13px] text-slate-500">{q.recommends}</p>
               </>
@@ -168,6 +170,7 @@ export function AskOnce() {
 
           {/* 3 · the next storm: settled under the ruling once it exists, waiting on it until then */}
           <article className="ao-card flex flex-col rounded-2xl bg-navy-900 p-6 text-cloud-50">
+            <p className="micro mb-4 text-cloud-400">3 / Reuse the ruling</p>
             <header className="flex flex-wrap items-center justify-between gap-2 text-[13.5px]">
               <span className="font-medium">Next storm{story.nextName ? `: ${story.nextName.replace("Storm ", "")}` : ""}</span>
               <span className="text-cloud-400">{next ? longDate(next.date) : <Pending ch={10} />}</span>
@@ -204,18 +207,18 @@ export function AskOnce() {
             ) : null}
             {rule && askedAgain ? (
               <p className="mt-6 text-[14px] leading-relaxed text-cloud-300">
-                <span className="figure text-cloud-50">{count(next?.questions.length ?? 1)}</span> asked again, outside the ruling&rsquo;s scope: {askedAgain.title}
+                <span className="figure text-cloud-50">{count(next?.questions.length ?? 1)}</span> still needs review because it falls outside the policy: {askedAgain.title}
               </p>
             ) : !rule && next ? (
               <p className="mt-6 text-[14px] leading-relaxed text-cloud-300">
-                {story.nextName?.replace("Storm ", "") ?? "The next storm"}&rsquo;s cancellations came with more unsigned service-desk vouchers. Once the Claims Lead answers, the ones inside the ruling&rsquo;s scope settle without a new question; the rest are asked again.
+                The next storm has more unsigned service-desk vouchers. Matching cases can use the confirmed policy; other cases still need review.
               </p>
             ) : null}
             <p className="mt-auto flex items-center gap-2 pt-8 font-mono text-[12px] text-cloud-500">
               <span className="inline-block motion-safe:animate-[spin_7s_linear_infinite]" aria-hidden="true">
                 ↻
               </span>
-              a ruling applies only where its scope holds
+              matching cases only
             </p>
           </article>
         </div>

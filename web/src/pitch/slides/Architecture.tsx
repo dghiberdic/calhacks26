@@ -9,11 +9,11 @@ type Kind = "data" | "claude" | "engine";
 
 /** Feeds → Facts (Reader) → Policies → Run (engine) → Trace, as THREAD_JUSTIN J11 names them (plan §2). */
 const STEPS: { name: string; tag: string; kind: Kind; body: string }[] = [
-  { name: "Feeds", tag: "raw and messy", kind: "data", body: "METAR, schedule, OCC and tech logs, coupons, CRM, claims" },
-  { name: "Facts", tag: "Reader · Claude", kind: "claude", body: "Each fact quotes its source and is re-checked against it" },
-  { name: "Policies", tag: "learned · ruled", kind: "data", body: "From history, rulings, rejections and regulation. No rule editor" },
-  { name: "Run", tag: "engine · deterministic", kind: "engine", body: "Cause, EU261 entitlement, liability, routing. Same input, same hash" },
-  { name: "Trace", tag: "hashed commits", kind: "data", body: "Every fact, decision and LLM call. Any euro can be blamed" },
+  { name: "Records", tag: "source documents", kind: "data", body: "Weather, maintenance logs, schedules and passenger claims." },
+  { name: "Facts", tag: "Reader · Claude", kind: "claude", body: "Extract facts and check each one against its quoted source." },
+  { name: "Rules", tag: "law and rulings", kind: "data", body: "Apply regulations and approved decisions to matching cases." },
+  { name: "Calculate", tag: "fixed rules", kind: "engine", body: "Determine the cause, entitlement and estimated liability." },
+  { name: "Audit trail", tag: "saved evidence", kind: "data", body: "Trace each amount back to its source and rule." },
 ];
 
 const CARD: Record<Kind, string> = {
@@ -103,20 +103,20 @@ export function Architecture() {
       eyebrow="how it works"
       footer={
         <p className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[25px] text-cloud-200" data-testid="sits-on-top">
-          Sits on top of{" "}
+          Simulated feeds model{" "}
           {SYSTEMS.map((name, i) => (
             <span key={name} className="inline-flex items-center">
               <span className="rounded-[8px] px-2.5 py-[5px] font-mono text-[19px] leading-none text-cloud-100 shadow-[inset_0_0_0_1.5px_rgba(200,208,219,0.22)]">{name}</span>
               {i < SYSTEMS.length - 1 ? "," : ";"}
             </span>
           ))}{" "}
-          writes only parked journals.
+          outputs are drafts, not payments.
         </p>
       }
     >
       <Reveal className="mt-10">
-        <h2 className="display text-[92px] text-cloud-50" aria-label={`${ARCHITECTURE_HEADLINE}.`} data-testid="architecture-headline">
-          2 Claude roles +<br /> 1 deterministic engine.
+        <h2 className="display text-[92px] text-cloud-50" aria-label={ARCHITECTURE_HEADLINE} data-testid="architecture-headline">
+          Claude reads.<br /> The engine calculates.
         </h2>
       </Reveal>
 
@@ -140,8 +140,8 @@ export function Architecture() {
         </div>
         <Beat at={LINE_AT} className="col-span-5 col-start-1 flex items-center pr-10">
           <p className="display-tight text-[40px] leading-[1.15] text-cloud-50">
-            <span className="block">Claude reads the mess. </span>
-            <span className="block text-cloud-300">It never decides who is owed.</span>
+            <span className="block">Same inputs, same result.</span>
+            <span className="block text-cloud-300">Claude never sets the amount.</span>
           </p>
         </Beat>
         <Beat at={DRAFTS_AT} className="col-span-3 col-start-7">
@@ -152,7 +152,7 @@ export function Architecture() {
                 Drafter · Claude
               </Chip>
             </div>
-            <p className="pt-1 text-[21px] leading-[1.38] text-cloud-300 text-pretty">Rights notices, journal memos and every &ldquo;why?&rdquo; answer. A number it can&rsquo;t find in the evidence gets a template instead.</p>
+            <p className="pt-1 text-[21px] leading-[1.38] text-cloud-300 text-pretty">Write notices and journal memos from verified results. People approve the next step.</p>
           </div>
         </Beat>
       </div>

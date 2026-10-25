@@ -8,7 +8,7 @@ test.describe.configure({ timeout: 120_000 });
 
 async function openDesk(page: Page) {
   await page.goto("/desk");
-  await expect(page.getByRole("heading", { name: "Name an airport and a date." })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole("heading", { name: "Try a different scenario." })).toBeVisible({ timeout: 60_000 });
 }
 
 async function pickAirport(page: Page, typed: string) {
@@ -93,5 +93,5 @@ test("an unknown airport is a plain message, not a crash", async ({ page }) => {
   const problem = page.getByTestId("desk-error");
   await expect(problem).toBeVisible({ timeout: 15_000 });
   await expect(problem).toHaveAttribute("data-code", /unknown_airport|no_metar|validation/);
-  await expect(page.getByRole("heading", { name: "Name an airport and a date." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Try a different scenario." })).toBeVisible();
 });

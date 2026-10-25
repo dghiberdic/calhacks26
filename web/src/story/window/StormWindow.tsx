@@ -69,14 +69,10 @@ export function StormWindow() {
   const logObs = log?.at ? nearestObs(run?.metar, log.at.toISOString()) : null;
   const hub = run?.station;
   const hubIata = run ? iataOf(run.station) : null;
-  const inside = run?.flights.filter((r) => r.flight.status === "cancelled" && r.flight.origin === hubIata && r.decision?.in_window_dep === "in").length;
   const operated = run?.flights.filter((r) => r.flight.status === "operated" && r.flight.origin === hubIata) ?? [];
   const opFirst = operated.length ? operated.reduce((a, b) => (ms(b.flight.sched_dep) < ms(a.flight.sched_dep) ? b : a)) : null;
   const opLast = operated.length ? operated.reduce((a, b) => (ms(b.flight.sched_dep) > ms(a.flight.sched_dep) ? b : a)) : null;
   const margin = focus?.decision?.window_margin_min ?? (win && focus ? Math.round((ms(focus.flight.sched_dep) - ms(win.end)) / 60_000) : null);
-  const limit = g?.facts.gustLimitKt ?? null;
-  // a shorter window the engine also found, before the main one (the burst around midnight on Éowyn)
-  const earlier = win ? (run?.windows ?? []).filter((w) => ms(w.end) <= ms(win.start)).sort((a, b) => ms(b.start) - ms(a.start))[0] ?? null : null;
 
   useGSAP(
     () => {
@@ -214,12 +210,11 @@ export function StormWindow() {
           The storm window closed at {win ? zulu(win.end) : <Pending ch={5} />}.
         </h2>
         <p className="mt-6 max-w-[50ch] text-[16.5px] leading-relaxed text-cloud-400 md:text-[19px]">
-          Dublin&rsquo;s METAR puts the gusts above {limit ? <span className="figure text-cloud-100">{limit} kt</span> : "limits"}{win ? <> from <span className="figure text-cloud-100">{zulu(win.start)}</span> to <span className="figure text-cloud-100">{zulu(win.end)}</span></> : null}
-          {earlier ? <>, after a shorter burst from <span className="figure text-cloud-100">{zulu(earlier.start)}</span></> : null}. {inside !== undefined ? count(inside) : <Pending ch={2} />} of the cancelled departures were inside that window.{" "}
+          The shaded area shows severe weather measured at Dublin Airport.{" "}
           {focus ? (
             <>
-              {focus.flight.number} was due out at <span className="figure text-cloud-100">{zulu(focus.flight.sched_dep)}</span>
-              {margin !== null && margin > 0 ? <>, {duration(margin)} after it closed</> : null}.
+              {focus.flight.number} was scheduled for <span className="figure text-cloud-100">{zulu(focus.flight.sched_dep)}</span>
+              {margin !== null && margin > 0 ? <>, {duration(margin)} after the storm window ended</> : null}.
             </>
           ) : null}
         </p>
@@ -265,7 +260,7 @@ export function StormWindow() {
                       Storm window {winLabel}
                     </text>
                     <text x={g.x(new Date(win.end)) - 12} y={M.t + 26} textAnchor="end" className="fill-cloud-500 text-[12px]">
-                      computed by the engine from METAR
+                      calculated from airport weather reports
                     </text>
                   </g>
                 ) : null}

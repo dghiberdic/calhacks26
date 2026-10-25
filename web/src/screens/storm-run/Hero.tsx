@@ -1,11 +1,10 @@
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import { Link } from "react-router";
-import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 import type { StormRun } from "@/api/types";
 import { Explain } from "@/components/explain";
 import { FaultLine } from "@/components/fault-line";
-import { ConfidenceLine, Details } from "@/components/kit";
+import { ConfidenceLine, Details, Money } from "@/components/kit";
 import { mainWindowOf, windowName } from "@/components/storm/model";
 import { StormTimeline } from "@/components/storm/StormTimeline";
 import { RouteLegend } from "@/components/storm/RouteMap";
@@ -53,16 +52,7 @@ function ReuseLine({ reuse }: { reuse: { rules: number; cases: number } }) {
   );
 }
 
-export function Hero({ run, onSelectFlight, reuse }: { run: StormRun; onSelectFlight: (id: string) => void; reuse?: { rules: number; cases: number } | null }) {
-  const reduce = useReducedMotion();
-  // The callout lands once the timeline has settled (about 4 s), per storm.
-  const [settledFor, setSettledFor] = useState<string | null>(null);
-  useEffect(() => {
-    if (reduce) return;
-    const t = window.setTimeout(() => setSettledFor(run.id), 4200);
-    return () => window.clearTimeout(t);
-  }, [reduce, run.id]);
-  const settled = !!reduce || settledFor === run.id;
+export function Hero({ run, onSelectFlight, reuse, focusLiability }: { run: StormRun; onSelectFlight: (id: string) => void; reuse?: { rules: number; cases: number } | null; focusLiability?: number | null }) {
   const pan = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = pan.current;
@@ -74,35 +64,29 @@ export function Hero({ run, onSelectFlight, reuse }: { run: StormRun; onSelectFl
   const window0 = mainWindowOf(run.windows);
   const story = stormStory(run);
   const operated = run.counters?.operated;
+  const metarSource = typeof run.real_context?.metar_source === "string" ? run.real_context.metar_source : "";
+  const syntheticWeather = /mock|synthetic/i.test(metarSource) || run.metar.some((observation) => /\bRMK MOCK\b/.test(observation.raw));
+  const weatherLabel = syntheticWeather ? "Simulated weather" : /real|iem|awc|pinned/i.test(metarSource) ? "Real weather" : "Weather records";
 
   return (
     <section className="relative overflow-hidden rounded-2xl bg-navy-900 text-cloud-50 shadow-[0_20px_60px_-20px_rgba(8,13,23,0.55)]" aria-label="Storm run">
       {/* soft storm light, decoration only */}
       <div aria-hidden="true" className="pointer-events-none absolute -right-40 -top-48 size-[560px] rounded-full bg-[radial-gradient(closest-side,rgba(79,159,224,0.15),transparent)]" />
       <div className="relative px-5 pb-5 pt-6 md:px-8 md:pt-8">
-        <p className="micro text-cloud-500">
-          {name ? `${name} · ` : ""}
-          {placeOf(run.station)} · {longDate(run.date)}
-        </p>
+        <p className="micro text-cloud-500">StormCheck / Flight compensation review</p>
 
         <div className="mt-3 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div className="min-w-0">
-            <h1 className="display text-balance text-[clamp(28px,2.7vw,40px)] leading-[1.08] text-cloud-50" data-testid="storm-headline">
-              {plural(story.cancelled, "flight", "flights")} cancelled, {plural(story.passengers, "passenger", "passengers")} stranded
-              {story.outage ? ": a power cut, not a storm." : <>, all coded &lsquo;weather&rsquo;.</>}
+            <h1 className="display max-w-[19ch] text-balance text-[clamp(34px,3.5vw,52px)] leading-[1.04] text-cloud-50" data-testid="storm-headline">
+              The cause changes the compensation.
             </h1>
-            <p className="mt-4 max-w-[64ch] text-[16px] leading-relaxed text-cloud-300" data-testid="storm-story">
-              StormCheck checked each one against{" "}
-              {story.outage ? (
-                <>
-                  the <Explain term="grid-outage">grid outage window</Explain>
-                </>
-              ) : (
-                <>
-                  the real airport weather (<Explain term="metar">METAR</Explain>)
-                </>
-              )}{" "}
-              and the airline&rsquo;s own logs.{" "}
+            <p className="mt-4 max-w-[54ch] text-[16px] leading-relaxed text-cloud-300">
+              StormCheck compares weather and airline records, calculates what passengers are owed, and prepares drafts for approval.
+            </p>
+            <p className="mt-5 text-[14px] text-cloud-100" data-testid="storm-summary">
+              {plural(story.cancelled, "cancellation", "cancellations")} checked · {plural(story.passengers, "passenger", "passengers")}
+            </p>
+            <p className="mt-2 max-w-[65ch] text-[13px] leading-relaxed text-cloud-300" data-testid="storm-story">
               {story.parts.map((p, i) => (
                 <Fragment key={p.kind}>
                   <span className="whitespace-nowrap">
@@ -117,35 +101,42 @@ export function Hero({ run, onSelectFlight, reuse }: { run: StormRun; onSelectFl
           </div>
 
           {focus ? (
-            <motion.div
-              initial={false}
-              animate={settled ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="rounded-xl bg-navy-950/70 p-4 ring-1 ring-white/10 backdrop-blur-sm"
+            <div
+              className="rounded-xl border-l-2 border-notweather bg-navy-950/70 p-5 ring-1 ring-white/10"
               data-testid="not-weather-callout"
               aria-live="polite"
             >
-              <p className="display-tight text-[26px] leading-[1.05] text-cloud-50">
-                <span className="block">Not weather.</span>
-                <span className="block text-notweather">Broken plane.</span>
+              <p className="micro text-cloud-500">Cancellation corrected</p>
+              <p className="mt-2 text-[13px] text-cloud-400">{focus.flight.number} · {focus.flight.origin}–{focus.flight.dest}</p>
+              <p className="display-tight mt-2 text-[28px] leading-[1.1] text-cloud-50">
+                {focus.decision?.cause === "technical" ? "Aircraft fault" : focus.decision?.cause === "crew" ? "Crew unavailable" : "Not weather"}
               </p>
               <p className="mt-2 font-mono text-[12px] text-cloud-300">
-                {focus.flight.number} {focus.flight.origin}–{focus.flight.dest} ·{" "}
                 <Explain term="delay-codes" className="text-notweather">
                   {focus.decision?.recode_label}
                 </Explain>
               </p>
-              {focus.decision ? <p className="mt-2 text-[13px] leading-snug text-cloud-300"><FaultLine decision={focus.decision} /></p> : null}
-              {focus.decision ? <ConfidenceLine confidence={focus.decision.confidence} showCaps={false} className="mt-2 text-cloud-400 [&_span.font-bold]:text-cloud-50" /> : null}
-              <Link to={`/flights/${encodeURIComponent(focus.flight.id)}`} className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-medium text-cloud-50 hover:underline" tabIndex={settled ? 0 : -1}>
-                Open the flight file <ArrowRight className="size-3.5" aria-hidden="true" />
+              {focusLiability != null && focusLiability > 0 ? (
+                <div className="mt-4 border-t border-white/10 pt-3" data-testid="finding-liability">
+                  <p className="text-[12px] text-cloud-400">Estimated compensation liability</p>
+                  <p className="display-tight mt-1 text-[32px] text-cloud-50"><Money cents={focusLiability} /></p>
+                  <p className="mt-1 text-[11.5px] text-cloud-400">Drafted, pending approval</p>
+                </div>
+              ) : null}
+              <Link to={`/flights/${encodeURIComponent(focus.flight.id)}`} className="app-evidence-link mt-4 inline-flex items-center gap-2 rounded-md px-3.5 py-2.5 text-[13px] font-semibold">
+                See the evidence <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
-            </motion.div>
+              {focus.decision ? <Details dark summary="Why it changed" className="mt-3"><p className="text-[13px] leading-relaxed text-cloud-300"><FaultLine decision={focus.decision} /></p><ConfidenceLine confidence={focus.decision.confidence} showCaps={false} className="mt-2 text-cloud-400 [&_span.font-bold]:text-cloud-50" /></Details> : null}
+            </div>
           ) : null}
         </div>
 
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-4">
+          <h2 className="text-[14px] font-medium text-cloud-100">The weather, alongside the flight schedule</h2>
+          <p className="text-[12px] text-cloud-400">{name ? `${name} · ` : ""}{placeOf(run.station)} · {longDate(run.date)}</p>
+        </div>
         {/* Phones pan the timeline instead of squeezing 30 hours into 350 px; it opens on the window's end and NS31. */}
-        <div ref={pan} className="-mx-5 mt-6 overflow-x-auto px-5 [scrollbar-width:none] md:mx-0 md:overflow-visible md:px-0">
+        <div ref={pan} className="-mx-5 mt-2 overflow-x-auto px-5 [scrollbar-width:none] md:mx-0 md:overflow-visible md:px-0">
           <div className="min-w-[700px] md:min-w-0">
             <StormTimeline run={run} tone="dark" onSelectFlight={onSelectFlight} />
           </div>
@@ -162,6 +153,7 @@ export function Hero({ run, onSelectFlight, reuse }: { run: StormRun; onSelectFl
             ) : null}
           </div>
           <RealContext run={run} />
+          <p className="text-[11.5px] text-cloud-500">{weatherLabel} · simulated airline records · drafts only</p>
         </div>
         {run.message ? <p className="mt-3 font-mono text-[12px] text-cloud-400">{run.message}</p> : null}
       </div>

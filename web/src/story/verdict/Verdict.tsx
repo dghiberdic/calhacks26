@@ -158,10 +158,10 @@ export function Verdict() {
   return (
     <section ref={root} aria-label={`The verdict on ${f?.number ?? "the flight"}`} data-section="verdict" className="bg-cloud-50 px-5 py-28 text-navy-900 md:px-16 md:py-36">
       <div className="mx-auto max-w-[1280px]">
-        <h2 className="text-balance display vd-reveal text-[clamp(46px,7.2vw,124px)]">
-          Not weather.
+        <h2 className="text-balance display vd-reveal text-[clamp(42px,6.1vw,104px)]">
+          Aircraft fault.
           <br />
-          <span className="text-notweather-ink">Broken plane.</span>
+          <span className="text-notweather-ink">Compensation owed.</span>
         </h2>
         <p className="vd-reveal mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[12.5px] text-slate-600 md:text-[13.5px]" data-testid="story-recode">
           <span className="rounded-md bg-notweather-wash px-2 py-1 text-notweather-ink">
@@ -177,7 +177,7 @@ export function Verdict() {
         </p>
 
         <div className="vd-bridge mt-20 grid grid-cols-1 items-start gap-x-12 gap-y-14 md:mt-28 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.15fr)_minmax(0,1.3fr)]">
-          <Figure label="Cash basis" struck caption="Nothing until a claim is paid.">
+          <Figure label="Cash basis" struck caption="Counts only payments already made, not what the airline owes.">
             <span className={big}>{m.cash !== null ? eur(m.cash) : <Pending ch={3} tone="light" />}</span>
           </Figure>
           <Figure
@@ -203,7 +203,7 @@ export function Verdict() {
             label="EU261 compensation liability, drafted"
             caption={
               <>
-                {rate !== null ? <span className="figure">{pct(rate)}</span> : <Pending ch={3} tone="light" />} expected ultimate claim rate (history to M18 + tail judgment)
+                {rate !== null ? <span className="figure">{pct(rate)}</span> : <Pending ch={3} tone="light" />} expected ultimate claim rate, based on 18 months of history and an estimate of later claims
                 {m.sensitivity !== null ? (
                   <>
                     {" "}
@@ -233,14 +233,14 @@ export function Verdict() {
               <dd>{m.statusLine ?? (m.payouts !== null ? `${count(m.payouts)} payouts drafted, pending Claims Lead approval` : <Pending ch={24} tone="light" />)}</dd>
               <dt className="text-slate-500">Storm total</dt>
               <dd>
-                {story.run ? <span className="figure">{eur(story.run.liability_drafted_cents)}</span> : <Pending ch={6} tone="light" />} EU261 compensation liability across {story.stormName ?? "the storm"}, held knock-on returns included
+                {story.run ? <span className="figure">{eur(story.run.liability_drafted_cents)}</span> : <Pending ch={6} tone="light" />} EU261 compensation liability across {story.stormName ?? "the storm"}, including return flights awaiting Legal&rsquo;s ruling
               </dd>
             </dl>
           </div>
           <figure className="vd-reveal vd-curve flex min-w-0 flex-col justify-between gap-6">
             {story.curve ? <Curve curve={story.curve} /> : story.curveMissing ? <Learned items={story.learned} /> : <div className="aspect-[300/130] w-full animate-pulse rounded-lg bg-navy-900/5" aria-hidden="true" />}
             <figcaption className="text-[14px] leading-relaxed text-slate-500">
-              Claims keep arriving for years. Northstar&rsquo;s own claims history sets the rate{story.curve ? ` (curve ${story.curve.version})` : ""}, and the liability is trued up against it at every month-end.
+              The estimate is updated each month as claims arrive. The curve shows Northstar&rsquo;s claims history{story.curve ? ` (${story.curve.version})` : ""}.
             </figcaption>
           </figure>
         </div>

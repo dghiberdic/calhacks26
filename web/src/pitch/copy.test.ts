@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { ARCHITECTURE_HEADLINE, CARD_TAGS, copyProblem, COVER_IMAGE_CREDIT, HONEST_FRAMING, REAL_CARD, SEATS_LINE } from "./copy";
 
 describe("pitch copy", () => {
-  it("keeps the seats line verbatim (THREAD_JUSTIN J11)", () => {
+  it("explains the job and the approval boundary in plain language", () => {
     expect(SEATS_LINE).toBe(
-      "StormCheck fills two seats at Northstar Air, the Passenger Claims Accountant and the Revenue Accountant, with one step between them: what really caused each cancellation. It drafts every payout and the EU261 compensation liability; the Claims Lead approves every payment.",
+      "StormCheck checks cancellation records against weather and maintenance evidence, then drafts passenger compensation and accounting entries. People approve the payments.",
     );
   });
 
@@ -16,7 +16,7 @@ describe("pitch copy", () => {
   });
 
   it("tags the Business cards in plain words, the same four the app uses", () => {
-    expect(CARD_TAGS).toEqual({ learns: "from its own history", runs: "overnight", escalates: "asks a person", improves: "becomes policy" });
+    expect(CARD_TAGS).toEqual({ learns: "past decisions", runs: "checks the evidence", escalates: "human review", improves: "saved ruling" });
   });
 
   it("every fixed line reads clean", () => {

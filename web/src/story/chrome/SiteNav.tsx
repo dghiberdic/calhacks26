@@ -47,10 +47,10 @@ export function SiteNav() {
         </Link>
         <nav className="pointer-events-auto flex items-center gap-5 text-[14.5px]" aria-label="Story">
           <Link to="/pitch" className="hidden opacity-80 transition-opacity hover:opacity-100 sm:inline">
-            Pitch
+            Presentation
           </Link>
           <Link to="/" className="whitespace-nowrap rounded-lg border border-white/20 bg-white/5 px-4 py-2 font-medium transition-colors hover:border-white/40 hover:bg-white/10">
-            <span className="hidden sm:inline">Open the storm run</span>
+            <span className="hidden sm:inline">Open the results</span>
             <span className="sm:hidden">Open app</span>
           </Link>
         </nav>
