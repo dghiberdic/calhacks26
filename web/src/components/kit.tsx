@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import type { Cents, Confidence, Role, TraceEvent } from "@/api/types";
 import { ApiError } from "@/api/client";
 import { eur, pct, ROLE_INITIALS, ROLE_LABEL, routedTo, shortId, zulu } from "@/lib/format";
@@ -119,6 +119,22 @@ export function Panel({ children, className, title, actions, footer, padded = tr
       <div className={cn(padded && "p-5", padded && (title || actions) && "pt-3")}>{children}</div>
       {footer ? <div className="border-t border-cloud-100 px-5 py-3 text-[13px] text-slate-500">{footer}</div> : null}
     </section>
+  );
+}
+
+/**
+ * Progressive disclosure: secondary numbers, raw codes and per-coupon tables sit behind "Details" or
+ * "How we got this". Closed by default; a native <details>, so it needs no state and works without JS.
+ */
+export function Details({ summary = "Details", children, className, defaultOpen, dark }: { summary?: ReactNode; children: ReactNode; className?: string; defaultOpen?: boolean; dark?: boolean }) {
+  return (
+    <details className={cn("group", className)} open={defaultOpen}>
+      <summary className={cn("inline-flex cursor-pointer list-none items-center gap-1 text-[12.5px] font-medium [&::-webkit-details-marker]:hidden", dark ? "text-cloud-300 hover:text-cloud-50" : "text-metar-ink hover:underline")}>
+        <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" aria-hidden="true" />
+        {summary}
+      </summary>
+      <div className="mt-2.5">{children}</div>
+    </details>
   );
 }
 
