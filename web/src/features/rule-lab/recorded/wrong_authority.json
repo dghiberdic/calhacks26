@@ -1,0 +1,156 @@
+{
+  "accounting": null,
+  "candidate": {
+    "action": "deny_offset",
+    "action_arg": null,
+    "authority_required": "claims_lead",
+    "cases_settled_by_storm": {},
+    "condition": {
+      "all": [
+        {
+          "f": "voucher.in_lieu",
+          "op": "eq",
+          "v": true
+        },
+        {
+          "f": "voucher.signed",
+          "op": "eq",
+          "v": false
+        }
+      ]
+    },
+    "grounding": {
+      "action=deny_offset": "Pay €600 cash",
+      "voucher.in_lieu=true": "the voucher",
+      "voucher.signed=false": "No signed acceptance"
+    },
+    "id": "R-CL-1",
+    "kind": "voucher",
+    "origin_example": "NS31@2025-01-24:14C",
+    "origin_quote": "No signed acceptance, no offset: pay €600 cash; the voucher stays as goodwill.",
+    "origin_ruling_id": "RUL-Q-1-1",
+    "recorded_at": "2025-01-25T09:30:00Z",
+    "scope": {
+      "flight.departs_eu": "case:true"
+    },
+    "static_card": false,
+    "status": "proposed",
+    "supersedes": null,
+    "support": null,
+    "tier": "claims_lead_ruling",
+    "times_cited": 0,
+    "title": "Pay €600 cash; the voucher stays as goodwill",
+    "valid_from": null,
+    "version": 1
+  },
+  "cases": [],
+  "checks": [
+    {
+      "detail": "Existing StormCheck proposal gate.",
+      "group": "existing_engine",
+      "id": "engine:compiles",
+      "label": "Compiles",
+      "passed": true
+    },
+    {
+      "detail": "Existing StormCheck proposal gate.",
+      "group": "existing_engine",
+      "id": "engine:reproduces_case",
+      "label": "Reproduces case",
+      "passed": true
+    },
+    {
+      "detail": "Existing StormCheck proposal gate.",
+      "group": "existing_engine",
+      "id": "engine:no_hard_control",
+      "label": "No hard control",
+      "passed": true
+    },
+    {
+      "detail": "Existing StormCheck proposal gate.",
+      "group": "existing_engine",
+      "id": "engine:grounded",
+      "label": "Grounded",
+      "passed": true
+    },
+    {
+      "detail": "Existing StormCheck proposal gate.",
+      "group": "existing_engine",
+      "id": "engine:author_has_authority",
+      "label": "Author has authority",
+      "passed": false
+    },
+    {
+      "detail": "Existing StormCheck proposal gate.",
+      "group": "existing_engine",
+      "id": "engine:no_conflict",
+      "label": "No conflict",
+      "passed": true
+    },
+    {
+      "detail": "Read-only source fixture.",
+      "group": "isolation",
+      "id": "isolation:fixture",
+      "label": "Golden inputs unchanged",
+      "passed": true
+    },
+    {
+      "detail": "No confirmation event is written, even to the temporary rule store.",
+      "group": "isolation",
+      "id": "isolation:proposal",
+      "label": "Candidate remains a proposal",
+      "passed": true
+    }
+  ],
+  "existing_gate_problems": [
+    "agent.engine may not author rules"
+  ],
+  "fingerprints": {
+    "candidate_sha256": "33ec5ba94a093de9b679a8e2297107e2e0d0d89646ea1fc1e48823c61121fe3e",
+    "curves_sha256": "b6213a18728648d7933c2a8dab42a01677a6de594a6b086cfe1cc4f6671cc748",
+    "implementation_sha256": "bb1c9c6ceae892a20a43933f9249229b653e8f1cd9ab135b4c2c2dbb3658cd49",
+    "report_sha256": "a1291ce690fa3ad17691436284b4fc3256c95c196b5e2a7615e10be00c905c08",
+    "test_pack_sha256": "bc6cc40db9633f1c99d13ff7a773fa4bf4cf764934f82299c09cb1bb661d0c47",
+    "world_sha256": "5fcc4bb2c32a1e2a4b5a59dc452377d29d9e91e2c1c76e7e10f8a90bc64da27d"
+  },
+  "isolation": {
+    "activated_rules": 0,
+    "fixture_unchanged": true,
+    "model_calls": 0,
+    "persistent_writes": 0,
+    "storage": ":memory:",
+    "stored_candidate_status": "proposed"
+  },
+  "label": "StormCheck simulated demo · regression evidence, not approval or certification",
+  "limitations": [
+    "Supports the Q1 unsigned-voucher rule family only.",
+    "Fixed simulated cases cannot establish correctness on unseen production data.",
+    "Passing only produces evidence for a human reviewer; it never confirms a rule."
+  ],
+  "preset": "wrong_authority",
+  "ruling": {
+    "at": "2025-01-25T09:30:00Z",
+    "author": "claims_lead:lab-reviewer",
+    "author_role": "claims_lead",
+    "decision": "Pay €600 cash; the voucher stays as goodwill",
+    "explanation": "No signed acceptance, no offset: pay €600 cash; the voucher stays as goodwill.",
+    "id": "RUL-Q-1-1",
+    "kind": "answer",
+    "question_id": "Q-1"
+  },
+  "scenario": {
+    "description": "Test mutation: submit the policy with an agent as its author.",
+    "title": "Agent claims rule authority"
+  },
+  "schema": "stormcheck-rule-lab-v1",
+  "simulation_ran": false,
+  "submitted_author_role": "agent.engine",
+  "summary": {
+    "failed_checks": 1,
+    "intended_cases": 0,
+    "passed_checks": 7,
+    "protected_cases": 0,
+    "total_checks": 8
+  },
+  "verdict": "blocked"
+}

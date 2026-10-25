@@ -13,6 +13,7 @@ const Close = lazy(() => import("@/screens/close"));
 const Desk = lazy(() => import("@/screens/desk"));
 const Proof = lazy(() => import("@/screens/proof"));
 const Pitch = lazy(() => import("@/pitch"));
+const RuleLab = lazy(() => import("@/screens/rule-lab"));
 const Story = lazy(() => import("@/story"));
 
 const screen = (node: ReactNode) => <Suspense fallback={<Loading />}>{node}</Suspense>;
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
       { path: "close", element: screen(<Close />) },
       { path: "desk", element: screen(<Desk />) },
       { path: "proof", element: screen(<Proof />) },
+      { path: "rule-lab", element: screen(<RuleLab />) },
       { path: "*", element: <NotFound /> },
     ],
   },

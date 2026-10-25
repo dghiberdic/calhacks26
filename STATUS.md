@@ -19,3 +19,4 @@
 | justin-b | 15:59 | /story: real Meteosat IR loop of Éowyn (© EUMETSAT) on one clock with ERA5 isobars + wind, 4K render, every beat moves at 60 fps; /pitch: 4K cover with clouds turning about the low, slides build in, copy check in e2e | Q&A/video | PR #5 (contracts/requests) waiting to merge |
 | filip-b2 (books agent) | Sat | F8b postings + F8c invariants / CFO / audit, golden-exact vs expected/ | (queue done) | no |
 | filip-a (F3d finish agent) | Sat 13:00 | F3d judge day: airport-local day, METAR across every needed hour, plants re-simulated (DUB fault, no extras), BOS→DUB context on EU days, `.json.gz` load, CPU-time timing tests | — | no |
+| filip / Rule Lab UI review | Sat 20:05 | Native Rule Lab in animated story + app sidebar; 238 frontend tests, 7 story/browser checks and 7 lab tests pass; saved reports match fresh runner | review codex/rule-lab-interface before merge | no |

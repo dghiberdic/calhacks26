@@ -11,6 +11,7 @@ const SECTIONS: [RegExp, string][] = [
   [/^\/close/, "Liability & Close"],
   [/^\/desk/, "Judge's Desk"],
   [/^\/proof/, "Proof"],
+  [/^\/rule-lab/, "Rule Lab"],
 ];
 
 export function pageTitle(pathname: string): string {

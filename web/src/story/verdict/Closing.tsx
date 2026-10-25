@@ -51,7 +51,7 @@ export function Closing() {
       <div className="relative mx-auto max-w-[1280px]">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           <div>
-            <h2 className="text-balance cl-reveal display max-w-[17ch] text-[clamp(38px,4.8vw,84px)]">Every count and euro on this page comes from the storm run.</h2>
+            <h2 className="text-balance cl-reveal display max-w-[17ch] text-[clamp(38px,4.8vw,84px)]">Every count and euro comes with evidence.</h2>
             <p className="cl-reveal mt-6 max-w-[52ch] text-[16.5px] leading-relaxed text-slate-600 md:text-[19px]">
               StormCheck fills two seats at Northstar Air: the Passenger Claims Accountant and the Revenue Accountant. Both jobs depend on what really caused each cancellation. StormCheck drafts every payout and the EU261 compensation liability, and the Claims Lead approves every payment.
             </p>

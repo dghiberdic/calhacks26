@@ -45,7 +45,8 @@ export function SiteNav() {
           <Logo className="h-[20px] w-auto" />
           <span className="text-[17px] font-semibold tracking-[-0.01em] [font-stretch:112%]">StormCheck</span>
         </Link>
-        <nav className="pointer-events-auto flex items-center gap-5 text-[14.5px]" aria-label="Story">
+        <nav className="pointer-events-auto flex items-center gap-4 text-[14.5px]" aria-label="Story">
+          <a href="#rule-lab" className="whitespace-nowrap text-[12px] opacity-80 transition-opacity hover:opacity-100 sm:text-[14.5px]">Rule Lab</a>
           <Link to="/pitch" className="hidden opacity-80 transition-opacity hover:opacity-100 sm:inline">
             Pitch
           </Link>

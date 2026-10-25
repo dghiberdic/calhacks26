@@ -74,3 +74,9 @@ Judgment calls, newest first within each task. One line each, with the why. Requ
 - The cover is a fresh NASA GIBS MODIS Terra export of 24 Jan 2025 at 3840×2160 with the colour grade baked in; its clouds turn counter-clockwise about the low in WebGL while land and sea stay still, and a slow GPU gets half resolution, then the still.
 - Eyebrows dropped "example ·"; every slide's rendered text is checked in e2e against the banned-words list (no generated-sounding words, em dashes, "!", "AI" as a selling word or rhetorical questions).
 - The seats line sits on the cover. The Business slide's footer carries no number until the API counts cases settled by a cited ruling (request 6).
+
+## Rule Lab · Native story integration
+- The user requested the existing animated UI. This review branch embeds the shared workbench after AskOnce and exposes it in the app sidebar; the team can review it before merging.
+- The lab has a separate transport from the app API. Unavailable or inconsistent live results fall back to actual saved runner output with an explicit saved-evidence label. Production defaults to saved evidence.
+- Both surfaces use the same candidate, case and accounting views. The story injects its rolling figures; the app view avoids importing the story's scrolling machinery. Reduced motion skips reveals and case entrance animations.
+- The original approval routes stay independent. Rule Lab shows a curated Q1 test pack and prepares evidence; it does not activate a policy or certify arbitrary rules.
