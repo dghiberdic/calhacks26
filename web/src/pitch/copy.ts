@@ -1,20 +1,15 @@
 /**
- * The deck's fixed words, verbatim from THREAD_JUSTIN J11 and IMPLEMENTATION_PLAN (§1.1 honest framing,
- * §9 wording). Only world facts from the plan live here ("€1.1B Irish carrier", "2 Claude roles");
+ * The deck's fixed words, with the plan's honest framing and accounting boundaries preserved.
+ * The introduction is short enough to understand before the first example;
  * every passenger count, euro and percentage on a slide is read from the API when it renders.
  */
 
-/** THREAD_JUSTIN J11, word for word. The emphasised spans are only typography. */
+/** Product explanation. The emphasised spans are only typography. */
 export const SEATS_LINE_PARTS: { text: string; strong?: boolean }[] = [
-  { text: "StormCheck fills " },
-  { text: "two seats", strong: true },
-  { text: " at Northstar Air, the " },
-  { text: "Passenger Claims Accountant", strong: true },
-  { text: " and the " },
-  { text: "Revenue Accountant", strong: true },
-  { text: ", with one step between them: " },
-  { text: "what really caused each cancellation", strong: true },
-  { text: ". It drafts every payout and the EU261 compensation liability; the Claims Lead approves every payment." },
+  { text: "StormCheck checks cancellation records against " },
+  { text: "weather and maintenance evidence", strong: true },
+  { text: ", then drafts passenger compensation and accounting entries. " },
+  { text: "People approve the payments.", strong: true },
 ];
 
 export const SEATS_LINE = SEATS_LINE_PARTS.map((p) => p.text).join("");
@@ -26,17 +21,17 @@ export const HONEST_FRAMING =
 /** Plan §9 wording for the "Real" card (THREAD_JUSTIN J11). */
 export const REAL_CARD = "Real Dublin weather, traffic and EU law; simulated logs, mess left in";
 
-export const ARCHITECTURE_HEADLINE = "2 Claude roles + 1 deterministic engine";
+export const ARCHITECTURE_HEADLINE = "Claude reads. The engine calculates.";
 
 /**
  * The Business slide's card tags, in plain words (they replaced Hyphenate's `self-learning`, `ai-automated`,
  * `needs-review` and `new-policy`). The app's Learns strip should use the same four.
  */
 export const CARD_TAGS = {
-  learns: "from its own history",
-  runs: "overnight",
-  escalates: "asks a person",
-  improves: "becomes policy",
+  learns: "past decisions",
+  runs: "checks the evidence",
+  escalates: "human review",
+  improves: "saved ruling",
 } as const;
 
 /**

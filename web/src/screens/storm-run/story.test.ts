@@ -19,7 +19,7 @@ describe("stormStory", () => {
     const s = stormStory(run(rows));
     expect(s.outage).toBe(false);
     expect(s.cancelled).toBe(4);
-    expect(s.parts.map((p) => p.text)).toEqual(["2 were weather", "1 was a broken plane: NS31", "1 waits on Legal"]);
+    expect(s.parts.map((p) => p.text)).toEqual(["2 were weather", "1 was an aircraft fault: NS31", "1 waits on Legal"]);
   });
 
   it("says power cut, not weather, for a grid outage", () => {

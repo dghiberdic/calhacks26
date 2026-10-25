@@ -15,7 +15,7 @@ export type Story = {
 };
 
 const CAUSE_PHRASE: Partial<Record<Cause, string>> = {
-  technical: "a broken plane",
+  technical: "an aircraft fault",
   crew: "crew out of duty hours",
   atc: "air traffic control",
 };

@@ -111,16 +111,16 @@ export function Cover() {
         </Reveal>
         <div className="mt-auto">
           {/* Two beats: the code everyone typed, then what the logs say. Then who it is for. */}
-          <h2 className="display text-[156px] leading-[0.9] text-cloud-50">
+          <h2 className="display text-[136px] leading-[0.94] text-cloud-50">
             <Reveal as="span" className="block" delay={0.2}>
-              Not weather.{" "}
+              Find the cause.{" "}
             </Reveal>
-            <Reveal as="span" className="block text-notweather" delay={0.8}>
-              Broken plane.
+            <Reveal as="span" className="block text-cloud-200" delay={0.8}>
+              Calculate what&rsquo;s owed.
             </Reveal>
           </h2>
           <Reveal delay={1.15}>
-            <p className="mt-14 max-w-[1080px] text-[34px] leading-[1.42] text-cloud-300 text-pretty" data-testid="seats-line">
+            <p className="mt-14 max-w-[1110px] text-[34px] leading-[1.42] text-cloud-300 text-pretty" data-testid="seats-line">
               {SEATS_LINE_PARTS.map((part, i) =>
                 part.strong ? (
                   <span key={i} className="text-cloud-50">

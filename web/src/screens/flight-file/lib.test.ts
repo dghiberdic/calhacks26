@@ -4,10 +4,10 @@ import { bandMarginText, breakdownText, draftedLiability, electionsOf, featureLa
 
 describe("plainHeadline", () => {
   it("says the verdict in plain words, power cut included", () => {
-    expect(plainHeadline("notweather", "technical")).toBe("A broken plane, not the storm.");
-    expect(plainHeadline("weather", "weather")).toBe("The storm stopped it.");
-    expect(plainHeadline("weather", "external_event")).toBe("The power cut stopped it.");
-    expect(plainHeadline("held", "knock_on")).toBe("A knock-on of the storm: Legal decides.");
+    expect(plainHeadline("notweather", "technical")).toBe("Aircraft fault. Compensation owed.");
+    expect(plainHeadline("weather", "weather")).toBe("Cancelled by the storm.");
+    expect(plainHeadline("weather", "external_event")).toBe("Cancelled by the power outage.");
+    expect(plainHeadline("held", "knock_on")).toBe("Disrupted earlier flight. Legal review needed.");
   });
 });
 

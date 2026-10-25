@@ -1,43 +1,43 @@
 import { count } from "@/lib/format";
-import { REAL_CARD } from "../copy";
-import { payoutsDrafted, type PitchData } from "../data";
+import { payoutsDrafted, recodedRow, type PitchData } from "../data";
 import { Bullets, Fig, GrammarCards, Reveal, SlideFrame, type GrammarCard } from "../ui";
 import { StormStrip } from "./StormStrip";
 
 /**
- * THREAD_JUSTIN J11 slide 2: the airline against the four questions (the tags are the judges' own words).
- * Wow gets a bright outline, not a meaning colour.
+ * One concrete case: reported cause → source evidence → corrected result → human approval.
  */
 export function Judged({ data }: { data: PitchData }) {
   const { run } = data;
+  const row = recodedRow(run);
   const cards: GrammarCard[] = [
     {
-      title: "Real.",
-      tag: "real-enough",
-      lead: <>{REAL_CARD}.</>,
-      details: <Bullets items={["A 5 a.m. cancel list, all coded weather", "Answer key: every passenger checked"]} />,
+      title: "Reported.",
+      tag: "01 · the problem",
+      lead: <>{row?.flight.number ?? "The flight"} was marked as a weather cancellation.</>,
+      details: <Bullets items={["That label can exclude compensation", "Refunds and care are still due"]} />,
     },
     {
-      title: "Hireable.",
-      tag: "would-you-hire-it",
-      lead: <>One role: disruption liability. Drafts it, never pays it.</>,
-      details: <Bullets items={["Each question goes to the person who owns it", "Every euro traces to a log line"]} />,
+      title: "Evidence.",
+      tag: "02 · the check",
+      lead: <>The aircraft was grounded before the storm.</>,
+      details: <StormStrip run={run} />,
     },
     {
-      title: "New.",
-      tag: "something-new",
-      lead: <>Works out what each cancellation costs from what really caused it.</>,
-      details: <Bullets items={["Storm window checked at both ends of a flight", "Rules that differ route to route"]} />,
-    },
-    {
-      title: "Wow.",
-      tag: "wow-moment",
+      title: "Corrected.",
+      tag: "03 · the result",
       highlight: "bright",
-      lead: <>Catches a &ldquo;weather&rdquo; cancellation that was a broken plane.</>,
+      lead: <>A technical fault: compensation is owed.</>,
+      details: <Bullets items={[
+        <>Code corrected: {row?.decision?.recode_label ?? "awaiting evidence"}</>,
+        "Passenger entitlements recalculated",
+      ]} />,
+    },
+    {
+      title: "Review.",
+      tag: "04 · the control",
+      lead: <>The Claims Lead approves payouts. The system cannot pay.</>,
       details: (
         <div className="flex flex-col gap-5">
-          {/* "Shows the weather and the tech log", drawn rather than said. */}
-          <StormStrip run={run} />
           <Bullets
             items={[
               <>
@@ -51,12 +51,12 @@ export function Judged({ data }: { data: PitchData }) {
   ];
 
   return (
-    <SlideFrame eyebrow="judged">
+    <SlideFrame eyebrow="a case from the demo">
       <Reveal className="mt-10">
-        <h2 className="display text-[108px] text-cloud-50">The airline, judged.</h2>
+        <h2 className="display text-[100px] text-cloud-50">Same storm. Different cause.</h2>
       </Reveal>
       <Reveal className="mt-6">
-        <p className="text-[32px] leading-tight text-cloud-200">Its storm night, against the four questions.</p>
+        <p className="text-[32px] leading-tight text-cloud-200">A cancellation code is a starting point, not proof.</p>
       </Reveal>
       <GrammarCards className="mt-auto pt-10" cards={cards} />
     </SlideFrame>

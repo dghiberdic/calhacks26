@@ -157,7 +157,7 @@ describe("Trace screen", () => {
 
   it("labels the SOC 2 controls as a mapping, sorted, with links to evidence", async () => {
     renderAt("/trace?tab=controls");
-    expect(await screen.findByRole("heading", { name: "SOC 2 is the floor" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Controls and evidence" })).toBeInTheDocument();
     expect(screen.getByText("mapping · not a certification")).toBeInTheDocument();
     const items = within(await screen.findByRole("list", { name: "Control mapping" })).getAllByRole("listitem");
     expect(items[0]).toHaveTextContent("CC6.1");

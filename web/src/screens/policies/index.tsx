@@ -48,7 +48,7 @@ export default function PoliciesScreen() {
     <MotionConfig reducedMotion="user">
       <div className="mx-auto max-w-[1120px]">
         <PageHeader title="Policies">
-          Every rule StormCheck applies, by where it came from: Northstar&rsquo;s own history, a person&rsquo;s ruling, a rejected proposal or the law. There is no rule editor.
+          Reuse a decision without losing who made it, why, or where it applies.
         </PageHeader>
 
         {learning.data?.length ? <LearnedAndReused steps={learning.data} rules={rules.data} /> : null}

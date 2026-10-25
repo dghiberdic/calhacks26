@@ -32,7 +32,7 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
   const { pathname } = useLocation();
   const openCount = open.data?.length ?? 0;
   return (
-    <nav aria-label="Main" className="flex flex-col gap-0.5">
+    <nav aria-label="Main" className="app-navigation flex flex-col gap-1">
       {NAV.map((item) => {
         const runActive = item.match ? item.match.some((m) => (m === "/" ? pathname === "/" : pathname.startsWith(m))) : undefined;
         return (
@@ -43,12 +43,12 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
             onClick={onNavigate}
             className={({ isActive }) =>
               cn(
-                "group flex h-9 items-center gap-3 rounded-lg px-3 text-[13.5px] transition-colors",
-                (runActive ?? isActive) ? "bg-navy-800 text-cloud-50" : "text-cloud-400 hover:bg-navy-850 hover:text-cloud-100",
+                "app-nav-item group relative flex h-11 items-center gap-3 rounded-lg px-3 text-[13.5px] font-medium transition-colors",
+                (runActive ?? isActive) ? "app-nav-item-active text-cloud-50" : "text-cloud-400 hover:bg-navy-850 hover:text-cloud-100",
               )
             }
           >
-            <item.icon className="size-4 shrink-0 opacity-90" aria-hidden="true" />
+            <item.icon className="size-[17px] shrink-0 opacity-90" strokeWidth={1.65} aria-hidden="true" />
             <span className="flex-1">{item.label}</span>
             {item.badge === "questions" && openCount > 0 ? (
               <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-held px-1.5 font-mono text-[10.5px] font-bold text-navy-950" aria-label={`${openCount} open`}>
@@ -58,14 +58,14 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
           </NavLink>
         );
       })}
-      <div className="my-2 h-px bg-navy-800" />
-      <NavLink to="/pitch" onClick={onNavigate} className="flex h-9 items-center gap-3 rounded-lg px-3 text-[13.5px] text-cloud-400 transition-colors hover:bg-navy-850 hover:text-cloud-100">
-        <Presentation className="size-4 shrink-0" aria-hidden="true" />
-        Pitch
+      <div className="mx-3 my-3 h-px bg-navy-700/70" />
+      <NavLink to="/pitch" onClick={onNavigate} className="app-nav-item flex h-10 items-center gap-3 rounded-lg px-3 text-[13.5px] text-cloud-400 transition-colors hover:bg-navy-850 hover:text-cloud-100">
+        <Presentation className="size-[17px] shrink-0" strokeWidth={1.65} aria-hidden="true" />
+        Presentation
       </NavLink>
-      <NavLink to="/story" onClick={onNavigate} className="flex h-9 items-center gap-3 rounded-lg px-3 text-[13.5px] text-cloud-400 transition-colors hover:bg-navy-850 hover:text-cloud-100">
-        <Clapperboard className="size-4 shrink-0" aria-hidden="true" />
-        The story
+      <NavLink to="/story" onClick={onNavigate} className="app-nav-item flex h-10 items-center gap-3 rounded-lg px-3 text-[13.5px] text-cloud-400 transition-colors hover:bg-navy-850 hover:text-cloud-100">
+        <Clapperboard className="size-[17px] shrink-0" strokeWidth={1.65} aria-hidden="true" />
+        Guided demo
       </NavLink>
     </nav>
   );
@@ -80,7 +80,7 @@ function SourceStatus() {
     mode === "mock" ? "mock data" : mode === "recorded" ? "recorded demo" : health.data ? (String(health.data.mode ?? "") === "stub" ? "contract stub" : `live · ${String(health.data.mode ?? "server")}`) : health.isError ? "server offline" : "connecting";
   const dot = status === "live" ? "bg-tie" : status === "polling" ? "bg-held" : status === "offline" ? "bg-notweather" : "bg-cloud-500";
   return (
-    <div className="flex items-center gap-2 px-3 font-mono text-[11px] text-cloud-500" title={`Stream: ${status}`}>
+    <div className="mx-3 flex w-fit items-center gap-2 rounded-md border border-navy-700/80 bg-navy-950/30 px-2 py-1.5 font-mono text-[10.5px] text-cloud-300" title={`Stream: ${status}`}>
       <span className={cn("size-1.5 rounded-full", dot)} aria-hidden="true" />
       {label}
     </div>
@@ -139,7 +139,7 @@ function StormContext() {
         value={storm.id}
         // The flights list stays the flights list; everywhere else the storm's run is the place to land.
         onChange={(e) => navigate(pathname === "/flights" ? `/flights?storm=${encodeURIComponent(e.target.value)}` : `/run/${encodeURIComponent(e.target.value)}`)}
-        className="min-w-0 max-w-full cursor-pointer truncate rounded-md bg-transparent py-1 pr-1 font-medium text-navy-900 outline-none hover:bg-cloud-50"
+        className="min-w-0 max-w-full cursor-pointer truncate rounded-md bg-transparent py-2 pr-1 font-medium text-navy-900 outline-none hover:bg-cloud-50"
       >
         {storms.data?.map((s) => (
           <option key={s.id} value={s.id}>
@@ -167,16 +167,18 @@ export function AppShell() {
   }, [pathname]);
 
   return (
-    <div className="min-h-svh bg-background lg:grid lg:grid-cols-[236px_minmax(0,1fr)]">
+    <div className="app-shell min-h-svh bg-background lg:grid lg:grid-cols-[244px_minmax(0,1fr)]">
+      <a href="#main" className="app-skip-link">Skip to content</a>
       {/* Sidebar (desktop) */}
-      <aside className="sticky top-0 hidden h-svh flex-col bg-navy-900 px-3 pb-3 pt-4 lg:flex">
-        <NavLink to="/" className="mb-6 flex items-center gap-2.5 px-3 text-cloud-50" aria-label="StormCheck, Storm Run">
-          <Logo className="h-[17px] w-auto" />
-          <span className="text-[16px] font-semibold tracking-[-0.01em] [font-stretch:112%]">StormCheck</span>
+      <aside className="app-sidebar sticky top-0 hidden h-svh flex-col bg-navy-900 px-3 pb-4 pt-6 lg:flex">
+        <NavLink to="/" className="app-wordmark mb-1 flex items-center gap-3 rounded-md px-3 py-2 text-cloud-50" aria-label="StormCheck, Storm Run">
+          <Logo className="h-[19px] w-auto" />
+          <span className="text-[17px] font-semibold tracking-[-0.025em] [font-stretch:108%]">StormCheck</span>
         </NavLink>
+        <p className="mb-7 px-3 text-[12px] leading-relaxed text-cloud-400">Flight compensation review</p>
         <NavItems />
-        <div className="mt-auto flex flex-col gap-1.5 border-t border-navy-800 pt-3">
-          <p className="px-3 text-[11.5px] leading-snug text-cloud-500">Northstar Air · drafts only, never pays</p>
+        <div className="mt-auto flex flex-col gap-3 border-t border-navy-700/70 pt-5">
+          <p className="px-3 text-[11.5px] leading-relaxed text-cloud-400">Fictional airline demo.<br />Drafts only. Human approval.</p>
           <SourceStatus />
           <ResetButton />
         </div>
@@ -186,7 +188,7 @@ export function AppShell() {
       {menu ? (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <button type="button" className="absolute inset-0 bg-navy-950/40" aria-label="Close menu" onClick={() => setMenu(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-[260px] flex-col bg-navy-900 px-3 pb-3 pt-4">
+          <div className="app-sidebar absolute inset-y-0 left-0 flex w-[272px] flex-col overflow-y-auto bg-navy-900 px-3 pb-4 pt-5">
             <div className="mb-6 flex items-center justify-between px-3 text-cloud-50">
               <span className="flex items-center gap-2.5">
                 <Logo className="h-[16px] w-auto" />
@@ -206,7 +208,7 @@ export function AppShell() {
       ) : null}
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-cloud-200 bg-background/85 px-4 backdrop-blur-md md:px-6">
+        <header className="app-topbar sticky top-0 z-30 flex min-h-16 items-center gap-3 border-b border-cloud-200 bg-card/95 px-4 py-2 backdrop-blur-md md:px-6 xl:px-8">
           <button type="button" onClick={() => setMenu(true)} className="-ml-1 rounded-md p-1.5 text-slate-500 hover:bg-cloud-100 lg:hidden" aria-label="Open menu">
             <Menu className="size-5" />
           </button>
@@ -214,10 +216,10 @@ export function AppShell() {
             <StormContext />
           </div>
           {knownAt ? <span className="hidden font-mono text-[11px] text-slate-400 xl:inline">replaying with the facts known then</span> : null}
-          <TimeScrubber />
-          <RoleSwitcher />
+          <TimeScrubber className="app-toolbar-control" />
+          <RoleSwitcher className="app-toolbar-control" />
         </header>
-        <main id="main" className="px-4 pb-20 pt-6 md:px-6 xl:px-8">
+        <main id="main" tabIndex={-1} className="app-main mx-auto max-w-[1800px] px-4 pb-20 pt-7 outline-none md:px-6 xl:px-8 xl:pt-8">
           <ErrorBoundary key={pathname} label={pathname}>
             <Outlet />
           </ErrorBoundary>

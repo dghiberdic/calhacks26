@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { count, eur } from "@/lib/format";
+import { eur } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useStory } from "../data/context";
 import type { ChainTone } from "../data/model";
@@ -61,14 +61,14 @@ export function Trace() {
       <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <div className="lg:sticky lg:top-32 lg:self-start">
           <h2 className="text-balance display text-[clamp(38px,4.6vw,80px)]">
-            {drafted !== null ? eur(drafted) : <Pending ch={7} tone="light" />} traces back to a log line in {steps.length ? count(steps.length) : <Pending ch={2} tone="light" />} steps.
+            The evidence behind {drafted !== null ? eur(drafted) : <Pending ch={7} tone="light" />}.
           </h2>
           <p className="mt-6 max-w-[40ch] text-[16.5px] leading-relaxed text-slate-600 md:text-[19px]">
-            Each step is a recorded commit, from the journal entry down to the tech-log and METAR lines the decision quoted. An auditor sees the same chain.
+            Follow the draft estimate back through the calculation, the rule and the original maintenance and weather records.
           </p>
           {steps.length ? (
             <p className="micro mt-6 text-slate-500">
-              {story.chainSource === "blame" ? "blame" : "flight file"} · {story.focus?.flight.number ?? ""} · {steps.length} steps
+              {story.chainSource === "blame" ? "audit trail" : "flight file"} · {story.focus?.flight.number ?? ""} · {steps.length} steps
             </p>
           ) : null}
         </div>

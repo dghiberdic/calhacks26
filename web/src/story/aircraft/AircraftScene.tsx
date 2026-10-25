@@ -3,27 +3,27 @@ import { Suspense, useEffect, useMemo, useRef, useState, type RefObject } from "
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, Environment, Lightformer, PerformanceMonitor, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import { asset } from "../data/assets";
+import { AIRCRAFT, MODEL_URL } from "./model";
 
 /**
- * EI-NSB in real time. Each surface is either blueprint (white edges on cyanotype) or ink (the PBR
+ * An A320neo family illustration for EI-NSB’s case. Each surface is either blueprint (white edges on cyanotype) or ink (the PBR
  * livery), split by a sweep plane that travels nose → tail. The camera starts as a near-orthographic
  * port elevation that matches the SVG drawing, then dollies and walks around the nose to the
  * starboard side, where the engine-2 pump is leaking. Once it gets there the aircraft stands on a wet
  * apron, the camera keeps drifting a little, the fans windmill and the pump drips.
  *
- * Model space (Blender export): x = metres aft of the nose, y = up, z = port (+) / starboard (−).
+ * Model space (normalized FlightGear export): x = metres aft of the nose, y = up, z = port (+) / starboard (−).
  */
 
 /** Scroll-driven: show (canvas visible), sweep (ink), orbit (camera), lines (blueprint edges), leak (label). */
 export type AircraftProgress = { sweep: number; orbit: number; lines: number; leak: number; show: number };
 
-const MODEL = asset("a321.glb");
+const MODEL = MODEL_URL;
 const LINE = new THREE.Color("#e8f0fa");
 const SWEEP_MIN = -2;
-const SWEEP_MAX = 47;
+const SWEEP_MAX = 40;
 /** The engine-2 (starboard) driven pump: lower outboard side of the right nacelle. */
-const LEAK_AT = new THREE.Vector3(17.6, 1.55, -6.85);
+const LEAK_AT = new THREE.Vector3().fromArray(AIRCRAFT.leak);
 /** End of the walk-around: front-starboard three-quarter view (radians, 0 = port side, −π/2 = head-on). */
 const AZ_END = -(Math.PI - 0.8);
 
@@ -89,7 +89,7 @@ function Model({ progress }: { progress: RefObject<AircraftProgress> }) {
         }`,
     });
 
-    // EdgesGeometry over ~117k triangles is too slow for one frame: each mesh's edges are a job for idle time.
+    // Detailed mesh edges are expensive: each mesh's edges are a job for idle time.
     const jobs: (() => void)[] = [];
     root.updateMatrixWorld(true);
     root.traverse((o) => {
@@ -106,6 +106,7 @@ function Model({ progress }: { progress: RefObject<AircraftProgress> }) {
         patchInk(c, uniforms);
         mesh.material = c;
       }
+      if (mesh.name.startsWith("livery_")) return;
       let built = false;
       jobs.push(() => {
         if (built) return;
@@ -139,7 +140,7 @@ function Model({ progress }: { progress: RefObject<AircraftProgress> }) {
     return () => cancelIdle(handle);
   }, [jobs, invalidate]);
 
-  const fans = useMemo(() => ["engine_1_fan", "engine_2_fan"].map((n) => root.getObjectByName(n)).filter((o): o is THREE.Object3D => !!o), [root]);
+  const fans = useMemo(() => ["Fan", "Fan_1", "Cone", "Cone_1"].map((n) => root.getObjectByName(n)).filter((o): o is THREE.Object3D => !!o), [root]);
 
   useFrame((_, dt) => {
     const p = progress.current;
@@ -169,21 +170,21 @@ function CameraRig({ progress }: { progress: RefObject<AircraftProgress> }) {
     const e = o * o * (3 - 2 * o);
     const aspect = size.width / Math.max(size.height, 1);
     const halfTan = (fovDeg: number) => Math.tan(THREE.MathUtils.degToRad(fovDeg / 2));
-    // start: telephoto far out on the port side, framing x ∈ [−3, 50] like the SVG drawing's view box
+    // start: telephoto far out on the port side, framing x ∈ [−3, 42] like the SVG drawing's view box
     const startFov = 4;
-    const halfW0 = 26.5;
+    const halfW0 = AIRCRAFT.views.side[2] / 2;
     const fov = THREE.MathUtils.lerp(startFov, 30, e);
     // Dolly zoom: the framed width eases from the drawing's to the three-quarter view's while the lens
     // widens, so the aircraft holds its size and only the perspective changes. Narrow screens back off.
     const fit = Math.max(1, 1.05 / aspect);
-    const halfW = THREE.MathUtils.lerp(halfW0, 72 * fit * halfTan(30) * aspect, e);
+    const halfW = THREE.MathUtils.lerp(halfW0, 66 * fit * halfTan(30) * aspect, e);
     const dist = halfW / (halfTan(fov) * aspect);
     // at the end of the walk-around the camera keeps breathing: a slow sway and a slight rise and fall
     const t = state.clock.elapsedTime;
     const idle = e * e * e;
     const az = THREE.MathUtils.lerp(0, AZ_END, e) + idle * 0.055 * Math.sin(t * 0.21);
     const el = THREE.MathUtils.lerp(0, 0.17, e) + idle * 0.016 * Math.sin(t * 0.13 + 1.2);
-    target.set(THREE.MathUtils.lerp(23.5, 21, e), THREE.MathUtils.lerp(5.6, 3.6, e), THREE.MathUtils.lerp(0, -2.5, e));
+    target.set(THREE.MathUtils.lerp(AIRCRAFT.views.side[0] + halfW0, 18.5, e), THREE.MathUtils.lerp(5.6, 4, e), THREE.MathUtils.lerp(0, -2.5, e));
     cam.fov = fov;
     cam.near = 0.5;
     cam.far = dist + 200;
@@ -287,7 +288,8 @@ function Leak({ progress, label }: { progress: RefObject<AircraftProgress>; labe
     const left = px - w >= 8;
     el.style.flexDirection = right || !left ? "row" : "row-reverse";
     const x = right ? px - 6 : left ? px - w + 6 : Math.min(Math.max(8, px - 6), size.width - w - 8);
-    const y = right || left ? py : py + 18;
+    // Keep the callout below the nacelle so the engine remains visible; its dot stays on the pump.
+    const y = py + 56;
     el.style.transform = `translate(${x}px, ${y}px) translate(0, -50%)`;
     el.style.opacity = String(progress.current?.leak ?? 0);
   });
@@ -358,9 +360,9 @@ export default function AircraftScene({ progress, leak, fallback, className }: {
         frameloop="demand"
         dpr={[1, dpr]}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance", toneMapping: THREE.AgXToneMapping, toneMappingExposure: 1.05, outputColorSpace: THREE.SRGBColorSpace }}
-        camera={{ fov: 4, position: [23.5, 5.6, 700], near: 0.5, far: 1000 }}
+        camera={{ fov: 4, position: [19.5, 5.6, 700], near: 0.5, far: 1000 }}
         shadows={false}
-        fallback={<img src={fallback} alt="Rendering of EI-NSB on a wet stand at Dublin" className="h-full w-full object-contain" />}
+        fallback={<img src={fallback} alt="A320neo family illustration of the grounded aircraft" className="h-full w-full object-contain" />}
       >
         <hemisphereLight args={["#dfe8f2", "#1a1f27", 0.6]} />
         <directionalLight position={[30, 40, -60]} intensity={1.6} color="#fff4e8" />
@@ -384,7 +386,8 @@ export default function AircraftScene({ progress, leak, fallback, className }: {
         <Pump wrap={wrap} progress={progress} />
       </Canvas>
       <div ref={label} className="pointer-events-none absolute left-0 top-0 flex items-center gap-2 whitespace-nowrap opacity-0" aria-hidden="true">
-        <span className="relative flex size-3">
+        <span className="relative flex size-3 -translate-y-14">
+          <span className="absolute left-1/2 top-3 h-11 w-px bg-[#ffb3a1]/40" />
           <span className="absolute inline-flex size-full animate-ping rounded-full bg-notweather opacity-60" />
           <span className="relative inline-flex size-3 rounded-full bg-notweather" />
         </span>

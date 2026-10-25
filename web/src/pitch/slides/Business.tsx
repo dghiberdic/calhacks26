@@ -12,54 +12,54 @@ export function Business({ data }: { data: PitchData }) {
 
   const cards: GrammarCard[] = [
     {
-      title: "Learns.",
+      title: "Learn.",
       tag: CARD_TAGS.learns,
-      lead: <>Before its first storm, it reads the airline&rsquo;s past ops logs, claims and payouts.</>,
+      lead: <>Use the airline&rsquo;s past claims and decisions.</>,
       details: <Learned items={run?.learned} />,
     },
     {
-      title: "Runs.",
+      title: "Check.",
       tag: CARD_TAGS.runs,
-      lead: <>By morning it has found what caused each cancellation and drafted every refund, payout and the liability.</>,
+      lead: <>Find the cause, calculate compensation and prepare drafts.</>,
       details: (
         <Bullets
           items={[
             <>
-              <Fig value={pax} className="text-cloud-50" /> passengers checked against EU261
+              <Fig value={pax} className="text-cloud-50" /> passengers checked
             </>,
-            "Liability draft ready for the Controller",
+            "EU261 passenger-rights rules applied",
           ]}
         />
       ),
     },
     {
-      title: "Escalates.",
+      title: "Ask.",
       tag: CARD_TAGS.escalates,
       highlight: "held",
-      lead: <>CRM says a passenger took a service-desk voucher instead of cash. Her claim says she never agreed.</>,
+      lead: <>A passenger disputes a voucher. There is no signed acceptance.</>,
       details: <Escalation q={q} loading={!run} />,
     },
     {
-      title: "Improves.",
+      title: "Reuse.",
       tag: CARD_TAGS.improves,
       lead: <>Claims Lead: &ldquo;No signed acceptance, no offset.&rdquo;</>,
-      details: <Bullets items={["Applies to every flight leaving the EU", "Never asked again"]} />,
+      details: <Bullets items={["Reuse for matching unsigned-voucher cases", "Ask again outside the ruling’s scope"]} />,
     },
   ];
 
   return (
     <SlideFrame
-      eyebrow="the business"
+      eyebrow="the review process"
       // No API count says "voucher cases settled by this ruling" (rules_cited mixes every rule), so no number here.
-      footer={<LoopLine>Next storm: cases like hers settle on their own, ruling cited.</LoopLine>}
+      footer={<LoopLine>One ruling can resolve the next matching case.</LoopLine>}
     >
       <Reveal className="mt-10">
-        <h2 className="display text-[108px] text-cloud-50">An airline.</h2>
+        <h2 className="display text-[96px] text-cloud-50">Review once. Reuse the ruling.</h2>
       </Reveal>
       <Reveal className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-4">
-        <p className="text-[32px] leading-tight text-cloud-200">The job: settle what every passenger is owed after each storm.</p>
+        <p className="text-[30px] leading-tight text-cloud-200">Routine cases become drafts. Conflicting evidence goes to a person.</p>
         <span className="flex gap-3">
-          <Chip size="sm">€1.1B Irish carrier</Chip>
+          <Chip size="sm">Northstar Air · fictional airline</Chip>
           <Chip size="sm">
             <Fig value={pax} className="font-mono" />
             &nbsp;passengers, one storm
@@ -118,7 +118,7 @@ function Escalation({ q, loading }: { q: Question | undefined; loading: boolean 
         <Bullets
           items={[
             <>
-              Holds {(q.holds?.length ?? 0) > 1 ? "" : "that one "}
+              Held for review: {" "}
               <Num className="text-cloud-50">{eur(q.holds_cents)}</Num>
             </>,
           ]}

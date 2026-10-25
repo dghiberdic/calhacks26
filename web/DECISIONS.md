@@ -4,6 +4,7 @@ Judgment calls, newest first within each task. One line each, with the why. Requ
 `contracts/requests/justin.md`.
 
 ## Across the app
+- **Judge clarity pass (25 Oct):** lead with what StormCheck does, show the corrected cause and flight-specific draft estimate immediately, then expose source records and accounting detail on demand. Use concise task headings, preserve real/simulated disclosures and approval gates, and describe rule reuse as scope-limited rather than “never asked again.” Review workload is explicitly modelled, not measured savings.
 - **Copy reads like a person who knows the job wrote it.** Justin's call (24 Oct): no words that sound generated. The learns strip's workshop tags from FINAL_IDEA (`self-learning`, `ai-automated`, `needs-review`, `new-policy`) show as plain ones: "from its own history", "overnight", "asks a person", "becomes policy"; the four steps (Learns → Runs → Escalates → Improves) stay. No rhetorical questions in headings.
 - **SEO and link previews:** each route sets its own title ("NS31 · Flight File · StormCheck"); index.html carries Open Graph and Twitter cards with `og.jpg` (1200×630, the real Éowyn MODIS image with "Not weather. Broken plane.") and an Apple touch icon. Absolute URLs come from `SITE_URL`, else Vercel's production host.
 - **J0 · Geist Mono for machine text; B612 Mono only as `font-cockpit`.** B612 sets ":" "," "." at the left of a full cell, so running text read "09: 00Z" and "€227, 000". The Airbus cockpit face stays for display imitations (the split-flap board).
@@ -41,6 +42,7 @@ Judgment calls, newest first within each task. One line each, with the why. Requ
 - **Mock world:** the spec's assumptions applied to each run's own counts (refund and voucher choices taken as 5% of passengers); the learning timeline is the scripted flow's expected story.
 
 ## J1 · Storm Run
+- **Great-circle map (25 Oct):** use a hub-longitude-centred Mercator projection and spherical route paths, fit the full arcs including their northern extent, and use identical paths for hover/click. The former hub-centred azimuthal projection made every route straight. This changes only presentation; geographic distance and compensation bands still come from the API.
 - The headline is now the sentence: "27 flights cancelled, 5,292 passengers stranded, all coded 'weather'." The lede then gives what each one turned out to be, counted from the same verdicts that colour the timeline. "3 questions" moved to the questions panel. The plan's "5,292 · 3 questions · 3 people" line is gone.
 - The headline's three counts sit on one line on a laptop and stack on a phone; a line never starts with a dot.
 - "Not weather. Broken plane." lands once the timeline has settled (about 4 s), beside the story rather than over the chart.

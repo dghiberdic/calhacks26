@@ -27,7 +27,7 @@ export function AccessTab() {
         <div className="flex flex-wrap items-end justify-between gap-3 px-5 pt-4">
           <div>
             <h2 className="text-[14.5px] font-semibold text-navy-900">Who can do what</h2>
-            <p className="mt-0.5 text-[13px] text-slate-500">People and agents are principals alike. Every request goes through the same broker.</p>
+            <p className="mt-0.5 text-[13px] text-slate-500">Permissions apply to people and software agents. An agent that drafts a payout cannot approve it.</p>
           </div>
           <CellLegend />
         </div>
@@ -70,7 +70,7 @@ function Matrix({ matrix }: { matrix: AccessMatrix }) {
         <thead>
           <tr>
             <th scope="col" className="sticky left-0 z-10 bg-card px-5 pb-2.5 pt-1 text-left align-bottom font-normal">
-              <span className="micro text-slate-400">principal</span>
+              <span className="micro text-slate-400">person or agent</span>
             </th>
             {matrix.resources.map((r) => (
               <th key={r} scope="col" className="px-1.5 pb-2.5 pt-1 text-left align-bottom font-normal">

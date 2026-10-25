@@ -61,7 +61,7 @@ export function SlideFrame({ eyebrow, children, footer, className }: { eyebrow: 
       {/* storm light, decoration only */}
       <div aria-hidden="true" className="pointer-events-none absolute -right-[420px] -top-[520px] size-[1300px] rounded-full bg-[radial-gradient(closest-side,rgba(200,208,219,0.07),transparent)]" />
       <RevealGroup className={cn("relative flex h-full flex-col px-[112px] pb-[72px] pt-[76px]", className)}>
-        <Reveal className="flex items-center justify-between">
+        <Reveal className="flex items-center justify-between border-b border-white/10 pb-7">
           <Eyebrow>{eyebrow}</Eyebrow>
           <Brand />
         </Reveal>
@@ -155,11 +155,11 @@ export type GrammarCard = {
 };
 
 // The card's own column is minmax(0, 1fr): a long unbreakable word can never widen it past its neighbours.
-const CARD_BASE = "row-span-3 grid grid-cols-[minmax(0,1fr)] grid-rows-subgrid rounded-[26px] px-[30px] pb-[30px] pt-[28px]";
+const CARD_BASE = "row-span-3 grid grid-cols-[minmax(0,1fr)] grid-rows-subgrid rounded-[16px] px-[30px] pb-[30px] pt-[28px]";
 const CARD_TONE = {
   none: "bg-white/[0.035] shadow-[inset_0_0_0_1px_rgba(200,208,219,0.1)]",
-  held: "bg-[linear-gradient(180deg,rgba(226,161,42,0.12),rgba(226,161,42,0.04))] shadow-[inset_0_0_0_2px_rgba(226,161,42,0.85),0_30px_80px_-30px_rgba(226,161,42,0.35)]",
-  bright: "bg-white/[0.07] shadow-[inset_0_0_0_2px_rgba(244,246,249,0.92),0_30px_80px_-30px_rgba(244,246,249,0.25)]",
+  held: "bg-held/[0.07] shadow-[inset_0_0_0_1.5px_rgba(226,161,42,0.65)]",
+  bright: "bg-white/[0.06] shadow-[inset_0_0_0_1.5px_rgba(244,246,249,0.65)]",
 };
 const TAG_TONE = { none: "quiet", held: "held", bright: "bright" } as const;
 

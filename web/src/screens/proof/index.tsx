@@ -22,8 +22,8 @@ export default function ProofScreen() {
   const q = useEvalReport();
   return (
     <div className="mx-auto flex max-w-[1280px] flex-col gap-3">
-      <PageHeader className="mb-3" eyebrow={<MicroLabel>How we know</MicroLabel>} title="Proof">
-        Scored on storms it never saw, against an answer key built from ground truth, never from the engine.
+      <PageHeader className="mb-3" eyebrow={<MicroLabel>Evaluation</MicroLabel>} title="Test results">
+        Held-out scenarios test correct decisions, repeatability and unsafe inputs. The answer key is generated separately from the engine.
       </PageHeader>
       {q.isError && q.error instanceof ApiError && q.error.status === 404 ? (
         <Empty title="The eval hasn't run yet">

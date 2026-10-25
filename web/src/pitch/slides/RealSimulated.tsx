@@ -17,9 +17,9 @@ export function RealSimulated({ data }: { data: PitchData }) {
   const normal = rc.normal_departures !== undefined ? String(rc.normal_departures) : null;
 
   return (
-    <SlideFrame eyebrow="real · simulated · how we know">
+    <SlideFrame eyebrow="data and testing">
       <Reveal className="mt-10">
-        <h2 className="display text-[96px] text-cloud-50">What&rsquo;s real, and how we know.</h2>
+        <h2 className="display text-[96px] text-cloud-50">Real weather. Simulated airline.</h2>
       </Reveal>
       <Reveal className="mt-6 max-w-[1500px]">
         <p className="text-[30px] leading-[1.38] text-cloud-200 text-pretty" data-testid="honest-framing">
@@ -43,10 +43,10 @@ export function RealSimulated({ data }: { data: PitchData }) {
           <Item title="EU law">EU261 and CJEU case law</Item>
         </Column>
         <Column title="Simulated" mark="dashed">
-          <Item title="Northstar Air">A fictional Irish carrier, about 65 aircraft</Item>
-          <Item title="Its logs">Schedule, OCC, tech and MCC logs, coupons, CRM</Item>
-          <Item title="Passengers and claims">Played by LLM personas; a person can take over</Item>
-          <Item title="The mess">Planted errors, every one in an answer key</Item>
+          <Item title="Northstar Air">A fictional Irish airline</Item>
+          <Item title="Operational records">Schedules, maintenance logs and booking records</Item>
+          <Item title="Passengers and claims">Generated for the demo</Item>
+          <Item title="Known errors">Planted cases with a separate answer key</Item>
         </Column>
         <Proof data={data} />
       </RevealGroup>
@@ -87,13 +87,13 @@ function Proof({ data }: { data: PitchData }) {
     // The method, from the plan (§5); results appear once GET /eval answers.
     return (
       <Reveal className="rounded-[26px] bg-white/[0.07] px-[34px] pb-[28px] pt-[26px] shadow-[inset_0_0_0_2px_rgba(244,246,249,0.92)]">
-        <p className="font-mono text-[17px] uppercase tracking-[0.16em] text-cloud-300">How we know</p>
+        <p className="font-mono text-[17px] uppercase tracking-[0.16em] text-cloud-300">Results unavailable</p>
         <ul className="mt-6 flex flex-col gap-[20px]">
-          <Item title="Storms it never saw">Learns on Jul 2023 – Dec 2024, scored on Jan – Jun 2025, &Eacute;owyn included</Item>
-          <Item title="An answer key">Written from the generator&rsquo;s ground truth, never from the engine</Item>
-          <Item title="Against plain Claude">Same raw documents, three runs each, compared to the euro and the hash</Item>
+          <Item title="Test method">Train on earlier storms, test on later storms</Item>
+          <Item title="Independent answer key">Generated from known causes, not engine decisions</Item>
+          <Item title="Planned comparison">Repeat the same documents through plain Claude and StormCheck</Item>
           <Item title="Replay">
-            Every decision is a hashed commit; <span className="font-mono text-[17px] text-cloud-300">make verify</span> recomputes it offline
+            Recompute saved decisions offline with <span className="font-mono text-[17px] text-cloud-300">make verify</span>
           </Item>
         </ul>
       </Reveal>
@@ -102,19 +102,19 @@ function Proof({ data }: { data: PitchData }) {
 
   return (
     <Reveal className="flex flex-col rounded-[26px] bg-white/[0.07] px-[34px] pb-[26px] pt-[26px] shadow-[inset_0_0_0_2px_rgba(244,246,249,0.92)]">
-      <p className="font-mono text-[17px] uppercase tracking-[0.16em] text-cloud-300">How we know</p>
+      <p className="font-mono text-[17px] uppercase tracking-[0.16em] text-cloud-300">Test results</p>
       <Runs proof={p} />
 
       <div className="mt-auto border-t border-white/15 pt-5">
         <p className="text-[21px] leading-[1.4] text-cloud-200">
           {learn && score ? (
             <>
-              Learned on {learn}, scored on {score}, including &Eacute;owyn: a storm it never saw.
+              Training: {learn}. Test: {score}.
             </>
           ) : (
-            <>Scored on storms it never saw, including &Eacute;owyn.</>
+            <>Test cases are separate from training cases.</>
           )}{" "}
-          Answer key from ground truth, never from the engine.
+          Answer key generated from known causes, not engine decisions.
         </p>
         {p ? <Scorecard proof={p} /> : null}
         {p?.label ? <p className="mt-1.5 text-[16px] text-cloud-500">{p.label}</p> : null}
@@ -151,15 +151,19 @@ function Runs({ proof }: { proof: Proof | undefined }) {
     ));
   return (
     <>
-      <p className="mt-4 text-[21px] text-cloud-300">Same raw documents, three runs each.</p>
+      <p className="mt-4 text-[21px] text-cloud-300">Same inputs, repeated runs.</p>
       <div className="mb-7 mt-5 grid grid-cols-[auto_repeat(3,minmax(0,1fr))] items-baseline gap-x-6" data-testid="proof-runs">
         <p className="font-mono text-[17px] text-cloud-400">Plain Claude</p>
-        {cells(proof?.baselineEur, "text-[32px] text-cloud-400", (i) => PLAIN_AT + i * RUN_EVERY)}
+        {proof && proof.baselineEur.length === 0 ? (
+          <p className="col-span-3 text-[25px] text-cloud-400">Not run yet</p>
+        ) : cells(proof?.baselineEur, "text-[32px] text-cloud-400", (i) => PLAIN_AT + i * RUN_EVERY)}
         <p className="col-span-3 col-start-2 mt-1 min-h-[24px] text-[18px] text-cloud-500">{distinct > 1 ? <Land at={PLAIN_AT + 3 * RUN_EVERY}>{`${spell(distinct)} different numbers`}</Land> : null}</p>
         <p className="mt-4 font-mono text-[17px] text-cloud-50">StormCheck</p>
-        {cells(proof?.stormcheckEur, "mt-4 text-[32px] text-cloud-50", () => OURS_AT)}
+        {proof && proof.stormcheckEur.length === 0 ? (
+          <p className="col-span-3 mt-4 text-[25px] text-cloud-400">Results unavailable</p>
+        ) : cells(proof?.stormcheckEur, "mt-4 text-[32px] text-cloud-50", () => OURS_AT)}
         <p className="col-span-3 col-start-2 mt-1 min-h-[24px] text-[18px] text-cloud-100">
-          {proof?.stormcheckSameHash ? (
+          {proof?.stormcheckSameHash && proof.stormcheckEur.length > 0 ? (
             <Land at={OURS_AT + 0.35} className="inline-flex items-center gap-2.5">
               <span aria-hidden="true" className="size-[7px] rounded-full bg-cloud-50" />
               same number, same hash, every run
@@ -176,12 +180,12 @@ function Scorecard({ proof: p }: { proof: Proof }) {
   const parts = [
     p.straightThrough !== undefined ? (
       <>
-        <Num className="text-cloud-100">{pct(p.straightThrough, p.straightThrough < 0.995 ? 1 : 0)}</Num> straight-through
+        <Num className="text-cloud-100">{pct(p.straightThrough, p.straightThrough < 0.995 ? 1 : 0)}</Num> resolved without review
       </>
     ) : null,
     p.miscodes ? (
       <>
-        <Num className="text-cloud-100">{count(p.miscodes.caught)}</Num> of <Num>{count(p.miscodes.total)}</Num> miscodes caught
+        <Num className="text-cloud-100">{count(p.miscodes.caught)}</Num> of <Num>{count(p.miscodes.total)}</Num> wrong codes caught
       </>
     ) : null,
     p.repeatQuestions !== undefined ? (

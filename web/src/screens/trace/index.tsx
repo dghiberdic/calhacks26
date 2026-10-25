@@ -13,15 +13,15 @@ import { TABS, TAB_LABEL, isTab, tabForTarget, type TraceTab } from "./model";
 
 /** What each tab is for, in a line. Access and Controls open with their own. */
 const TAB_INTRO: Partial<Record<TraceTab, ReactNode>> = {
-  live: "Everything StormCheck did, newest first, across every storm. Runs of the same step fold into one row.",
+  live: "Recent actions across all runs. Repeated steps are grouped.",
   commits: (
     <>
-      The same history as commits. Each carries the hash of the one before (<Explain term="trace">a hash chain</Explain>), so nothing in the past can change without breaking it.
+      Each record is linked to the previous one by a <Explain term="trace">hash chain</Explain>, so edits to earlier records can be detected.
     </>
   ),
   blame: (
     <>
-      Pick a number and walk it back (<Explain term="blame">blame</Explain>): the entitlement, the rule and its version, the ruling&rsquo;s words, the facts, and the log line or weather report they came from.
+      Follow an amount to its <Explain term="blame">source evidence</Explain>: the calculation, policy, human ruling and original record.
     </>
   ),
 };
@@ -58,7 +58,7 @@ export default function TraceScreen() {
   return (
     <MotionConfig reducedMotion="user">
       <div className="mx-auto max-w-[1120px]">
-        <PageHeader title="Trace">Every number links back to its evidence, and the history can&rsquo;t be edited.</PageHeader>
+        <PageHeader title="Audit trail">See the evidence behind a decision, who approved it, and what changed.</PageHeader>
         <Tabs value={tab} onValueChange={select} className="mt-6 gap-0">
           <TabsList variant="line" className="h-auto w-full justify-start gap-0.5 rounded-none border-b border-cloud-200 p-0 sm:gap-1">
             {TABS.map((t) => (

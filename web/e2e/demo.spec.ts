@@ -37,7 +37,7 @@ async function rule(page: Page, marker: string | RegExp, text: string, option?: 
   await card.getByRole("button", { name: /Submit ruling|Reject and preview the rule/ }).click();
   await expect(card.getByTestId("rule-preview")).toBeVisible();
   await card.getByRole("button", { name: "Confirm as policy" }).click();
-  await expect(card.getByText("Never asked again")).toBeVisible();
+  await expect(card.getByText("Policy saved for matching cases")).toBeVisible();
 }
 
 test("the demo, clicked through", async ({ page }) => {
@@ -46,14 +46,14 @@ test("the demo, clicked through", async ({ page }) => {
 
   // 0:00 · Storm Run, as the Judge: the overnight story settles on NS31.
   await page.goto("/");
-  await expect(page.getByTestId("storm-headline")).toContainText("5,292 passengers", { timeout: 60_000 });
+  await expect(page.getByTestId("storm-summary")).toContainText("5,292 passengers", { timeout: 60_000 });
   await expect(page.locator('g[data-flight="NS31"]')).toHaveAttribute("data-verdict", "notweather", { timeout: 15_000 });
   const callout = page.getByTestId("not-weather-callout");
   await expect(callout).toContainText("71 → 41");
   await expect(page.getByTestId("ns31-liability")).toContainText("€34,650");
 
   // 0:20 · NS31's file: the tech log outranks the batch code; a bare assertion doesn't move it.
-  await callout.getByRole("link", { name: /Open the flight file/ }).click();
+  await callout.getByRole("link", { name: /See the evidence/ }).click();
   await expect(page).toHaveURL(/\/flights\/NS31/);
   const challenge = page.getByTestId("challenge");
   await expect(challenge).toBeVisible({ timeout: 30_000 });
@@ -83,7 +83,7 @@ test("the demo, clicked through", async ({ page }) => {
   // 2:00 · Judge's Desk: a day of the judge's choosing (here, the next storm).
   await viewAs(page, "judge");
   await go(page, "Judge's Desk");
-  await expect(page.getByRole("heading", { name: "Name an airport and a date." })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: "Try a different scenario." })).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: /Storm Herminia/ }).click();
   await expect(page.getByTestId("desk-run-result")).toHaveAttribute("data-run-id", /EIDW@2025-01-26/, { timeout: 30_000 });
 

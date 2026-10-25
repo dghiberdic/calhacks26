@@ -50,7 +50,7 @@ function QuestionsForRole({ role }: { role: Role }) {
   const header = (
     <PageHeader
       eyebrow={<MicroLabel>Viewing as {ROLE_LABEL[role]}</MicroLabel>}
-      title="Questions"
+      title="Human review"
       actions={
         open.data && mine ? (
           <p className="text-right text-[13px] text-slate-500" data-testid="questions-summary">
@@ -65,7 +65,7 @@ function QuestionsForRole({ role }: { role: Role }) {
         ) : null
       }
     >
-      One question per pattern, to the person who can rule on it. A ruling becomes a policy, so the same question is never asked twice.
+      Unresolved cases go to the right specialist. Confirmed rulings are reused for matching cases, within their approved scope.
     </PageHeader>
   );
 
@@ -145,8 +145,7 @@ function NothingRouted({ role }: { role: Role }) {
     <div className="mt-8 rounded-2xl bg-card px-6 py-12 text-center shadow-[0_0_0_1px_var(--color-cloud-200)] md:py-16" data-testid="questions-empty">
       <p className="display-tight text-[22px] text-navy-900">{READ_ONLY.includes(role) ? "No open questions." : `Nothing is waiting on ${seatPhrase(role)}.`}</p>
       <p className="mx-auto mt-2 max-w-[52ch] text-[14px] leading-relaxed text-slate-500">
-        StormCheck asks only where the evidence disagrees or there is no precedent, and only the person who can rule on it.
-        {others.length ? " The open questions are with:" : ""}
+        {others.length ? "Other decisions are waiting for:" : "There are no unresolved decisions for this role."}
       </p>
       {others.length ? <SeatButtons seats={others} className="mt-5 justify-center" /> : null}
     </div>
@@ -158,7 +157,7 @@ function OtherSeats({ role, shown }: { role: Role; shown: Question[] }) {
   if (!shown.length || !others.length) return null;
   return (
     <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-cloud-200 pt-5">
-      <span className="text-[13px] text-slate-500">Also open, for other seats</span>
+      <span className="text-[13px] text-slate-500">Waiting for other specialists</span>
       <SeatButtons seats={others} />
     </div>
   );

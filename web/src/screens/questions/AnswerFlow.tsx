@@ -12,7 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ruleRef, TIER_LABEL } from "@/components/rule-sentence";
 import { ROLE_LABEL } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { findProposalRule, isReleaseProposal, nextStormLine, REJECT_RE, seatPhrase, settledHereLine } from "./lib";
+import { findProposalRule, isReleaseProposal, nextStormLine, REJECT_RE, settledHereLine } from "./lib";
 import { RulePreview } from "./RulePreview";
 import { useViewAs } from "./viewAs";
 
@@ -118,8 +118,8 @@ function AnswerForm({ question, onFlow }: { question: Question; onFlow: (f: Flow
 
       <div>
         <label htmlFor={`${id}-why`} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-          <span className="micro text-slate-500">In your words</span>
-          <span className="text-[12px] text-slate-400">the rule is built from what you write</span>
+          <span className="micro text-slate-500">Reason for your decision</span>
+          <span className="text-[12px] text-slate-400">used to draft the policy</span>
         </label>
         <textarea
           id={`${id}-why`}
@@ -146,7 +146,7 @@ function AnswerForm({ question, onFlow }: { question: Question; onFlow: (f: Flow
         {busy ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
         {busy ? "Drafting the rule" : rejecting ? "Reject and preview the rule" : "Submit ruling"}
       </button>
-      <p className="-mt-3 text-center text-[12px] text-slate-500">You&rsquo;ll see the rule and what it changes before anything is saved.</p>
+      <p className="-mt-3 text-center text-[12px] text-slate-500">Your ruling is recorded first. Review the proposed policy before activating it.</p>
     </form>
   );
 }
@@ -157,7 +157,7 @@ function ReadOnly({ question }: { question: Question }) {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <MicroLabel>Options</MicroLabel>
+        <MicroLabel>Available decisions</MicroLabel>
         <ul className="mt-2 flex flex-col gap-1.5">
           {question.options.map((opt) => (
             <li key={opt} className="flex items-start gap-2.5 rounded-lg bg-card px-3.5 py-2.5 text-[13.5px] leading-snug text-slate-600 shadow-[inset_0_0_0_1px_var(--color-cloud-200)]">
@@ -170,7 +170,7 @@ function ReadOnly({ question }: { question: Question }) {
           ))}
         </ul>
       </div>
-      <p className="text-[13px] leading-relaxed text-slate-500">Only {seatPhrase(question.routed_to)} can rule on this. Every other seat sees it read-only.</p>
+      <p className="text-[13px] leading-relaxed text-slate-500">Decision owner: {who}. You are viewing this case read-only.</p>
       <button
         type="button"
         disabled={!!busy}
@@ -235,7 +235,7 @@ function Saved({ question, flow }: { question: Question; flow: Extract<Flow, { s
           <Check className="size-4.5" strokeWidth={2.6} />
         </motion.span>
         <div className="min-w-0">
-          <p className="display-tight text-balance text-[21px] leading-tight text-navy-900">Saved as policy · Never asked again</p>
+          <p className="display-tight text-balance text-[21px] leading-tight text-navy-900">Policy saved for matching cases</p>
           <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-slate-500">
             <span className="font-mono text-[12.5px] font-bold text-navy-900">{ruleRef(rule)}</span>
             <span>{TIER_LABEL[rule.tier]}</span>
@@ -250,7 +250,7 @@ function Saved({ question, flow }: { question: Question; flow: Extract<Flow, { s
         {here ? <LoopFooter className="text-navy-900">{here}</LoopFooter> : null}
         {next ? <LoopFooter className="text-navy-900">{next.settled}</LoopFooter> : null}
         {next?.asks ? <p className="pl-6 text-[13px] text-slate-500">{next.asks}</p> : null}
-        {!here && !next ? <LoopFooter className="text-navy-900">The next matching case settles without asking, with this ruling cited.</LoopFooter> : null}
+        {!here && !next ? <LoopFooter className="text-navy-900">Matching cases can reuse this ruling. Cases outside its scope still need review.</LoopFooter> : null}
         <ReplaySummary diff={flow.confirmed.replay} className="pl-6 text-[11.5px] text-slate-500" />
       </div>
 
@@ -259,7 +259,7 @@ function Saved({ question, flow }: { question: Question; flow: Extract<Flow, { s
           Asked once more, in its own card: <span className="font-semibold">{followUp.title}</span>
         </p>
       ) : widenNext ? (
-        <p className="text-[12.5px] leading-snug text-slate-500">One rung wider is possible in Policies: {widenQuestion(widenNext)}</p>
+        <p className="text-[12.5px] leading-snug text-slate-500">Review a broader scope in Policies: {widenQuestion(widenNext)}</p>
       ) : null}
 
       <Link to={`/policies#${encodeURIComponent(rule.id)}`} className="inline-flex items-center gap-1 self-start text-[13px] font-medium text-metar-ink hover:underline">
@@ -275,7 +275,7 @@ function Recorded({ answer }: { answer: AnswerResponse }) {
     <div className="flex flex-col gap-2" data-testid="recorded">
       <MicroLabel>Ruling recorded</MicroLabel>
       <p className="text-[15px] font-semibold text-navy-900">&ldquo;{answer.ruling.decision}&rdquo;</p>
-      <p className="text-[13px] leading-relaxed text-slate-500">Recorded as your ruling on this case. No rule was proposed from it, so a case like it will be asked again.</p>
+      <p className="text-[13px] leading-relaxed text-slate-500">Saved for this case only. No reusable policy was proposed.</p>
     </div>
   );
 }

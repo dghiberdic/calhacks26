@@ -21,12 +21,12 @@ export const VERDICT_HEADLINE: Record<VerdictKind, string> = {
   pending: "Not decided yet",
 };
 
-/** The verdict in a few plain words, over the engine's own reason: "A broken plane, not the storm." */
+/** A short cause and consequence, above the engine's supporting evidence. */
 export function plainHeadline(kind: VerdictKind, cause: FlightDecision["cause"] | undefined): string {
   const outage = cause === "external_event";
-  if (kind === "notweather") return cause === "technical" ? "A broken plane, not the storm." : cause === "crew" ? "Crew out of duty hours, not the storm." : "Not the storm: compensation is owed.";
-  if (kind === "weather") return outage ? "The power cut stopped it." : "The storm stopped it.";
-  if (kind === "held") return cause === "knock_on" ? "A knock-on of the storm: Legal decides." : outage ? "Inside the power cut: Legal decides." : "Waiting on a ruling.";
+  if (kind === "notweather") return cause === "technical" ? "Aircraft fault. Compensation owed." : cause === "crew" ? "Crew duty limit. Compensation owed." : "Compensation owed, not a weather exemption.";
+  if (kind === "weather") return outage ? "Cancelled by the power outage." : "Cancelled by the storm.";
+  if (kind === "held") return cause === "knock_on" ? "Disrupted earlier flight. Legal review needed." : outage ? "Power outage. Legal review needed." : "A human ruling is needed.";
   if (kind === "operated") return "It flew as scheduled.";
   return "Not decided yet.";
 }
