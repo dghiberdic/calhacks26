@@ -1,6 +1,6 @@
 {
   "version": "cal-default-v1",
-  "note": "Hand-set priors shipped until data/calibration.json (fitted by eval/) lands. Logistic: p = 1/(1+exp(-(intercept + coef.x))). Not fitted on data. concurrent_causes −4.0 (D0b-6): a concurrent-causes finding stays far below 0.60 and goes to Legal.",
+  "note": "Hand-set priors shipped until data/calibration.json (fitted by eval/) lands. Logistic: p = 1/(1+exp(-(intercept + coef.x))). Not fitted on data. concurrent_causes −4.0 (D0b-6): a concurrent-causes finding stays far below 0.60 and goes to Legal. in_event_window +4.0 and internal_cause_logged +4.0 (blackout v1): hand-set priors, not fitted.",
   "models": {
     "cause": {
       "features": [
@@ -13,7 +13,9 @@
         "sources_disagree",
         "precedent_count",
         "knock_on",
-        "concurrent_causes"
+        "concurrent_causes",
+        "in_event_window",
+        "internal_cause_logged"
       ],
       "coef": [
         4.0,
@@ -25,7 +27,9 @@
         -2.5,
         0.35,
         0.5,
-        -4.0
+        -4.0,
+        4.0,
+        4.0
       ],
       "intercept": -1.5,
       "trained_on": "prior",

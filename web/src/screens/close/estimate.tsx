@@ -4,14 +4,14 @@ import { RoleAvatar } from "@/components/kit";
 import { count, eur, pct, ROLE_LABEL } from "@/lib/format";
 import { stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
-import { IAS8_LABEL, preparerRole, segmentName } from "./model";
+import { IAS8_LABEL, METHOD_NAME, preparerRole, segmentName } from "./model";
 
 type MethodKey = Estimate["selected"];
 
-const METHODS: { key: MethodKey; name: string; how: string; cents: (e: Estimate) => number }[] = [
-  { key: "expected_loss", name: "Expected loss", how: "Ultimate rate × entitlement, less claims to date. Ignores experience.", cents: (e) => e.expected_loss_cents },
-  { key: "bf", name: "Bornhuetter-Ferguson", how: "Claims to date, plus the curve's prior for what is still to come.", cents: (e) => e.bf_cents },
-  { key: "chain_ladder", name: "Chain ladder", how: "Claims to date grossed up by the curve. Volatile this early.", cents: (e) => e.chain_ladder_cents },
+const METHODS: { key: MethodKey; how: string; cents: (e: Estimate) => number }[] = [
+  { key: "expected_loss", how: "Ultimate rate × entitlement, less claims so far. Ignores how fast claims are coming.", cents: (e) => e.expected_loss_cents },
+  { key: "bf", how: "Claims so far, plus what the curve still expects to come. Steady early on.", cents: (e) => e.bf_cents },
+  { key: "chain_ladder", how: "Claims so far, scaled up by the curve. Jumpy this early.", cents: (e) => e.chain_ladder_cents },
 ];
 
 /** Cumulative rate the curve expects at month m (exact point only; no interpolation is claimed). */
@@ -80,7 +80,7 @@ export function EstimateCardView({ est, curve }: { est: Estimate; curve?: ClaimC
                 aria-current={selected ? "true" : undefined}
               >
                 {selected ? <span className="absolute -top-2 left-3 rounded bg-navy-900 px-1.5 py-[3px] font-mono text-[9.5px] font-bold uppercase leading-none tracking-[0.08em] text-cloud-50">selected</span> : null}
-                <span className={cn("text-[12.5px] font-semibold leading-tight", selected ? "text-navy-900" : "text-slate-500")}>{m.name}</span>
+                <span className={cn("text-[12.5px] font-semibold leading-tight", selected ? "text-navy-900" : "text-slate-500")}>{METHOD_NAME[m.key]}</span>
                 <span className={cn("display-tight mt-2 text-[22px] leading-none", selected ? "text-navy-900" : "text-slate-500")}>{eur(m.cents(est))}</span>
                 {selected && m.key === "bf" && bfFormula ? <span className="figure mt-1.5 text-[12px] text-navy-900">{bfFormula}</span> : null}
                 <span className="mt-1.5 text-[11.5px] leading-snug text-slate-500">{m.how}</span>
@@ -92,13 +92,13 @@ export function EstimateCardView({ est, curve }: { est: Estimate; curve?: ClaimC
 
       <dl className="mx-5 mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-cloud-100 pt-3.5 sm:grid-cols-3">
         <div>
-          <dt className="text-[12px] text-slate-500">Actual vs expected</dt>
+          <dt className="text-[12px] text-slate-500">Claims vs the curve</dt>
           <dd className="mt-0.5 text-[15px] font-semibold text-navy-900 [font-stretch:108%]">
             {est.actual_vs_expected === null ? "—" : `A/E ${est.actual_vs_expected.toFixed(2)}`} <span className="text-[11.5px] font-normal text-slate-400">€-weighted</span>
           </dd>
         </div>
         <div>
-          <dt className="text-[12px] text-slate-500">Credibility</dt>
+          <dt className="text-[12px] text-slate-500">Weight on experience</dt>
           <dd className="mt-0.5 text-[15px] font-semibold text-navy-900 [font-stretch:108%]">{est.credibility_z === null ? "—" : `z ${est.credibility_z.toFixed(2)}`}</dd>
         </div>
         <div className="col-span-2 sm:col-span-1">

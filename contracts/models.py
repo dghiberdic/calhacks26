@@ -5,6 +5,7 @@ from datetime import datetime, date, timezone as _tz
 from enum import Enum
 from typing import Annotated, Any, Literal
 from pydantic import AfterValidator, BaseModel, ConfigDict, Strict, WithJsonSchema
+from pydantic import Field as _Field     # additive (blackout v1): World.events is left out of dumps while empty
 
 
 def _utc(v: datetime) -> datetime:
@@ -42,6 +43,7 @@ class SourceKind(str, Enum):
     SPARES = "spares"; MANIFEST = "manifest"; PSS = "pss"; CRM = "crm"; BSP = "bsp"; CLAIM = "claim"
     EMAIL = "email"; REGULATION = "regulation"; RULING = "ruling"; MANUFACTURER = "manufacturer"; CHALLENGE = "challenge"
     FINANCE = "finance"                     # additive (D0b): GL extracts, care accrual sheets, vendor invoices
+    EXTERNAL_EVENT = "external_event"       # additive (blackout v1): grid/airport/ANSP notice (tier 1); tier 4 if a passenger says it
 
 class Source(BaseModel):
     id: ID; kind: SourceKind; title: str
@@ -71,6 +73,27 @@ class StormWindow(BaseModel):
     station: str; start: UTCDateTime; end: UTCDateTime; peak_gust_kt: int
     definition: str = "gust>=35kt or sknt>=30kt or vsby<0.5sm or wx in {SN,FZ,TS,GR}; gaps<2h merged"
     obs_count: int = 0
+    kind: str = "weather"                   # additive (blackout v1): "weather" | "grid_outage"
+    label: str | None = None                # additive (blackout v1): "Grid outage (Iberian blackout)"
+
+
+class EventAirportWindow(BaseModel):        # additive (blackout v1): an external event's outage window at one airport
+    icao: str                               # "LPPT"
+    start: UTCDateTime                      # 2025-04-28T10:33:00Z
+    end: UTCDateTime                        # when normal operations resumed at that airport
+    note: str | None = None                 # "approximate: ..." whenever the end is an estimate, never a published fact
+
+
+class ExternalEvent(BaseModel):             # additive (blackout v1): a non-weather extraordinary event (grid outage, ...)
+    id: ID                                  # "EVT-IBERIA-BLACKOUT@2025-04-28"
+    kind: str                               # "grid_outage"
+    title: str                              # "Iberian Peninsula blackout"
+    airports: list[EventAirportWindow]
+    source_ids: list[ID]                    # Source(kind=EXTERNAL_EVENT, trust_tier=1) with the verbatim notice text
+
+
+def _no_events(v: list[Any]) -> bool:
+    return not v
 
 class Airport(BaseModel):
     icao: str; iata: str; name: str; lat: float; lon: float; country: str
@@ -155,11 +178,15 @@ class World(BaseModel):
     history_cases: list[HistoryCase] = []
     opening_balances: list[OpeningBalance] = []
     real_context: dict[str, Any] = {}       # {"EIDW@2025-01-24": {"eurocontrol_departures":179,"reported_cancellations_dep":119,"red_warning":"06:00-11:00"}}
+    # additive (blackout v1): external events (e.g. a grid outage). Left out of dumps while empty, so every existing
+    # world (golden, the full world, the answer key's world_hash) serialises and hashes exactly as before.
+    events: list[ExternalEvent] = _Field(default_factory=list, exclude_if=_no_events)
 
 # ---------- engine ----------
 class Cause(str, Enum):
     WEATHER = "weather"; TECHNICAL = "technical"; KNOCK_ON = "knock_on"
     CREW = "crew"; ATC = "atc"; CONCURRENT = "concurrent"; UNKNOWN = "unknown"
+    EXTERNAL_EVENT = "external_event"       # additive (blackout v1): inside an external event's outage window
 
 class Extraordinary(str, Enum):
     YES = "extraordinary"; NO = "not_extraordinary"; NEEDS_LEGAL = "needs_legal"
@@ -390,6 +417,7 @@ class StormRun(BaseModel):
     message: str | None = None              # e.g. "max gust 18 kt · no storm window"
     airports: list[Airport] = []            # additive (D0a): every airport referenced by flights (map coordinates, tz, eu)
     name: str | None = None                 # additive (Justin #3): "Storm Éowyn" (from real_context.storm_name)
+    event_id: str | None = None             # additive (blackout v1): the ExternalEvent this run covers, if any
 
 TimelineKind = Literal["tech_log", "mcc", "occ", "spares", "metar", "window_start", "window_end",
                        "metar_window_start", "metar_window_end", "crm", "operated", "schedule", "pss", "claim",

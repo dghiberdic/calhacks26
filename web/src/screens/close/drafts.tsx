@@ -1,29 +1,46 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/api/client";
 import { invalidateAfterWrite, useAudit } from "@/api/queries";
 import type { JournalEntry, Role } from "@/api/types";
 import { MicroLabel, StatusChip } from "@/components/chips";
+import { Explain } from "@/components/explain";
 import { JournalCard, KIND_LABEL, statusLabel } from "@/components/journal";
 import { ActionPair, Empty, ErrorNote, Money, Shimmer } from "@/components/kit";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { count, longDate, periodLabel, shortId, zuluDay } from "@/lib/format";
+import { count, eur, longDate, periodLabel, shortId, zuluDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { preparerRole } from "./model";
+import { journalGroups, kindRank, preparerRole, type JournalGroup } from "./model";
 import { Denied, Segmented } from "./ui";
 
 type Filter = "draft" | "approved";
 
-const KIND_ORDER: JournalEntry["kind"][] = ["change_in_estimate", "compensation_estimate", "recode", "out_of_period_adjustment", "claim_approved", "derecognition", "voucher_in_lieu", "voucher_void"];
-const rank = (k: JournalEntry["kind"]) => {
-  const i = KIND_ORDER.indexOf(k);
-  return i < 0 ? KIND_ORDER.length : i;
+/** What each kind of entry is, in words, for its group's header. */
+const KIND_NOTE: Partial<Record<JournalEntry["kind"], string>> = {
+  compensation_estimate: "the first estimate of what passengers will claim, into 2140",
+  change_in_estimate: "month-end re-estimates of 2140",
+  claim_approved: "approved claims, moved from 2140 to claims payable (2141)",
+  claim_paid: "approved claims paid out",
+  recode: "a flight's cause corrected",
+  derecognition: "2140 released when the six-year claim window closed",
+  out_of_period_adjustment: "a miss from a locked month, corrected in this one",
+  refund: "tickets refunded to passengers",
+  voucher: "refund vouchers issued instead of cash",
+  voucher_in_lieu: "a service-desk voucher offered in lieu of compensation",
+  voucher_void: "vouchers voided before they were used",
+  reroute_fim: "passengers moved to partner airlines, who bill us later",
+  care_accrual: "hotels and meals for stranded passengers: owed even when the cause is extraordinary",
+  care_invoice: "hotel and meal invoices received against the care accrual",
+  sale: "ticket sales from the passenger system",
 };
 
-/** Parked journals for the period, newest first, with [Edit][Approve] where the seat may act. */
+/** Groups open by default: the ones that move 2140, or every group when there are only a few entries. */
+const FEW = 6;
+
+/** Parked journals for the period, grouped by kind, with [Edit][Approve] where the seat may act. */
 export function JournalDrafts({
   period,
   entries,
@@ -48,6 +65,7 @@ export function JournalDrafts({
   const [filter, setFilter] = useState<Filter>("draft");
   const [editing, setEditing] = useState<JournalEntry | null>(null);
   const [ringed, setRinged] = useState<string | null>(null);
+  const [opened, setOpened] = useState<Record<string, boolean>>({});
   const reduce = useReducedMotion();
   const jumped = useRef<string | null>(null);
 
@@ -58,7 +76,9 @@ export function JournalDrafts({
     if (!target) return;
     jumped.current = focusId;
     const open = window.setTimeout(() => {
-      setFilter(target.status === "draft" ? "draft" : "approved");
+      const tab = target.status === "draft" ? "draft" : "approved";
+      setFilter(tab);
+      setOpened((o) => ({ ...o, [`${tab}:${target.kind}`]: true }));
       setRinged(focusId);
     }, 0);
     const scroll = window.setTimeout(() => document.getElementById(focusId)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" }), 180);
@@ -69,10 +89,13 @@ export function JournalDrafts({
       window.clearTimeout(unring);
     };
   }, [focusId, entries, reduce]);
-  const sorted = useMemo(() => [...(entries ?? [])].sort((a, b) => b.event_date.localeCompare(a.event_date) || rank(a.kind) - rank(b.kind) || a.id.localeCompare(b.id)), [entries]);
+  const sorted = useMemo(() => [...(entries ?? [])].sort((a, b) => b.event_date.localeCompare(a.event_date) || kindRank(a.kind) - kindRank(b.kind) || a.id.localeCompare(b.id)), [entries]);
   const drafts = sorted.filter((e) => e.status === "draft");
   const approved = sorted.filter((e) => e.status !== "draft");
   const shown = filter === "draft" ? drafts : approved;
+  const groups = useMemo(() => journalGroups(shown), [shown]);
+  const isOpen = (g: JournalGroup) => opened[`${filter}:${g.kind}`] ?? (g.moves2140 || shown.length <= FEW);
+  const toggle = (g: JournalGroup) => setOpened((o) => ({ ...o, [`${filter}:${g.kind}`]: !isOpen(g) }));
 
   return (
     <section id="journal" aria-labelledby="journal-title" className="scroll-mt-20">
@@ -80,10 +103,10 @@ export function JournalDrafts({
         <div className="min-w-0">
           <MicroLabel>Parked · StormCheck never posts</MicroLabel>
           <h2 id="journal-title" className="mt-1 text-[17px] font-semibold text-navy-900">
-            Journal · {periodLabel(period)}
+            Journals to approve · {periodLabel(period)}
           </h2>
-          <p className="mt-0.5 text-[13px] text-slate-500">
-            Drafted, pending approval. Control: preparer ≠ approver, so the preparer can never approve their own entry. {periodLabel(period)} is {locked ? "locked: never written again" : "open"}.
+          <p className="mt-0.5 max-w-[80ch] text-[13px] leading-relaxed text-slate-500">
+            StormCheck drafts every entry and never posts it. Whoever prepared an entry can't approve it: <Explain term="preparer-approver">preparer ≠ approver</Explain>. {periodLabel(period)} is {locked ? "locked: never written again" : "open"}.
           </p>
         </div>
         <Segmented
@@ -111,9 +134,14 @@ export function JournalDrafts({
             {filter === "draft" ? "Month-end drafts the change in estimate here, pending approval." : "Approved journals stay parked; posting happens in the ledger, never from StormCheck."}
           </Empty>
         ) : (
-          <ul className="grid grid-cols-[minmax(0,1fr)] items-start gap-3 lg:grid-cols-2">
+          <div className="flex flex-col gap-2">
+            {groups.map((g) => (
+              <div key={g.kind}>
+                <GroupHead group={g} open={isOpen(g)} onToggle={() => toggle(g)} />
+                {isOpen(g) ? (
+          <ul className="mt-2 mb-2 grid grid-cols-[minmax(0,1fr)] items-start gap-3 lg:grid-cols-2">
             <AnimatePresence initial={false}>
-              {shown.map((je) => (
+              {g.entries.map((je) => (
                 <motion.li
                   key={je.id}
                   layout
@@ -130,11 +158,37 @@ export function JournalDrafts({
               ))}
             </AnimatePresence>
           </ul>
+                ) : null}
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
       <ProposeChange entry={editing} onClose={() => setEditing(null)} />
     </section>
+  );
+}
+
+/** "EU261 compensation liability · 4 entries · €82,146", what the kind is in words, and a toggle. */
+function GroupHead({ group: g, open, onToggle }: { group: JournalGroup; open: boolean; onToggle: () => void }) {
+  const name = KIND_LABEL[g.kind] ?? g.kind.replace(/_/g, " ");
+  const note = KIND_NOTE[g.kind];
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      className="flex w-full flex-wrap items-baseline gap-x-3 gap-y-0.5 rounded-lg bg-card px-4 py-2.5 text-left shadow-[0_0_0_1px_var(--color-cloud-200)] outline-none transition-colors hover:bg-cloud-25 focus-visible:ring-2 focus-visible:ring-ring/50"
+      data-testid={`je-group-${g.kind}`}
+    >
+      <ChevronRight className={cn("size-3.5 shrink-0 self-center text-slate-400 transition-transform", open && "rotate-90")} aria-hidden="true" />
+      <span className="text-[13.5px] font-semibold text-navy-900 first-letter:uppercase">{name}</span>
+      <span className="figure text-[13px] text-slate-600">
+        {count(g.entries.length)} {g.entries.length === 1 ? "entry" : "entries"} · {eur(g.cents)}
+      </span>
+      {note ? <span className="min-w-0 basis-full pl-[26px] text-[12.5px] leading-snug text-slate-500 sm:basis-auto sm:pl-0">{note}</span> : null}
+    </button>
   );
 }
 
