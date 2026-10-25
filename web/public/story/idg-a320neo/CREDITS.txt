@@ -1,0 +1,33 @@
+Airbus A320neo exterior — IDG A32X for FlightGear
+
+Original model: Immersive Design Group and FlightGear aircraft contributors.
+The source project credits Joshua Davidson (Octal450), Jonathan Redpath
+(legoboyvdlp), and Thorsten Herrmann (TH-555). The original README and
+THANKS are included in source.zip.
+
+Source repository:
+https://github.com/omega13a/A320Family-With-All-Liveries
+Pinned source commit: 3cd4eb7433ac3ac0fe16cee97ef7b870553da4df
+
+License: GNU General Public License, version 2. See COPYING.txt.
+The AC3D geometry, textures, XML assembly, original license/credits, and
+conversion script used for this exterior are provided alongside this file
+in source.zip. StormCheck livery, projection and export sources are in
+stormcheck-design-source.zip. No simulator scripts are executed by the web application.
+
+Local modifications, 24 October 2026:
+- Converted static exterior geometry and original UVs to glTF 2.0.
+- Retained the source assembly, engine geometry and gear without stretching.
+- Replaced the demonstration livery with native StormCheck wordmarks, navy
+  engines/tail, white surfaces and narrow brass/navy fuselage stripes.
+- Omitted simulator systems, cabin/flight-deck interiors, services and effects.
+- Mapped simulated reflective engine surfaces to web PBR materials; used
+  smoked exterior glazing, and placed the uncompressed gear at ground level.
+- Rendered side/top/hero sketches and story stills from the same painted model.
+- The shared manifest records geometry measurements, projection bounds and
+  the exported model hash used to invalidate all runtime asset URLs.
+
+This asset depicts an A320neo. It illustrates the A320-family maintenance
+case in StormCheck; it is not an exact model of the fictional A321 EI-NSB.
+Original demonstration textures remain in the source archive. The active
+model uses StormCheck paint. No manufacturer affiliation or endorsement is implied.

@@ -1,0 +1,34 @@
+{
+  "model": "idg-a320neo/stormcheck.glb",
+  "revision": "a92eb005408b",
+  "posters": {
+    "small": "idg-a320neo/poster-1280.webp",
+    "large": "idg-a320neo/poster-2560.webp"
+  },
+  "dimensions": {
+    "length": 37.56647,
+    "height": 12.3834424,
+    "span": 35.21635
+  },
+  "views": {
+    "side": [
+      -3,
+      -13.4,
+      45,
+      15.6
+    ],
+    "top": [
+      -2,
+      -19.4,
+      42,
+      38.8
+    ]
+  },
+  "leak": [
+    13.4,
+    1.55,
+    -6.65
+  ],
+  "source": "IDG A320neo",
+  "livery": "StormCheck"
+}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { count, zulu } from "@/lib/format";
-import { asset } from "../data/assets";
-import { HERO_LINES } from "../data/lineart";
+import { POSTER_LARGE, POSTER_SMALL } from "../aircraft/model";
+import HERO_LINES from "../data/aircraftHeroLines.json";
 import { nearestObs } from "../data/model";
 import { useStory } from "../data/context";
 import { gsap, MEDIA, PLOTTED, prefersReducedMotion, UNPLOTTED, useGSAP } from "../motion/gsap";
@@ -10,8 +10,8 @@ import { Pending } from "../ui";
 import { Rain } from "./Rain";
 
 /**
- * Drawing → photograph, belgradearbor-style but with our own render: the Blender line art plots itself
- * stroke by stroke, then the Cycles render from the very same camera washes in from the nose. Rain falls
+ * Drawing → photograph, belgradearbor-style but with our own render: the projected line art plots itself
+ * stroke by stroke, then the render from the very same camera washes in from the nose. Rain falls
  * on a canvas over it and the camera drifts slowly while the section is on screen. The clock, the METAR
  * and the counts are the API's.
  */
@@ -84,12 +84,12 @@ export function Interlude() {
       <div className="story-drift absolute inset-0">
         {/* the render, revealed by a soft radial wash centred on the nose */}
         <img
-          src={asset("ns31-render-2560.webp")}
-          srcSet={`${asset("ns31-render-1280.webp")} 1280w, ${asset("ns31-render-2560.webp")} 2560w, ${asset("ns31-render.webp")} 3840w`}
+          src={POSTER_LARGE}
+          srcSet={`${POSTER_SMALL} 1280w, ${POSTER_LARGE} 2560w`}
           sizes="(max-aspect-ratio: 16/9) 178vh, 100vw"
           loading="lazy"
           decoding="async"
-          alt={`Rendering of Northstar\u2019s A321 ${f?.aircraft ?? ""} parked on a wet stand at Dublin, in the rain`}
+          alt={`StormCheck A320neo family illustration of ${f?.aircraft ?? "the aircraft"} grounded at Dublin in the rain`}
           className="il-img absolute inset-0 h-full w-full object-cover [@media(max-aspect-ratio:1/1)]:object-left"
           style={{
             ["--r" as string]: "175%",
