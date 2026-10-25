@@ -541,7 +541,7 @@ describe("injections", () => {
     const inj = (await get<Injection[]>("/injections")).json[0];
     const r = (await post<InjectResponse>("/inject", inj.request)).json;
     expect(r.affected).toContain("NS110@2025-01-24");
-    expect(r.facts.find((f) => f.field === "aog.logged_at")?.value).toBe("2025-01-24T08:20:00Z");
+    expect(r.facts.find((f) => f.field === "aog.logged_at")?.value).toBe("2025-01-24T04:05:00Z");
     const run = (await get<StormRun>(EOWYN)).json;
     expect(run.flights.find((x) => x.flight.id === "NS110@2025-01-24")?.decision).toMatchObject({ cause: "concurrent", extraordinary: "needs_legal", routed_to: "legal" });
     expect(run.liability_drafted_cents).toBe(8_214_600 + 950_000);

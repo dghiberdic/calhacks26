@@ -43,6 +43,8 @@ import type {
  * Pick with VITE_API_MODE, or `?api=mock|http|recorded` in the URL (remembered for the tab).
  */
 export type ApiMode = "http" | "mock" | "recorded";
+/** A named moment on the server's clock (additive: GET /clock → marks), e.g. "Iberian blackout · 28 Apr 2025". */
+export type ClockMark = { at: string; label: string; note?: string | null };
 
 export type ApiFetch = (path: string, init: RequestInit) => Promise<Response>;
 
@@ -187,7 +189,7 @@ export const api = {
   /** Additive (contracts/requests/justin.md #1): the World's airports; a server without it answers 404. */
   airports: () => get<Airport[]>("/airports"),
   /** Additive (contracts/requests/justin.md #2): the current known-at; absent on a server without it. */
-  clockNow: () => get<{ known_at: string }>("/clock"),
+  clockNow: () => get<{ known_at: string; marks?: ClockMark[] }>("/clock"),
   reset: () => post<{ ok: boolean }>("/reset"),
 };
 
