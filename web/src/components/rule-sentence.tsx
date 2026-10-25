@@ -21,38 +21,46 @@ const FEATURE: Record<string, (op: string, v: unknown) => string | null> = {
   "flight.arrives_eu": (op, v) => (truthy(op, v) ? "the flight lands in the EU" : "the flight doesn't land in the EU"),
   "flight.operating_carrier_eu": (op, v) => (truthy(op, v) ? "the operating carrier is an EU carrier" : "the operating carrier isn't an EU carrier"),
   "flight.is_return_sector": (op, v) => (truthy(op, v) ? "it's a return sector" : "it isn't a return sector"),
-  "flight.in_window_dep": (op, v) => `the departure is ${op === "ne" ? "not " : ""}${String(v)} the storm window`,
-  "flight.in_window_arr": (op, v) => `the arrival is ${op === "ne" ? "not " : ""}${String(v)} the storm window`,
+  "flight.in_window_dep": (op, v) => `the departure is ${neg(op) ? "not " : ""}${words(v)} the storm window`,
+  "flight.in_window_arr": (op, v) => `the arrival is ${neg(op) ? "not " : ""}${words(v)} the storm window`,
   "flight.window_margin_min": (op, v) => `the window margin is ${opWord(op)} ${v} min`,
   "flight.distance_km": (op, v) => `the flight is ${opWord(op)} ${Number(v).toLocaleString("en-IE")} km`,
   "flight.band_eur": (op, v) => `the compensation band is ${opWord(op)} €${v}`,
-  "flight.route_region": (op, v) => `the route is ${op === "ne" ? "not " : ""}${String(v).replace("_", "–")}`,
-  "flight.ops_cause_code": (op, v) => `OCC coded it ${op === "ne" ? "anything but " : ""}${String(v)}`,
+  "flight.route_region": (op, v) => `the route is ${neg(op) ? "not " : ""}${words(v, (s) => s.replace("_", "–"))}`,
+  "flight.ops_cause_code": (op, v) => `OCC coded it ${neg(op) ? "anything but " : ""}${words(v)}`,
   "aog.before_window": (op, v) => (truthy(op, v) ? "the aircraft was grounded before the storm window" : "the aircraft wasn't grounded before the window"),
   "aog.inside_window": (op, v) => (truthy(op, v) ? "the aircraft was grounded inside the storm window" : "the grounding wasn't inside the window"),
-  "aog.ata_chapter": (_op, v) => `the defect is in ATA chapter ${String(v)}`,
+  "aog.ata_chapter": (_op, v) => `the defect is in ATA chapter ${words(v)}`,
   "aog.root_cause_internal": (op, v) => (truthy(op, v) ? "the root cause is internal to the airline" : "the root cause is external"),
   "aog.mel_relief": (op, v) => (truthy(op, v) ? "the MEL allows dispatch" : "there is no MEL relief"),
   "rotation.prev_cancelled": (op, v) => (truthy(op, v) ? "the previous rotation was cancelled" : "the previous rotation operated"),
-  "rotation.prev_cause": (_op, v) => `the previous rotation's cause was ${String(v)}`,
+  "rotation.prev_cause": (_op, v) => `the previous rotation's cause was ${words(v)}`,
   "spare.available_within_h": (op, v) => (op === "gt" || op === "ge" ? `no aircraft and crew could operate it within ${v} h` : `a spare could operate it within ${v} h`),
   "pax.notice_days": (op, v) => `passengers had ${opWord(op)} ${v} days' notice`,
   "pax.arrival_delay_min": (op, v) => `passengers arrived ${opWord(op)} ${Number(v) / 60} h late`,
-  "pax.election": (_op, v) => `the passenger chose ${String(v).replace(/_/g, " ")}`,
+  "pax.election": (op, v) => `the passenger ${neg(op) ? "didn't choose" : "chose"} ${words(v, (s) => s.replace(/_/g, " "))}`,
   "pax.reroute_earliest_offered": (op, v) => (truthy(op, v) ? "passengers were offered the earliest reroute on any carrier" : "the earliest reroute wasn't offered"),
   "pax.fare_type": (_op, v) => `the ticket is ${String(v) === "staff_id90" ? "a staff ID90 ticket" : "a revenue ticket"}`,
   "claim.channel": (_op, v) => `the claim came ${String(v) === "agency" ? "through an agency" : "directly"}`,
-  "claim.authority": (_op, v) => `the agency's authority is ${String(v)}`,
+  "claim.authority": (_op, v) => `the agency's authority is ${words(v)}`,
   "claim.duplicate": (op, v) => (truthy(op, v) ? "the claim is a duplicate" : "the claim isn't a duplicate"),
   "claim.age_months": (op, v) => `the claim is ${opWord(op)} ${v} months old`,
   "claim.after_limitation": (op, v) => (truthy(op, v) ? "the claim arrived after the limitation period" : "the claim is within the limitation period"),
-  "claim.regime": (_op, v) => `the claim cites ${String(v)}`,
+  "claim.regime": (_op, v) => `the claim cites ${words(v)}`,
   "cohort.age_months": (op, v) => `the cohort is ${opWord(op)} ${v} months old`,
   "cohort.months_since_last_claim": (op, v) => `there have been no new claims for ${opWord(op)} ${v} months`,
   "cohort.limitation_expired": (op, v) => (truthy(op, v) ? "the six-year limitation has expired" : "the six-year limitation hasn't expired"),
   "sources.disagree": (op, v) => (truthy(op, v) ? "the sources disagree" : "the sources agree"),
   "precedent.count": (op, v) => `there ${Number(v) === 1 ? "is" : "are"} ${opWord(op)} ${v} precedent${Number(v) === 1 ? "" : "s"}`,
 };
+
+/** A literal, or an `in` list as a person says it: ["reroute_partner", "reaccommodated_own"] → "reroute partner or reaccommodated own". */
+function words(v: unknown, fmt: (s: string) => string = (s) => s): string {
+  const items = (Array.isArray(v) ? v : [v]).map((x) => fmt(String(x)));
+  return items.length > 1 ? `${items.slice(0, -1).join(", ")} or ${items[items.length - 1]}` : (items[0] ?? "");
+}
+
+const neg = (op: string) => op === "ne" || op === "nin";
 
 function truthy(op: string, v: unknown) {
   return op === "eq" ? v === true || v === "true" : op === "ne" ? !(v === true || v === "true") : op === "exists";

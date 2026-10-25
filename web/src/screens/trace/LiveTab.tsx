@@ -10,7 +10,8 @@ import { Empty, ErrorNote, Money, Shimmer } from "@/components/kit";
 import { longDate, zulu } from "@/lib/format";
 import { plainIds } from "@/lib/plain";
 import { cn } from "@/lib/utils";
-import { collapseRuns, eventRef, matchesTarget, timeOrdered, type FeedItem } from "./model";
+import { collapseRuns, type FeedItem } from "@/lib/feed";
+import { eventRef, matchesTarget, timeOrdered } from "./model";
 import { FilterChip, Principal } from "./parts";
 
 const CHIP_ORDER: TraceChipKind[] = ["APPLIED", "DRAFTED", "HELD", "ASKED", "RULED", "LEARNED", "CITED", "DENIED", "LOCKED", "INFO"];

@@ -148,6 +148,7 @@ def test_stormcheck_is_scored_on_the_same_flights_by_the_same_rule():
         {"day": day, "flight_id": "C", "truth_cause": "technical", "truth_extraordinary": "not_extraordinary",
          "predicted_cause": "weather", "predicted_extraordinary": "extraordinary", "preview_cents": 0,
          "ultimate_cents": 14000},
+        {"kind": "claim_validity", "split": "test", "correct": True},      # full_run passes these too; no day
     ]
     s = summarize_results({}, rows, days=[day])
     storm = s["storms"][day]

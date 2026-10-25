@@ -12,8 +12,9 @@ Priority (THREAD_DAVID D2):
    technical, crew, ATC or airport code there with no tech-log line -> ``occ_code_in_window``: sources disagree, Ops.
 4b. In an external event's window (a grid outage) at either end, no decisive AOG -> ``external_event`` /
    ``external_event_window``: no precedent, Legal. A decisive AOG there is concurrent causes (2).
-4c. Cancelled after an event window closed (< 24 h) and the carrier's own OCC/MCC log names crew out of duty hours or
-   the aircraft out of position -> ``crew`` / ``technical``, not extraordinary (``internal_cause_logged``, owed).
+4c. Cancelled after an event window closed (< 24 h) and the carrier's own OCC/MCC log names crew out of duty hours, or
+   the aircraft out of position while a spare could operate within 3 h -> ``crew`` / ``knock_on``, not extraordinary
+   (``internal_cause_logged``, owed).
 5. Return sector whose outbound (previous rotation) was cancelled for weather, out at both ends ->
    ``knock_on / needs_legal`` unless an active legal rule settles it (applied by the engine, not here).
 6. ``unknown`` window -> ``unknown / needs_legal`` routed to Ops.
@@ -70,6 +71,7 @@ LB = {
 # the carrier's own OCC/MCC log naming an internal cause after an external event closed
 CREW_DUTY = re.compile(r"\bCREW\b[^.;]*?\b(?:OUT OF (?:DUTY |FDP|HOURS)|FDP|DUTY (?:HOURS|TIME|LIMITS?)|TIMED OUT)|"
                        r"\bOUT OF FDP\b|\bFDP (?:EXCEEDED|LIMIT)", re.I)
+SPARE_REASONABLE_H = 3.0     # a spare this close to STD was a reasonable measure (C-74/19; the R-LEG-1 test)
 POSITIONING = re.compile(r"\b(?:OUT OF|NOT IN) POSITION\b|\bNO TAIL AT\b|\bA/C STUCK\b|\bSTRANDED AT\b", re.I)
 
 
@@ -420,24 +422,29 @@ def find_cause(case: FlightCase, prev_finding: Finding | None = None) -> Finding
     # 4c: cancelled after an event window closed: judged on its own evidence. The carrier's own OCC/MCC log naming
     # crew out of duty hours or an aircraft out of position is an internal cause (owed); else on to the knock-on.
     logged = _logged_internal(case) if case.after_event and case.event is not None and not in_any else None
+    spare = case.spare_within_h is not None and case.spare_within_h <= SPARE_REASONABLE_H
+    if logged is not None and not logged[0] and not spare:
+        logged = None       # out of position with no spare to hand is the event's knock-on, not an internal cause
     if logged is not None:
         crew, line, quote = logged
         ew = case.event
-        group, new = (CREW_CODES, NEW_CODE[Cause.CREW]) if crew else (ROTATION_CODES | TECH_CODES, "93")
+        group, new = (CREW_CODES, NEW_CODE[Cause.CREW]) if crew else (ROTATION_CODES, NEW_CODE[Cause.KNOCK_ON])
         recoded = code is not None and code not in group
         closed_at = ew.window.station == case.origin.icao and ew.window.end <= f.sched_dep
         at = f"STD {hhmm(f.sched_dep)}" if closed_at else f"STA {hhmm(f.sched_arr)}"
         log_field = "occ.text" if line.kind == "occ" else "mcc.text"
         sid, tier = find_source(case, SourceKind.OCC_LOG if line.kind == "occ" else SourceKind.MCC_LOG,
                                 line.text[:40], f"SRC-{line.id}")
+        what = ("crew out of duty hours" if crew else
+                f"the aircraft out of position while a spare could operate within {case.spare_within_h:g} h of STD")
         return Finding(
-            Cause.CREW if crew else Cause.TECHNICAL, Extraordinary.NO, "internal_cause_logged",
+            Cause.CREW if crew else Cause.KNOCK_ON, Extraordinary.NO, "internal_cause_logged",
             f"Not the {ew.event.title}: the {_kind(ew)} window at {ew.window.station} had closed "
-            f"({event_window_text(ew)}) before {at}; the OCC log records "
-            f"{'crew out of duty hours' if crew else 'the aircraft out of position'}: \"{quote}\". Compensation owed.",
+            f"({event_window_text(ew)}) before {at}; the OCC log records {what}: \"{quote}\". Compensation owed.",
             recoded=recoded, new_code=new if recoded else None,
             evidence=[Evidence(fact_id=nz.ops_fact_id(line.id, f.id, log_field), source_id=sid, field=log_field,
                                value=line.text, quote=quote, role="supports", trust_tier=tier)]
+            + ([] if crew else _spares_ev(case))
             + _event_ev(case, role="context", end_role="supports")
             + _end_ev(case, case.dep, "contradicts", "supports") + _end_ev(case, case.arr, "contradicts", "supports")
             + [e for e in [_occ_ev(case, "contradicts", struck=recoded)] if e],

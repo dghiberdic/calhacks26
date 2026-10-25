@@ -154,7 +154,7 @@ def summarize_results(results: dict, rows: list[dict], days=None) -> dict:
     storms = {}
     completed = 0
     for day in days:
-        truth = {r["flight_id"]: r for r in rows if r["day"] == day and r.get("kind", "cause") == "cause"}
+        truth = {r["flight_id"]: r for r in rows if r.get("day") == day and r.get("kind", "cause") == "cause"}
         liabilities, accuracies, hashes = [], [], []
         for run in range(1, RUNS + 1):
             item = results.get(f"plain-{day}-run-{run}", {})

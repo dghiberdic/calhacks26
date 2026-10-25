@@ -12,6 +12,7 @@ import { JournalCard, KIND_LABEL, statusLabel } from "@/components/journal";
 import { ActionPair, Empty, ErrorNote, Money, Shimmer } from "@/components/kit";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { count, eur, longDate, periodLabel, shortId, zuluDay } from "@/lib/format";
+import { plainMemo } from "@/lib/plain";
 import { cn } from "@/lib/utils";
 import { journalGroups, kindRank, preparerRole, type JournalGroup } from "./model";
 import { Denied, Segmented } from "./ui";
@@ -295,7 +296,7 @@ function EntryLines({ entry }: { entry: JournalEntry }) {
     <div className="rounded-xl bg-card shadow-[0_0_0_1px_var(--color-cloud-200)]">
       <div className="px-4 pt-3.5">
         <MicroLabel>{statusLabel(entry)}</MicroLabel>
-        <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">{entry.memo}</p>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600" title={entry.memo}>{plainMemo(entry.memo)}</p>
       </div>
       <ul className="mt-3">
         {entry.lines.map((l, i) => (

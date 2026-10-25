@@ -1,0 +1,499 @@
+{
+  "challenge_reply:NS31:assertion": {
+    "hand_written": {
+      "out": {
+        "id": "DRAFT-NS31@2025-01-24-challenge_reply-cdbc2420",
+        "kind": "challenge_reply",
+        "llm_commit": null,
+        "numbers_verified": true,
+        "template_fallback": false,
+        "text": "Decision stands. Dublin's storm window closed at 15:00Z, the 16:30Z METAR shows 11 kt gusting 22 kt, and 11 DUB departures operated 15:30\u201317:30Z. EI-NSB had been AOG since 23 Jan 21:40Z with an engine-driven pump leak and no MEL relief, logged before the storm, so the storm did not cause this cancellation."
+      },
+      "provenance": "hand-written"
+    },
+    "live": {
+      "out": {
+        "id": "DRAFT-NS31@2025-01-24-challenge_reply-cdbc2420",
+        "kind": "challenge_reply",
+        "llm_commit": null,
+        "numbers_verified": true,
+        "template_fallback": false,
+        "text": "Decision stands. The tier-1 technical log records an external leak at the EDP case drain port on EI-NSB at DUB, logged 23JAN 21:40Z, exceeding the AMM limit with no MEL relief and the aircraft AOG, and the pool replacement unit had an ETA of 25JAN 14:00Z. The DUB storm window had closed at 15:00Z, the 241630Z METAR shows gusts of only 22KT, and 11 DUB departures operated 15:30\u201317:30Z, so NS31 was cancelled because of the technical fault, not the weather. The challenge brings nothing new to check, so no question has been routed and the engine's finding stands."
+      },
+      "provenance": "live"
+    }
+  },
+  "challenge_reply:NS31:new_legal_pattern": {
+    "hand_written": {
+      "out": {
+        "id": "DRAFT-NS31@2025-01-24-challenge_reply-e3c02ce0",
+        "kind": "challenge_reply",
+        "llm_commit": null,
+        "numbers_verified": true,
+        "template_fallback": false,
+        "text": "Decision stands. A manufacturer's notice of a hidden defect in the pump batch is a new legal question (CJEU C-549/07 \u00b626), so it has gone to Legal, and the decision does not change unless Legal rules. On the evidence today EI-NSB was AOG from 23 Jan 21:40Z with no MEL relief, logged before Dublin's storm window closed at 15:00Z."
+      },
+      "provenance": "hand-written"
+    },
+    "live": {
+      "out": {
+        "id": "DRAFT-NS31@2025-01-24-challenge_reply-e3c02ce0",
+        "kind": "challenge_reply",
+        "llm_commit": null,
+        "numbers_verified": true,
+        "template_fallback": false,
+        "text": "Decision stands. The tier-1 technical log shows EI-NSB grounded at DUB at 23JAN 21:40Z with an EDP case drain leak exceeding the AMM limit and no MEL relief, before the storm window opened, and the pool replacement unit had an ETA of 25JAN 14:00Z. The DUB storm window closed at 15:00Z, the EIDW 241630Z METAR read 23011G22KT, and 11 DUB departures operated 15:30\u201317:30Z. Your argument that this could be an extraordinary circumstance, such as a hidden manufacturing defect under CJEU C-549/07, has gone to Legal, and the decision does not change unless Legal rules, because the engine decides facts; Legal rules on law."
+      },
+      "provenance": "live"
+    }
+  },
+  "classify:NS31:airbus_hidden_defect": {
+    "hand_written": {
+      "out": [
+        "new_legal_pattern",
+        [
+          "id='F-CH-NS31@2025-01-24-df6ab44749-0' source_id='SRC-CHALLENGE-NS31@2025-01-24-df6ab44749' subject='flight:NS31@2025-01-24' field='challenge.text' value='Airbus operator notice: hidden defect in this EDP batch' span='Airbus operator notice: hidden defect in this EDP batch' extractor='verbatim@1' extract_conf=None valid_at=None recorded_at=datetime.datetime(2026, 10, 24, 17, 0, tzinfo=datetime.timezone.utc) acl_tags=[]",
+          "id='F-CH-NS31@2025-01-24-df6ab44749-1' source_id='SRC-CHALLENGE-NS31@2025-01-24-df6ab44749' subject='aircraft:EI-NSB' field='manufacturer.hidden_defect' value=True span='hidden defect in this EDP batch' extractor='llm:claude-opus-5-5@drafter-classify-v1' extract_conf=None valid_at=None recorded_at=datetime.datetime(2026, 10, 24, 17, 0, tzinfo=datetime.timezone.utc) acl_tags=[]"
+        ]
+      ],
+      "provenance": "hand-written"
+    },
+    "live": {
+      "out": [
+        "new_legal_pattern",
+        [
+          "id='F-CH-NS31@2025-01-24-df6ab44749-0' source_id='SRC-CHALLENGE-NS31@2025-01-24-df6ab44749' subject='flight:NS31@2025-01-24' field='challenge.text' value='Airbus operator notice: hidden defect in this EDP batch' span='Airbus operator notice: hidden defect in this EDP batch' extractor='verbatim@1' extract_conf=None valid_at=None recorded_at=datetime.datetime(2026, 10, 24, 17, 0, tzinfo=datetime.timezone.utc) acl_tags=[]",
+          "id='F-CH-NS31@2025-01-24-df6ab44749-1' source_id='SRC-CHALLENGE-NS31@2025-01-24-df6ab44749' subject='aircraft:EI-NSB' field='manufacturer.hidden_defect' value=True span='hidden defect in this EDP batch' extractor='llm:claude-opus-5-5@drafter-classify-v1' extract_conf=None valid_at=None recorded_at=datetime.datetime(2026, 10, 24, 17, 0, tzinfo=datetime.timezone.utc) acl_tags=[]"
+        ]
+      ],
+      "provenance": "live"
+    }
+  },
+  "classify:NS31:storm_anyway": {
+    "hand_written": {
+      "out": [
+        "assertion",
+        [
+          "id='F-CH-NS31@2025-01-24-aabe84b64a-0' source_id='SRC-CHALLENGE-NS31@2025-01-24-aabe84b64a' subject='flight:NS31@2025-01-24' field='challenge.text' value='The storm would have grounded it anyway' span='The storm would have grounded it anyway' extractor='verbatim@1' extract_conf=None valid_at=None recorded_at=datetime.datetime(2026, 10, 24, 17, 0, tzinfo=datetime.timezone.utc) acl_tags=[]"
+        ]
+      ],
+      "provenance": "hand-written"
+    },
+    "live": {
+      "out": [
+        "assertion",
+        [
+          "id='F-CH-NS31@2025-01-24-aabe84b64a-0' source_id='SRC-CHALLENGE-NS31@2025-01-24-aabe84b64a' subject='flight:NS31@2025-01-24' field='challenge.text' value='The storm would have grounded it anyway' span='The storm would have grounded it anyway' extractor='verbatim@1' extract_conf=None valid_at=None recorded_at=datetime.datetime(2026, 10, 24, 17, 0, tzinfo=datetime.timezone.utc) acl_tags=[]"
+        ]
+      ],
+      "provenance": "live"
+    }
+  },
+  "explain:NS31": {
+    "hand_written": {
+      "out": {
+        "id": "DRAFT-NS31@2025-01-24-explanation",
+        "kind": "explanation",
+        "llm_commit": null,
+        "numbers_verified": true,
+        "template_fallback": false,
+        "text": "Not weather. EI-NSB was AOG from 23 Jan 21:40Z with an engine-driven pump leak beyond AMM limits (ATA 2913) and no MEL relief, logged before Dublin's storm window of 02:30\u201315:00Z; the window closed 90 min before the 16:30Z STD, and 11 DUB departures operated 15:30\u201317:30Z. OCC's weather code 71 is struck and the cause recoded 71 \u2192 41: a technical fault is not an extraordinary circumstance (EU261 Art.5(3); CJEU C-549/07, C-257/14), so compensation is owed and 172 payouts are drafted, pending Claims Lead approval. Cause-finding confidence 91%."
+      },
+      "provenance": "hand-written"
+    },
+    "live": {
+      "out": {
+        "id": "DRAFT-NS31@2025-01-24-explanation",
+        "kind": "explanation",
+        "llm_commit": null,
+        "numbers_verified": true,
+        "template_fallback": false,
+        "text": "Not weather: NS31 on 24 Jan was cancelled for a technical fault, so OCC code 71 is recoded 71 \u2192 41 and the cancellation is not extraordinary under EU261 Art.5(3). Tier 1 maintenance records show an external leak at the engine-driven pump case drain port on EI-NSB at DUB, beyond the AMM limit, logged 23 Jan 21:40Z with no MEL relief and a replacement unit not due until 25 Jan 14:00Z; the DUB storm window closed at 15:00Z, 90 minutes before the 16:30Z departure, when the METAR showed gusts of 22 kt, and the tier 3 OCC weather code 71 is struck. Passengers are owed EU261 compensation, and 172 payouts are drafted, pending Claims Lead approval. Cause-finding confidence 91%."
+      },
+      "provenance": "live"
+    }
+  },
+  "je_memo:JE-000101": {
+    "hand_written": {
+      "out": {
+        "id": "DRAFT-JE-000101-je_memo",
+        "kind": "je_memo",
+        "llm_commit": null,
+        "numbers_verified": true,
+        "template_fallback": false,
+        "text": "NS31 day-1 EU261 compensation liability, drafted, pending approval: Dr 4090 EU261 compensation (reduction of passenger revenue) \u20ac34,650 / Cr 2140 EU261 compensation liability (estimated) \u20ac34,650, the IFRS 15 variable-consideration estimate of 35% expected ultimate claim rate \u00d7 \u20ac99,000 full Art. 7 entitlement; built from 9 sources and ties to GL 2140."
+      },
+      "provenance": "hand-written"
+    },
+    "live": {
+      "out": {
+        "id": "DRAFT-JE-000101-je_memo",
+        "kind": "je_memo",
+        "llm_commit": null,
+        "numbers_verified": true,
+        "template_fallback": false,
+        "text": "JE-000101 records the NS31 (2025-01-24) EU261 compensation liability as IFRS 15 variable consideration, measured as the full Art. 7 entitlement of \u20ac99,000 \u00d7 a 35% expected ultimate claim rate and presented as a reduction of passenger revenue: Dr 4090 EU261 compensation (reduction of passenger revenue) \u20ac34,650, Cr 2140 EU261 compensation liability (estimated) \u20ac34,650. The entry is drafted, pending approval."
+      },
+      "provenance": "live"
+    }
+  },
+  "rights_notice:NS108:weather": {
+    "hand_written": {
+      "out": {
+        "id": "DRAFT-NS108@2025-01-24:12A-rights_notice",
+        "kind": "rights_notice",
+        "llm_commit": null,
+        "numbers_verified": true,
+        "template_fallback": false,
+        "text": "Dear {{passenger_name}},\n\nYour Northstar Air flight NS108 on 24 January 2025 (booking {{booking_reference}}) was cancelled because of Storm \u00c9owyn. This notice sets out your rights under Regulation (EC) No 261/2004, as Article 14(2) requires.\n\nCompensation: no compensation; refunds and care still due. The storm is an extraordinary circumstance under Article 5(3), so no compensation is payable under Article 7.\n\nRefund or re-routing: you can choose a refund of your ticket, paid within seven days, or re-routing to your destination at the earliest opportunity or at a later date of your choosing (Article 8).\n\nCare: while you wait for a re-routed flight we provide meals and refreshments, hotel accommodation where necessary, transport between the airport and the hotel, and two telephone calls or emails (Article 9). Keep your receipts for anything you paid for yourself.\n\nIf you need help, you can contact the national enforcement body: {{neb_contact}}.\n\nNorthstar Air Customer Care"
+      },
+      "provenance": "hand-written"
+    },
+    "live": {
+      "out": {
+        "id": "DRAFT-NS108@2025-01-24:12A-rights_notice",
+        "kind": "rights_notice",
+        "llm_commit": null,
+        "numbers_verified": true,
+        "template_fallback": false,
+        "text": "Dear {{passenger_name}},\n\nWe are writing about your booking {{booking_reference}}. Your flight NS108 on 24 January 2025 was cancelled. The cause was Storm \u00c9owyn: departure inside Dublin's storm window. We are sorry for the disruption to your journey.\n\nThis notice sets out your rights under Regulation (EC) No 261/2004, as Article 14(2) of that Regulation requires.\n\nFor this cancellation there is no compensation; refunds and care still due. Under Article 5(3), no compensation is payable when a cancellation is caused by extraordinary circumstances that could not have been avoided even if all reasonable measures had been taken. This cancellation falls under that rule. The same article makes clear that your right to a refund or re-routing and your right to care remain in full.\n\nUnder Article 8, you may choose one of the following. You can have the price of your ticket reimbursed within seven days. Or you can be re-routed to your final destination at the earliest opportunity, or at a later date of your choosing. No refund has been started on this booking yet. Please contact us and quote your booking reference to tell us which option you want.\n\nUnder Article 9, you are entitled to care while you wait for your re-routed flight. This means meals and refreshments, hotel accommodation where necessary, and transport between the airport and the hotel. You may also make two telephone calls or send two emails. If you paid for any of these yourself, please send us your receipts with your booking reference so that we can review them.\n\nIf you are not satisfied with how we have handled your case, you can contact the national enforcement body at {{neb_contact}}.\n\nYours sincerely,\n\nNorthstar Air Customer Care"
+      },
+      "provenance": "live"
+    }
+  },
+  "rights_notice:NS31:refund_initiated_corrected": {
+    "hand_written": {
+      "out": {
+        "id": "DRAFT-NS31@2025-01-24:3A-rights_notice",
+        "kind": "rights_notice",
+        "llm_commit": null,
+        "numbers_verified": true,
+        "template_fallback": false,
+        "text": "Dear {{passenger_name}},\n\nWe are writing to correct our earlier email about your booking {{booking_reference}}. It said your flight was \"cancelled due to weather (extraordinary circumstances)\" and that \"No compensation is payable under EU261\". That was wrong: Northstar Air flight NS31 on 24 January 2025 was cancelled because of a technical fault on the aircraft, not the weather.\n\nThis notice sets out your rights under Regulation (EC) No 261/2004, as Article 14(2) requires.\n\nCompensation: you are entitled to \u20ac600 under Article 7(1)(c). We pay it in cash, by bank transfer or by cheque; we will only use travel vouchers if you agree in writing (Article 7(3)).\n\nRefund: your refund of EUR 510.00 has already been initiated and will not be repeated (Article 8(1)(a)).\n\nCare: you were also entitled to meals and refreshments, hotel accommodation where necessary and transport between the airport and the hotel (Article 9). If you paid for any of these yourself, please send us your receipts.\n\nIf you need help, you can contact the national enforcement body: {{neb_contact}}.\n\nNorthstar Air Customer Care"
+      },
+      "provenance": "hand-written"
+    },
+    "live": {
+      "out": {
+        "id": "DRAFT-NS31@2025-01-24:3A-rights_notice",
+        "kind": "rights_notice",
+        "llm_commit": null,
+        "numbers_verified": true,
+        "template_fallback": false,
+        "text": "Dear {{passenger_name}},\n\nThis notice is about your booking {{booking_reference}} on Northstar Air flight NS31 on 24 January 2025, which was cancelled. Article 14(2) of Regulation (EC) No 261/2004 requires us to set out your rights in writing.\n\nWe previously sent you a message that was wrong. It said: \"Your flight NS31 on 24 Jan was cancelled due to weather (extraordinary circumstances). No compensation is payable under EU261.\" That is not correct. The cancellation was caused by a technical fault on the aircraft (engine-driven pump leak logged before the storm), not the weather. Compensation is therefore owed to you. We apologise for the error.\n\nYou are entitled to compensation of \u20ac600. Under Article 7(3), we pay compensation in cash, by bank transfer or by cheque. We can pay it in travel vouchers only if you agree to this in writing and sign that agreement.\n\nUnder Article 8, you have the right to a refund of your ticket or to re-routing to your final destination. A refund for your booking has already been initiated. It will not be repeated.\n\nUnder Article 9, you are also entitled to care. This includes meals and refreshments, hotel accommodation where necessary, transport between the airport and the hotel, and telephone calls or emails. If you paid for any of these yourself because of the cancellation, please contact us with your receipts and your booking reference {{booking_reference}}.\n\nIf you are not satisfied with how we handle your claim, you may contact the national enforcement body: {{neb_contact}}\n\nYours sincerely,\n\nNorthstar Air Customer Care"
+      },
+      "provenance": "live"
+    }
+  },
+  "rule:Q-1": {
+    "hand_written": {
+      "out": {
+        "action": "deny_offset",
+        "action_arg": null,
+        "authority_required": "claims_lead",
+        "cases_settled_by_storm": {},
+        "condition": {
+          "all": [
+            {
+              "f": "voucher.in_lieu",
+              "op": "eq",
+              "v": true
+            },
+            {
+              "f": "voucher.signed",
+              "op": "eq",
+              "v": false
+            }
+          ]
+        },
+        "grounding": {
+          "action=deny_offset": "no offset",
+          "voucher.in_lieu=true": "the voucher stays as goodwill",
+          "voucher.signed=false": "No signed acceptance"
+        },
+        "id": "R-CL-1",
+        "kind": "voucher",
+        "origin_example": "NS31@2025-01-24:14C",
+        "origin_quote": null,
+        "origin_ruling_id": "RUL-Q1",
+        "recorded_at": "2025-01-25T09:40:00Z",
+        "scope": {
+          "flight.departs_eu": "case:true"
+        },
+        "static_card": false,
+        "status": "proposed",
+        "supersedes": null,
+        "support": null,
+        "tier": "claims_lead_ruling",
+        "times_cited": 0,
+        "title": "No signed acceptance, no offset: pay \u20ac600 cash; the voucher stays as goodwill.",
+        "valid_from": null,
+        "version": 1
+      },
+      "provenance": "hand-written"
+    },
+    "live": {
+      "out": {
+        "action": "deny_offset",
+        "action_arg": null,
+        "authority_required": "claims_lead",
+        "cases_settled_by_storm": {},
+        "condition": {
+          "all": [
+            {
+              "f": "voucher.signed",
+              "op": "eq",
+              "v": false
+            }
+          ]
+        },
+        "grounding": {
+          "action=deny_offset": "no offset",
+          "voucher.signed=false": "No signed acceptance"
+        },
+        "id": "R-CL-1",
+        "kind": "voucher",
+        "origin_example": "NS31@2025-01-24:14C",
+        "origin_quote": null,
+        "origin_ruling_id": "RUL-Q1",
+        "recorded_at": "2025-01-25T09:40:00Z",
+        "scope": {
+          "flight.departs_eu": "case:true",
+          "voucher.in_lieu": "case:true"
+        },
+        "static_card": false,
+        "status": "proposed",
+        "supersedes": null,
+        "support": null,
+        "tier": "claims_lead_ruling",
+        "times_cited": 0,
+        "title": "No signed acceptance, no offset: pay \u20ac600 cash; the voucher stays as goodwill.",
+        "valid_from": null,
+        "version": 1
+      },
+      "provenance": "live"
+    }
+  },
+  "rule:Q-2": {
+    "hand_written": {
+      "out": {
+        "action": "set_extraordinary",
+        "action_arg": null,
+        "authority_required": "legal",
+        "cases_settled_by_storm": {},
+        "condition": {
+          "all": [
+            {
+              "f": "flight.is_return_sector",
+              "op": "eq",
+              "v": true
+            },
+            {
+              "f": "rotation.prev_cancelled",
+              "op": "eq",
+              "v": true
+            },
+            {
+              "f": "spare.available_within_h",
+              "op": "gt",
+              "v": 3
+            },
+            {
+              "f": "pax.reroute_earliest_offered",
+              "op": "eq",
+              "v": true
+            }
+          ]
+        },
+        "grounding": {
+          "3": "no aircraft and crew could operate it within 3 h of STD",
+          "action=set_extraordinary": "is extraordinary",
+          "flight.is_return_sector=true": "A return sector",
+          "pax.reroute_earliest_offered=true": "passengers were offered the earliest reroute on any carrier",
+          "rotation.prev_cancelled=true": "storm-cancelled rotation",
+          "rotation.prev_cause=weather": "storm"
+        },
+        "id": "R-LEG-1",
+        "kind": "cause",
+        "origin_example": "NS113@2025-01-24",
+        "origin_quote": null,
+        "origin_ruling_id": "RUL-Q2",
+        "recorded_at": "2025-01-25T10:05:00Z",
+        "scope": {
+          "rotation.prev_cause": "weather"
+        },
+        "static_card": false,
+        "status": "proposed",
+        "supersedes": null,
+        "support": null,
+        "tier": "legal_ruling",
+        "times_cited": 0,
+        "title": "A return sector of a storm-cancelled rotation is extraordinary only if no aircraft and crew could operate it within 3 h of STD, and passengers were offered the earliest reroute on any carrier (C-74/19).",
+        "valid_from": null,
+        "version": 1
+      },
+      "provenance": "hand-written"
+    },
+    "live": {
+      "out": {
+        "action": "set_extraordinary",
+        "action_arg": null,
+        "authority_required": "legal",
+        "cases_settled_by_storm": {},
+        "condition": {
+          "all": [
+            {
+              "f": "flight.is_return_sector",
+              "op": "eq",
+              "v": true
+            },
+            {
+              "f": "rotation.prev_cancelled",
+              "op": "eq",
+              "v": true
+            },
+            {
+              "f": "rotation.prev_cause",
+              "op": "eq",
+              "v": "weather"
+            },
+            {
+              "f": "spare.available_within_h",
+              "op": "gt",
+              "v": 3
+            },
+            {
+              "f": "pax.reroute_earliest_offered",
+              "op": "eq",
+              "v": true
+            }
+          ]
+        },
+        "grounding": {
+          "3": "no aircraft and crew could operate it within 3 h of STD",
+          "action=set_extraordinary": "is extraordinary only if",
+          "flight.is_return_sector=true": "A return sector",
+          "pax.reroute_earliest_offered=true": "passengers were offered the earliest reroute on any carrier",
+          "rotation.prev_cancelled=true": "storm-cancelled rotation",
+          "rotation.prev_cause=weather": "storm-cancelled"
+        },
+        "id": "R-LEG-1",
+        "kind": "cause",
+        "origin_example": "NS113@2025-01-24",
+        "origin_quote": null,
+        "origin_ruling_id": "RUL-Q2",
+        "recorded_at": "2025-01-25T10:05:00Z",
+        "scope": {
+          "flight.arrives_eu": "case:true",
+          "flight.departs_eu": "case:true",
+          "flight.operating_carrier_eu": "case:true",
+          "flight.route_region": "case:EU"
+        },
+        "static_card": false,
+        "status": "proposed",
+        "supersedes": null,
+        "support": null,
+        "tier": "legal_ruling",
+        "times_cited": 0,
+        "title": "A return sector of a storm-cancelled rotation is extraordinary only if no aircraft and crew could operate it within 3 h of STD, and passengers were offered the earliest reroute on any carrier (C-74/19).",
+        "valid_from": null,
+        "version": 1
+      },
+      "provenance": "live"
+    }
+  },
+  "rule:Q-3": {
+    "hand_written": {
+      "out": {
+        "action": "keep_tail",
+        "action_arg": null,
+        "authority_required": "controller",
+        "cases_settled_by_storm": {},
+        "condition": {
+          "all": [
+            {
+              "f": "cohort.age_months",
+              "op": "ge",
+              "v": 12
+            },
+            {
+              "f": "cohort.limitation_expired",
+              "op": "eq",
+              "v": false
+            }
+          ]
+        },
+        "grounding": {
+          "12": "At M12",
+          "action=keep_tail": "Never release the tail",
+          "cohort.limitation_expired=false": "until the six-year limitation"
+        },
+        "id": "R-CTL-1",
+        "kind": "release",
+        "origin_example": "EIDW@2024-01-21",
+        "origin_quote": null,
+        "origin_ruling_id": "RUL-Q3",
+        "recorded_at": "2025-01-25T10:30:00Z",
+        "scope": {
+          "cohort": "case:EIDW@2024-01-21"
+        },
+        "static_card": false,
+        "status": "proposed",
+        "supersedes": null,
+        "support": null,
+        "tier": "controller_ruling",
+        "times_cited": 0,
+        "title": "Never release the tail. At M12 keep (ultimate \u2212 M12 rate) \u00d7 entitlement until the six-year limitation.",
+        "valid_from": "2025-01-25T10:30:00Z",
+        "version": 1
+      },
+      "provenance": "hand-written"
+    },
+    "live": {
+      "out": {
+        "action": "keep_tail",
+        "action_arg": null,
+        "authority_required": "controller",
+        "cases_settled_by_storm": {},
+        "condition": {
+          "all": [
+            {
+              "f": "cohort.age_months",
+              "op": "eq",
+              "v": 12
+            },
+            {
+              "f": "cohort.limitation_expired",
+              "op": "eq",
+              "v": false
+            }
+          ]
+        },
+        "grounding": {
+          "12": "At M12",
+          "action=keep_tail": "Never release the tail",
+          "cohort.limitation_expired=false": "until the six-year limitation"
+        },
+        "id": "R-CTL-1",
+        "kind": "release",
+        "origin_example": "EIDW@2024-01-21",
+        "origin_quote": null,
+        "origin_ruling_id": "RUL-Q3",
+        "recorded_at": "2025-01-25T10:30:00Z",
+        "scope": {
+          "cohort": "case:EIDW@2024-01-21"
+        },
+        "static_card": false,
+        "status": "proposed",
+        "supersedes": null,
+        "support": null,
+        "tier": "controller_ruling",
+        "times_cited": 0,
+        "title": "Never release the tail. At M12 keep (ultimate \u2212 M12 rate) \u00d7 entitlement until the six-year limitation.",
+        "valid_from": "2025-01-25T10:30:00Z",
+        "version": 1
+      },
+      "provenance": "live"
+    }
+  }
+}

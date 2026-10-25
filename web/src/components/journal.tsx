@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { Check, Lock } from "lucide-react";
 import type { JournalEntry, ReplayDiff, Role } from "@/api/types";
 import { eur, longDate, periodLabel, ROLE_LABEL, shortId } from "@/lib/format";
+import { plainMemo } from "@/lib/plain";
 import { cn } from "@/lib/utils";
 import { MicroLabel, StatusChip, TiesChip } from "./chips";
 import { Money } from "./kit";
@@ -64,7 +65,7 @@ export function JournalCard({ entry, actions, className, dense, periodLocked }: 
           <h3 className="mt-1 text-[14.5px] font-semibold text-navy-900">
             <span className="font-mono text-[12.5px] font-normal text-slate-500">{entry.id}</span> · {KIND_LABEL[entry.kind] ?? entry.kind}
           </h3>
-          {!dense ? <p className="mt-1 max-w-[60ch] text-[13px] leading-relaxed text-slate-500">{entry.memo}</p> : null}
+          {!dense ? <p className="mt-1 max-w-[60ch] text-[13px] leading-relaxed text-slate-500" title={entry.memo}>{plainMemo(entry.memo)}</p> : null}
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           {entry.ias8_class && entry.ias8_class !== "none" ? (
