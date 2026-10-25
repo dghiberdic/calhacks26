@@ -4,7 +4,7 @@
     "title": "AOG logged inside the storm window",
     "request": {
       "kind": "tech_log",
-      "text": "24JAN 08:05Z EI-NSH DUB N/S. BIRD STRIKE ENG 1 ON TAXI-IN. BORESCOPE REQD. NO MEL RELIEF. A/C AOG.",
+      "text": "24JAN 04:05Z EI-NSH DUB N/S. BIRD STRIKE ENG 1 ON TAXI-IN. BORESCOPE REQD. NO MEL RELIEF. A/C AOG.",
       "flight_id": "NS110@2025-01-24"
     },
     "expected": "NS110 → concurrent / needs_legal · routed to Legal (concurrent causes)"
