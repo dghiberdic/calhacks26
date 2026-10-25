@@ -290,9 +290,8 @@ only need loosening where the live model picks a different span that is still ve
   hand-written recordings were re-recorded under the new keys and the 8 old files removed.
   `test_every_schema_fits_the_structured_output_limits` guards every Reader schema (≤ 16 unions, ≤ 16 optional).
 - **inj01's AOG moved to 04:05Z** (coordinator, with the engine fix: an AOG logged after the 05:12Z OCC weather batch
-  can't be the cause). Its hand-written recording and `test_rehearsed_injections` follow the new text. Until
-  `contracts/fixtures/api/injections.json` moves too, `LEGACY_DOCS` keeps the 08:05Z text recorded (the same file as
-  before, byte for byte), so the server finds a recording for whichever text the fixture holds. Remove it after.
+  can't be the cause). Its hand-written recording and `test_rehearsed_injections` follow the new text.
+  `contracts/fixtures/api/injections.json` has moved to 04:05Z too, so the 08:05Z recording (`LEGACY_DOCS`) is gone.
 - **Recording tools.** `llm.recordings --live` reads with no 8 s budget (a timed-out call records nothing) and keeps
   going past one unusable answer; `llm.drafter --out-dir` records into a scratch dir, so live output is reviewed before
   it replaces `data/cache/demo/`.

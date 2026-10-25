@@ -99,11 +99,6 @@ def known(code: str) -> bool:
     return True
 
 
-def all_airports() -> list[Airport]:
-    """The pinned subset, sorted by ICAO."""
-    return list(_pinned()[0].values())
-
-
 def great_circle_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     p1, p2 = math.radians(lat1), math.radians(lat2)
     dp, dl = p2 - p1, math.radians(lon2 - lon1)

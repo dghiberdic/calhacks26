@@ -31,7 +31,6 @@ PROMPT_VERSION = "persona-v1"
 EFFORT = "medium"
 MAX_TOKENS = 8000
 PERSONA_PREFIX = "persona:"
-PERSONA_ROLES = (Role.CLAIMS_LEAD, Role.LEGAL, Role.CONTROLLER)
 
 
 class PersonaError(ValueError):

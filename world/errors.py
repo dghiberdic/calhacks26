@@ -18,6 +18,3 @@ class WorldError(Exception):
         super().__init__(f"{code}: {message}")
         self.code: WorldErrorCode = code
         self.message = message
-
-    def to_envelope(self) -> dict:
-        return {"error": {"code": self.code, "message": self.message}}

@@ -38,7 +38,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from contracts.models import ExternalEvent, OpsLogEntry, SourceKind, Source, World
+from contracts.models import ExternalEvent, OpsLogEntry, Source, SourceKind, World
 from world import network as N
 from world import texts as T
 from world.airports import airport
@@ -85,7 +85,6 @@ class Outcome:
     delay_min: int = 0                 # operated flights
 
 
-OP = Outcome("operated")
 EVT = Outcome("cancelled", "external_event")
 PLAN: dict[str, Outcome] = {
     "NS108": Outcome("operated", delay_min=6), "NS109": Outcome("operated", delay_min=9),   # left BCN 10:15Z
@@ -262,8 +261,7 @@ def _station_meta(icao: str | None, flights: list[Any], metar_keys: list[str]) -
             "known_at": KNOWN_AT.strftime("%Y-%m-%dT%H:%M:%SZ"), "event_id": EVENT_ID, "kind": "grid_outage",
             "flight_ids": [f.id for f in fl], "cancelled": len(cancelled), "operated": len(fl) - len(cancelled),
             "passengers_cancelled": sum(f.pax for f in cancelled),
-            "metar_keys": [k for k in metar_keys if icao is None or k.startswith(f"{icao}@")
-                           or k.startswith(f"{N.HUB_ICAO}@")]}
+            "metar_keys": [k for k in metar_keys if icao is None or k.startswith((f"{icao}@", f"{N.HUB_ICAO}@"))]}
 
 
 @lru_cache(maxsize=4)

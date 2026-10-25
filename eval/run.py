@@ -61,43 +61,7 @@ def dump_json(value) -> bytes:
     return orjson.dumps(value, option=orjson.OPT_SORT_KEYS | orjson.OPT_INDENT_2) + b"\n"
 
 
-def _report_v1(cache: dict, fitted: dict) -> EvalReport:
-    """Filip's eval-v1 report (equal-width bins), kept verbatim so a committed v1 proof stays reproducible from
-    its own cache until it is regenerated as eval-v2."""
-    from contracts import calibration as cc
-    from eval.calibration import wilson
-
-    bins, coverage = {}, {}
-    for kind in cc.KINDS:
-        rows = [r for r in cache["calibration_rows"] if r["split"] == "test" and r["kind"] == kind]
-        if kind not in fitted.get("models", {}):
-            bins[kind], coverage[kind] = [], 0.0
-            continue
-        scored = [(p, bool(r["correct"])) for r in rows if (p := cc.score(fitted, kind, r["features"])) is not None]
-        out = []
-        for i in range(5):
-            members = [(p, y) for p, y in scored if min(4, int(p * 5)) == i]
-            n = len(members)
-            acc = sum(y for _, y in members) / n if n else 0.0
-            lo, hi = wilson(sum(y for _, y in members), n)
-            out.append({"lo": i / 5, "hi": (i + 1) / 5, "n": n, "accuracy": round(acc, 6),
-                        "wilson_lo": round(lo, 6), "wilson_hi": round(hi, 6)})
-        bins[kind] = out
-        coverage[kind] = round(sum(p >= 0.9 for p, _ in scored) / len(scored), 6) if scored else 0.0
-    return EvalReport(split={"train": "2023-07-01..2024-12-31", "test": "2025-01-01..2025-06-30"},
-        n_storms=cache["held_out_storms"], **summarize(cache["scored_rows"]), calibration=bins,
-        coverage_at_90=coverage, repeat_questions=cache["controls"]["repeat_questions"],
-        out_of_scope_auto=cache["controls"]["out_of_scope_auto"],
-        baseline=cache["baseline"], stormcheck_runs=cache["replay"], injections=cache["injections"],
-        real_vs_simulated={"real": ["pinned METAR observations", "airport coordinates and timezones"],
-            "simulated": ["airline, flights, faults, passengers, claims and accounting estimates",
-                          "explicit human rulings in control replay",
-                          "Reader injection outputs are hand-written recordings, not live model results"]}, label=LABEL)
-
-
 def report_from_cache(cache: dict, fitted: dict) -> EvalReport:
-    if cache.get("version") == "eval-v1":
-        return _report_v1(cache, fitted)
     rows = cache["scored_rows"]
     bins, coverage = reliability(cache["calibration_rows"], fitted)
     m = summarize(rows, {k: {int(m): v for m, v in pts.items()} for k, pts in cache.get("curves", {}).items()})
@@ -113,8 +77,8 @@ def report_from_cache(cache: dict, fitted: dict) -> EvalReport:
                                     "EU261 articles and CJEU case law as rules"],
             "simulated": ["airline, flights, faults, passengers, claims and accounting estimates",
                           "explicit human rulings in the held-out and control replays",
-                          "Reader outputs for the rehearsed injections are hand-written recordings, not live model "
-                          "results"]}, label=LABEL)
+                          ("Reader outputs for the rehearsed injections are hand-written recordings, not live model "
+                           "results")]}, label=LABEL)
 
 
 def _pct(x: float) -> str:
@@ -150,24 +114,24 @@ def _baseline_headline(base: dict, storms: dict) -> str:
 def _baseline_section(base: dict, storms: dict) -> list[str]:
     lines = ["### Plain Claude vs StormCheck on the same raw documents", ""]
     if base.get("status") != "complete":
-        return lines + [f"Plain Claude: **{base.get('status', 'pending')}** "
-                        f"({base.get('completed_requests', 0)}/{len(B.DAYS) * B.RUNS} genuine batch results). Run "
-                        f"`{B.LIVE_COMMAND}` with ANTHROPIC_API_KEY in .env, then `uv run python -m eval.run`. The "
-                        "nine matched-input requests are prepared offline (`python -m eval.baseline --prepare`); no "
-                        "plain-Claude number is claimed until then.", ""]
-    lines += [f"Plain Claude: `{base['model']}`, effort `{base['effort']}`, adaptive thinking, structured output, "
-              "through the Batches API. It gets the operational documents StormCheck reads (schedule, OCC/MCC/spares "
-              "lines, tech log, raw METAR at both ends, PII-free PSS coupon lines) and the same supplied policy, and "
-              "is asked for cause, extraordinary status and the initial € EU261 compensation liability per cancelled "
-              "flight. Three byte-identical requests per storm. Phase: the initial estimate before any human ruling, "
-              "the same phase as StormCheck ×3.", "",
-              "Scoring, the same rule for both: cause (root-aware) and extraordinary status must match the answer "
-              "key; a `needs_legal` answer counts as right when the key routes the flight to a person. StormCheck's "
-              "accuracy is its initial output in the held-out replay, which on later storms already applies rulings "
-              "made on earlier days; plain Claude gets only the supplied policy.", "",
-              "| Storm | Flights | Plain Claude accuracy (3 runs) | StormCheck accuracy | Plain Claude € (3 runs) "
-              "| StormCheck € (×3) | Answer key € (latent entitlement × expected ultimate claim rate) "
-              "| Plain Claude same hash? |", "|---|---:|---:|---:|---:|---:|---:|---|"]
+        return lines + [(f"Plain Claude: **{base.get('status', 'pending')}** "
+                         f"({base.get('completed_requests', 0)}/{len(B.DAYS) * B.RUNS} genuine batch results). Run "
+                         f"`{B.LIVE_COMMAND}` with ANTHROPIC_API_KEY in .env, then `uv run python -m eval.run`. The "
+                         "nine matched-input requests are prepared offline (`python -m eval.baseline --prepare`); no "
+                         "plain-Claude number is claimed until then."), ""]
+    lines += [(f"Plain Claude: `{base['model']}`, effort `{base['effort']}`, adaptive thinking, structured output, "
+               "through the Batches API. It gets the operational documents StormCheck reads (schedule, OCC/MCC/spares "
+               "lines, tech log, raw METAR at both ends, PII-free PSS coupon lines) and the same supplied policy, and "
+               "is asked for cause, extraordinary status and the initial € EU261 compensation liability per cancelled "
+               "flight. Three byte-identical requests per storm. Phase: the initial estimate before any human ruling, "
+               "the same phase as StormCheck ×3."), "",
+              ("Scoring, the same rule for both: cause (root-aware) and extraordinary status must match the answer "
+               "key; a `needs_legal` answer counts as right when the key routes the flight to a person. StormCheck's "
+               "accuracy is its initial output in the held-out replay, which on later storms already applies rulings "
+               "made on earlier days; plain Claude gets only the supplied policy."), "",
+              ("| Storm | Flights | Plain Claude accuracy (3 runs) | StormCheck accuracy | Plain Claude € (3 runs) "
+               "| StormCheck € (×3) | Answer key € (latent entitlement × expected ultimate claim rate) "
+               "| Plain Claude same hash? |"), "|---|---:|---:|---:|---:|---:|---:|---|"]
     for day in B.DAYS:
         s = base["storms"].get(day, {})
         sc = storms.get(day, {})
@@ -178,9 +142,9 @@ def _baseline_section(base: dict, storms: dict) -> list[str]:
                      f"{_eur(s.get('liability_eur', []))} | {_eur(sc.get('liability_eur', []))} | "
                      f"€{s.get('key_ultimate_expected_eur', 0):,.0f} | "
                      f"{'yes' if same else 'no' if same is False else '—'} |")
-    lines += ["", f"`proof.json` `baseline.hash_identical` is the {_storm(B.DAYS[0])} value, as the F9 spec asks. "
-              "Requests, model ids, usage and request records: `cache/baseline_requests.json`, "
-              "`cache/baseline_results.json`.", ""]
+    lines += ["", (f"`proof.json` `baseline.hash_identical` is the {_storm(B.DAYS[0])} value, as the F9 spec asks. "
+               "Requests, model ids, usage and request records: `cache/baseline_requests.json`, "
+               "`cache/baseline_results.json`."), ""]
     return lines
 
 
@@ -196,75 +160,75 @@ def numbers(report: EvalReport, cache: dict, fitted: dict) -> str:
     miss = cache["miss_table"]
     n_test = int(sum(lva.get(k, 0) for k in OUTCOME_ROWS))
     n_auto = int(lva["auto_correct"] + lva["auto_wrong"])
-    lines = [f"# StormCheck measured proof", "", f"{LABEL}.", "",
-             "Every number below is computed by `python -m eval.run` from the pinned corpus. Reproduce it offline with "
-             "`uv run python -m eval.run --from-cache`; `uv run python -m eval.run --check` fails if anything drifted.",
+    lines = ["# StormCheck measured proof", "", f"{LABEL}.", "",
+             ("Every number below is computed by `python -m eval.run` from the pinned corpus. Reproduce it offline with "
+              "`uv run python -m eval.run --from-cache`; `uv run python -m eval.run --check` fails if anything drifted."),
              "", "## Headline: held-out January–June 2025 (never seen in training)", "",
-             f"{n_test} cancelled flights on {report.n_storms} storm days plus background days "
-             f"({int(lva['curated_golden_cancellations'])} curated golden, {int(lva['non_golden_cancellations'])} "
-             f"generated; {report.n_passengers:,} passengers). Every flight lands in exactly one outcome class:", "",
+             (f"{n_test} cancelled flights on {report.n_storms} storm days plus background days "
+              f"({int(lva['curated_golden_cancellations'])} curated golden, {int(lva['non_golden_cancellations'])} "
+              f"generated; {report.n_passengers:,} passengers). Every flight lands in exactly one outcome class:"), "",
              "| Outcome class | Flights | Generated only |", "|---|---:|---:|"]
     for k, label in OUTCOME_ROWS.items():
         lines.append(f"| {label} | {int(lva[k])} | {int(lva['generated_' + k])} |")
-    lines += ["", f"**Auto-precision {_pct(lva['auto_precision'])}**: of {n_auto} flights settled with no person, "
-              f"{int(lva['auto_correct'])} were right and {int(lva['auto_wrong'])} wrong. Generated flights only: "
-              f"{_pct(lva['generated_auto_precision'])} ({int(lva['generated_auto_wrong'])} wrong).", "",
-              f"Straight-through, reported separately: **{report.straight_through_pct:.2f}%** of passengers (the "
-              f"flight is automatic and the coupon has no hold or question); {lva['auto_flights_pct']:.1f}% of "
-              "flights. It measures routing, not correctness.", "",
-              f"Ambiguous by design: **{int(lva['ambiguous_by_design'])}** flights are feature-invisible (hidden crew "
-              "faults, unrecorded AOGs and their knock-ons). They are counted inside the classes above; "
-              f"{int(lva['ambiguous_auto_wrong'])} of them are auto-wrong.", "",
+    lines += ["", (f"**Auto-precision {_pct(lva['auto_precision'])}**: of {n_auto} flights settled with no person, "
+               f"{int(lva['auto_correct'])} were right and {int(lva['auto_wrong'])} wrong. Generated flights only: "
+               f"{_pct(lva['generated_auto_precision'])} ({int(lva['generated_auto_wrong'])} wrong)."), "",
+              (f"Straight-through, reported separately: **{report.straight_through_pct:.2f}%** of passengers (the "
+               f"flight is automatic and the coupon has no hold or question); {lva['auto_flights_pct']:.1f}% of "
+               "flights. It measures routing, not correctness."), "",
+              (f"Ambiguous by design: **{int(lva['ambiguous_by_design'])}** flights are feature-invisible (hidden crew "
+               "faults, unrecorded AOGs and their knock-ons). They are counted inside the classes above; "
+               f"{int(lva['ambiguous_auto_wrong'])} of them are auto-wrong."), "",
               _baseline_headline(base, storms), "",
               "## Detail", "",
-              f"Right or correctly escalated: {_pct(lva['right_or_correctly_escalated'])} of all, "
-              f"{_pct(lva['generated_right_or_correctly_escalated'])} of generated. Strict cause **and** "
-              f"extraordinary equality with the key (an escalation counts as a miss): "
-              f"{_pct(lva['flight_cause_and_extraordinary_accuracy'])}.", "",
+              (f"Right or correctly escalated: {_pct(lva['right_or_correctly_escalated'])} of all, "
+               f"{_pct(lva['generated_right_or_correctly_escalated'])} of generated. Strict cause **and** "
+               f"extraordinary equality with the key (an escalation counts as a miss): "
+               f"{_pct(lva['flight_cause_and_extraordinary_accuracy'])}."), "",
               "Why flights were not auto-correct (`miss_class`, examples in `cache/results.json`):", "",
               "| Class | n | generated | examples |", "|---|---:|---:|---|"]
     for k, v in miss.items():
         if k != "auto_correct":
             lines.append(f"| {k} | {v['n']} | {v['generated']} | {', '.join(v['examples'])} |")
-    lines += ["", "`held_window_edge` (a weather code just outside the strict window → Ops) and "
-              "`held_external_event_no_precedent` (only Legal settles a new legal pattern) are deliberate "
-              "conservative escalations.", "",
-              f"- Miscodes caught: {report.miscodes_caught}/{report.miscodes_total} latent internal AOGs typed as "
-              f"weather were not accepted as weather ({int(lva['miscodes_caught_auto'])} recoded automatically); "
-              f"face cash entitlement €{report.miscodes_eur_cents / 100:,.2f}.",
+    lines += ["", ("`held_window_edge` (a weather code just outside the strict window → Ops) and "
+               "`held_external_event_no_precedent` (only Legal settles a new legal pattern) are deliberate "
+               "conservative escalations."), "",
+              (f"- Miscodes caught: {report.miscodes_caught}/{report.miscodes_total} latent internal AOGs typed as "
+               f"weather were not accepted as weather ({int(lva['miscodes_caught_auto'])} recoded automatically); "
+               f"face cash entitlement €{report.miscodes_eur_cents / 100:,.2f}."),
               f"- Conservative escalations (`held_other`, reported as `false_holds`): {report.false_holds}.",
-              f"- Refund drafted for an unsigned, non-web voucher election: "
-              f"{int(lva.get('refund_drafted_unsigned_non_web_voucher_coupons', 0))} coupons, "
-              f"€{lva.get('refund_drafted_unsigned_non_web_voucher_eur', 0):,.2f}. The key says no refund is due there; "
-              "the engine treats a voucher as agreed only with a signed acceptance or a web self-service election "
-              "(Art. 8(1)(a) via 7(3)). That is deliberate legal conservatism, reported as its own category and not "
-              f"as an error. Other coupon refund disagreements: {int(lva.get('refund_disagree_other_coupons', 0))}.",
-              f"- Repeat questions after a ruling, across all held-out days in date order: **{report.repeat_questions}**"
-              f". Rulings applied from the morning first asked: {', '.join(r['rule'] + ' (' + r['day'] + ')' for r in cache['rulings'])}. "
-              f"Settled by them in their ground-truth scope: {ctl['in_scope_settled']}; out-of-scope automatic "
-              f"applications: **{report.out_of_scope_auto}**.",
+              (f"- Refund drafted for an unsigned, non-web voucher election: "
+               f"{int(lva.get('refund_drafted_unsigned_non_web_voucher_coupons', 0))} coupons, "
+               f"€{lva.get('refund_drafted_unsigned_non_web_voucher_eur', 0):,.2f}. The key says no refund is due there; "
+               "the engine treats a voucher as agreed only with a signed acceptance or a web self-service election "
+               "(Art. 8(1)(a) via 7(3)). That is deliberate legal conservatism, reported as its own category and not "
+               f"as an error. Other coupon refund disagreements: {int(lva.get('refund_disagree_other_coupons', 0))}."),
+              (f"- Repeat questions after a ruling, across all held-out days in date order: **{report.repeat_questions}**"
+               f". Rulings applied from the morning first asked: {', '.join(r['rule'] + ' (' + r['day'] + ')' for r in cache['rulings'])}. "
+               f"Settled by them in their ground-truth scope: {ctl['in_scope_settled']}; out-of-scope automatic "
+               f"applications: **{report.out_of_scope_auto}**."),
               "", "### Liability vs actual (generated held-out cohorts, train-learned € curves)", "",
               "| Month | Expected claims (accrual × curve) | Valid claims received | A/E |", "|---|---:|---:|---:|"]
     for k in (1, 3, 6):
         if f"m{k}_expected_eur" in lva:
             lines.append(f"| M{k} | €{lva[f'm{k}_expected_eur']:,.2f} | €{lva[f'm{k}_actual_eur']:,.2f} | "
                          f"{lva[f'm{k}_actual_over_expected']:.3f} |")
-    lines += ["", f"Initial EU261 compensation liability estimate (all held-out flights): €{lva['preview_eur']:,.2f}; "
-              f"latent net entitlement × segment expected ultimate claim rates: €{lva['ultimate_expected_eur']:,.2f}; "
-              f"valid claims observed through 30 June 2026: €{lva['valid_claims_through_2026_06_30_eur']:,.2f} (a "
-              "development snapshot, not the final outcome).", "", "## Same input, same answer", ""]
+    lines += ["", (f"Initial EU261 compensation liability estimate (all held-out flights): €{lva['preview_eur']:,.2f}; "
+               f"latent net entitlement × segment expected ultimate claim rates: €{lva['ultimate_expected_eur']:,.2f}; "
+               f"valid claims observed through 30 June 2026: €{lva['valid_claims_through_2026_06_30_eur']:,.2f} (a "
+               "development snapshot, not the final outcome)."), "", "## Same input, same answer", ""]
     for day, s in storms.items():
         lines.append(f"- StormCheck ×3 on {day} ({s['cancelled']} cancelled), fresh process each: "
                      f"€{' / €'.join(f'{x:,.0f}' for x in s['liability_eur'])}, "
                      f"{'same hash' if s['hash_identical'] else 'HASHES DIFFER'} `{s['hashes'][0][:16]}…`.")
-    lines += [f"- Golden control replay (real Engine + TraceStore + Books, scripted Claims Lead/Legal/Controller "
-              f"rulings): **€34,650 ×3, same hash** `{report.stormcheck_runs['hashes'][0][:16]}…`. Before the Legal "
-              f"ruling it is €82,146 (held knock-ons accrued); €34,650 is after it. The Isha tail kept: "
-              f"€{report.stormcheck_runs['tail_kept_eur'][0]:,.0f}.", ""]
+    lines += [(f"- Golden control replay (real Engine + TraceStore + Books, scripted Claims Lead/Legal/Controller "
+               f"rulings): **€34,650 ×3, same hash** `{report.stormcheck_runs['hashes'][0][:16]}…`. Before the Legal "
+               f"ruling it is €82,146 (held knock-ons accrued); €34,650 is after it. The Isha tail kept: "
+               f"€{report.stormcheck_runs['tail_kept_eur'][0]:,.0f}."), ""]
     lines += _baseline_section(base, storms)
     lines += ["## Calibration (one logistic model per Confidence.kind)", "",
-              "Label: the engine settled the item alone and correctly per the answer key (an abstention is 0). "
-              "Fitted on train only; C chosen by 5-fold grouped CV log-loss on train.", "",
+              ("Label: the engine settled the item alone and correctly per the answer key (an abstention is 0). "
+               "Fitted on train only; C chosen by 5-fold grouped CV log-loss on train."), "",
               "| Kind | trained on | n (train) | C | held-out n | coverage@0.9 | accuracy@0.9 |",
               "|---|---|---:|---:|---:|---:|---:|"]
     for kind, m in fitted["models"].items():
@@ -272,24 +236,24 @@ def numbers(report: EvalReport, cache: dict, fitted: dict) -> str:
         lines.append(f"| {kind} | {m.get('trained_on', '')} | {m.get('n', 0)} | {m.get('metrics', {}).get('C', '—')} | "
                      f"{cal['test_n'].get(kind, 0)} | {report.coverage_at_90.get(kind, 0.0):.3f} | "
                      f"{f'{k}/{n}' if n else '—'} |")
-    lines += ["", f"Bins: five per kind at the routing thresholds (0.60 / 0.75 / 0.90 / 0.97), with n and Wilson 95% "
-              f"intervals, in `proof.json`.", ""]
+    lines += ["", ("Bins: five per kind at the routing thresholds (0.60 / 0.75 / 0.90 / 0.97), with n and Wilson 95% "
+               "intervals, in `proof.json`."), ""]
     if cal["promoted"]:
         lines.append(f"**Promoted** to `data/calibration.json` ({fitted['version']}): it keeps every golden confidence "
                      "band (real engine and FakeEngine).")
     else:
-        lines += [f"**Not promoted**: the runtime keeps `engine/default_calibration.json`, and the held-out routing "
-                  f"numbers above use it. The candidate (`eval/cache/calibration.json`, {fitted['version']}) breaks "
-                  f"{len(gate)} golden confidence band(s):", ""]
+        lines += [(f"**Not promoted**: the runtime keeps `engine/default_calibration.json`, and the held-out routing "
+                   f"numbers above use it. The candidate (`eval/cache/calibration.json`, {fitted['version']}) breaks "
+                   f"{len(gate)} golden confidence band(s):"), ""]
         lines += [f"  - {p}" for p in gate[:12]]
     lines += ["", "## Injections and hostile input", "",
-              f"- {inj['attempted']} rehearsed injections through the real `llm.reader` (hand-written recordings) "
-              f"and the engine: {inj['as_expected']}/{inj['attempted']} had the expected effect, "
-              f"{inj['blocked_or_escalated']}/{inj['attempted']} blocked or escalated, {inj['auto_flips']} automatic "
-              f"flips, {inj['approvals_by_injection']} approvals. Injection emails: {inj['facts_only']} facts-only, "
-              f"{inj['unsafe_extractions']} unsafe.",
-              f"- {inj['fuzz']} hostile/fuzz inputs (regex fallback, no recording): {inj['fuzz_errors']} errors, "
-              f"{inj['fuzz_auto_flips']} automatic flips.", "",
+              (f"- {inj['attempted']} rehearsed injections through the real `llm.reader` (hand-written recordings) "
+               f"and the engine: {inj['as_expected']}/{inj['attempted']} had the expected effect, "
+               f"{inj['blocked_or_escalated']}/{inj['attempted']} blocked or escalated, {inj['auto_flips']} automatic "
+               f"flips, {inj['approvals_by_injection']} approvals. Injection emails: {inj['facts_only']} facts-only, "
+               f"{inj['unsafe_extractions']} unsafe."),
+              (f"- {inj['fuzz']} hostile/fuzz inputs (regex fallback, no recording): {inj['fuzz_errors']} errors, "
+               f"{inj['fuzz_auto_flips']} automatic flips."), "",
               "## Stress corpus (controlled regressions, separate from the natural-world numbers)", "",
               f"{stress['passed']}/{stress['cases']} cases pass end to end (engine → entitlements → Books claims).", "",
               "| Error type | train | test |", "|---|---:|---:|"]
@@ -297,13 +261,13 @@ def numbers(report: EvalReport, cache: dict, fitted: dict) -> str:
         lines.append(f"| {k} | {v['train'][0]}/{v['train'][1]} | {v['test'][0]}/{v['test'][1]} |")
     diag = cache.get("world_diagnostics", {})
     lines += ["", "## Coverage limits", ""]
-    lines += [f"- Ambiguous (feature-invisible) generated cancellations: " + ", ".join(
+    lines += ["- Ambiguous (feature-invisible) generated cancellations: " + ", ".join(
         f"{s} {v['ambiguous']}/{v['non_golden_cancelled']} ({_pct(v['ambiguous'] / v['non_golden_cancelled'])})"
         for s, v in sorted(diag.items()) if v.get("non_golden_cancelled")) + " (plan target ~5%)."]
     lines += [f"- {s}" for s in cache.get("coverage_gaps", [])]
-    lines += ["", "Input manifest: `cache/manifest.json` (sha256 of every source module in world/, engine/, books/, eval/, "
-              "contracts/, llm/, the demo recordings, keys and pinned data). Metric inputs: `cache/results.json`. "
-              "Independent answer keys: `data/answer_key/`. No label is copied from an engine decision.", ""]
+    lines += ["", ("Input manifest: `cache/manifest.json` (sha256 of every source module in world/, engine/, books/, eval/, "
+               "contracts/, llm/, the demo recordings, keys and pinned data). Metric inputs: `cache/results.json`. "
+               "Independent answer keys: `data/answer_key/`. No label is copied from an engine decision."), ""]
     return "\n".join(lines)
 
 
@@ -326,11 +290,10 @@ def stale_inputs() -> list[str]:
 
 
 def full_run(progress=print) -> tuple[dict, dict]:
+    from eval.stress import score_stress
     from world.answer_key import write as write_answer_keys
     from world.error_cases import CATEGORIES, build_error_cases
     from world.generator import generate_world
-
-    from eval.stress import score_stress
 
     progress("Generating the deterministic world and independent answer keys")
     generated = generate_world(seed=0)
@@ -391,10 +354,10 @@ def full_run(progress=print) -> tuple[dict, dict]:
             "Release has no train-split proposals (Isha reaches M12 in January 2025), so it runs on the shipped prior.",
             "Claim validity has no engine consumer yet; it is fitted on the CONTRACTS x-encoding and reported only.",
             "The historical Art. 7(2) reduction policy is supplied as a fixture rule, not mined.",
-            "Rulings in the held-out replay are the plan's scripted words, drafted into rules by the engine's "
-            "deterministic template drafter (not the LLM Drafter).",
-            "The rehearsed-injection Reader outputs are hand-written recordings: this tests validation and wiring, "
-            "not a live model's resistance."]}
+            ("Rulings in the held-out replay are the plan's scripted words, drafted into rules by the engine's "
+             "deterministic template drafter (not the LLM Drafter)."),
+            ("The rehearsed-injection Reader outputs are hand-written recordings: this tests validation and wiring, "
+             "not a live model's resistance.")]}
     return cache, fitted
 
 

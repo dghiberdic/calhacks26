@@ -39,7 +39,7 @@ ACL = {SourceKind.TECH_LOG: ["maintenance"], SourceKind.MCC_LOG: ["maintenance"]
 def make_source(sid: str, kind: SourceKind, text: str, received_at: str, title: str | None = None) -> Source:
     return Source(id=sid, kind=kind, title=title or f"{kind.value} {sid}", text=text,
                   sha256=hashlib.sha256(text.encode()).hexdigest(),
-                  received_at=datetime.fromisoformat(received_at.replace("Z", "+00:00")),
+                  received_at=datetime.fromisoformat(received_at),
                   trust_tier=TIER.get(kind, 4), acl_tags=ACL.get(kind, []))
 
 
@@ -238,7 +238,7 @@ def _inj(n: str, kind: SourceKind, text: str) -> Source:
 
 def _inj01(label: str, hhmm: str) -> DemoDoc:
     """Injection 01: an AOG logged inside the storm window. 04:05Z is the rehearsed time (an AOG logged after the
-    05:12Z OCC weather batch can't be the cause); 08:05Z is the fixture's previous text (LEGACY_DOCS)."""
+    05:12Z OCC weather batch can't be the cause)."""
     return DemoDoc(label, None, {
         "tail": S("EI-NSH", "EI-NSH"),
         "logged_at": S(f"2025-01-24T{hhmm}:00Z", f"24JAN {hhmm}Z"),
@@ -298,8 +298,4 @@ INJECTION_DOCS: list[DemoDoc] = [
                                                 "UK261 claim: NS100 DUB-LHR 24 Jan 2025 cancelled, claiming £520.")),
 ]
 
-# Recorded too, so the server reads whichever text contracts/fixtures/api/injections.json holds while it moves to
-# 04:05Z. Remove once the fixture has moved.
-LEGACY_DOCS: list[DemoDoc] = [_inj01("inj01_aog_inside_window_0805", "08:05")]
-
-READER_DOCS: list[DemoDoc] = GOLDEN_DOCS + GOLDEN_LINES + INJECTION_DOCS + LEGACY_DOCS
+READER_DOCS: list[DemoDoc] = GOLDEN_DOCS + GOLDEN_LINES + INJECTION_DOCS
