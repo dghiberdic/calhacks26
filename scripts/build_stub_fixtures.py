@@ -1063,7 +1063,7 @@ CONTROLS = [
 INJECTIONS = [
     Injection(id="01_aog_inside_window", title="AOG logged inside the storm window",
               request=InjectRequest(kind="tech_log", flight_id="NS110@2025-01-24",
-                                    text="24JAN 08:05Z EI-NSH DUB N/S. BIRD STRIKE ENG 1 ON TAXI-IN. BORESCOPE REQD. "
+                                    text="24JAN 04:05Z EI-NSH DUB N/S. BIRD STRIKE ENG 1 ON TAXI-IN. BORESCOPE REQD. "
                                          "NO MEL RELIEF. A/C AOG."),
               expected="NS110 → concurrent / needs_legal · routed to Legal (concurrent causes)"),
     Injection(id="02_duplicate_direct_plus_agency", title="Same coupon claimed directly and via an agency",

@@ -35,6 +35,8 @@ FEATURES = frozenset({
     "cohort.age_months", "cohort.months_since_last_claim", "cohort.limitation_expired",
     # evidence
     "sources.disagree", "precedent.count",
+    # external events (blackout v1; contracts.fields.EVENT_DSL_FEATURES): "in" | "out" | "unknown", and the kind
+    "flight.in_event_window_dep", "flight.in_event_window_arr", "event.kind",
 })
 
 # Scope may also pin the case's context (widen removes these one rung at a time). ``pattern`` is the question a cause

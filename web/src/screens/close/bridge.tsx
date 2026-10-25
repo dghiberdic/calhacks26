@@ -8,7 +8,7 @@ import { Details } from "@/components/kit";
 import { count, eur, longDate, pct, zulu } from "@/lib/format";
 import { stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
-import { asFraction, bridgeScale, bridgeToGl, isRateTimesEntitlement, newStorms } from "./model";
+import { asFraction, bridgeScale, bridgeToGl, cohortTitle, isRateTimesEntitlement, newStorms } from "./model";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -21,8 +21,8 @@ export function CfoBridge({ metrics, curve, tiesToGl }: { metrics: CfoMetrics; c
   const m = metrics;
   const gl = bridgeToGl(m);
   // "after Storm Éowyn" when one storm is new in the bridge; a month with none new carries several in.
-  const storms = newStorms(m.liability_bridge, stormName);
-  const after = storms.length === 1 ? storms[0] : "the storms";
+  const storms = newStorms(m.liability_bridge, (b) => cohortTitle(b, stormName));
+  const after = storms.length === 1 ? (storms[0] === "Iberian blackout" ? "the Iberian blackout" : storms[0]) : "the storms";
   const rate = curve?.ultimate ?? null;
   const formula = isRateTimesEntitlement(m.drafted_liability_cents, m.full_entitlement_cents, rate);
 
@@ -93,7 +93,7 @@ export function CfoBridge({ metrics, curve, tiesToGl }: { metrics: CfoMetrics; c
           </a>{" "}
           = {eur(gl.drafted)} drafted
           {gl.held ? <> + <span className="text-held-ink">{eur(gl.held)} held until Legal rules</span></> : null}
-          {gl.other ? <> + {eur(gl.other)} from {gl.earlier.length ? gl.earlier.map((c) => stormName(c) ?? c).join(", ") : "other cohorts"}</> : null}.
+          {gl.other ? <> + {eur(gl.other)} from {gl.earlier.length ? gl.earlier.map((c) => cohortTitle(c, stormName)).join(", ") : "other cohorts"}</> : null}.
           {tiesToGl ? (
             <span className="ml-2 inline-flex items-center gap-1 whitespace-nowrap font-medium text-tie-ink">
               <Check className="size-3.5" aria-hidden="true" /> ties to GL 2140

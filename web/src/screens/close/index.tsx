@@ -18,19 +18,18 @@ import { CfoBridge } from "./bridge";
 import { ClaimCurveChart, type CohortActual } from "./curve";
 import { JournalDrafts } from "./drafts";
 import { EstimateCardView } from "./estimate";
-import { bridgeToGl, invariantsSummary, isSegment, journalTies, lockedPeriods, METHOD_NAME, rollforwardCsv, rollforwardTotals, SEGMENTS } from "./model";
+import { bridgeToGl, closePeriods, invariantsSummary, isSegment, journalTies, lockedPeriods, METHOD_NAME, rollforwardCsv, rollforwardTotals, SEGMENTS } from "./model";
 import { CloseRail, InvariantsList } from "./rail";
 import { FootingNotes, RollforwardTable } from "./rollforward";
 import { DetailsTitle, SectionHead, Segmented } from "./ui";
 
-/** The demo's close periods (identifiers, not figures): January closes with 6 claims, February runs the BF true-up. */
-const CLOSE_PERIODS = ["2025-01", "2025-02"] as const;
+/** February runs the BF true-up: the default when nothing is pending. */
 const DEFAULT_PERIOD = "2025-02";
 
-/** Where the work is: the latest close period with drafts still pending (January on the stub, February after it closes). */
-function workingPeriod(entries: { period: string; status: string }[] | undefined): string | undefined {
+/** Where the work is: the latest close period with drafts still pending (January on the stub, February after it closes, a scenario's month after its run). */
+function workingPeriod(entries: { period: string; status: string }[] | undefined, periods: string[]): string | undefined {
   return (entries ?? [])
-    .filter((e) => e.status === "draft" && (CLOSE_PERIODS as readonly string[]).includes(e.period))
+    .filter((e) => e.status === "draft" && periods.includes(e.period))
     .map((e) => e.period)
     .sort()
     .at(-1);
@@ -45,7 +44,8 @@ export default function CloseScreen() {
   const params = new URLSearchParams(location.search);
   const asked = params.get("period") ?? "";
   const everyEntry = useQuery({ queryKey: qk.journal(undefined, undefined), queryFn: () => api.journal() });
-  const period: string = (CLOSE_PERIODS as readonly string[]).includes(asked) ? asked : (workingPeriod(everyEntry.data) ?? DEFAULT_PERIOD);
+  const periods = useMemo(() => closePeriods(everyEntry.data), [everyEntry.data]);
+  const period: string = periods.includes(asked) ? asked : (workingPeriod(everyEntry.data, periods) ?? DEFAULT_PERIOD);
   const role = useSession((s) => s.role);
   const canAct = role === "controller" || role === "cfo";
 
@@ -105,8 +105,8 @@ export default function CloseScreen() {
   useEffect(() => {
     if (!focusId || !focusPeriod || jumped.current === focusId) return;
     jumped.current = focusId;
-    if (focusPeriod !== period && (CLOSE_PERIODS as readonly string[]).includes(focusPeriod)) setPeriod(focusPeriod);
-  }, [focusId, focusPeriod, period, setPeriod]);
+    if (focusPeriod !== period && periods.includes(focusPeriod)) setPeriod(focusPeriod);
+  }, [focusId, focusPeriod, period, setPeriod, periods]);
 
   return (
     <div className="mx-auto flex max-w-[1280px] flex-col gap-3">
@@ -119,7 +119,7 @@ export default function CloseScreen() {
             label="Period"
             value={period}
             onChange={setPeriod}
-            options={CLOSE_PERIODS.map((p) => ({ value: p, label: periodLabel(p), title: locked.has(p) ? `${periodLabel(p)} is locked` : `${periodLabel(p)} is open`, badge: locked.has(p) ? <Lock className="size-3 opacity-70" aria-label="locked" /> : null }))}
+            options={periods.map((p) => ({ value: p, label: periodLabel(p), title: locked.has(p) ? `${periodLabel(p)} is locked` : `${periodLabel(p)} is open`, badge: locked.has(p) ? <Lock className="size-3 opacity-70" aria-label="locked" /> : null }))}
           />
         }
       >

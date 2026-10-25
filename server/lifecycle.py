@@ -36,6 +36,7 @@ FLIGHT_ACTIONS = {RuleAction.SET_EXTRAORDINARY: Extraordinary.YES,
                   RuleAction.SET_NOT_EXTRAORDINARY: Extraordinary.NO}
 COHORT_ACTIONS = {RuleAction.KEEP_TAIL, RuleAction.DENY_RELEASE}
 BASE_EXTRACTORS = frozenset({"normalize@1", "engine:evidence@1"})   # facts that restate the base world
+TEMPLATE_ONLY = frozenset({"external_event_window"})   # engine.lifecycle.TEMPLATE_ONLY when importable
 PATTERN_TO_CANNED = {"voucher_in_lieu_unsigned": "Q-1", "knock_on_return": "Q-2", "cohort_release": "Q-3"}
 AUTHORITY = {  # THREAD D4: who may author what
     Role.CLAIMS_LEAD: {"voucher", "entitlement", "routing"},
@@ -391,6 +392,47 @@ class Lifecycle:
         return rule.model_copy(update={"status": "proposed", "origin_ruling_id": rule.origin_ruling_id or ruling.id,
                                        "recorded_at": max(rule.recorded_at, rt.now)})
 
+    def templated_proposal(self, q: Question, ruling: Ruling, principal: str, elc: Any) -> RuleProposal | None:
+        """Patterns the engine templates from the ruling's chosen option and never sends to the Drafter (its schema
+        cannot express the event features; the blackout's Legal question): `engine.lifecycle.template_rule`, then
+        `engine.rules.checks` (grounding, authority), then the same replay as any proposal. "Decide flight by flight"
+        templates no rule, so the ruling is applied to its own cases instead."""
+        rt = self.rt
+        rb = _module("engine.rules")
+        fn = getattr(elc, "template_rule", None)
+        feats = dict(self.features().get(q.case_refs[0], {})) if q.case_refs else {}
+        draft = fn(ruling, q, feats) if fn is not None else None
+        if draft is None or rb is None:
+            return None
+        from contracts import stub_app as stub
+        prefix = getattr(elc, "PREFIX", {}).get(ruling.author_role, "R-X")
+        taken = {r.id for r in rt.rules()} | set(rt.store.keys("proposal")) | set(stub.RULE_TO_QUESTION)
+        rid = next(f"{prefix}-{n}" for n in range(1, 1000) if f"{prefix}-{n}" not in taken)
+        rule = draft.model_copy(update={
+            "id": rid, "version": 1, "tier": rb.TIER_OF_ROLE.get(ruling.author_role, draft.tier),
+            "authority_required": rb.required_role(draft), "origin_ruling_id": ruling.id,
+            "origin_example": q.case_refs[0] if q.case_refs else None, "recorded_at": rt.now, "status": "proposed",
+            "origin_quote": (ruling.explanation or "").strip() or (ruling.decision or "").strip() or None})
+        active = [r for r in rt.rules() if r.status == "active" and r.id != rule.id]
+        rule, _, _ = rb.checks(rule, author_role=ruling.author_role, ruling=ruling, case_feats=feats, existing=active)
+        rule = rule.model_copy(update={"status": "proposed"})
+        p = self.build_proposal(rule, cases=q.case_refs, author_role=ruling.author_role, actor=principal)
+        self.store_proposal(p, cases=q.case_refs)
+        return p
+
+    def no_wider(self, drafted: Rule, scripted: Rule, q: Question, ruling: Ruling) -> Rule | None:
+        """A draft keeps every case-scoped key of its pattern's scripted rule (in its scope or its condition): it is
+        never wider than the case that was ruled on, because widening is explicit (`widen`, "All storm cohorts?").
+        A wider draft is recorded as rejected and the scripted rule stands."""
+        keys = [k for k, v in scripted.scope.items() if isinstance(v, str) and v.startswith("case:")]
+        have = set(drafted.scope) | {c.get("f") for c in drafted.condition.get("all", []) if isinstance(c, dict)}
+        dropped = [k for k in keys if k not in have]
+        if not dropped:
+            return drafted
+        self.rt.store.put("draft_rejected", f"{q.id}:{ruling.id}", {"problems": [
+            f"wider than the ruled case: drops {k} (widening is explicit)" for k in dropped]}, self.rt.now)
+        return None
+
     def draft_proposal(self, q: Question, ruling: Ruling, principal: str) -> RuleProposal | None:
         """Drafter's rule → engine checks → replay. If the draft fails any check (or there is none), the scripted
         rule for the known patterns stands in; for other patterns the ruling is applied to its cases directly."""
@@ -398,8 +440,13 @@ class Lifecycle:
         canned = PATTERN_TO_CANNED.get(q.pattern)
         from contracts import stub_app as stub
         canned_id = next((rid for rid, qid in stub.RULE_TO_QUESTION.items() if qid == canned), None)
+        elc = _module("engine.lifecycle")
+        if self.world is not None and q.pattern in getattr(elc, "TEMPLATE_ONLY", TEMPLATE_ONLY):
+            return self.templated_proposal(q, ruling, principal, elc)
         if self.world is not None:
             drafted = self.drafted_rule(q, ruling, canned_id)
+            if drafted is not None and canned is not None:
+                drafted = self.no_wider(drafted, stub.canned_proposal(canned, ruling, rt.now).rule, q, ruling)
             if drafted is not None:
                 p = self.build_proposal(drafted, cases=q.case_refs, author_role=ruling.author_role, actor=principal)
                 if all(p.checks.values()):
@@ -678,21 +725,42 @@ class Lifecycle:
         return ruling, proposal
 
     # ---- views ------------------------------------------------------------------
-    def times_cited(self) -> dict[str, int]:
-        """Citations as a view: flight-level rules once per decision, coupon-level rules once per coupon."""
-        counts: dict[str, int] = {}
+    def citations(self) -> dict[str, dict[str, int]]:
+        """Citations as a view, per rule ref and storm run: flight-level rules once per decision, coupon-level
+        rules once per coupon."""
+        counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
         for fid, d in self.decisions().items():
+            run = self.run_of(fid) or "unassigned"
             flight_level = set(d.rules_applied)
             for r in flight_level:
-                counts[r] = counts.get(r, 0) + 1
+                counts[r][run] += 1
             for e in self.ents(fid):
                 for r in set(e.rules_applied) - flight_level:
-                    counts[r] = counts.get(r, 0) + 1
-        return counts
+                    counts[r][run] += 1
+        return {r: dict(by_run) for r, by_run in counts.items()}
+
+    def times_cited(self) -> dict[str, int]:
+        return {r: sum(by_run.values()) for r, by_run in self.citations().items()}
 
     def with_views(self, rule: Rule) -> Rule:
-        return rule.model_copy(update={"times_cited": self.times_cited().get(ref(rule), 0)})
+        by_run = self.citations().get(ref(rule), {})
+        return rule.model_copy(update={"times_cited": sum(by_run.values()), "cases_settled_by_storm": by_run})
 
     def rules_view(self) -> list[Rule]:
-        cited = self.times_cited()
-        return [r.model_copy(update={"times_cited": cited.get(ref(r), r.times_cited)}) for r in self.rt.rules()]
+        cited = self.citations()
+        return [r.model_copy(update={"times_cited": sum(cited[ref(r)].values()) if ref(r) in cited else r.times_cited,
+                                     "cases_settled_by_storm": cited.get(ref(r), r.cases_settled_by_storm)})
+                for r in self.rt.rules()]
+
+    def reject_target(self, q: Question) -> str | None:
+        """Justin #11: the rule a "Reject" on this question targets. Once ruled on, the rule drafted from the
+        ruling; before that, only a release proposal has one (its Reject keeps the tail: R-CTL-1)."""
+        ruled = self.rt.store.get("ruling_for", q.id)
+        if ruled is not None:
+            return next((p.rule.id for k in self.rt.store.keys("proposal") if (p := self.proposal(k)) is not None
+                         and p.rule.origin_ruling_id == ruled["ruling_id"]), None)
+        if q.pattern != "cohort_release":
+            return None
+        from contracts import stub_app as stub
+        canned = PATTERN_TO_CANNED[q.pattern]
+        return next((rid for rid, qid in stub.RULE_TO_QUESTION.items() if qid == canned), None)

@@ -13,13 +13,14 @@ from pathlib import Path
 import pytest
 
 from contracts.fakes import FakeReader
-from contracts.models import Cause, Extraordinary, Fact, Role, Source, SourceKind, World
+from contracts.models import Cause, Extraordinary, Fact, Injection, Role, Source, SourceKind, World
 from engine.case import overlay_facts, stations_for
 from engine.confidence import default_calibration
 from engine.engine import Engine
 from engine.trace import TraceStore
 
-GOLDEN = Path(__file__).resolve().parents[2] / "contracts" / "fixtures" / "golden" / "world.json"
+ROOT = Path(__file__).resolve().parents[2]
+GOLDEN = ROOT / "contracts" / "fixtures" / "golden" / "world.json"
 NS110 = "NS110@2025-01-24"
 RECEIVED = datetime(2025, 1, 25, 9, 0, tzinfo=UTC)
 KNOWN = datetime(2025, 1, 25, 9, 30, tzinfo=UTC)
@@ -107,6 +108,29 @@ def test_the_world_source_wins_over_a_registered_one_with_the_same_id(world, eng
     fake = injected(sid=email.id)
     d = engine.decide(NS110, read(fake), [], KNOWN, sources=[fake])
     assert d.cause != Cause.CONCURRENT and d.routed_to == Role.OPS
+
+
+# ---------- the rehearsed fixture itself ----------
+
+INJ01 = Injection.model_validate_json((ROOT / "contracts" / "fixtures" / "injections" /
+                                       "01_aog_inside_window.json").read_bytes())
+
+
+def test_rehearsed_injection_01_redecides_ns110_concurrent_to_legal(engine):
+    assert INJ01.request.kind == "tech_log" and INJ01.request.flight_id == NS110
+    src = injected(INJ01.request.text)
+    d = engine.decide(NS110, read(src), [], KNOWN, sources=[src])
+    assert sig(d) == CONCURRENT_TO_LEGAL and d.outcome == "escalated"
+
+
+def test_injection_01_is_logged_inside_the_window_and_before_the_occ_cancellation(engine, world):
+    """The fixture's AOG must be able to have caused the cancellation: inside the 02:30Z-15:00Z DUB window and
+    before the 05:12Z OCC weather batch that cancelled NS110 (E3: a later AOG is not the cause)."""
+    (logged,) = [f.value for f in read(injected(INJ01.request.text)) if f.field == "aog.logged_at"]
+    at = datetime.fromisoformat(logged.replace("Z", "+00:00"))
+    case = engine.evaluate(world, NS110, [], KNOWN).case
+    assert case.window is not None and case.window.start <= at <= case.window.end
+    assert at < case.decided_at == datetime(2025, 1, 24, 5, 12, tzinfo=UTC)
 
 
 def test_an_aog_logged_after_the_occ_cancellation_does_not_flip_ns110_even_at_tier_1(engine):
