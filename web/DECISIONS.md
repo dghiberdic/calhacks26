@@ -42,6 +42,7 @@ Judgment calls, newest first within each task. One line each, with the why. Requ
 - **Mock world:** the spec's assumptions applied to each run's own counts (refund and voucher choices taken as 5% of passengers); the learning timeline is the scripted flow's expected story.
 
 ## J1 · Storm Run
+- **Great-circle map (25 Oct):** use a hub-longitude-centred Mercator projection and spherical route paths, fit the full arcs including their northern extent, and use identical paths for hover/click. The former hub-centred azimuthal projection made every route straight. This changes only presentation; geographic distance and compensation bands still come from the API.
 - The headline is now the sentence: "27 flights cancelled, 5,292 passengers stranded, all coded 'weather'." The lede then gives what each one turned out to be, counted from the same verdicts that colour the timeline. "3 questions" moved to the questions panel. The plan's "5,292 · 3 questions · 3 people" line is gone.
 - The headline's three counts sit on one line on a laptop and stack on a phone; a line never starts with a dot.
 - "Not weather. Broken plane." lands once the timeline has settled (about 4 s), beside the story rather than over the chart.

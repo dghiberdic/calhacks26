@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { geoAzimuthalEquidistant, geoGraticule10, geoPath } from "d3-geo";
+import { geoMercator, geoGraticule10, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
 import type { GeometryCollection, Topology } from "topojson-specification";
 import landTopo from "world-atlas/land-110m.json";
@@ -59,8 +59,8 @@ function placeLabels(points: { code: string; x: number; y: number }[], hub: [num
 type Props = { run: StormRun; compact?: boolean; tone?: "dark" | "light"; className?: string; animate?: boolean; onSelectFlight?: (flightId: string) => void };
 
 /**
- * Every arc leaves the hub, so an azimuthal-equidistant projection centred on it draws each route as
- * the straight great-circle line the Art. 7(4) distance is measured along.
+ * Project great-circle routes onto a Mercator map so longer routes visibly follow Earth's curvature.
+ * These are geographic connections, not recorded flight tracks. Distance/band calculations stay in the API.
  */
 export function RouteMap({ run, compact, tone = "dark", className, animate = true, onSelectFlight }: Props) {
   const [ref, width] = useWidth<HTMLDivElement>(560);
@@ -86,25 +86,28 @@ export function RouteMap({ run, compact, tone = "dark", className, animate = tru
       by.set(other, cur);
     }
     return [...by.values()].filter((r) => airport(r.code)).sort((a, b) => RANK[a.verdict] - RANK[b.verdict]);
-  }, [facts]);
+  }, [facts, served]);
 
   const H = compact ? 240 : Math.round(Math.min(480, Math.max(300, width < 720 ? width * 0.7 : width * 0.42)));
   const W = Math.max(width, 280);
 
   const { path, project, graticule } = useMemo(() => {
     if (!hub) return { path: null, project: null, graticule: "" };
-    const pts = routes.map((r) => airport(r.code)!).concat(hub);
-    const projection = geoAzimuthalEquidistant().rotate([-hub.lon, -hub.lat]).clipAngle(150);
-    projection.fitExtent(
-      [
-        [28, 28],
-        [W - 28, H - 28],
-      ],
-      { type: "MultiPoint", coordinates: pts.map((p) => [p.lon, p.lat]) },
-    );
+    const destinations = routes.map((r) => airport(r.code)!).filter((a) => a.lon !== hub.lon || a.lat !== hub.lat);
+    const projection = geoMercator().rotate([-hub.lon, 0]).precision(0.15);
+    if (destinations.length) {
+      // Fit the complete spherical arcs, not only endpoints: long-haul arcs extend farther north.
+      projection.fitExtent(
+        [[28, 28], [W - 28, H - 28]],
+        { type: "MultiLineString", coordinates: destinations.map((a) => [[hub.lon, hub.lat], [a.lon, a.lat]]) },
+      );
+    } else {
+      projection.center([0, hub.lat]).scale(Math.min(W, H) / 3).translate([W / 2, H / 2]);
+    }
+    projection.clipExtent([[0, 0], [W, H]]);
     const p = geoPath(projection);
     return { path: p, project: (lon: number, lat: number) => projection([lon, lat]) as [number, number], graticule: p(geoGraticule10()) ?? "" };
-  }, [hub, routes, W, H]);
+  }, [hub, routes, served, W, H]);
 
   if (!hub || !path || !project) return <div ref={ref} className={cn("h-[240px] w-full", className)} />;
   const [hx, hy] = project(hub.lon, hub.lat);
@@ -127,21 +130,21 @@ export function RouteMap({ run, compact, tone = "dark", className, animate = tru
 
   return (
     <div ref={ref} className={cn("relative w-full", className)}>
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Routes from ${hub.name}, coloured by verdict`} className="block">
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Great-circle routes connected to ${hub.name}, coloured by verdict`} className="block">
         <path d={graticule} fill="none" stroke={dark ? "rgba(200,208,219,0.06)" : "rgba(13,21,36,0.05)"} />
         <path d={land} fill={dark ? "#152035" : "#e4e9f0"} stroke={dark ? "#22314b" : "#d3dae4"} strokeWidth={0.6} />
         {routes.map((r, i) => {
           const a = airport(r.code)!;
           const [ax, ay] = project(a.lon, a.lat);
+          // d3 resamples spherical segments before projection; never bend a screen-space chord by hand.
+          const arc = path({ type: "LineString", coordinates: [[hub.lon, hub.lat], [a.lon, a.lat]] }) ?? "";
           const active = hover === r.code;
           const strong = r.verdict === "notweather";
           return (
-            <g key={r.code} onPointerEnter={() => setHover(r.code)} onPointerLeave={() => setHover(null)} onClick={() => onSelectFlight?.(r.flights[0].id)} className={onSelectFlight ? "cursor-pointer" : undefined}>
-              <motion.line
-                x1={hx}
-                y1={hy}
-                x2={ax}
-                y2={ay}
+            <g key={r.code} data-testid={`route-${r.code}`} onPointerEnter={() => setHover(r.code)} onPointerLeave={() => setHover(null)} onClick={() => onSelectFlight?.(r.flights[0].id)} className={onSelectFlight ? "cursor-pointer" : undefined}>
+              <motion.path
+                d={arc}
+                fill="none"
                 stroke={COLOR[r.verdict]}
                 strokeWidth={strong ? 2.4 : active ? 2 : 1.3}
                 strokeOpacity={strong || active ? 1 : 0.75}
@@ -166,7 +169,7 @@ export function RouteMap({ run, compact, tone = "dark", className, animate = tru
                 </text>
               ) : null}
               {/* generous hit target */}
-              <line x1={hx} y1={hy} x2={ax} y2={ay} stroke="transparent" strokeWidth={12} />
+              <path d={arc} fill="none" stroke="transparent" strokeWidth={12} />
             </g>
           );
         })}

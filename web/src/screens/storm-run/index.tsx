@@ -89,7 +89,7 @@ export default function StormRunScreen() {
         <div className="flex flex-wrap items-end justify-between gap-3 px-1">
           <div>
             <h2 className="text-[15px] font-semibold">Routes connected to {airportName(data.station)}</h2>
-            <p className="mt-0.5 text-[12.5px] text-cloud-500">Select a route to inspect its flights. Colours show the review outcome.</p>
+            <p className="mt-0.5 text-[12.5px] text-cloud-500">Great-circle routes, not recorded flight paths. Select a route to inspect its flights.</p>
           </div>
           <RouteLegend tone="dark" />
         </div>
