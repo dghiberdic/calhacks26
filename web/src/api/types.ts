@@ -536,67 +536,24 @@ export type StormRun = {
 
 export type StormSummary = { id: string; station: string; date: ISODate; cancelled: number; questions: number; liability_drafted_cents: Cents };
 
-// ---------- pitch insights (additive: GET /runs/{run_id}/effort, GET /learning) ----------
-/** One line of the by-hand estimate: "Find what really caused each cancellation", 27 flights × 1.5 h. */
-export type EffortLine = {
-  task: string;
-  /** "ops analyst" | "claims handler" | "in-house counsel" | "revenue accountant" */
-  role: string;
-  /** Plain words: "27 flights × 1.5 h". */
-  basis: string;
-  manual_hours: number;
-  with_stormcheck_hours: number;
-  /** Loaded cost of an hour of that role. */
-  rate_eur_per_hour: number;
-  source?: string | null;
-};
+// ---------- pitch insights (GET /runs/{run_id}/effort, GET /learning) ----------
+// Generated from contracts/openapi.json (`pnpm gen:api`); only errors_caught is narrowed, since the model
+// types it as list[dict[str, Any]].
+type Schemas = import("./schema").components["schemas"];
 
-/** Something the run caught that a person working by hand could have missed: a recode, a bot refund not repeated. */
+/** One line of the by-hand estimate: "Find what really caused each cancellation", 27 flights × 1.5 h. */
+export type EffortLine = Schemas["EffortLine"];
+
+/** Something the run caught that a person working by hand could miss: a recode, a bot refund not repeated. */
 export type ErrorCaught = { label: string; amount_cents?: Cents | null; detail?: string | null };
 
-/** Computed on read from the run's own data; never stored. */
-export type EffortEstimate = {
-  run_id: string;
-  /** "Storm Éowyn · 24 Jan 2025" */
-  name: string;
-  /** cancelled_flights, passengers, expected_claims, questions, refunds, cohorts, month_ends */
-  inputs: Record<string, number>;
-  lines: EffortLine[];
-  manual_hours: number;
-  with_stormcheck_hours: number;
-  hours_saved: number;
-  manual_cost_cents: Cents;
-  with_stormcheck_cost_cents: Cents;
-  cost_saved_cents: Cents;
-  errors_caught: ErrorCaught[];
-  /** "Estimate from the assumptions below; not measured at a real airline." */
-  assumptions_note: string;
-};
+/** Computed on read from the run's own data; never stored. Totals come rounded (5 h, €100). */
+export type EffortEstimate = Omit<Schemas["EffortEstimate"], "errors_caught"> & { errors_caught: ErrorCaught[] };
 
-export type RuleReuse = {
-  /** "R-CL-1@1" */
-  rule_ref: string;
-  title: string;
-  /** "Claims Lead ruling on Storm Éowyn (Q-1)" | "18 months of history (41 of 42)" */
-  learned_from: string;
-  /** Cases this rule settled on this run, with no question asked. */
-  cases: number;
-};
+export type RuleReuse = Schemas["RuleReuse"];
 
 /** One storm or event on the learning timeline, in the order the clock reached them. */
-export type LearningStep = {
-  run_id: string;
-  name: string;
-  known_at: ISODateTime;
-  /** New questions this run raised. */
-  questions_asked: number;
-  cases_settled_by_reused_rules: number;
-  reused: RuleReuse[];
-  /** Rule refs first confirmed on this run. */
-  new_rules: string[];
-  /** One plain sentence. */
-  note: string;
-};
+export type LearningStep = Schemas["LearningStep"];
 
 /** One timeline mark on the Flight File strip (tech log → MCC → OCC → METAR marks → CRM). Loosely typed by the contract. */
 /** Kinds of Flight File timeline mark (CONTRACTS TimelineKind; Justin request #9). */

@@ -381,6 +381,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/runs/{run_id}/effort": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Run Effort */
+        get: operations["run_effort_api_runs__run_id__effort_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/learning": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Learning */
+        get: operations["learning_api_learning_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/session": {
         parameters: {
             query?: never;
@@ -950,6 +984,54 @@ export interface components {
              * @default false
              */
             template_fallback: boolean;
+        };
+        /** EffortEstimate */
+        EffortEstimate: {
+            /** Run Id */
+            run_id: string;
+            /** Name */
+            name: string;
+            /** Inputs */
+            inputs: {
+                [key: string]: number;
+            };
+            /** Lines */
+            lines: components["schemas"]["EffortLine"][];
+            /** Manual Hours */
+            manual_hours: number;
+            /** With Stormcheck Hours */
+            with_stormcheck_hours: number;
+            /** Hours Saved */
+            hours_saved: number;
+            /** Manual Cost Cents */
+            manual_cost_cents: number;
+            /** With Stormcheck Cost Cents */
+            with_stormcheck_cost_cents: number;
+            /** Cost Saved Cents */
+            cost_saved_cents: number;
+            /** Errors Caught */
+            errors_caught: {
+                [key: string]: unknown;
+            }[];
+            /** Assumptions Note */
+            assumptions_note: string;
+        };
+        /** EffortLine */
+        EffortLine: {
+            /** Task */
+            task: string;
+            /** Role */
+            role: string;
+            /** Basis */
+            basis: string;
+            /** Manual Hours */
+            manual_hours: number;
+            /** With Stormcheck Hours */
+            with_stormcheck_hours: number;
+            /** Rate Eur Per Hour */
+            rate_eur_per_hour: number;
+            /** Source */
+            source?: string | null;
         };
         /** Entitlement */
         Entitlement: {
@@ -1589,6 +1671,28 @@ export interface components {
             /** Rule Ref */
             rule_ref?: string | null;
         };
+        /** LearningStep */
+        LearningStep: {
+            /** Run Id */
+            run_id: string;
+            /** Name */
+            name: string;
+            /**
+             * Known At
+             * Format: date-time
+             */
+            known_at: string;
+            /** Questions Asked */
+            questions_asked: number;
+            /** Cases Settled By Reused Rules */
+            cases_settled_by_reused_rules: number;
+            /** Reused */
+            reused: components["schemas"]["RuleReuse"][];
+            /** New Rules */
+            new_rules: string[];
+            /** Note */
+            note: string;
+        };
         /** LockResponse */
         LockResponse: {
             /** Locked */
@@ -1903,6 +2007,17 @@ export interface components {
             widen_next?: {
                 [key: string]: unknown;
             } | null;
+        };
+        /** RuleReuse */
+        RuleReuse: {
+            /** Rule Ref */
+            rule_ref: string;
+            /** Title */
+            title: string;
+            /** Learned From */
+            learned_from: string;
+            /** Cases */
+            cases: number;
         };
         /** Ruling */
         Ruling: {
@@ -2762,6 +2877,66 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EvalReport"];
+                };
+            };
+        };
+    };
+    run_effort_api_runs__run_id__effort_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EffortEstimate"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Bad input (plain message) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    learning_api_learning_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LearningStep"][];
                 };
             };
         };

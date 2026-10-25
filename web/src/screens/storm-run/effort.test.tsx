@@ -37,6 +37,7 @@ const EOWYN: EffortEstimate = {
     { label: "NS31 recoded 71 → 41", amount_cents: 9_900_000, detail: "Coded weather, but the plane was broken." },
     { label: "32 refunds the CRM bot had already made, not repeated", amount_cents: 1_632_000, detail: null },
     { label: "1 claim duplicates another", amount_cents: null, detail: null },
+    { label: "Bot refund run held", amount_cents: 51_000, detail: "€510 would have been paid twice." },
   ],
   assumptions_note: "Estimate from the assumptions below; not measured at a real airline.",
 };
@@ -86,7 +87,7 @@ describe("WithoutStormCheck", () => {
     expect(rows[2]).toHaveTextContent("claims handler · €31/h");
     expect(rows[1]).toHaveTextContent("41 h → 30 min");
     const errors = within(screen.getByTestId("errors-caught")).getAllByRole("listitem");
-    expect(errors.map((li) => li.textContent)).toEqual(["NS31 recoded 71 → 41: €99,000. Coded weather, but the plane was broken.", "32 refunds the CRM bot had already made, not repeated: €16,320", "1 claim duplicates another"]);
+    expect(errors.map((li) => li.textContent)).toEqual(["NS31 recoded 71 → 41: €99,000. Coded weather, but the plane was broken.", "32 refunds the CRM bot had already made, not repeated: €16,320", "1 claim duplicates another", "Bot refund run held. €510 would have been paid twice."]);
     expect(within(details).getByText(/not measured at a real airline/)).toBeInTheDocument();
     expect(within(details).getByText("Source: Steer (2020) for the European Commission")).toBeInTheDocument();
     expect(within(details).getAllByText(/^Source:/)).toHaveLength(2);

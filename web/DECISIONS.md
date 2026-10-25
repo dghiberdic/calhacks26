@@ -37,6 +37,7 @@ Judgment calls, newest first within each task. One line each, with the why. Requ
 - **"Learned and reused" opens Policies:** one row per step, in the server's order, with its note. Reused rules are chips (↻, title, cases) that jump to their card; rules a run first confirmed are "new" chips named from `GET /rules`.
 - **The reuse line under the Storm Run headline** shows only for a run after the first on the timeline, and only when it reused something.
 - **Both routes are optional:** a 404 (an older server, a recording without them) hides the card, the timeline and the line. A desk result's inline `effort` wins over the fetch.
+- **Types are generated** (`pnpm gen:api`) once the server landed the routes; only `errors_caught` is narrowed, since the model types it as a list of dicts. A caught amount the server already writes into its detail is said once.
 - **Mock world:** the spec's assumptions applied to each run's own counts (refund and voucher choices taken as 5% of passengers); the learning timeline is the scripted flow's expected story.
 
 ## J1 · Storm Run

@@ -2,6 +2,7 @@ import type { EffortEstimate } from "@/api/types";
 import { MicroLabel } from "@/components/chips";
 import { Explain } from "@/components/explain";
 import { Details, Money, Panel } from "@/components/kit";
+import { eur } from "@/lib/format";
 import { plainIds } from "@/lib/plain";
 import { hoursCell, roughEur, roughHours } from "./effort";
 
@@ -58,7 +59,8 @@ export function WithoutStormCheck({ effort, noun = "storm" }: { effort: EffortEs
                 {effort.errors_caught.map((e) => (
                   <li key={e.label}>
                     <span className="text-navy-900">{plainIds(e.label)}</span>
-                    {e.amount_cents !== null && e.amount_cents !== undefined ? (
+                    {/* The amount once: skip it when the server's detail already says it. */}
+                    {e.amount_cents !== null && e.amount_cents !== undefined && !e.detail?.includes(eur(e.amount_cents)) ? (
                       <>
                         : <Money cents={e.amount_cents} className="font-medium text-navy-900" />
                       </>
