@@ -48,7 +48,7 @@ def fid(number: str) -> str:
     return f"{number}@{DAY.isoformat()}"
 
 
-def build(*, notice_at: datetime = z("11:00"), notice_tier: int = 1) -> World:
+def build(*, notice_at: datetime = z("11:00"), notice_tier: int = 1, ns512_spare: bool = True) -> World:
     b = Builder()
     b.meta = {"carrier": "Northstar Air", "distances_km": {"DUB-LIS": 1643, "DUB-MAD": 1450}}
     for st in ("EIDW", "LPPT", "LEMD"):
@@ -84,6 +84,10 @@ def build(*, notice_at: datetime = z("11:00"), notice_tier: int = 1) -> World:
                          "AT LIS."),
         OpsLogEntry(id="OCC-2110", at=z("21:10"), kind="occ", code="87", flight_ids=[fid("NS512")], author="OCC DM",
                     text="21:10Z OCC: NS512 CNL RSN 87. A/C EI-NSD OUT OF POSITION AT LIS AFTER THE BLACKOUT."),
+        *([OpsLogEntry(id="SPARES-NS512", at=z("21:15"), kind="spares", flight_ids=[fid("NS512")],
+                       author="OCC fleet desk",
+                       text="NS512: no tail at MAD. Spare EI-NSZ serviceable at MAD = STD+1h00, not assigned.")]
+          if ns512_spare else []),
         OpsLogEntry(id="OCC-2120", at=z("21:20"), kind="occ", code="93", flight_ids=[fid("NS521")], author="OCC DM",
                     text="21:20Z OCC: NS521 CNL RSN 93. INBD NS520 CNL."),
     ]
@@ -192,11 +196,19 @@ def test_a_crew_duty_cancellation_after_the_window_is_owed(engine, world):
     assert {e.status for e in engine.entitlements(d, world, [])} == {"owed"}
 
 
-def test_an_aircraft_out_of_position_after_the_window_is_owed(engine, world):
+def test_an_aircraft_out_of_position_with_a_spare_to_hand_is_owed(engine, world):
     d = decide(engine, world, "NS512")
-    assert (d.cause, d.extraordinary, d.outcome) == (Cause.TECHNICAL, Extraordinary.NO, "auto")
+    assert (d.cause, d.extraordinary, d.outcome) == (Cause.KNOCK_ON, Extraordinary.NO, "auto")
+    assert d.recode_label == "87 → 93" and any(e.field == "spare.available_within_h" for e in d.evidence)
     assert any(e.quote and "OUT OF POSITION" in e.quote for e in d.evidence)
     assert {e.status for e in engine.entitlements(d, world, [])} == {"owed"}
+
+
+def test_out_of_position_with_no_spare_is_not_an_internal_cause():
+    """The aircraft was stranded by the event itself and nothing else could fly: not owed on the log line alone."""
+    w = build(ns512_spare=False)
+    ev = Engine(w, calibration=default_calibration()).evaluate(w, fid("NS512"), [], KNOWN)
+    assert ev.finding.pattern != "internal_cause_logged" and ev.finding.extraordinary != Extraordinary.NO
 
 
 def test_a_pure_knock_on_after_the_window_keeps_the_knock_on_pattern(engine, world):

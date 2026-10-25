@@ -22,8 +22,8 @@ from contracts.models import (
     World,
 )
 from engine import questions as qs
-from engine.case import station_obs, stations_for
-from engine.cause import event_window_text
+from engine.case import EventWindow, station_obs, stations_for
+from engine.cause import hhmm
 from engine.engine import cohort_question_id, expected_liability, local_day_span, question_id, station_airport
 from engine.geo import UnknownAirport, airport
 from engine.timeline import storm_windows
@@ -61,15 +61,44 @@ def _chip_summary(d: FlightDecision, ents: Sequence[Entitlement], number: str) -
 
 
 def storm_name(world: World, storm_id: str) -> str | None:
-    """'Storm Éowyn' from real_context.storm_name, else meta.storms[<id>].name; None if the world names none."""
+    """'Storm Éowyn' from real_context.storm_name, else meta.storms[<id>].name; None if the world names none. A run
+    the world marks as an external event (``meta.storms[<id>].event_id``) keeps its own name, never "Storm …"."""
     ctx = (world.real_context or {}).get(storm_id) or {}
+    meta = ((world.meta or {}).get("storms") or {}).get(storm_id) or {}
+    if meta.get("event_id") or (meta.get("kind") or "weather") != "weather":
+        return str(meta.get("name") or ctx.get("event_name") or "") or None
     name = ctx.get("storm_name") or ctx.get("name")
     if not name:
-        meta = ((world.meta or {}).get("storms") or {}).get(storm_id) or {}
         name = str(meta.get("name") or "").split(" (")[0] or None
     if not name:
         return None
     return name if str(name).lower().startswith("storm ") else f"Storm {name}"
+
+
+def event_message(world: World, events: Sequence[EventWindow]) -> str:
+    """'Grid outage (Iberian Peninsula blackout): LIS 10:33Z–21:00Z, MAD 10:33Z–16:00Z (ends approximate)'."""
+    parts = []
+    for label in dict.fromkeys(e.window.label or e.event.title for e in events):
+        mine = [e for e in events if (e.window.label or e.event.title) == label]
+        spans = ", ".join(f"{_iata(world, e.window.station)} {hhmm(e.window.start)}–{hhmm(e.window.end)}"
+                          for e in mine)
+        approx = " (ends approximate)" if any(e.approximate for e in mine) else ""
+        parts.append(f"{label}: {spans}{approx}")
+    return " · ".join(parts)
+
+
+def _iata(world: World, icao: str) -> str:
+    try:
+        return airport(world, icao).iata
+    except UnknownAirport:
+        return icao
+
+
+def _icao(world: World, code: str) -> str:
+    try:
+        return airport(world, code).icao
+    except UnknownAirport:
+        return code
 
 
 def others_settled(q: Question, decisions: Sequence[FlightDecision], ents: Sequence[Entitlement]) -> int:
@@ -108,11 +137,13 @@ def run_storm(engine: Engine, world: World, station: str, local_day: date, rules
     obs = [o for o in station_obs(world, icao, known_at) if start - METAR_PAD <= o.valid < end + METAR_PAD]
     windows = storm_windows(obs)
     stations = stations_for(world, known_at)
-    # external-event windows (a grid outage) at this station that overlap its local day join the storm windows
-    events = [e for e in stations.get(icao).events if e.window.start < end and e.window.end >= start]
-    windows = sorted([*windows, *(e.window for e in events)], key=lambda w: (w.start, w.kind))
-
     flights = storm_flights(world, station, local_day)
+    # external-event windows (a grid outage) that overlap the local day, here or at the far end of any of the day's
+    # flights (Dublin's run shows the Lisbon, Madrid and Barcelona outage windows), join the storm windows
+    codes = sorted({icao} | {_icao(world, c) for f in flights for c in (f.origin, f.dest)})
+    events = [e for c in codes for e in stations.get(c).events if e.window.start < end and e.window.end >= start]
+    windows = sorted([*windows, *(e.window for e in events)], key=lambda w: (w.start, w.kind, w.station))
+
     rows: list[FlightRow] = []
     decisions: list[FlightDecision] = []
     ents_all: list[Entitlement] = []
@@ -181,7 +212,7 @@ def run_storm(engine: Engine, world: World, station: str, local_day: date, rules
         peak = max((o.gust if o.gust is not None else (o.sknt or 0) for o in obs), default=None)
         message = f"max gust {peak} kt · no storm window" if peak is not None else "no METAR · no storm window"
         if events:
-            message = " · ".join([f"{e.window.label} {event_window_text(e)}" for e in events] + [message])
+            message = f"{event_message(world, events)} · {message}"
     event = events[0].event if events else None
     return StormRun(
         id=storm_id, station=icao, date=local_day, windows=windows, metar=obs, flights=rows, counters=counters,
