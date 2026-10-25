@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { Check, Minus, X } from "lucide-react";
 import type { Evidence } from "@/api/types";
-import { zulu } from "@/lib/format";
+import { eur, zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Details } from "./kit";
 
@@ -42,10 +42,18 @@ export function sourceKind(sourceId: string): string {
 
 const MACHINE = /tech log|mcc|occ|metar|spare|bsp/i;
 
-function display(value: unknown) {
+/** "voucher.signed" → "Signed", for a value shown without a quote. */
+const fieldName = (field: string) => {
+  const last = (field.split(".").pop() ?? field).replace(/_cents$/, "").replace(/_/g, " ");
+  return last.charAt(0).toUpperCase() + last.slice(1);
+};
+
+/** A value with no verbatim quote, in words: "Signed: no", "Amount: €300", a window as its times. */
+function display(value: unknown, field: string) {
   if (value === null || value === undefined) return "—";
   if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (typeof value === "boolean") return `${fieldName(field)}: ${value ? "yes" : "no"}`;
+  if (typeof value === "number") return field.endsWith("_cents") ? `${fieldName(field)}: ${eur(value)}` : `${fieldName(field)}: ${value}`;
   // A computed window: "02:30Z–15:00Z · peak gust 56 kt".
   const w = value as { start?: unknown; end?: unknown; peak_gust_kt?: unknown };
   if (typeof w.start === "string" && typeof w.end === "string") return `${zulu(w.start)}–${zulu(w.end)}${typeof w.peak_gust_kt === "number" && w.peak_gust_kt > 0 ? ` · peak gust ${w.peak_gust_kt} kt` : ""}`;
@@ -124,7 +132,7 @@ function EvidenceRow({ e, compact }: { e: Evidence; compact?: boolean }) {
             e.struck ? "text-slate-400 line-through decoration-slate-400" : "text-navy-900",
           )}
         >
-          {e.quote ? <MaskedText text={e.quote} /> : display(e.value)}
+          {e.quote ? <MaskedText text={e.quote} /> : display(e.value, e.field)}
         </div>
       </div>
     </li>

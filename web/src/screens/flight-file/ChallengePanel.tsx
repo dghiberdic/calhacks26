@@ -50,7 +50,7 @@ export function ChallengePanel({ flightId, kind }: { flightId: string; kind: Ver
           Challenge this decision
         </h2>
         <p className="mt-1 max-w-[64ch] text-[13px] leading-relaxed text-slate-500">
-          A challenge is evidence at trust tier 4. It can route a question to the right person; it never flips a decision on its own.
+          Think it&rsquo;s wrong? Say why. A challenge counts as the weakest kind of evidence (tier 4): it can send a question to the right person, but it never flips a decision on its own.
         </p>
       </header>
       <form onSubmit={submit} className="px-5 pb-5 pt-3">

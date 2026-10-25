@@ -288,16 +288,20 @@ export const kindRank = (k: JournalEntry["kind"]) => {
   return i < 0 ? KIND_ORDER.length : i;
 };
 
-export type JournalGroup = { kind: JournalEntry["kind"]; entries: JournalEntry[]; cents: Cents; moves2140: boolean };
+export type JournalGroup = { kind: JournalEntry["kind"]; entries: JournalEntry[]; cents: Cents; moves2140: boolean; net2140: Cents };
 
-/** Entries grouped by kind, each with its count and total (Σ debits); the groups that move 2140 come first. */
+/**
+ * Entries grouped by kind, each with its count, its total (Σ debits) and its net effect on 2140 (a release
+ * proposal left out until approved, as the rollforward leaves it out); the groups that move 2140 come first.
+ */
 export function journalGroups(entries: JournalEntry[]): JournalGroup[] {
   const by = new Map<JournalEntry["kind"], JournalGroup>();
   for (const je of entries) {
-    const g = by.get(je.kind) ?? { kind: je.kind, entries: [], cents: 0, moves2140: false };
+    const g = by.get(je.kind) ?? { kind: je.kind, entries: [], cents: 0, moves2140: false, net2140: 0 };
     g.entries.push(je);
     g.cents += je.lines.reduce((t, l) => t + (l.dr_cents ?? 0), 0);
     g.moves2140 ||= effectOn2140(je) !== 0;
+    if (!isReleaseProposal(je)) g.net2140 += effectOn2140(je);
     by.set(je.kind, g);
   }
   return [...by.values()].sort((a, b) => Number(b.moves2140) - Number(a.moves2140) || kindRank(a.kind) - kindRank(b.kind) || a.kind.localeCompare(b.kind));

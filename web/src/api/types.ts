@@ -40,7 +40,9 @@ export type SourceKind =
   | "manufacturer"
   | "challenge"
   /** Additive (D0b): GL extracts, care accrual sheets, vendor invoices. */
-  | "finance";
+  | "finance"
+  /** Additive (blackout spec): a grid operator's, airport operator's or ANSP's notice (tier 1). */
+  | "external_event";
 
 export type Source = {
   id: string;

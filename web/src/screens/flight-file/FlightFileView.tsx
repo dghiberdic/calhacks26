@@ -113,15 +113,15 @@ function FileBody({ file, stormLabel, stormId, hub, windows, metar, realContext 
       <VerdictCover file={file} kind={kind} stormLabel={stormLabel} stormId={stormId} />
 
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_372px]">
-        <aside ref={railRef} className="flex flex-col gap-6 lg:sticky lg:col-start-2 lg:row-start-1" style={{ top: railTop }} aria-label="Confidence and money">
-          {kind === "operated" ? null : <ConfidenceCard confidence={d.confidence} reason={d.reason} />}
+        <aside ref={railRef} className="flex flex-col gap-6 lg:sticky lg:col-start-2 lg:row-start-1" style={{ top: railTop }} aria-label="Money and confidence">
           <MoneyCard file={file} kind={kind} />
+          {kind === "operated" ? null : <ConfidenceCard confidence={d.confidence} />}
         </aside>
 
         <div className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-1">
           <Section
             title="Evidence"
-            note="Ranked by trust tier. The losing source is struck through."
+            note="The most trusted sources first (T1 is the strongest). Where two disagree, the weaker one is struck through and not used."
             testId="evidence"
             legend={
               <ul className="mt-1.5 hidden flex-wrap gap-x-4 gap-y-1 sm:flex">
@@ -148,7 +148,7 @@ function FileBody({ file, stormLabel, stormId, hub, windows, metar, realContext 
               </span>
             }
           >
-            {d.evidence.length ? <EvidenceList evidence={d.evidence} /> : <p className="py-2 text-[13.5px] text-slate-500">No evidence recorded.</p>}
+            {d.evidence.length ? <EvidenceList evidence={d.evidence} foldContext /> : <p className="py-2 text-[13.5px] text-slate-500">No evidence recorded.</p>}
           </Section>
 
           {defence ? (
@@ -163,7 +163,7 @@ function FileBody({ file, stormLabel, stormId, hub, windows, metar, realContext 
           ) : null}
 
           {file.timeline?.length ? (
-            <Section title="Timeline" note="Tech log, MCC, OCC, METAR and CRM, in UTC. Hover a mark for its line.">
+            <Section title="Timeline" note="Every log line that matters, in UTC (Z). Hover a mark to read it.">
               <FlightTimeline marks={file.timeline} flight={file.flight} kind={kind} hub={hub} windows={windows} metar={metar} />
             </Section>
           ) : null}

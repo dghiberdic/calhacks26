@@ -1,43 +1,78 @@
 import type { ReactNode } from "react";
 import type { Confidence } from "@/api/types";
 import { MicroLabel, StatusChip } from "@/components/chips";
-import { ConfidenceLine, ScoreBar } from "@/components/kit";
+import { Explain, WhatsThis } from "@/components/explain";
+import { Details, ScoreBar } from "@/components/kit";
+import type { Term } from "@/lib/glossary";
+import { pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { featureLabel } from "./lib";
 
+const CAP_TERM: Record<string, Term> = { "no-precedent": "no-precedent", "sources-disagree": "sources-disagree" };
+
+/** The few inputs that moved the score most, in words: contributions when the model sends them, else the flags that are on. */
+function topDrivers(confidence: Confidence, n = 3): string[] {
+  const ranked = confidence.contributions
+    ? Object.entries(confidence.contributions)
+        .filter(([, v]) => typeof v === "number" && v > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([k]) => k)
+    : Object.entries(confidence.features ?? {})
+        .filter(([, v]) => v === 1)
+        .map(([k]) => k);
+  return ranked.slice(0, n).map(featureLabel);
+}
+
 /**
- * Confidence breakdown: the one line everybody reads, the score as a bar, the features the model used
- * (readable names), and caps as separate chips. No model for the kind → "uncalibrated", hatched.
+ * How sure the engine is, said plainly: the score bar, the two or three things that drove it, and any cap.
+ * Every input and the calibration version sit behind Details. No model for the kind → "uncalibrated", hatched.
  */
-export function ConfidenceCard({ confidence, reason, className }: { confidence: Confidence; reason?: string | null; className?: string }) {
+export function ConfidenceCard({ confidence, className }: { confidence: Confidence; className?: string }) {
   const caps = confidence.caps ?? [];
+  const drivers = topDrivers(confidence);
   return (
     <section aria-labelledby="confidence-title" className={cn("rounded-xl bg-card p-5 shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04)]", className)}>
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 id="confidence-title">
-          <MicroLabel>Confidence</MicroLabel>
-        </h2>
-        <span className="font-mono text-[10.5px] text-slate-400" title="Calibration version">
-          {confidence.calibration_version}
-        </span>
-      </div>
-      <ConfidenceLine confidence={confidence} reason={reason} showCaps={false} className="mt-2.5 text-[12.5px] leading-relaxed" />
+      <h2 id="confidence-title" className="flex items-center gap-1.5">
+        <MicroLabel>How sure it is</MicroLabel>
+        <WhatsThis term="confidence" className="text-slate-500" />
+      </h2>
+      {/* The score itself sits by the verdict; this bar shows it, and the lines below say why. */}
       <ScoreBar score={confidence.score} className="mt-3 h-2" />
+      <span className="sr-only">{confidence.score === null ? "uncalibrated" : pct(confidence.score)}</span>
       {confidence.score === null ? <p className="mt-2 text-[12.5px] text-slate-500">No calibrated model for {confidence.kind} decisions yet, so no score is claimed.</p> : null}
-
-      <FeatureBars features={confidence.features} className="mt-5" />
-
+      {drivers.length ? (
+        <p className="mt-3 text-[13px] leading-relaxed text-slate-600">
+          Mostly from: {drivers.map((d, i) => <Driver key={d} text={d} last={i === drivers.length - 1} />)}
+        </p>
+      ) : null}
       {caps.length ? (
-        <div className="mt-4 flex flex-wrap items-center gap-1.5">
-          <span className="text-[12px] text-slate-500">Capped by</span>
-          {caps.map((cap) => (
-            <StatusChip key={cap} tone="outline" dot={false} className="h-5 text-[10.5px]">
-              {cap}
-            </StatusChip>
-          ))}
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <span className="text-[12.5px] text-slate-500">Held down by</span>
+          {caps.map((cap) => {
+            const word = cap.replace(/^capped:/, "");
+            const term = CAP_TERM[word];
+            return (
+              <StatusChip key={cap} tone="outline" dot={false} className="h-5 text-[10.5px]">
+                {term ? <Explain term={term}>{word.replace(/-/g, " ")}</Explain> : word.replace(/-/g, " ")}
+              </StatusChip>
+            );
+          })}
         </div>
       ) : null}
+      <Details summary="Every input" className="mt-3">
+        <FeatureBars features={confidence.features} />
+        <p className="mt-3 font-mono text-[10.5px] text-slate-400">calibration {confidence.calibration_version}</p>
+      </Details>
     </section>
+  );
+}
+
+function Driver({ text, last }: { text: string; last: boolean }) {
+  return (
+    <>
+      <span className="font-medium text-navy-900">{text.charAt(0).toLowerCase() + text.slice(1)}</span>
+      {last ? "." : ", "}
+    </>
   );
 }
 
@@ -63,14 +98,11 @@ export function FeatureBars({ features, className }: { features: Record<string, 
   const weighted = entries.some(([, v]) => v < 0) || entries.some(([k, v]) => v > 0 && v < 1 && !MEASURE.test(k));
   return (
     <div className={className}>
-      <div className="flex items-baseline justify-between">
-        <MicroLabel>Features</MicroLabel>
-        {weighted && entries.some(([, v]) => v < 0) ? (
-          <span className="text-[11px] text-slate-400">
-            against · <span className="text-navy-900">for</span>
-          </span>
-        ) : null}
-      </div>
+      {weighted && entries.some(([, v]) => v < 0) ? (
+        <p className="text-right text-[11px] text-slate-400">
+          against · <span className="text-navy-900">for</span>
+        </p>
+      ) : null}
       {weighted ? <Weighted entries={entries} /> : <Inputs entries={entries} />}
     </div>
   );
