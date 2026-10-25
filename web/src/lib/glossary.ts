@@ -90,7 +90,7 @@ export const GLOSSARY = {
   },
   "bornhuetter-ferguson": {
     term: "Bornhuetter-Ferguson",
-    plain: "An actuarial way to re-estimate the liability at month-end: keep the expected claims still to come, (ultimate claim rate − rate expected by now) × entitlement, rather than chasing early claims up or down.",
+    plain: "How StormCheck re-estimates at month-end when claims come in faster or slower than the curve expected: it keeps the expected claims still to come, (ultimate claim rate − rate expected by now) × entitlement, rather than chasing early claims up or down.",
   },
   "prior-period-error": {
     term: "Prior-period error",

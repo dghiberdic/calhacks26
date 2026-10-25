@@ -10,6 +10,10 @@ Priority (THREAD_DAVID D2):
 3. An AOG claimed only below tier 1 (an e-mail, a claim, an OCC note) -> ``aog_unverified``: Ops verifies it.
 4. In a window at either end, no AOG -> ``weather / extraordinary`` (a rotation code is recoded to 71). An OCC
    technical, crew, ATC or airport code there with no tech-log line -> ``occ_code_in_window``: sources disagree, Ops.
+4b. In an external event's window (a grid outage) at either end, no decisive AOG -> ``external_event`` /
+   ``external_event_window``: no precedent, Legal. A decisive AOG there is concurrent causes (2).
+4c. Cancelled after an event window closed (< 24 h) and the carrier's own OCC/MCC log names crew out of duty hours or
+   the aircraft out of position -> ``crew`` / ``technical``, not extraordinary (``internal_cause_logged``, owed).
 5. Return sector whose outbound (previous rotation) was cancelled for weather, out at both ends ->
    ``knock_on / needs_legal`` unless an active legal rule settles it (applied by the engine, not here).
 6. ``unknown`` window -> ``unknown / needs_legal`` routed to Ops.
@@ -26,9 +30,9 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from contracts.models import Cause, Evidence, Extraordinary, MetarObs, Role, SourceKind, StormWindow
+from contracts.models import Cause, Evidence, Extraordinary, MetarObs, OpsLogEntry, Role, SourceKind, StormWindow
 from contracts import normalize as nz
-from engine.case import FlightCase, find_source, provenance
+from engine.case import EVENT_KIND_LABEL, EventWindow, FlightCase, find_source, provenance
 from engine.timeline import EndPosition
 
 # IATA delay-code groups (AHM 730)
@@ -59,7 +63,14 @@ LB = {
     "occ_code_in_window": [LB_ART53, "EU261 Recital 14", "CJEU C-549/07"],
     "aog_unverified": [LB_ART53, "CJEU C-549/07"],
     "cause_unknown": [LB_ART53],
+    # care and re-routing stay owed in extraordinary circumstances (C-12/11 McDonagh)
+    "external_event_window": [LB_ART53, "EU261 Recital 14", "CJEU C-549/07", "CJEU C-12/11"],
+    "internal_cause_logged": [LB_ART53, "CJEU C-549/07"],
 }
+# the carrier's own OCC/MCC log naming an internal cause after an external event closed
+CREW_DUTY = re.compile(r"\bCREW\b[^.;]*?\b(?:OUT OF (?:DUTY |FDP|HOURS)|FDP|DUTY (?:HOURS|TIME|LIMITS?)|TIMED OUT)|"
+                       r"\bOUT OF FDP\b|\bFDP (?:EXCEEDED|LIMIT)", re.I)
+POSITIONING = re.compile(r"\b(?:OUT OF|NOT IN) POSITION\b|\bNO TAIL AT\b|\bA/C STUCK\b|\bSTRANDED AT\b", re.I)
 
 
 @dataclass
@@ -192,6 +203,74 @@ def _claim_ev(case: FlightCase) -> list[Evidence]:
     return out
 
 
+def _sentence(text: str | None, *needles: str) -> str | None:
+    """The first sentence of ``text`` holding a needle (tried in order), verbatim; else its first sentence."""
+    parts = [p.strip() for p in re.split(r"(?<=[.!?])\s+", text or "") if p.strip()]
+    for n in needles:
+        hit = next((p for p in parts if n and n.lower() in p.lower()), None)
+        if hit is not None:
+            return hit
+    return parts[0] if parts else None
+
+
+def _iso(t: datetime) -> str:
+    return t.isoformat().replace("+00:00", "Z")
+
+
+def _kind(e: EventWindow) -> str:
+    """'grid outage'."""
+    return EVENT_KIND_LABEL.get(e.event.kind, e.event.kind.replace("_", " ")).lower()
+
+
+def event_window_text(e: EventWindow) -> str:
+    """'10:33Z–22:00Z (end approximate)'."""
+    w = e.window
+    end = hhmm(w.end) if w.end.date() == w.start.date() else dmy(w.end)
+    return f"{hhmm(w.start)}–{end}" + (" (end approximate)" if e.approximate else "")
+
+
+def _event_ev(case: FlightCase, role: str = "supports", end_role: str = "context") -> list[Evidence]:
+    """The event as its operator notice states it: kind and window start quote the notice; the window (with the
+    event's title, for the question) is engine context."""
+    e = case.event
+    if e is None:
+        return []
+    ev, a = e.event, e.airport
+    src = next((case.sources[s] for s in ev.source_ids if s in case.sources), None)
+    sid, tier = (src.id, src.trust_tier) if src is not None else (ev.source_ids[0] if ev.source_ids else "SRC-EVENT",
+                                                                 4)
+    text = src.text if src is not None else None
+    kind_words = (ev.kind, ev.kind.replace("_", " "), "blackout", "outage", "power")
+    return [
+        Evidence(fact_id=nz.event_fact_id(ev.id, "event.kind"), source_id=sid, field="event.kind", value=ev.kind,
+                 quote=_sentence(text, *kind_words), role=role, trust_tier=tier),
+        Evidence(fact_id=nz.event_fact_id(ev.id, "event.window_start", a.icao), source_id=sid,
+                 field="event.window_start", value=_iso(a.start),
+                 quote=_sentence(text, hhmm(a.start), f"{a.start:%H:%M}", *kind_words), role=role, trust_tier=tier),
+        Evidence(fact_id=nz.event_fact_id(ev.id, "event.window_end", a.icao), source_id=sid, field="event.window_end",
+                 value=_iso(a.end), quote=None, role=end_role, trust_tier=tier),
+        Evidence(fact_id=f"F-EVENT-WINDOW-{ev.id}:{a.icao}", source_id=sid, field="event.window",
+                 value={"event_id": ev.id, "kind": ev.kind, "title": ev.title, "label": e.window.label,
+                        "start": _iso(a.start), "end": _iso(a.end), "note": a.note},
+                 quote=None, role="context", trust_tier=tier),
+    ]
+
+
+def _logged_internal(case: FlightCase) -> tuple[bool, OpsLogEntry, str] | None:
+    """(crew?, line, verbatim clause): the carrier's own OCC/MCC line naming a crew-duty or positioning cause. A crew
+    line wins over a positioning one; then the latest."""
+    hits = []
+    for line in sorted([*case.occ_lines, *case.mcc], key=lambda e: (e.at, e.id)):
+        for crew, rx in ((True, CREW_DUTY), (False, POSITIONING)):
+            m = rx.search(line.text)
+            if m:
+                hits.append((crew, line.at, line, _sentence(line.text, m.group(0)) or line.text))
+    if not hits:
+        return None
+    crew, _, line, quote = max(hits, key=lambda h: (h[0], h[1], h[2].id))
+    return crew, line, quote
+
+
 def _end_ev(case: FlightCase, end: EndPosition, role_in: str, role_out: str) -> list[Evidence]:
     st = case.dep_station if end.end == "dep" else case.arr_station
     o = _nearest(st.obs, end.at)
@@ -206,8 +285,9 @@ def main_window(case: FlightCase) -> StormWindow | None:
 
 
 def deciding_margin(case: FlightCase) -> int | None:
-    """Non-negative minutes to the nearest window edge at the end that decides (in-end first, else nearest out)."""
-    ends = [case.dep, case.arr]
+    """Non-negative minutes to the nearest window edge at the end that decides (in-end first, else nearest out).
+    Storm and external-event windows both count (with no event, the event ends carry no margin)."""
+    ends = [e for e in (case.dep, case.arr, case.dep_event, case.arr_event) if e is not None]
     ins = [e for e in ends if e.position == "in" and e.margin_min is not None]
     if ins:
         return max(abs(e.margin_min) for e in ins)
@@ -233,6 +313,18 @@ def find_cause(case: FlightCase, prev_finding: Finding | None = None) -> Finding
 
     # 1-2: a no-go AOG is positive tier-1 evidence; concurrent only when the flight itself sits in a window
     if aog is not None and aog.decisive and not elsewhere:
+        if not in_any and case.event_in and case.event is not None:
+            ew = case.event
+            when = "inside" if ew.window.start <= aog.entry.logged_at <= ew.window.end else "before"
+            at_end = "departure" if case.dep_event is not None and case.dep_event.position == "in" else "arrival"
+            return Finding(
+                Cause.CONCURRENT, Extraordinary.NEEDS_LEGAL, "concurrent_causes",
+                f"Concurrent causes: AOG logged {dmy(aog.entry.logged_at)} {when} the {_kind(ew)} window "
+                f"({ew.event.title}, {event_window_text(ew)}), and the flight sits in it at {at_end}. Legal question.",
+                route=Role.LEGAL, reason_tag="concurrent-causes",
+                evidence=_aog_ev(case) + _event_ev(case) + _end_ev(case, case.dep, "context", "context")
+                + _end_ev(case, case.arr, "context", "context") + [e for e in [_occ_ev(case, "context")] if e],
+                legal_basis=LB["concurrent_causes"])
         if in_any:
             when = "inside" if aog.inside_window else "before"
             return Finding(
@@ -309,6 +401,47 @@ def find_cause(case: FlightCase, prev_finding: Finding | None = None) -> Finding
             evidence=metar_ev + [e for e in [_occ_ev(case, "contradicts" if recoded else "supports",
                                                      struck=recoded)] if e],
             legal_basis=LB["weather"])
+
+    # 4b: inside an external event's window (a grid outage) at either end, no decisive AOG: a new pattern for Legal
+    if case.event_in and case.event is not None:
+        ew = case.event
+        dep_in = case.dep_event is not None and case.dep_event.position == "in"
+        where, at = (case.origin.iata, f"STD {hhmm(f.sched_dep)}") if dep_in else (case.dest.iata,
+                                                                                   f"STA {hhmm(f.sched_arr)}")
+        return Finding(
+            Cause.EXTERNAL_EVENT, Extraordinary.NEEDS_LEGAL, "external_event_window",
+            f"{ew.event.title}: {where} inside the {_kind(ew)} window {event_window_text(ew)} at {at}, and no "
+            "aircraft defect grounds the flight. No precedent for this event: Legal question.",
+            route=Role.LEGAL, reason_tag="no-precedent",
+            evidence=_event_ev(case) + _end_ev(case, case.dep, "context", "context")
+            + _end_ev(case, case.arr, "context", "context") + [e for e in [_occ_ev(case, "context")] if e],
+            legal_basis=LB["external_event_window"])
+
+    # 4c: cancelled after an event window closed: judged on its own evidence. The carrier's own OCC/MCC log naming
+    # crew out of duty hours or an aircraft out of position is an internal cause (owed); else on to the knock-on.
+    logged = _logged_internal(case) if case.after_event and case.event is not None and not in_any else None
+    if logged is not None:
+        crew, line, quote = logged
+        ew = case.event
+        group, new = (CREW_CODES, NEW_CODE[Cause.CREW]) if crew else (ROTATION_CODES | TECH_CODES, "93")
+        recoded = code is not None and code not in group
+        closed_at = ew.window.station == case.origin.icao and ew.window.end <= f.sched_dep
+        at = f"STD {hhmm(f.sched_dep)}" if closed_at else f"STA {hhmm(f.sched_arr)}"
+        log_field = "occ.text" if line.kind == "occ" else "mcc.text"
+        sid, tier = find_source(case, SourceKind.OCC_LOG if line.kind == "occ" else SourceKind.MCC_LOG,
+                                line.text[:40], f"SRC-{line.id}")
+        return Finding(
+            Cause.CREW if crew else Cause.TECHNICAL, Extraordinary.NO, "internal_cause_logged",
+            f"Not the {ew.event.title}: the {_kind(ew)} window at {ew.window.station} had closed "
+            f"({event_window_text(ew)}) before {at}; the OCC log records "
+            f"{'crew out of duty hours' if crew else 'the aircraft out of position'}: \"{quote}\". Compensation owed.",
+            recoded=recoded, new_code=new if recoded else None,
+            evidence=[Evidence(fact_id=nz.ops_fact_id(line.id, f.id, log_field), source_id=sid, field=log_field,
+                               value=line.text, quote=quote, role="supports", trust_tier=tier)]
+            + _event_ev(case, role="context", end_role="supports")
+            + _end_ev(case, case.dep, "contradicts", "supports") + _end_ev(case, case.arr, "contradicts", "supports")
+            + [e for e in [_occ_ev(case, "contradicts", struck=recoded)] if e],
+            legal_basis=LB["internal_cause_logged"])
 
     # 5: knock-on (previous rotation of the tail cancelled)
     if prev is not None and prev.status == "cancelled" and prev_finding is not None:

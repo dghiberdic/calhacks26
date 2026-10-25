@@ -28,7 +28,8 @@ HARD_GATES = {"capped:sources-disagree": "sources_disagree"}
 
 PATTERN_ROLE = {
     "knock_on_return": Role.LEGAL, "concurrent_causes": Role.LEGAL, "external_event": Role.LEGAL,
-    "new_legal_pattern": Role.LEGAL, "rule_conflict": Role.LEGAL,
+    "new_legal_pattern": Role.LEGAL, "rule_conflict": Role.LEGAL, "external_event_window": Role.LEGAL,
+    "internal_cause_logged": Role.OPS,
     "voucher_in_lieu_unsigned": Role.CLAIMS_LEAD, "claim_dispute": Role.CLAIMS_LEAD,
     "cohort_release": Role.CONTROLLER, "change_in_estimate": Role.CONTROLLER, "materiality": Role.CONTROLLER,
     "window_unknown": Role.OPS, "weather_code_contradicted": Role.OPS, "cause_unknown": Role.OPS,

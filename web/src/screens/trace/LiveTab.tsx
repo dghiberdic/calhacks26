@@ -8,6 +8,7 @@ import type { TraceChip as TraceChipKind, TraceEvent } from "@/api/types";
 import { TraceChip } from "@/components/chips";
 import { Empty, ErrorNote, Money, Shimmer } from "@/components/kit";
 import { longDate, zulu } from "@/lib/format";
+import { plainIds } from "@/lib/plain";
 import { cn } from "@/lib/utils";
 import { collapseRuns, eventRef, matchesTarget, timeOrdered, type FeedItem } from "./model";
 import { FilterChip, Principal } from "./parts";
@@ -200,7 +201,7 @@ function LiveRow({ event: e, dayBreak, dated }: { event: TraceEvent; dayBreak: b
           {zulu(e.at)}
         </span>
         <div className="min-w-0">
-          <p className="text-[13.5px] leading-snug text-navy-900">{e.summary}</p>
+          <p className="text-[13.5px] leading-snug text-navy-900">{plainIds(e.summary)}</p>
           <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-slate-400">
             {ref ? (
               ref.to ? (
@@ -243,7 +244,7 @@ function RunRow({ run, open, onToggle, dayBreak }: { run: Extract<FeedItem, { ki
         <span className="figure pt-0.5 text-[12px] leading-tight text-slate-400">{zulu(e.at)}</span>
         <div className="min-w-0">
           <p className="text-[13.5px] leading-snug text-navy-900">
-            {e.summary} <span className="text-slate-500">and {n - 1} more like it</span>
+            {plainIds(e.summary)} <span className="text-slate-500">and {n - 1} more like it</span>
           </p>
           <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-slate-400">
             <button type="button" onClick={onToggle} aria-expanded={open} className="inline-flex items-center gap-1 font-medium text-metar-ink hover:underline">

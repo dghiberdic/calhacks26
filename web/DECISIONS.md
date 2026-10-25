@@ -43,8 +43,10 @@ Judgment calls, newest first within each task. One line each, with the why. Requ
 - The server's own wording first (`status_line`, `band_label`, `claim_rate_label`, …); plan §9 wording when a key is missing.
 - Operated flights get a slate chip and no confidence card or challenge box.
 - Confidence feature bars pick their form from the values: flags show yes/no, measures show units, weights get diverging bars.
+- Simplify pass: the verdict leads with a plain headline from verdict and cause ("A broken plane, not the storm.") and two sentences built from the decision's own evidence; the engine's exact reason and the Drafter's text sit behind "Why?". The money card shows one figure and one line (claim rate × full entitlement), the rest under "How we got this"; the confidence card names what moved the score most (the model's contributions) and folds every input away. Evidence names sources in words and folds context-only rows; journal entries are one line each; the per-passenger table is under "Per-passenger detail". The index folds the routine groups (weather, operated) behind "Show N flights".
 
 ## J3 · Questions
+- Simplify pass: evidence starts folded, since "what it found" and "why" already say it in words. The rule preview's checks read "All N checks pass" with the list behind Details unless one fails; the flipped past decisions likewise. Caps aren't repeated as chips next to the same reason.
 - The recommended option is preselected; the explanation box starts empty, so the words are the ruler's.
 - Rejecting Q3 goes through `answer` when the server offers a "Reject: …" option; `/rules/{id}/reject` is used only when the UI has to add the option for a modelled proposal.
 - Server-raised follow-ups (BOS→DUB, "All storm cohorts?") appear as their own cards; the UI never adds an ask.

@@ -148,6 +148,8 @@ def resolve(rules: Iterable[Rule], feats: Mapping[str, Any], *, actions: Iterabl
 _NUM_WORDS = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine",
               10: "ten", 12: "twelve", 14: "fourteen", 18: "eighteen", 24: "twenty-four"}
 
+_INSIDE_EVENT = (r"\binside (?:the |its )?(?:[\w-]+ )?(?:outage |event )?window\b|"
+                 r"\bin the (?:[\w-]+ )?(?:outage|event) window\b|\bduring the (?:outage|blackout)\b")
 LEXICON: dict[tuple[str, Any], str] = {
     ("voucher.signed", False): r"\bno signed acceptance\b|\bunsigned\b|\bnot signed\b|\bno signature\b|"
                                r"\bwithout (?:a )?signature\b|\bwithout signed acceptance\b|\bno signed\b",
@@ -168,6 +170,9 @@ LEXICON: dict[tuple[str, Any], str] = {
     ("sources.disagree", True): r"\bsources disagree\b|\bdisagree\b",
     ("aog.root_cause_internal", True): r"\binternal\b|\bown aircraft\b",
     ("aog.root_cause_internal", False): r"\bexternal\b|\boutside (?:the carrier'?s|its) control\b",
+    ("event.kind", "grid_outage"): r"\bgrid outage\b|\bblackout\b|\bpower (?:cut|outage|failure)\b|\boutage\b",
+    ("flight.in_event_window_dep", "in"): _INSIDE_EVENT,
+    ("flight.in_event_window_arr", "in"): _INSIDE_EVENT,
 }
 NUMERIC_UNITS: dict[str, str] = {
     "spare.available_within_h": r"(?:within )?{n} ?h(?:ours?)?(?: of STD)?|{w} hours?",

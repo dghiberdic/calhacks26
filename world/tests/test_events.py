@@ -45,17 +45,30 @@ def test_event_json_validates_and_its_sources_are_verbatim_notices_with_urls():
     assert ev.id == E.EVENT_ID and ev.kind == "grid_outage" and ev.title == "Iberian Peninsula blackout"
     assert {w.icao for w in ev.airports} == set(E.STATIONS)
     by_id = {s.id: s for s in sources}
-    assert set(ev.source_ids) == set(by_id) and ev.source_ids[0] == "SRC-EVT-ENTSOE-BLACKOUT"
+    assert set(ev.source_ids) == set(by_id) and ev.source_ids[0] == E.PRIMARY_SOURCE
     for s in sources:
         assert s.kind == SourceKind.EXTERNAL_EVENT
         assert s.sha256 == hashlib.sha256((s.text or "").encode("utf-8")).hexdigest()
         assert s.uri and s.uri.startswith("https://") and s.uri in (s.text or "")
         assert s.trust_tier in (1, 2)
     tier1 = {s.id for s in sources if s.trust_tier == 1}
-    assert {"SRC-EVT-ENTSOE-BLACKOUT", "SRC-EVT-ENTSOE-RESTORATION", "SRC-EVT-REE-RESTORATION",
-            "SRC-EVT-IAA-ADVICE"} == tier1
+    assert {"SRC-EVT-ANA-GENERATORS", "SRC-EVT-ENTSOE-BLACKOUT", "SRC-EVT-ENTSOE-RESTORATION",
+            "SRC-EVT-REE-RESTORATION", "SRC-EVT-IAA-ADVICE"} == tier1
     assert "at 12:33 CEST, the power systems of continental Spain and Portugal experienced a total blackout" in \
         by_id["SRC-EVT-ENTSOE-BLACKOUT"].text
+
+
+def test_the_primary_source_is_a_same_day_operator_statement_known_by_the_morning_after():
+    _, sources = E.load_event()
+    by_id = {s.id: s for s in sources}
+    primary = by_id[E.PRIMARY_SOURCE]
+    assert E.KNOWN_AT == datetime(2025, 4, 29, 6, 0, tzinfo=UTC)
+    assert primary.trust_tier == 1 and primary.received_at.date() == date(2025, 4, 28)
+    assert primary.received_at < E.KNOWN_AT
+    assert "Os aeroportos da ANA acionaram os geradores de emergência" in primary.text
+    assert "In Lisbon, operations are ongoing but with limitations." in primary.text
+    # ENTSO-E corroborates later (9 May)
+    assert by_id["SRC-EVT-ENTSOE-BLACKOUT"].received_at > E.KNOWN_AT
 
 
 def test_every_window_starts_at_the_entsoe_onset_and_every_end_says_it_is_approximate():
@@ -87,6 +100,8 @@ def test_world_carries_the_event_its_sources_and_validates(world: World):
     assert {a.iata for a in world.airports} == {"DUB", "LIS", "MAD", "BCN"}
     assert {"EIDW@2025-04-28", "LPPT@2025-04-28", "LEMD@2025-04-28", "LEBL@2025-04-28"} <= set(world.metar)
     assert world.meta["scenario"]["run_id"] == E.RUN_ID and world.meta["storms"][E.RUN_ID]["event_id"] == E.EVENT_ID
+    assert world.meta["scenario"]["known_at"] == "2025-04-29T06:00:00Z"
+    assert {s["known_at"] for s in world.meta["storms"].values()} == {"2025-04-29T06:00:00Z"}
     ids = {f.id for f in world.flights}
     assert set(world.meta["storms"][E.RUN_ID]["flight_ids"]) == ids
     assert all(f.origin == "DUB" or f.dest == "DUB" for f in world.flights)
@@ -140,7 +155,7 @@ def test_normalize_emits_the_event_facts(world: World):
     facts = {f.id: f for f in world_to_facts(world, flight_ids=[])}
     for icao in E.STATIONS:
         start = facts[event_fact_id(E.EVENT_ID, "event.window_start", icao)]
-        assert start.value == "2025-04-28T10:33:00Z" and start.source_id == "SRC-EVT-ENTSOE-BLACKOUT"
+        assert start.value == "2025-04-28T10:33:00Z" and start.source_id == E.PRIMARY_SOURCE
     assert facts[event_fact_id(E.EVENT_ID, "event.kind")].value == "grid_outage"
 
 

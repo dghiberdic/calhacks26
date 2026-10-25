@@ -8,6 +8,7 @@ import { qk } from "@/api/queries";
 import type { Commit, CommitKind } from "@/api/types";
 import { Empty, ErrorNote, Shimmer } from "@/components/kit";
 import { longDate, zulu } from "@/lib/format";
+import { plainIds } from "@/lib/plain";
 import { cn } from "@/lib/utils";
 import { KIND_ORDER, blameTarget, chainOrder, shortHash, timeOrdered } from "./model";
 import { FilterChip, Principal } from "./parts";
@@ -199,7 +200,7 @@ function CommitRow({ commit: c, index, dated, open, flash, onToggle, byHash, onJ
             </span>
             <span className="figure ml-auto text-[12px] text-slate-400 md:hidden">{dated ? `${longDate(c.at)} · ${zulu(c.at)}` : zulu(c.at)}</span>
           </span>
-          <span className={cn("mt-1 block text-[13.5px] leading-snug text-navy-900 md:mt-0", !open && "md:truncate")}>{c.message}</span>
+          <span className={cn("mt-1 block text-[13.5px] leading-snug text-navy-900 md:mt-0", !open && "md:truncate")}>{plainIds(c.message)}</span>
           <span className="mt-1.5 flex md:mt-0">
             <Principal principal={c.actor} />
           </span>

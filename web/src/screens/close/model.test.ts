@@ -263,10 +263,16 @@ describe("journal groups", () => {
   });
   it("groups by kind, the entries that move 2140 first, each with its count and total", () => {
     const g = journalGroups([je("JE-3", "refund", "2120", 100), je("JE-1", "compensation_estimate", "2140", 3_465_000), je("JE-4", "refund", "2120", 50), je("JE-2", "compensation_estimate", "2140", 1_922_400)]);
-    expect(g.map((x) => [x.kind, x.entries.map((e) => e.id), x.cents, x.moves2140])).toEqual([
-      ["compensation_estimate", ["JE-1", "JE-2"], 5_387_400, true],
-      ["refund", ["JE-3", "JE-4"], 150, false],
+    expect(g.map((x) => [x.kind, x.entries.map((e) => e.id), x.cents, x.moves2140, x.net2140])).toEqual([
+      ["compensation_estimate", ["JE-1", "JE-2"], 5_387_400, true, 5_387_400],
+      ["refund", ["JE-3", "JE-4"], 150, false, 0],
     ]);
+  });
+  it("nets a group's effect on 2140 both ways, leaving out a release proposal not yet in it", () => {
+    const down: JournalEntry = { ...je("JE-5", "change_in_estimate", "2140", 0), lines: [{ account: "2140", account_name: "", dr_cents: 2_634_700 }, { account: "4090", account_name: "", cr_cents: 2_634_700 }] };
+    const up = je("JE-6", "change_in_estimate", "2140", 330_000);
+    const release: JournalEntry = { ...down, id: "JE-7", estimate_ref: "release:EIDW@2024-01-21", lines: [{ account: "2140", account_name: "", dr_cents: 330_000 }, { account: "4090", account_name: "", cr_cents: 330_000 }] };
+    expect(journalGroups([down, up, release])[0].net2140).toBe(-2_304_700);
   });
   it("is empty for no entries", () => {
     expect(journalGroups([])).toEqual([]);
