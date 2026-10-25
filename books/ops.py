@@ -38,8 +38,6 @@ OPEN_2120 = frozenset({"bsp", "queued"})          # reliefs that leave a refund 
 RELIEF_ELECTIONS = {"refund": "queued", "voucher": "voucher", "reroute_partner": "reroute_fim"}
 IN_LIEU = "voucher_in_lieu_of_compensation"
 ACCRUING = ("owed", "held", "needs_ruling")
-OPS_KINDS = ("sale", "refund", "voucher", "reroute_fim", "voucher_in_lieu", "voucher_void", "care_accrual",
-             "care_invoice")
 
 # bucket -> (JE kind, credit account of the relief); bucket order fixes the JE order within a flight and date
 _BUCKETS = ("sale", "bot", "relief:crm_bot", "settle:crm_bot", "relief:bsp", "relief:chargeback",
@@ -186,13 +184,6 @@ class OpsMixin:
             if val is not None:
                 sql += f" AND {col} = ?"
                 args.append(val)
-        return [dict(r) for r in self._q(sql + " ORDER BY seq", args)]
-
-    def care_events(self, flight_id: str | None = None) -> list[dict[str, Any]]:
-        sql, args = "SELECT * FROM books_care_events", []
-        if flight_id is not None:
-            sql += " WHERE flight_id = ?"
-            args.append(flight_id)
         return [dict(r) for r in self._q(sql + " ORDER BY seq", args)]
 
     # ------------------------------------------------------------------ ATL side
