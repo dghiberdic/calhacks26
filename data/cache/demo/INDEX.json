@@ -1,6 +1,21 @@
 {
+  "01a49f2a4346fad6f7bf9a6c4cbac5e8490c505412ae52c6dd1cca12ad772c2c": {
+    "label": "messy_injection_email",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "279a7874022c40bcf579ed7d3258ea77fa6706d3b89ca10e10594d47e65eefba": {
+    "label": "inj03_prompt_injection_email",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
   "3a60981600b0449abd4e3c38184a02d66e32c20bba607be40cde5d64c64ed3a5": {
     "label": "messy_agency_letter",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "3f1a6990a32d3bcbc93c14aa121fa429f92a41eec076567befd67a4571217013": {
+    "label": "messy_occ_handover",
     "provenance": "hand-written",
     "role": "reader"
   },
@@ -9,18 +24,13 @@
     "provenance": "hand-written",
     "role": "reader"
   },
-  "4bcb704730d99b0341a48a843d06989c9db99fb8e4801eb0b92dc1024881ec92": {
-    "label": "inj01_aog_inside_window",
-    "provenance": "hand-written",
-    "role": "reader"
-  },
   "4e26093ab15b3ae8837fc46d5c151504fa87a8cf178c509dd4eb4082093265d5": {
     "label": "inj05_airbus_hidden_defect_notice",
     "provenance": "hand-written",
     "role": "reader"
   },
-  "5f806d172e8304b55123ce654a423c6be5cb3d2a376293426e2418612a0bf278": {
-    "label": "messy_crm_bot_template",
+  "51e42176e0ac228a48f5d895e04b653b7aba7d576098d0c405465050b3ff061c": {
+    "label": "messy_hotel_invoice",
     "provenance": "hand-written",
     "role": "reader"
   },
@@ -31,16 +41,6 @@
   },
   "66c2043eb585a4a467cb50025e1781ef6fe279c323190ae1e935fab4e12365a2": {
     "label": "inj02_duplicate_direct_plus_agency",
-    "provenance": "hand-written",
-    "role": "reader"
-  },
-  "6bd06bcf77e3fff4aa130e4db77e7e5cd798ed5554c8886d998df372b71a0afa": {
-    "label": "inj03_prompt_injection_email",
-    "provenance": "hand-written",
-    "role": "reader"
-  },
-  "6c184b99b9366e3fe98a996c68afeaba1febfb563bddb259a8dc93789667e513": {
-    "label": "messy_hotel_invoice",
     "provenance": "hand-written",
     "role": "reader"
   },
@@ -89,8 +89,13 @@
     "provenance": "hand-written",
     "role": "reader"
   },
-  "ae15581a4518a6eb56922868678ac0e5e5ab2ab559ef1b862dc7540e36e3b18b": {
-    "label": "messy_mcc_forward",
+  "9dfe8527c2404115362a2a663dbd71f9cf6346d406d071a0dc9ca5de690a1630": {
+    "label": "messy_met_eireann_forward",
+    "provenance": "hand-written",
+    "role": "reader"
+  },
+  "af1b167cc014243e68fa22f098f329ebf545ddb589939f7bfe30bc83f3376477": {
+    "label": "inj07_challenge_storm_anyway",
     "provenance": "hand-written",
     "role": "reader"
   },
@@ -114,8 +119,8 @@
     "provenance": "hand-written",
     "role": "reader"
   },
-  "c70d066f597a92ad514b5fc660925b004718199f1ae295f8318a3c0e7d2664d1": {
-    "label": "messy_occ_handover",
+  "c425a10e13df845e64a4b9bab8bc5432afbd4010e171edd836c9b3c5bc3bd30b": {
+    "label": "messy_mcc_forward",
     "provenance": "hand-written",
     "role": "reader"
   },
@@ -134,13 +139,8 @@
     "provenance": "hand-written",
     "role": "reader"
   },
-  "e74b598b0a543482e607b88d9f5fb905fddb6dcea6f7ceaecc68a93a62885ba9": {
-    "label": "messy_met_eireann_forward",
-    "provenance": "hand-written",
-    "role": "reader"
-  },
-  "e79a7dc3eb05ea40974760c51f55d0a89f645bb33eb50b425176b2cfe9349b6f": {
-    "label": "messy_injection_email",
+  "ed0dbb5ea48fb2077ad5a085dcd0a4f87c56f76216a9fb688a7f887231c5927c": {
+    "label": "messy_crm_bot_template",
     "provenance": "hand-written",
     "role": "reader"
   },
@@ -149,8 +149,8 @@
     "provenance": "hand-written",
     "role": "persona"
   },
-  "f2e8bc9926d967af86e8617b43006ddbb92f30cf16c5d514cb9050bba1401fe6": {
-    "label": "inj07_challenge_storm_anyway",
+  "f7fd6f14ba7c61d66b3835d072df045c19234a5e12bece30661936dc71fb9883": {
+    "label": "inj01_aog_inside_window",
     "provenance": "hand-written",
     "role": "reader"
   },

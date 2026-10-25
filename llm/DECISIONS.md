@@ -275,3 +275,22 @@ only need loosening where the live model picks a different span that is still ve
   and use the plan's ruling texts. When the real server's question text differs, the call is a cache miss: live in
   `cache` mode, scripted offline.
 
+
+## Live recordings, 24 October 2026 (filip-agent/live-proof)
+
+- **The live Reader could not read an email.** The first live run (`python -m llm.recordings --live`) got HTTP 400 on
+  all 8 email documents: "Schemas contains too many parameters with union types (20 parameters with type arrays or
+  anyOf) … limit: 16". Every `X | None = None` field is a union. Turning them into omitted-when-absent optional fields
+  instead gave "Schema is too complex" (26 optional parameters). Offline nothing showed it: the hand-written
+  recordings never compile a schema, and the regex fallback hid the failure live.
+- **Fix: `fit_schema` on `EmailFacts` only.** The 9 rare fields (MCC-forward fields and the two weather warnings) are
+  omitted when absent; the other 11 and both lists are required (absent = `null` / `[]`). That is 15 unions and 13
+  optional parameters, inside what the API accepted for ClaimFacts (14 / 15). The pydantic model is unchanged, so
+  parsing, Facts and replay are the same; only the schema sent, and so the 8 email cache keys, changed. The
+  hand-written recordings were re-recorded under the new keys and the 8 old files removed.
+  `test_every_schema_fits_the_structured_output_limits` guards every Reader schema (≤ 16 unions, ≤ 16 optional).
+- **inj01's AOG moved to 04:05Z** (coordinator, with the engine fix: an AOG logged after the 05:12Z OCC weather batch
+  can't be the cause). Its hand-written recording and `test_rehearsed_injections` follow the new text.
+- **Recording tools.** `llm.recordings --live` reads with no 8 s budget (a timed-out call records nothing) and keeps
+  going past one unusable answer; `llm.drafter --out-dir` records into a scratch dir, so live output is reviewed before
+  it replaces `data/cache/demo/`.

@@ -236,7 +236,7 @@ def test_rehearsed_injections(tmp_path: Path) -> None:
     got = {d.label: triples(offline_reader(tmp_path).read(d.source, ctx_of(d)).facts) for d in INJECTION_DOCS}
     nsh = "aircraft:EI-NSH"
     assert got["inj01_aog_inside_window"] == {
-        T(nsh, "aog.tail", "EI-NSH"), T(nsh, "aog.logged_at", "2025-01-24T08:05:00Z"), T(nsh, "aog.station", "DUB"),
+        T(nsh, "aog.tail", "EI-NSH"), T(nsh, "aog.logged_at", "2025-01-24T04:05:00Z"), T(nsh, "aog.station", "DUB"),
         T(nsh, "aog.mel_relief", False), T(nsh, "aog.aog", True),
         T(nsh, "aog.defect_text", "BIRD STRIKE ENG 1 ON TAXI-IN. BORESCOPE REQD")}
     c2 = "claim:INJ-02"
@@ -340,6 +340,34 @@ def test_no_name_field_exists() -> None:
     for schema in SCHEMAS.values():
         blob = json.dumps(schema_json(schema)).lower()
         assert '"name"' not in blob and "first_name" not in blob
+
+
+def _count(node: object, hit) -> int:
+    if isinstance(node, dict):
+        return hit(node) + sum(_count(v, hit) for v in node.values())
+    if isinstance(node, list):
+        return sum(_count(v, hit) for v in node)
+    return 0
+
+
+@pytest.mark.parametrize("kind", list(SCHEMAS))
+def test_every_schema_fits_the_structured_output_limits(kind: SourceKind) -> None:
+    """Live, the API rejects more than 16 union-typed parameters (400 "too many parameters with union types") and a
+    schema with too many optional ones ("Schema is too complex"); the Reader would then fall back to regex on every
+    such document. 16 optional parameters is the most a live-accepted Reader schema has (ClaimFacts: 15)."""
+    sent = schema_json(SCHEMAS[kind])
+    unions = _count(sent, lambda n: int("anyOf" in n or isinstance(n.get("type"), list)))
+    optional = _count(sent, lambda n: len(set(n["properties"]) - set(n.get("required", [])))
+                      if isinstance(n.get("properties"), dict) else 0)
+    assert unions <= 16 and optional <= 16, (kind, unions, optional)
+
+
+def test_a_fitted_schema_still_parses_absent_fields_as_none() -> None:
+    schema = SCHEMAS[SourceKind.EMAIL]
+    sent = schema_json(schema)["schema"]
+    assert "tail" not in sent["required"] and "null" not in json.dumps(sent["properties"]["tail"])
+    assert "flight" in sent["required"]
+    assert schema.model_validate({}).tail is None and schema.model_validate({"flight": None}).flight is None
 
 
 # ---------------------------------------------------------------- fallback:regex@1

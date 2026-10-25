@@ -17,11 +17,12 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from contracts.models import Fact, Source, SourceKind
 from llm import regex_fallback
@@ -130,8 +131,44 @@ class ManufacturerFacts(BaseModel):
     instruction: SpanBool | None = _f(_INSTR)
 
 
+def fit_schema(omitted: frozenset[str]) -> Callable[[dict[str, Any]], None]:
+    """``json_schema_extra`` that keeps a wide schema inside the API's structured-output limits.
+
+    The API rejects a schema with more than 16 union-typed (``anyOf``/type-array) parameters, and compiles optional
+    (non-required) parameters at a cost that grows quickly ("Schema is too complex"). Every ``X | None = None``
+    field is both. So: fields in ``omitted`` (the rare ones) lose ``null`` and stay optional (absent = omitted); every
+    other field, lists included, becomes required (absent = ``null`` / ``[]``). The pydantic model is unchanged:
+    ``None`` still validates and is the default, so parsing, the Facts and replay are the same. Only the JSON schema
+    sent, and so the cache key, differs. ``allOf`` keeps a description next to a ``$ref`` (the SDK transform drops a
+    bare ``$ref``'s siblings).
+    """
+    def fit(schema: dict[str, Any]) -> None:
+        props = schema.get("properties", {})
+        for name, prop in props.items():
+            prop.pop("default", None)
+            branches = prop.get("anyOf")
+            if name not in omitted or not isinstance(branches, list) or {"type": "null"} not in branches:
+                continue
+            rest = [b for b in branches if b != {"type": "null"}]
+            if len(rest) == 1:
+                del prop["anyOf"]
+                if "$ref" in rest[0]:
+                    prop["allOf"] = rest
+                else:
+                    prop.update(rest[0])
+        schema["required"] = [n for n in props if n not in omitted]
+    return fit
+
+
+# MCC-forward and warning fields are rare in emails: omitted when absent. The rest are required (null when absent).
+_EMAIL_OMITTED = frozenset({"tail", "logged_at", "ata", "mel_relief", "aog", "defect_text", "part_eta",
+                            "red_warning", "orange_warning"})
+
+
 class EmailFacts(BaseModel):
     """Emails carry anything: claims, MCC/OCC forwards, handovers, templates, warnings."""
+    # 20 optional, nullable fields exceed the API's limits (16 unions); see fit_schema
+    model_config = ConfigDict(json_schema_extra=fit_schema(_EMAIL_OMITTED))
     flight: SpanStr | None = _f(_FLIGHT)
     passengers: list[PassengerRef] = _PAX
     tail: SpanStr | None = None
