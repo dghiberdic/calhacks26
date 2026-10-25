@@ -356,10 +356,6 @@ class Broker:
     def register_sources(self, sources: Iterable[Source]) -> None:
         self._pii_sources |= {s.id for s in sources if _pii_source(s)}
 
-    @property
-    def pii_source_ids(self) -> frozenset[str]:
-        return frozenset(self._pii_sources)
-
     def _at(self, at: datetime | None) -> datetime:
         if at is not None:
             return utc(at)

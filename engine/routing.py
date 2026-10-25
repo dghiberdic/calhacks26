@@ -36,7 +36,6 @@ PATTERN_ROLE = {
     "technical_unverified": Role.OPS, "crew": Role.OPS, "atc": Role.OPS, "unresolved_subject": Role.OPS,
     "occ_code_in_window": Role.OPS, "airport_restriction": Role.OPS, "aog_unverified": Role.OPS,
 }
-LEGAL_PATTERNS = frozenset(p for p, r in PATTERN_ROLE.items() if r == Role.LEGAL)   # never routed away from Legal
 
 
 @dataclass(frozen=True)

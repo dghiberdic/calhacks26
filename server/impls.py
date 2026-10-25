@@ -12,8 +12,9 @@ from __future__ import annotations
 import importlib
 import inspect
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 log = logging.getLogger("stormcheck.server")
 
@@ -23,7 +24,7 @@ def _module(name: str) -> Any:
         return importlib.import_module(name)
     except ImportError:
         return None
-    except Exception as exc:   # a half-landed module must never take the server down
+    except Exception as exc:   # noqa: BLE001  (a half-landed module must never take the server down)
         log.warning("import %s failed: %s", name, exc)
         return None
 
@@ -48,7 +49,7 @@ def instantiate(obj: Any, **kwargs: Any) -> Any:
     accepted = {k: v for k, v in kwargs.items() if k in params}
     try:
         return obj(**accepted)
-    except Exception as exc:
+    except Exception as exc:   # noqa: BLE001  (an impl that can't start degrades to stub behaviour)
         log.warning("could not instantiate %s: %s", obj, exc)
         return None
 
@@ -73,10 +74,8 @@ RUN_STORM_CANDIDATES = [("engine.storm", "run_storm"), ("engine.run", "run_storm
                         ("engine.pipeline", "run_storm"), ("engine", "run_storm")]
 READER_CANDIDATES = [("llm.reader", "Reader"), ("llm.reader", "RealReader"), ("llm", "Reader")]
 DRAFTER_CANDIDATES = [("llm.drafter", "Drafter"), ("llm.drafter", "RealDrafter"), ("llm", "Drafter")]
-WORLD_CANDIDATES = [("world.api", "World"), ("world.api", "WorldImpl"), ("world", "WorldImpl"), ("world.api", "Api")]
 GENERATE_DAY_CANDIDATES = [("world.generate", "generate_day"), ("world.generator", "generate_day"),
                            ("world.day", "generate_day"), ("world", "generate_day")]
-LOAD_WORLD_CANDIDATES = [("world.load", "load"), ("world.loader", "load"), ("world", "load")]
 
 
 @dataclass

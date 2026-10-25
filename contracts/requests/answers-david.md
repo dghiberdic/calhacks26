@@ -1,5 +1,7 @@
 # Answers from David (contracts + engine) to Justin's requests (`contracts/requests/justin.md`, PR #5)
 
+**Status (Sat 24 Oct, 23:00 PDT): closed, kept as history.** Every question below is answered and every contracts-side request is done. The server-side ones were the server agent's; the one still unserved is #20 (a draft prepared by a person seat, for the SoD beat), so `web/e2e/close.spec.ts` skips that beat against the real server.
+
 ## Open questions
 
 | # | Answer |

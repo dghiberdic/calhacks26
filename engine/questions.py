@@ -15,8 +15,8 @@ from collections.abc import Iterable, Sequence
 from datetime import date, datetime, timedelta
 from typing import Any
 
+from contracts import normalize as nz
 from contracts.models import (
-    Claim,
     Confidence,
     Entitlement,
     Evidence,
@@ -28,7 +28,6 @@ from contracts.models import (
     RuleAction,
     World,
 )
-from contracts import normalize as nz
 from engine import confidence as conf
 from engine import dsl
 
@@ -171,9 +170,9 @@ def flight_questions(decisions: Sequence[FlightDecision], ents: Sequence[Entitle
 
 # ---------- vouchers ----------
 
-_ACCEPTED = re.compile(r"\baccept(ed|s)?\b", re.I)
+_ACCEPTED = re.compile(r"\baccept(ed|s)?\b", re.IGNORECASE)
 _DISPUTED = re.compile(r"never (agreed|accepted|signed)|did not (agree|accept|sign)|didn't (agree|accept|sign)|"
-                       r"not (agree|accept)", re.I)
+                       r"not (agree|accept)", re.IGNORECASE)
 
 
 def voucher_features(world: World, coupon_id: str, known_at: datetime, rules: Sequence[Rule] = ()) -> tuple[
@@ -247,7 +246,7 @@ def voucher_questions(world: World, ents: Sequence[Entitlement], storm_id: str, 
         found = f"{len(refs)} passengers hold service-desk vouchers 'in lieu of compensation' with no signed acceptance."
     if tag == "sources-disagree":
         found += " CRM records the voucher as accepted; there is no signature hash."
-    options = [f"Pay {comp} cash; the voucher stays as goodwill", f"Offset the voucher: pay the balance in cash",
+    options = [f"Pay {comp} cash; the voucher stays as goodwill", "Offset the voucher: pay the balance in cash",
                "Ask the passenger to sign the acceptance first"]
     return [Question(
         id=qid or f"Q-{storm_id}:voucher_in_lieu_unsigned", case_refs=refs, pattern="voucher_in_lieu_unsigned",
@@ -322,10 +321,6 @@ def release_questions(world: World, rules: Sequence[Rule], known_at: datetime, c
             confidence=c, reason_tag="release-proposal", holds=[ob.cohort], holds_cents=ob.balance_cents,
             remind_at=remind_at(asked_at)))
     return out
-
-
-def claims_for(world: World, coupon_id: str) -> list[Claim]:
-    return [c for c in world.claims if c.coupon_id == coupon_id]
 
 
 def lowest(confs: Iterable[Confidence]) -> Confidence | None:

@@ -1024,9 +1024,6 @@ class TraceStore:
                                         ref_type="metar", message=f"METAR {o.station} {valid:%d %b %H:%MZ}"))
         return out
 
-    def record_fact(self, fact: Fact, actor: str, at: datetime, inputs: Iterable[str] = ()) -> Commit:
-        return self.record_facts([fact], actor, at, inputs)[0]
-
     def record_facts(self, facts: Iterable[Fact], actor: str, at: datetime,
                      inputs: Iterable[str] = ()) -> list[Commit]:
         """Each fact links to its source commit and, when its span is a raw METAR line, to that observation."""

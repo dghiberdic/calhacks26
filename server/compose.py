@@ -10,13 +10,32 @@ from __future__ import annotations
 
 import json
 from collections import Counter, defaultdict
+from collections.abc import Iterable, Sequence
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any
 
 from contracts.models import (
-    Airport, Cause, Confidence, Draft, Entitlement, Evidence, Extraordinary, Flight, FlightDecision, FlightFile,
-    FlightRow, JournalEntry, LearnedItem, MetarObs, Question, Role, Rule, StormRun, StormWindow, World,
+    Airport,
+    Cause,
+    Confidence,
+    Draft,
+    Entitlement,
+    Evidence,
+    Extraordinary,
+    Flight,
+    FlightDecision,
+    FlightFile,
+    FlightRow,
+    JournalEntry,
+    LearnedItem,
+    MetarObs,
+    Question,
+    Role,
+    Rule,
+    StormRun,
+    StormWindow,
+    World,
 )
 
 from .impls import _module
@@ -24,7 +43,6 @@ from .impls import _module
 ROLE_LABEL = {Role.CLAIMS_LEAD: "Claims Lead", Role.LEGAL: "Legal", Role.CONTROLLER: "Controller", Role.OPS: "Ops",
               Role.CFO: "CFO", Role.JUDGE: "Judge"}
 CAL_VERSION = "cal-v1"
-PROVISIONAL = "provisional:window-only"
 
 
 def label(role: Role | str | None) -> str:
@@ -51,7 +69,7 @@ def _airport_from_table(code: str) -> Airport | None:
     if geo is not None:
         try:
             return geo.airport(None, code)
-        except Exception:
+        except Exception:   # noqa: BLE001  (an unknown code is no airport, never a 500)
             return None
     return None
 
@@ -187,7 +205,7 @@ def provisional_decision(f: Flight, world: World, known_at: datetime) -> FlightD
         obs = station_obs(world, icao, t.astimezone(UTC).date())
         wins = storm_windows(obs)
         ends.append((code, t, obs, wins, *position(t, obs, wins)))
-    (o_code, std, o_obs, o_w, dep, dep_m), (d_code, sta, d_obs, d_w, arr, arr_m) = ends
+    (o_code, _std, _o_obs, _o_w, dep, dep_m), (d_code, _sta, _d_obs, _d_w, arr, arr_m) = ends
     margins = [m for m in (dep_m, arr_m) if m is not None]
     margin = min((abs(m) for m in margins), default=None)
     evidence = []
@@ -234,7 +252,7 @@ def expected_entries() -> dict[str, dict[str, Any]]:
             data = json.loads(EXPECTED_DECISIONS.read_text())
             for storm in (data.get("storms") or {}).values():
                 out.update(storm)
-        except Exception:
+        except Exception:   # noqa: BLE001  (no expected file: nothing to compare against)
             out = {}
         _expected_cache = out
     return _expected_cache
@@ -279,7 +297,7 @@ def entitlements_for(decision: FlightDecision, world: World, rules: Sequence[Rul
         try:
             from .impls import call
             return list(call(engine.entitlements, decision, world, list(rules), known_at=known_at))
-        except Exception:
+        except Exception:   # noqa: BLE001, S110  (fall back to the EU261 table below)
             pass
     eu = _module("engine.eu261")
     if eu is None:
@@ -298,7 +316,7 @@ def summarize(ents: Sequence[Entitlement], world: World | None = None, flight: F
                 o, d = airport_by(world, flight.origin), airport_by(world, flight.dest)
                 if o and d:
                     out["band_note"] = eu.band_for(e.distance_km, o.eu and d.eu).note(e.distance_km)
-            except Exception:
+            except Exception:   # noqa: BLE001, S110  (the band note is optional copy)
                 pass
         out["owed"] = sum(1 for x in ents if x.status == "owed")
         out["held"] = sum(1 for x in ents if x.status == "held")

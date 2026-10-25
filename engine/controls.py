@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from contracts.models import AccessDecision, Role, Rule, RuleAction, TraceEvent
+from contracts.models import AccessDecision, Role, TraceEvent
 
 MATERIALITY_CENTS = 5_000_000
 AUTO_CONFIDENCE = 0.90
@@ -66,7 +66,6 @@ CONTROLS = [
     Control("R-HC-FLOOR", "Statutory floor: only Legal may lower EU261 compensation", "CC8.1"),
     Control("R-HC-NO-NOW", "No wall clock inside a decision (injected Clock only)", "PI1"),
 ]
-CONTROL_BY_ID = {c.id: c for c in CONTROLS}
 
 # text that tries to automate around a hard control (rulings, rule titles, drafted conditions)
 _HC_PATTERNS: dict[str, str] = {
@@ -85,7 +84,7 @@ _HC_PATTERNS: dict[str, str] = {
 
 
 def hard_controls_touched(text: str) -> list[str]:
-    return [cid for cid, pat in _HC_PATTERNS.items() if re.search(pat, text or "", re.I)]
+    return [cid for cid, pat in _HC_PATTERNS.items() if re.search(pat, text or "", re.IGNORECASE)]
 
 
 @dataclass(frozen=True)
@@ -169,14 +168,3 @@ def check_answer(*, principal: str, role: Role | str | None, routed_to: Role) ->
     if r != routed_to:
         return ControlResult(False, "R-HC-AUTHORITY", f"routed to {routed_to.value}, not {r.value}")
     return OK
-
-
-def hard_control_cards(at: datetime) -> list[Rule]:
-    """Display cards for the Policies screen. They carry no logic: the checks above are the controls."""
-    out = []
-    for c in CONTROLS:
-        out.append(Rule(id=c.id, version=1, kind="routing", scope={}, condition={"all": []},
-                        action=RuleAction.ROUTE_TO, action_arg="controller", tier="hard_control",
-                        authority_required=Role.CONTROLLER, valid_from=None, recorded_at=at, status="active",
-                        static_card=True, title=c.title))
-    return out

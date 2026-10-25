@@ -14,12 +14,12 @@ connections; afterwards every cache here is dropped.
 """
 from __future__ import annotations
 
-import hashlib
 import sqlite3
 import threading
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import orjson
 from pydantic import BaseModel
@@ -47,7 +47,7 @@ def iso(t: datetime) -> str:
 
 
 def parse_iso(s: str) -> datetime:
-    return datetime.fromisoformat(s.replace("Z", "+00:00")).astimezone(UTC)
+    return datetime.fromisoformat(s).astimezone(UTC)
 
 
 def jsonable(obj: Any) -> Any:
@@ -62,11 +62,6 @@ def jsonable(obj: Any) -> Any:
 
 def canonical(obj: Any) -> bytes:
     return orjson.dumps(jsonable(obj), option=orjson.OPT_SORT_KEYS)
-
-
-def content_hash(obj: Any) -> str:
-    """CONTRACTS §0: sha256 of orjson.dumps(model_dump(mode="json"), OPT_SORT_KEYS)."""
-    return hashlib.sha256(canonical(obj)).hexdigest()
 
 
 
