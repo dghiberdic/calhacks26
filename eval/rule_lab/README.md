@@ -4,10 +4,14 @@ StormCheck already turns an authorized ruling into a grounded, previewed rule. T
 extension adds a **ruling-owned regression pack**: demonstrate the cases that a draft
 should resolve and the nearby cases it must leave alone, before a person confirms it.
 
-Everything lives in `eval/rule_lab/`. No existing file, original frontend, server
-route, rule store, fixture, cache, or project dependency has been changed. The
-extension imports the real Engine, Lifecycle, rule checks and Books through their
-existing interfaces. It runs as a separate process with in-memory SQLite stores.
+The standalone lab lives in `eval/rule_lab/`. It imports the real Engine,
+Lifecycle, rule checks and Books through their existing interfaces and runs as a
+separate process with in-memory SQLite stores. It does not change the main server
+routes, rule store, fixtures, caches or project dependencies.
+
+This review branch also adds a native Rule Lab section to the animated story and
+app sidebar. See [the frontend integration guide](../../web/src/features/rule-lab/README.md)
+for the live-service proxy and explicitly labeled saved-evidence mode.
 
 ## Run it
 
