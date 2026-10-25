@@ -322,9 +322,11 @@ PATTERN_NO = {
 
 
 def primary_storm(world: World) -> str | None:
-    """``meta.primary_storm``, else the earliest of ``meta.storms``; ``None`` if the world lists no storms."""
+    """``meta.primary_storm``, else the earliest of ``meta.storms``; ``None`` if the world lists no storms, or if it
+    is an external-event scenario (``World.events``): a scenario loaded beside the hero storm must never take its
+    short ids (Q-1, Q-2, ...)."""
     storms = world.meta.get("storms") if isinstance(world.meta, dict) else None
-    if not isinstance(storms, dict) or not storms:
+    if not isinstance(storms, dict) or not storms or world.events:
         return None
     if world.meta.get("primary_storm") in storms:
         return str(world.meta["primary_storm"])

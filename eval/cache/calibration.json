@@ -2,15 +2,18 @@
   "models": {
     "cause": {
       "coef": [
-        0.870506989797,
-        1.972596223062,
-        0.276775321689,
-        -0.277511282194,
-        -2.328167368718,
-        -1.001847130189,
-        -3.489937785607,
+        0.793675018958,
+        3.080504990997,
+        0.038707458241,
+        1.35829069665,
+        -0.644712998748,
+        1.749426431216,
+        -5.778927919496,
         0.0,
-        -3.88358350592
+        -3.584421451306,
+        -5.328875730318,
+        0.0,
+        0.0
       ],
       "features": [
         "in_window_dep",
@@ -21,13 +24,99 @@
         "root_cause_internal",
         "sources_disagree",
         "precedent_count",
-        "knock_on"
+        "knock_on",
+        "concurrent_causes",
+        "in_event_window",
+        "internal_cause_logged"
       ],
-      "intercept": 0.646480661685,
+      "intercept": 1.280405797106,
+      "metrics": {
+        "C": 10.0,
+        "cv_logloss_C0.01": 0.57158,
+        "cv_logloss_C0.1": 0.364478,
+        "cv_logloss_C1.0": 0.245562,
+        "cv_logloss_C10.0": 0.22773,
+        "cv_logloss_C100.0": 0.238488,
+        "cv_logloss_C1000.0": 0.251452,
+        "train_positive": 260.0
+      },
       "n": 394,
+      "trained_on": "2023-07-01..2024-12-31"
+    },
+    "claim_validity": {
+      "coef": [
+        -0.013576692507,
+        -4.13181994243,
+        0.19225792402,
+        -38.916435943759,
+        4.145561913248,
+        0.472587326345,
+        0.0
+      ],
+      "features": [
+        "channel_agency",
+        "authority_none",
+        "duplicate",
+        "after_limitation",
+        "regime_uk261",
+        "age_months",
+        "precedent_count"
+      ],
+      "intercept": -1.28737931935,
+      "metrics": {
+        "C": 100.0,
+        "cv_logloss_C0.01": 0.601096,
+        "cv_logloss_C0.1": 0.597783,
+        "cv_logloss_C1.0": 0.590787,
+        "cv_logloss_C10.0": 0.558817,
+        "cv_logloss_C100.0": 0.554382,
+        "cv_logloss_C1000.0": 0.55709,
+        "train_positive": 2301.0
+      },
+      "n": 4699,
+      "trained_on": "2023-07-01..2024-12-31"
+    },
+    "release": {
+      "coef": [
+        0.1,
+        0.33,
+        0.35
+      ],
+      "features": [
+        "cohort_age_months",
+        "months_since_last_claim",
+        "precedent_count"
+      ],
+      "intercept": -1.25,
+      "metrics": {
+        "train_positive": 0.0,
+        "train_rows": 0.0
+      },
+      "n": 0,
+      "trained_on": "prior"
+    },
+    "voucher": {
+      "coef": [
+        -0.000369845248,
+        1.680793821003,
+        -1.681163666251,
+        0.0
+      ],
+      "features": [
+        "in_lieu",
+        "signed",
+        "sources_disagree",
+        "precedent_count"
+      ],
+      "intercept": 0.529423848373,
+      "metrics": {
+        "C": 1.0,
+        "train_positive": 17.0
+      },
+      "n": 24,
       "trained_on": "2023-07-01..2024-12-31"
     }
   },
   "note": "calibrated on synthetic labels; validates the pipeline, not the world",
-  "version": "cal-synthetic-v1-117a2e4731ac"
+  "version": "cal-synthetic-v2-3d59393a4a73"
 }
