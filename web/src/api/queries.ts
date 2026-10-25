@@ -39,6 +39,8 @@ export const qk = {
   health: ["health"] as const,
   clock: ["clock"] as const,
   airports: ["airports"] as const,
+  effort: (runId: string) => ["insights", "effort", runId] as const,
+  learning: ["insights", "learning"] as const,
 };
 
 /** The World's airports (GET /airports, additive). Static per run; a server without it 404s and callers fall back. */
@@ -71,6 +73,9 @@ export const useAccessLog = () => useQuery({ queryKey: qk.accessLog, queryFn: ap
 export const useControls = () => useQuery({ queryKey: qk.controls, queryFn: api.controls });
 export const useInjections = () => useQuery({ queryKey: qk.injections, queryFn: api.injections });
 export const useEvalReport = () => useQuery({ queryKey: qk.evalReport, queryFn: api.evalReport });
+/** Pitch insights (additive). A server or recording without them answers 404, and the card stays hidden. */
+export const useEffort = (runId: string | undefined) => useQuery({ queryKey: qk.effort(runId ?? ""), queryFn: () => api.effort(runId!), enabled: !!runId, retry: false });
+export const useLearning = () => useQuery({ queryKey: qk.learning, queryFn: api.learning, retry: false });
 
 /** After any write: refetch everything a write can change (cheap at demo scale, never stale). */
 export function invalidateAfterWrite() {

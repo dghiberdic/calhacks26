@@ -530,9 +530,73 @@ export type StormRun = {
   name?: string | null;
   /** Additive (blackout spec): the external event this run is about, e.g. "EVT-IBERIA-BLACKOUT@2025-04-28". */
   event_id?: string | null;
+  /** Additive (insights spec): desk results may carry the effort estimate inline. */
+  effort?: EffortEstimate | null;
 };
 
 export type StormSummary = { id: string; station: string; date: ISODate; cancelled: number; questions: number; liability_drafted_cents: Cents };
+
+// ---------- pitch insights (additive: GET /runs/{run_id}/effort, GET /learning) ----------
+/** One line of the by-hand estimate: "Find what really caused each cancellation", 27 flights × 1.5 h. */
+export type EffortLine = {
+  task: string;
+  /** "ops analyst" | "claims handler" | "in-house counsel" | "revenue accountant" */
+  role: string;
+  /** Plain words: "27 flights × 1.5 h". */
+  basis: string;
+  manual_hours: number;
+  with_stormcheck_hours: number;
+  /** Loaded cost of an hour of that role. */
+  rate_eur_per_hour: number;
+  source?: string | null;
+};
+
+/** Something the run caught that a person working by hand could have missed: a recode, a bot refund not repeated. */
+export type ErrorCaught = { label: string; amount_cents?: Cents | null; detail?: string | null };
+
+/** Computed on read from the run's own data; never stored. */
+export type EffortEstimate = {
+  run_id: string;
+  /** "Storm Éowyn · 24 Jan 2025" */
+  name: string;
+  /** cancelled_flights, passengers, expected_claims, questions, refunds, cohorts, month_ends */
+  inputs: Record<string, number>;
+  lines: EffortLine[];
+  manual_hours: number;
+  with_stormcheck_hours: number;
+  hours_saved: number;
+  manual_cost_cents: Cents;
+  with_stormcheck_cost_cents: Cents;
+  cost_saved_cents: Cents;
+  errors_caught: ErrorCaught[];
+  /** "Estimate from the assumptions below; not measured at a real airline." */
+  assumptions_note: string;
+};
+
+export type RuleReuse = {
+  /** "R-CL-1@1" */
+  rule_ref: string;
+  title: string;
+  /** "Claims Lead ruling on Storm Éowyn (Q-1)" | "18 months of history (41 of 42)" */
+  learned_from: string;
+  /** Cases this rule settled on this run, with no question asked. */
+  cases: number;
+};
+
+/** One storm or event on the learning timeline, in the order the clock reached them. */
+export type LearningStep = {
+  run_id: string;
+  name: string;
+  known_at: ISODateTime;
+  /** New questions this run raised. */
+  questions_asked: number;
+  cases_settled_by_reused_rules: number;
+  reused: RuleReuse[];
+  /** Rule refs first confirmed on this run. */
+  new_rules: string[];
+  /** One plain sentence. */
+  note: string;
+};
 
 /** One timeline mark on the Flight File strip (tech log → MCC → OCC → METAR marks → CRM). Loosely typed by the contract. */
 /** Kinds of Flight File timeline mark (CONTRACTS TimelineKind; Justin request #9). */

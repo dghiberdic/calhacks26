@@ -5,6 +5,7 @@ import type { CfoMetrics, CurveSegment, Role, Session } from "@/api/types";
 import { answerQuestion, approveJournal, challenge, confirmProposal, lockPeriod, monthEnd, rejectRule, revertRule, setClock, widenRule } from "./actions";
 import { CURVES, invariants } from "./data/books";
 import { INJECTIONS } from "./data/injections";
+import { effortOf, LEARNING } from "./data/insights";
 import { deskRun, inject } from "./live";
 import { accessMatrix, audit, blame, CONTROLS, EVAL_REPORT, newestCommits } from "./views";
 import { fail, ok, PEOPLE, ROLE_NAME, ROLES, type Reply, type Req } from "./reply";
@@ -119,6 +120,15 @@ const routes: Route[] = [
       return ok(S().trace.filter((e) => e.seq > since));
     },
   },
+  {
+    method: "GET",
+    path: "/runs/:id/effort",
+    run: (req, p) => {
+      const storm = stormById(S(), p.id);
+      return storm ? ok(effortOf(stormRun(S(), storm, req.role))) : fail(404, "not_found", `No storm run ${p.id}.`);
+    },
+  },
+  { method: "GET", path: "/learning", run: () => ok(LEARNING) },
   { method: "GET", path: "/books/cfo", run: () => ok(cfo(S())) },
   { method: "GET", path: "/airports", run: () => ok(AIRPORTS) },
   { method: "GET", path: "/clock", run: () => ok({ known_at: S().knownAt }) },

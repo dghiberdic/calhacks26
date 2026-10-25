@@ -1,14 +1,17 @@
 import { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { ArrowRight } from "lucide-react";
-import { useCfo, useStormRun, useStorms } from "@/api/queries";
+import { useCfo, useEffort, useLearning, useStormRun, useStorms } from "@/api/queries";
 import { ErrorNote, Panel, Shimmer } from "@/components/kit";
 import { RouteLegend, RouteMap } from "@/components/storm/RouteMap";
+import { isOutage, mainWindowOf } from "@/components/storm/model";
 import { airport, iataOf } from "@/lib/airports";
 import { count } from "@/lib/format";
 import { HERO_STORM } from "@/lib/storms";
+import { reuseFor } from "./effort";
 import { Hero } from "./Hero";
 import { FeedPanel, LearnsStrip, LiabilityTiles, QuestionsPreview } from "./Sections";
+import { WithoutStormCheck } from "./WithoutStormCheck";
 
 const airportName = (station: string) => airport(iataOf(station))?.name.replace(/ Airport$/, "") ?? station;
 
@@ -19,6 +22,9 @@ export default function StormRunScreen() {
   const stormId = params.stormId ? decodeURIComponent(params.stormId) : (storms.data?.find((s) => s.id === HERO_STORM)?.id ?? storms.data?.[0]?.id);
   const run = useStormRun(stormId);
   const cfo = useCfo();
+  // Pitch insights (additive routes): a server or recording without them answers 404 and they stay hidden.
+  const effort = useEffort(run.data && !run.data.effort ? run.data.id : undefined);
+  const learning = useLearning();
   const navigate = useNavigate();
   const openFlight = (id: string) => navigate(`/flights/${encodeURIComponent(id)}`);
 
@@ -48,11 +54,14 @@ export default function StormRunScreen() {
   }
 
   const data = run.data;
+  const estimate = data.effort ?? effort.data ?? null;
   return (
     <div className="mx-auto flex max-w-[1280px] flex-col gap-3">
-      <Hero run={data} onSelectFlight={openFlight} />
+      <Hero run={data} onSelectFlight={openFlight} reuse={reuseFor(learning.data, data.id)} />
 
       <LiabilityTiles run={data} cfo={cfo.data} recodedFlight={recoded} />
+
+      {estimate ? <WithoutStormCheck effort={estimate} noun={isOutage(mainWindowOf(data.windows)) ? "power cut" : "storm"} /> : null}
 
       <LearnsStrip run={data} />
 

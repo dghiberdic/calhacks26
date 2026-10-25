@@ -32,6 +32,13 @@ Judgment calls, newest first within each task. One line each, with the why. Requ
 - **Raw ids in server prose read as words** (`plainIds`: "EIDW@2024-01-21 long_haul_gt3500" → "Storm Isha (21 Jan 2024) long-haul"). Display only; ids stay in links and the trace.
 - **Grid outage windows** (`StormWindow.kind == "grid_outage"`) are calm hatched slate, not METAR blue: a power cut isn't weather.
 
+## Pitch insights (24 Oct, `GET /runs/{id}/effort`, `GET /learning`)
+- **"Without StormCheck" sits under the liability tiles as one sentence;** the lines, the errors caught and the assumptions with their sources are behind "How we got this". The sentence rounds hours to the nearest 5 and euros to the nearest €100 (the spec's rule); table lines show whole hours, and minutes under an hour, so a 10-minute review never reads "0 h". The blackout says "this power cut", not "this storm".
+- **"Learned and reused" opens Policies:** one row per step, in the server's order, with its note. Reused rules are chips (↻, title, cases) that jump to their card; rules a run first confirmed are "new" chips named from `GET /rules`.
+- **The reuse line under the Storm Run headline** shows only for a run after the first on the timeline, and only when it reused something.
+- **Both routes are optional:** a 404 (an older server, a recording without them) hides the card, the timeline and the line. A desk result's inline `effort` wins over the fetch.
+- **Mock world:** the spec's assumptions applied to each run's own counts (refund and voucher choices taken as 5% of passengers); the learning timeline is the scripted flow's expected story.
+
 ## J1 · Storm Run
 - The headline is now the sentence: "27 flights cancelled, 5,292 passengers stranded, all coded 'weather'." The lede then gives what each one turned out to be, counted from the same verdicts that colour the timeline. "3 questions" moved to the questions panel. The plan's "5,292 · 3 questions · 3 people" line is gone.
 - The headline's three counts sit on one line on a laptop and stack on a phone; a line never starts with a dot.

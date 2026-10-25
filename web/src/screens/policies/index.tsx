@@ -3,12 +3,13 @@ import { Link, useLocation } from "react-router";
 import { useMutation } from "@tanstack/react-query";
 import { MotionConfig, useReducedMotion } from "motion/react";
 import { api } from "@/api/client";
-import { useRules } from "@/api/queries";
+import { useLearning, useRules } from "@/api/queries";
 import type { Rule } from "@/api/types";
 import { Explain } from "@/components/explain";
 import { Details, DetailsTitle, Empty, ErrorNote, PageHeader, Shimmer } from "@/components/kit";
 import { cn } from "@/lib/utils";
 import { RevertDialog, WidenDialog } from "./dialogs";
+import { LearnedAndReused } from "./Learning";
 import { ORIGIN_COPY, ORIGIN_ORDER, byOrigin, familyFromHash, type Origin, type RuleFamily } from "./model";
 import { StatusLifecycle } from "./parts";
 import { HardControls, StaticRegulationCard } from "./regulation";
@@ -33,6 +34,8 @@ const EMPTY_LINE: Record<Origin, ReactNode> = {
 /** J4 · Policies: every rule by where it came from. Rules come only from history, rulings, rejections and regulation. */
 export default function PoliciesScreen() {
   const rules = useRules();
+  // Additive route: a server or recording without it answers 404, and the timeline stays hidden.
+  const learning = useLearning();
   const groups = useMemo(() => (rules.data ? byOrigin(rules.data) : null), [rules.data]);
   const flash = useDeepLinkFlash(!!groups);
   const { actions, dialogs } = useRuleActions();
@@ -47,6 +50,8 @@ export default function PoliciesScreen() {
         <PageHeader title="Policies">
           Every rule StormCheck applies, by where it came from: Northstar&rsquo;s own history, a person&rsquo;s ruling, a rejected proposal or the law. There is no rule editor.
         </PageHeader>
+
+        {learning.data?.length ? <LearnedAndReused steps={learning.data} rules={rules.data} /> : null}
 
         <HowRulesWork />
 

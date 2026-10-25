@@ -18,5 +18,6 @@
 | `/story`: the scroll story on Éowyn (beyond the plan) | B | done |
 | Switch off mocks: `pnpm gen:api`, CP1 against the stub, then the server | A | done |
 | Record the demo (`pnpm record` against `make demo`) and redeploy | B | done (recorded Sat 16:18 on the real engine; re-record after the February month-end fix) |
+| Pitch insights: "Without StormCheck" card and reuse line on Storm Run, "Learned and reused" on Policies | A | done |
 
 Tests: `pnpm test` (265 unit), `pnpm e2e` (including `e2e/demo.spec.ts`, the 3:00 script clicked end to end).
