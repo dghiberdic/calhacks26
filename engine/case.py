@@ -12,12 +12,18 @@ other AOG claim stays a claim (``FlightCase.aog_claims``, routed to Ops). The ea
 from tier ≤ 2 statements, best tier then latest. Overlaid lines carry their fact ids, source and tier
 (``world.meta["_overlay"]``) so evidence and blame reach the fact itself.
 
+A fact's source is looked up in the world, then among the documents registered outside it (``sources=`` or the
+trace's registry while it replays, ``registered_sources``). A registered document's kind caps the tier it may
+claim (``KIND_TIER``); a source found nowhere is tier 4 (fail closed).
+
 Pure: no wall clock, no randomness.
 """
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
@@ -44,6 +50,13 @@ SPARES_MAX_TIER = 2
 CLAIM_WINDOW = timedelta(hours=48)     # an unverified AOG claim counts only this close before the decision
 FAIL_CLOSED_TIER = 4                   # a source the world doesn't know is treated as a passenger e-mail
 LOG_TIER = {"mcc": 1, "spares": 2, "occ": 3}
+# the best tier a document registered outside the world may claim, by kind (CONTRACTS Source.trust_tier); unlisted
+# kinds fail closed. The curated base world keeps its own tiers.
+KIND_TIER = {SourceKind.TECH_LOG: 1, SourceKind.MCC_LOG: 1, SourceKind.METAR: 1, SourceKind.SCHEDULE: 2,
+             SourceKind.MANIFEST: 2, SourceKind.PSS: 2, SourceKind.BSP: 2, SourceKind.SPARES: 2,
+             SourceKind.MANUFACTURER: 2, SourceKind.OCC_LOG: 3, SourceKind.CRM: 3, SourceKind.CLAIM: 4,
+             SourceKind.EMAIL: 4, SourceKind.CHALLENGE: 4}
+_REGISTERED: ContextVar[Mapping[str, Source] | None] = ContextVar("engine_registered_sources", default=None)
 _CNL = re.compile(r"\bCNL\b|\bCANCEL", re.I)
 _RTS = re.compile(r"\bRTS\b|\bRETURNED TO SERVICE\b|\bA/C S/S\b|\bRELEASED TO SERVICE\b", re.I)
 
@@ -296,23 +309,51 @@ def _prev(world: World, flight: Flight) -> Flight | None:
 
 # ---------- facts overlay ----------
 
-def _source_of(world: World, fact: Fact) -> Source | None:
-    return next((s for s in world.sources if s.id == fact.source_id), None)
+@contextmanager
+def registered_sources(sources: Iterable[Source]) -> Iterator[None]:
+    """Make documents registered outside the world (the trace's injected sources) known to ``overlay_facts`` inside
+    the block. ``TraceStore`` binds its registry while a replay runs, so a ``decide_fn`` that overlays the trace's
+    facts resolves their sources without having to name them."""
+    token = _REGISTERED.set({**(_REGISTERED.get() or {}), **{s.id: s for s in sources}})
+    try:
+        yield
+    finally:
+        _REGISTERED.reset(token)
 
 
-def _tier(world: World, fact: Fact) -> int:
-    s = _source_of(world, fact)
-    return s.trust_tier if s is not None else FAIL_CLOSED_TIER
+SourceIndex = Mapping[str, tuple[Source, int]]
 
 
-def resolve_facts(world: World, facts: Iterable[Fact], known_at: datetime) -> dict[tuple[str, str], Fact]:
+def source_index(world: World, sources: Iterable[Source] = ()) -> dict[str, tuple[Source, int]]:
+    """source id -> (source, trust tier). A registered document (bound by ``registered_sources``, or in ``sources``)
+    may not claim a better tier than its kind allows; a world source of the same id wins, at its own tier."""
+    out: dict[str, tuple[Source, int]] = {}
+    for s in [*(_REGISTERED.get() or {}).values(), *sources]:
+        out[s.id] = (s, max(int(s.trust_tier), KIND_TIER.get(s.kind, FAIL_CLOSED_TIER)))
+    out.update({s.id: (s, s.trust_tier) for s in world.sources})
+    return out
+
+
+def _source_of(index: SourceIndex, fact: Fact) -> Source | None:
+    hit = index.get(fact.source_id)
+    return hit[0] if hit is not None else None
+
+
+def _tier(index: SourceIndex, fact: Fact) -> int:
+    hit = index.get(fact.source_id)
+    return hit[1] if hit is not None else FAIL_CLOSED_TIER
+
+
+def resolve_facts(world: World, facts: Iterable[Fact], known_at: datetime,
+                  sources: Iterable[Source] = ()) -> dict[tuple[str, str], Fact]:
     """Per (subject, field): facts recorded by ``known_at``, best trust tier, then latest (plan §2 rule 7)."""
+    index = source_index(world, sources)
     best: dict[tuple[str, str], tuple[tuple[int, float], Fact]] = {}
     for f in facts:
         if f.recorded_at > known_at:
             continue
         key = (f.subject, f.field)
-        rank = (-_tier(world, f), f.recorded_at.timestamp())
+        rank = (-_tier(index, f), f.recorded_at.timestamp())
         if key not in best or rank > best[key][0]:
             best[key] = (rank, f)
     return {k: v[1] for k, v in best.items()}
@@ -329,7 +370,7 @@ def _as_dt(v: Any) -> datetime | None:
     return None
 
 
-def overlay_facts(world: World, facts: Sequence[Fact], known_at: datetime) -> World:
+def overlay_facts(world: World, facts: Sequence[Fact], known_at: datetime, sources: Iterable[Source] = ()) -> World:
     """Fold extracted facts into a copy of the world, so the cause logic has one input shape.
 
     Understood: ``flight:<id>`` · ``flight.ops_cause_code`` / ``spare.available_within_h`` /
@@ -337,7 +378,9 @@ def overlay_facts(world: World, facts: Sequence[Fact], known_at: datetime) -> Wo
     ``aog.ata_chapter``, ``aog.mel_relief``, ``aog.station``, ``aog.defect_text``/``aog.text``, ``aog.rts_est``,
     ``aog.aog``). Anything else is evidence only.
 
-    What a fact may become depends on its source's trust tier (a source the world doesn't know is tier 4):
+    What a fact may become depends on its source's trust tier (``source_index``: the world's sources, then the
+    documents registered in ``sources`` or by ``registered_sources``, capped by kind; a source found nowhere is
+    tier 4):
     - ``aog.*`` from a tier-1 tech-log or MCC source becomes a tech-log line; from anything else it stays an AOG
       claim (``FlightCase.aog_claims``: Ops verifies it, it never grounds the flight).
     - spare hours from tier ≤ 2 become a spares line; a lower tier is evidence only.
@@ -350,9 +393,11 @@ def overlay_facts(world: World, facts: Sequence[Fact], known_at: datetime) -> Wo
     """
     if not facts:
         return world
-    resolved = resolve_facts(world, facts, known_at)
+    sources = list(sources)
+    resolved = resolve_facts(world, facts, known_at, sources)
     if not resolved:
         return world
+    index = source_index(world, sources)
     w = world.model_copy(deep=True)
     prov: dict[str, Any] = {"techlog": {}, "ops": {}, "aog_claims": []}
     flights = {f.id: f for f in w.flights}
@@ -372,13 +417,13 @@ def overlay_facts(world: World, facts: Sequence[Fact], known_at: datetime) -> Wo
                 known = [parse_spare_hours(e.text) for e in w.ops_log
                          if e.kind == "spares" and ident in e.flight_ids and e.at <= known_at]
                 if (isinstance(f.value, int | float) and not isinstance(f.value, bool)
-                        and _tier(world, f) <= SPARES_MAX_TIER
+                        and _tier(index, f) <= SPARES_MAX_TIER
                         and float(f.value) not in [k for k in known if k is not None]):
                     eid = f"FACT-{f.id}"
                     w.ops_log.append(OpsLogEntry(id=eid, at=f.recorded_at, kind="spares", flight_ids=[ident],
                                                  text=f"spare available within {float(f.value)} h",
                                                  author=f.extractor))
-                    prov["ops"][eid] = {"source_id": f.source_id, "tier": _tier(world, f),
+                    prov["ops"][eid] = {"source_id": f.source_id, "tier": _tier(index, f),
                                         "facts": {"spare.available_within_h": f.id}}
             if "pax.reroute_earliest_offered" in fields:
                 f = fields["pax.reroute_earliest_offered"]
@@ -387,8 +432,8 @@ def overlay_facts(world: World, facts: Sequence[Fact], known_at: datetime) -> Wo
                     txt = "earliest reroute offered" if f.value else "earliest reroute not offered"
                     w.ops_log.append(OpsLogEntry(id=eid, at=f.recorded_at, kind="occ", flight_ids=[ident],
                                                  text=txt, author=f.extractor))
-                    src = _source_of(world, f)
-                    prov["ops"][eid] = {"source_id": f.source_id, "tier": _tier(world, f),
+                    src = _source_of(index, f)
+                    prov["ops"][eid] = {"source_id": f.source_id, "tier": _tier(index, f),
                                         "facts": {"pax.reroute_earliest_offered": f.id},
                                         "occ": src is not None and src.kind == SourceKind.OCC_LOG}
                     w.meta = {**w.meta, OVERLAY: prov}           # the resolver must see this line's tier now
@@ -399,8 +444,8 @@ def overlay_facts(world: World, facts: Sequence[Fact], known_at: datetime) -> Wo
                 continue
             val = {k: v.value for k, v in fields.items()}
             text = str(val.get("aog.defect_text") or val.get("aog.text") or f.span or "")
-            src = _source_of(world, f)
-            tier = _tier(world, f)
+            src = _source_of(index, f)
+            tier = _tier(index, f)
             fact_ids = {k: v.id for k, v in fields.items()}
             if src is None or tier != 1 or src.kind not in (SourceKind.TECH_LOG, SourceKind.MCC_LOG):
                 prov["aog_claims"].append({"aircraft": ident, "logged_at": at, "source_id": f.source_id, "tier": tier,

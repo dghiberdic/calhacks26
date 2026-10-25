@@ -33,6 +33,17 @@ MANIFEST = ROOT / "eval/cache/manifest.json"
 PROOF, NUMBERS = ROOT / "eval/proof.json", ROOT / "eval/NUMBERS.md"
 DATA_CALIBRATION = ROOT / "data/calibration.json"
 SOURCE_DIRS = ("world", "engine", "books", "eval", "contracts", "llm")
+CACHE_VERSION = "eval-v2"          # what full_run writes and numbers() reads
+STALE = "stale proof: regenerate with `uv run python -m eval.run`"
+# The four outcome classes, in headline order (eval/DECISIONS.md F9 §3; `held_other` is the conservative one)
+OUTCOME_ROWS = {
+    "auto_correct": "Auto-correct: settled with no person, and right",
+    "escalated_correct": "Correct escalation: held for the person the answer key names",
+    "held_other": "Conservative escalation: held although the key needs no person, or held for another role "
+                  "(costs straight-through; not an error)",
+    "auto_wrong": "**Auto-wrong**: settled with no person, and wrong (the dangerous class)",
+}
+STORM_NAMES = {"2025-01-24": "Éowyn", "2025-01-26": "Herminia"}
 
 
 def injection_check() -> dict:
@@ -110,6 +121,68 @@ def _pct(x: float) -> str:
     return f"{100 * x:.1f}%"
 
 
+def _storm(day: str) -> str:
+    return f"{STORM_NAMES[day]} ({day})" if day in STORM_NAMES else day
+
+
+def _eur(values) -> str:
+    return " / ".join(f"€{x:,.0f}" for x in values) or "—"
+
+
+def _baseline_headline(base: dict, storms: dict) -> str:
+    """One line for the headline: plain Claude against StormCheck on the same raw documents."""
+    if base.get("status") != "complete":
+        return (f"Plain Claude on the same raw documents: **{base.get('status', 'pending')}** "
+                f"({base.get('completed_requests', 0)}/{len(B.DAYS) * B.RUNS} genuine batch results); no plain-Claude "
+                "number is claimed.")
+    first = B.DAYS[0]
+    s = base["storms"][first]
+    sc = storms.get(first, {})
+    return (f"Plain Claude on the same raw documents ({base['model']}, effort {base['effort']}, 3 identical runs): on "
+            f"{_storm(first)} it scored {' / '.join(_pct(a) for a in s['cause_accuracy'])} and estimated "
+            f"{_eur(s['liability_eur'])}, `hash_identical={str(s['hash_identical']).lower()}`. StormCheck on the "
+            f"same flights: {_pct(s['stormcheck_accuracy'])}, {_eur(sc.get('liability_eur', []))}, "
+            f"`hash_identical={str(sc.get('hash_identical')).lower()}`. Every storm is in “Plain Claude vs "
+            "StormCheck” below.")
+
+
+def _baseline_section(base: dict, storms: dict) -> list[str]:
+    lines = ["### Plain Claude vs StormCheck on the same raw documents", ""]
+    if base.get("status") != "complete":
+        return lines + [f"Plain Claude: **{base.get('status', 'pending')}** "
+                        f"({base.get('completed_requests', 0)}/{len(B.DAYS) * B.RUNS} genuine batch results). Run "
+                        f"`{B.LIVE_COMMAND}` with ANTHROPIC_API_KEY in .env, then `uv run python -m eval.run`. The "
+                        "nine matched-input requests are prepared offline (`python -m eval.baseline --prepare`); no "
+                        "plain-Claude number is claimed until then.", ""]
+    lines += [f"Plain Claude: `{base['model']}`, effort `{base['effort']}`, adaptive thinking, structured output, "
+              "through the Batches API. It gets the operational documents StormCheck reads (schedule, OCC/MCC/spares "
+              "lines, tech log, raw METAR at both ends, PII-free PSS coupon lines) and the same supplied policy, and "
+              "is asked for cause, extraordinary status and the initial € EU261 compensation liability per cancelled "
+              "flight. Three byte-identical requests per storm. Phase: the initial estimate before any human ruling, "
+              "the same phase as StormCheck ×3.", "",
+              "Scoring, the same rule for both: cause (root-aware) and extraordinary status must match the answer "
+              "key; a `needs_legal` answer counts as right when the key routes the flight to a person. StormCheck's "
+              "accuracy is its initial output in the held-out replay, which on later storms already applies rulings "
+              "made on earlier days; plain Claude gets only the supplied policy.", "",
+              "| Storm | Flights | Plain Claude accuracy (3 runs) | StormCheck accuracy | Plain Claude € (3 runs) "
+              "| StormCheck € (×3) | Answer key € (latent entitlement × expected ultimate claim rate) "
+              "| Plain Claude same hash? |", "|---|---:|---:|---:|---:|---:|---:|---|"]
+    for day in B.DAYS:
+        s = base["storms"].get(day, {})
+        sc = storms.get(day, {})
+        same = s.get("hash_identical")
+        lines.append(f"| {_storm(day)} | {s.get('flights', '—')} | "
+                     f"{' / '.join(_pct(a) for a in s.get('cause_accuracy', [])) or '—'} | "
+                     f"{_pct(s['stormcheck_accuracy']) if s.get('stormcheck_accuracy') is not None else '—'} | "
+                     f"{_eur(s.get('liability_eur', []))} | {_eur(sc.get('liability_eur', []))} | "
+                     f"€{s.get('key_ultimate_expected_eur', 0):,.0f} | "
+                     f"{'yes' if same else 'no' if same is False else '—'} |")
+    lines += ["", f"`proof.json` `baseline.hash_identical` is the {_storm(B.DAYS[0])} value, as the F9 spec asks. "
+              "Requests, model ids, usage and request records: `cache/baseline_requests.json`, "
+              "`cache/baseline_results.json`.", ""]
+    return lines
+
+
 def numbers(report: EvalReport, cache: dict, fitted: dict) -> str:
     lva = report.liability_vs_actual
     cal = cache["calibration"]
@@ -120,28 +193,29 @@ def numbers(report: EvalReport, cache: dict, fitted: dict) -> str:
     stress = cache["stress"]
     storms = cache.get("storm_runs", {}).get("storms", {})
     miss = cache["miss_table"]
-    n_test = int(lva.get("auto_correct", 0) + lva.get("auto_wrong", 0) + lva.get("escalated_correct", 0)
-                 + lva.get("held_other", 0))
+    n_test = int(sum(lva.get(k, 0) for k in OUTCOME_ROWS))
+    n_auto = int(lva["auto_correct"] + lva["auto_wrong"])
     lines = [f"# StormCheck measured proof", "", f"{LABEL}.", "",
              "Every number below is computed by `python -m eval.run` from the pinned corpus. Reproduce it offline with "
              "`uv run python -m eval.run --from-cache`; `uv run python -m eval.run --check` fails if anything drifted.",
-             "", "## Held-out (January–June 2025, never seen in training)", "",
-             f"- {report.n_storms} storm days plus background days; {n_test} cancelled flights "
+             "", "## Headline: held-out January–June 2025 (never seen in training)", "",
+             f"{n_test} cancelled flights on {report.n_storms} storm days plus background days "
              f"({int(lva['curated_golden_cancellations'])} curated golden, {int(lva['non_golden_cancellations'])} "
-             f"generated); {report.n_passengers:,} passengers on them.",
-             f"- **Auto-precision {_pct(lva['auto_precision'])}**: of {int(lva['auto_correct'] + lva['auto_wrong'])} "
-             f"flights settled with no person, {int(lva['auto_correct'])} were right and **{int(lva['auto_wrong'])} "
-             f"wrong** ({int(lva['ambiguous_auto_wrong'])} of them ambiguous by design). Generated flights only: "
-             f"{_pct(lva['generated_auto_precision'])} ({int(lva['generated_auto_wrong'])} wrong).",
-             f"- **Straight-through {report.straight_through_pct:.2f}%** of passengers (the flight is automatic and "
-             f"the coupon has no hold or question); {lva['auto_flights_pct']:.1f}% of flights.",
-             "", "| Outcome class | All | Generated |", "|---|---:|---:|"]
-    for k, label in (("auto_correct", "Auto, correct"), ("auto_wrong", "Auto, **wrong** (the dangerous one)"),
-                     ("escalated_correct", "Escalated to the key's route (correct escalation)"),
-                     ("held_other", "Held elsewhere or over-cautiously (costs straight-through, not an error)")):
+             f"generated; {report.n_passengers:,} passengers). Every flight lands in exactly one outcome class:", "",
+             "| Outcome class | Flights | Generated only |", "|---|---:|---:|"]
+    for k, label in OUTCOME_ROWS.items():
         lines.append(f"| {label} | {int(lva[k])} | {int(lva['generated_' + k])} |")
-    lines += [f"| Ambiguous by design (feature-invisible; inside the rows above) | {int(lva['ambiguous_by_design'])} "
-              f"| {int(lva['ambiguous_by_design'])} |", "",
+    lines += ["", f"**Auto-precision {_pct(lva['auto_precision'])}**: of {n_auto} flights settled with no person, "
+              f"{int(lva['auto_correct'])} were right and {int(lva['auto_wrong'])} wrong. Generated flights only: "
+              f"{_pct(lva['generated_auto_precision'])} ({int(lva['generated_auto_wrong'])} wrong).", "",
+              f"Straight-through, reported separately: **{report.straight_through_pct:.2f}%** of passengers (the "
+              f"flight is automatic and the coupon has no hold or question); {lva['auto_flights_pct']:.1f}% of "
+              "flights. It measures routing, not correctness.", "",
+              f"Ambiguous by design: **{int(lva['ambiguous_by_design'])}** flights are feature-invisible (hidden crew "
+              "faults, unrecorded AOGs and their knock-ons). They are counted inside the classes above; "
+              f"{int(lva['ambiguous_auto_wrong'])} of them are auto-wrong.", "",
+              _baseline_headline(base, storms), "",
+              "## Detail", "",
               f"Right or correctly escalated: {_pct(lva['right_or_correctly_escalated'])} of all, "
               f"{_pct(lva['generated_right_or_correctly_escalated'])} of generated. Strict cause **and** "
               f"extraordinary equality with the key (an escalation counts as a miss): "
@@ -157,7 +231,7 @@ def numbers(report: EvalReport, cache: dict, fitted: dict) -> str:
               f"- Miscodes caught: {report.miscodes_caught}/{report.miscodes_total} latent internal AOGs typed as "
               f"weather were not accepted as weather ({int(lva['miscodes_caught_auto'])} recoded automatically); "
               f"face cash entitlement €{report.miscodes_eur_cents / 100:,.2f}.",
-              f"- False holds (`held_other`): {report.false_holds}.",
+              f"- Conservative escalations (`held_other`, reported as `false_holds`): {report.false_holds}.",
               f"- Refund drafted for an unsigned, non-web voucher election: "
               f"{int(lva.get('refund_drafted_unsigned_non_web_voucher_coupons', 0))} coupons, "
               f"€{lva.get('refund_drafted_unsigned_non_web_voucher_eur', 0):,.2f}. The key says no refund is due there; "
@@ -174,10 +248,10 @@ def numbers(report: EvalReport, cache: dict, fitted: dict) -> str:
         if f"m{k}_expected_eur" in lva:
             lines.append(f"| M{k} | €{lva[f'm{k}_expected_eur']:,.2f} | €{lva[f'm{k}_actual_eur']:,.2f} | "
                          f"{lva[f'm{k}_actual_over_expected']:.3f} |")
-    lines += ["", f"Initial engine estimate (all held-out flights): €{lva['preview_eur']:,.2f}; latent net entitlement × "
-              f"segment ultimate rates: €{lva['ultimate_expected_eur']:,.2f}; valid claims observed through 30 June "
-              f"2026: €{lva['valid_claims_through_2026_06_30_eur']:,.2f} (a development snapshot, not the final "
-              "outcome).", "", "## Same input, same answer", ""]
+    lines += ["", f"Initial EU261 compensation liability estimate (all held-out flights): €{lva['preview_eur']:,.2f}; "
+              f"latent net entitlement × segment expected ultimate claim rates: €{lva['ultimate_expected_eur']:,.2f}; "
+              f"valid claims observed through 30 June 2026: €{lva['valid_claims_through_2026_06_30_eur']:,.2f} (a "
+              "development snapshot, not the final outcome).", "", "## Same input, same answer", ""]
     for day, s in storms.items():
         lines.append(f"- StormCheck ×3 on {day} ({s['cancelled']} cancelled), fresh process each: "
                      f"€{' / €'.join(f'{x:,.0f}' for x in s['liability_eur'])}, "
@@ -185,13 +259,9 @@ def numbers(report: EvalReport, cache: dict, fitted: dict) -> str:
     lines += [f"- Golden control replay (real Engine + TraceStore + Books, scripted Claims Lead/Legal/Controller "
               f"rulings): **€34,650 ×3, same hash** `{report.stormcheck_runs['hashes'][0][:16]}…`. Before the Legal "
               f"ruling it is €82,146 (held knock-ons accrued); €34,650 is after it. The Isha tail kept: "
-              f"€{report.stormcheck_runs['tail_kept_eur'][0]:,.0f}.",
-              f"- Plain Claude: **{base['status']}**. "
-              + (f"Runs: {base['runs']}." if base["status"] == "complete" else
-                 f"Baseline pending: run `{B.LIVE_COMMAND}` with ANTHROPIC_API_KEY in .env, then "
-                 "`uv run python -m eval.run`. The nine matched-input requests are prepared offline "
-                 "(`python -m eval.baseline --prepare`); no Claude number is claimed until then."),
-              "", "## Calibration (one logistic model per Confidence.kind)", "",
+              f"€{report.stormcheck_runs['tail_kept_eur'][0]:,.0f}.", ""]
+    lines += _baseline_section(base, storms)
+    lines += ["## Calibration (one logistic model per Confidence.kind)", "",
               "Label: the engine settled the item alone and correctly per the answer key (an abstention is 0). "
               "Fitted on train only; C chosen by 5-fold grouped CV log-loss on train.", "",
               "| Kind | trained on | n (train) | C | held-out n | coverage@0.9 | accuracy@0.9 |",
@@ -297,7 +367,7 @@ def full_run(progress=print) -> tuple[dict, dict]:
     curves = load_curves(ROOT / "data/answer_key/curves_train.json")
     test_cal = [r for r in rows if r["split"] == "test"]
     slim = ("split", "kind", "day", "features", "correct")
-    cache = {"version": "eval-v2", "seed": 0, "calibration_rows": [{k: r[k] for k in slim if k in r} for r in rows],
+    cache = {"version": CACHE_VERSION, "seed": 0, "calibration_rows": [{k: r[k] for k in slim if k in r} for r in rows],
         "scored_rows": [r for r in scored if r["kind"] == "cause"], "replay": replay, "controls_golden": controls_golden, "controls": ledger["controls"],
         "rulings": ledger["rulings"], "repeats": ledger["repeats"], "out_of_scope": ledger["out_of_scope"],
         "questions": ledger["questions"], "storm_runs": storm_runs,
@@ -332,6 +402,55 @@ def build(cache: dict, fitted: dict) -> tuple[bytes, bytes]:
     return dump_json(report.model_dump(mode="json")), numbers(report, cache, fitted).encode()
 
 
+def _read_bytes(path: Path) -> bytes | None:
+    try:
+        return path.read_bytes()
+    except OSError:
+        return None
+
+
+def load_current_cache() -> tuple[dict, dict] | str:
+    """The committed cache and fitted model, or why they cannot build the current proof (stale, legacy, missing)."""
+    try:
+        cache, fitted = orjson.loads(CACHE.read_bytes()), orjson.loads(FITTED.read_bytes())
+    except (OSError, orjson.JSONDecodeError) as e:
+        return f"cannot read the cache ({type(e).__name__}: {e})"
+    version = cache.get("version") if isinstance(cache, dict) else None
+    if version != CACHE_VERSION:
+        return f"eval/cache/results.json is {version!r}; this code builds {CACHE_VERSION!r}"
+    return cache, fitted
+
+
+def check(full: bool = False) -> list[str]:
+    """Every reason the committed proof is not a byte-exact rebuild of the committed cache. Never raises on a cache
+    that predates the code: that is reported as a stale proof."""
+    try:
+        bad = stale_inputs()
+        problems = [f"input changed since the proof was built: {n}" for n in bad[:10]]
+        problems += [f"… and {len(bad) - 10} more changed inputs"] if len(bad) > 10 else []
+    except (OSError, orjson.JSONDecodeError, KeyError, TypeError) as e:
+        problems = [f"eval/cache/manifest.json is missing or unreadable ({type(e).__name__})"]
+    loaded = load_current_cache()
+    if isinstance(loaded, str):
+        return [*problems, loaded]
+    try:
+        proof, nums = build(*loaded)
+    except (KeyError, TypeError, ValueError, AttributeError, IndexError, ZeroDivisionError) as e:
+        # pydantic.ValidationError is a ValueError
+        return [*problems, f"the cache predates the code ({type(e).__name__}: {e})"]
+    if _read_bytes(PROOF) != proof:
+        problems.append("eval/proof.json differs from a rebuild from eval/cache")
+    if _read_bytes(NUMBERS) != nums:
+        problems.append("eval/NUMBERS.md differs from a rebuild from eval/cache")
+    if full:
+        cache, fitted = full_run(progress=lambda s: print(s, file=sys.stderr, flush=True))
+        if dump_json(cache) != _read_bytes(CACHE):
+            problems.append("a full rerun changed eval/cache/results.json")
+        if build(cache, fitted)[0] != _read_bytes(PROOF):
+            problems.append("a full rerun changed eval/proof.json")
+    return problems
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--from-cache", action="store_true")
@@ -339,28 +458,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--full", action="store_true", help="with --check: rerun everything and byte-compare")
     args = parser.parse_args(argv)
     if args.check:
-        problems = [f"input changed since the proof was built: {n}" for n in stale_inputs()]
-        proof, nums = build(orjson.loads(CACHE.read_bytes()), orjson.loads(FITTED.read_bytes()))
-        if PROOF.read_bytes() != proof:
-            problems.append("eval/proof.json differs from a rebuild from eval/cache")
-        if NUMBERS.read_bytes() != nums:
-            problems.append("eval/NUMBERS.md differs from a rebuild from eval/cache")
-        if args.full:
-            cache, fitted = full_run(progress=lambda s: print(s, file=sys.stderr, flush=True))
-            if dump_json(cache) != CACHE.read_bytes():
-                problems.append("a full rerun changed eval/cache/results.json")
-            if build(cache, fitted)[0] != PROOF.read_bytes():
-                problems.append("a full rerun changed eval/proof.json")
+        problems = check(full=args.full)
         for p in problems:
             print(f"eval --check: {p}")
-        print("eval --check: OK" if not problems else f"eval --check: {len(problems)} problem(s); regenerate with "
-              "`uv run python -m eval.run`")
+        print("eval --check: OK" if not problems else f"eval --check: {STALE} ({len(problems)} problem(s))")
         return 1 if problems else 0
     if args.from_cache:
         bad = stale_inputs()
         if bad:
             raise SystemExit(f"Input hash mismatch: {bad[0]} (+{len(bad) - 1} more); rerun without --from-cache")
-        cache, fitted = orjson.loads(CACHE.read_bytes()), orjson.loads(FITTED.read_bytes())
+        loaded = load_current_cache()
+        if isinstance(loaded, str):
+            raise SystemExit(f"{STALE}: {loaded}")
+        cache, fitted = loaded
     else:
         cache, fitted = full_run(progress=lambda s: print(s, flush=True))
         write_json(CACHE, cache)
