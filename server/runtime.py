@@ -25,13 +25,13 @@ from typing import Any
 
 from contracts.models import (
     AccessDecision, Draft, Entitlement, Fact, FlightDecision, FlightFile, JournalEntry, Question, Role, Rule, Session,
-    StormRun, StormSummary, TraceEvent, World,
+    StormRun, StormSummary, TraceAnchor, TraceEvent, World,
 )
 
 from . import compose
 from .config import ROOT, Settings
 from .impls import Impls, _module, call, instantiate, select
-from .store import Store, iso
+from .store import Store, TraceWriteError, iso
 
 log = logging.getLogger("stormcheck.server")
 DEMO_START = datetime(2025, 1, 25, 6, 0, tzinfo=UTC)     # "the morning after" Éowyn
@@ -102,6 +102,7 @@ class Runtime:
         self.books = self._make_books()
         self.pipeline = "golden" if self.world is not None else "stub"
         self.boot_error: str | None = None
+        self.trace_failures: list[str] = []          # trace writes that failed since boot / reset (GET /health)
         self.trace = self._open_trace()
         acl = _module("engine.acl")
         self.broker = acl.Broker(clock=self.clock, trace=self.trace) if acl is not None else None
@@ -187,12 +188,23 @@ class Runtime:
                                amount_cents=amount)
 
     def record(self, method: str, *args: Any, **kwargs: Any) -> Any:
-        """A trace commit that never takes the pipeline down (returns None on failure, logged)."""
+        """A trace commit. A failed write is logged, counted (`/health` turns `ok: false`) and raised as
+        `TraceWriteError`, so the request answers 503 instead of reporting a change the record does not hold."""
         try:
             return getattr(self.trace, method)(*args, **kwargs)
         except Exception as exc:
-            log.warning("trace.%s failed: %s", method, exc)
+            log.error("trace.%s failed: %s: %s", method, type(exc).__name__, exc)
+            self.trace_failures.append(f"{iso(self.now)} trace.{method}: {type(exc).__name__}")
+            raise TraceWriteError(f"The trace could not record this change (trace.{method}: {type(exc).__name__}),"
+                                  " so it was not saved as done. Reset the demo, or retry.") from exc
+
+    def anchor(self) -> TraceAnchor | None:
+        """The chain's published head ("head <sha> · N commits"; `scripts/verify.py --expect-head` checks it)."""
+        fn = getattr(self.trace, "anchor", None)
+        if fn is None:
             return None
+        a = fn()
+        return TraceAnchor(head=a.head, count=a.count, text=a.text())
 
     # ------------------------------------------------------------------ access
     def deny(self, principal: str, action: str, resource: str, reason: str, *, committed: bool = False) -> None:
@@ -256,6 +268,7 @@ class Runtime:
             self.store.restore(self.settings.baseline)
             self.clock.invalidate()
             self.trace = self._open_trace()
+            self.trace_failures.clear()
             if self.broker is not None:
                 self.broker.trace = self.trace
                 self.broker.log.clear()

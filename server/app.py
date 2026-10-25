@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -24,6 +24,7 @@ from contracts.stub_app import ERRORS, ApiError, envelope
 from . import routes, routes_live
 from .config import Settings
 from .runtime import Runtime
+from .store import TraceWriteError
 
 log = logging.getLogger("stormcheck.server")
 
@@ -41,6 +42,10 @@ def install_errors(app: FastAPI) -> None:
     @app.exception_handler(ApiError)
     async def _api_error(_: Request, exc: ApiError) -> JSONResponse:
         return envelope(exc.status, exc.code, exc.message)
+
+    @app.exception_handler(TraceWriteError)
+    async def _trace_write_error(_: Request, exc: TraceWriteError) -> JSONResponse:
+        return envelope(503, "upstream", str(exc))
 
     @app.exception_handler(RequestValidationError)
     async def _validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
@@ -97,8 +102,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     # ============================================================ reads on the real pipeline
     @app.get("/api/health", response_model=Health)
-    def health() -> Health:
-        return Health(ok=True, mode=settings.mode, impl=rt.health_impl())
+    def health(response: Response) -> Health:
+        anchor = rt.anchor()
+        routes.anchor_headers(response, anchor)
+        return Health(ok=not rt.trace_failures, mode=settings.mode, impl=rt.health_impl(), anchor=anchor,
+                      trace_write_failures=len(rt.trace_failures))
 
     @app.get("/api/storms", response_model=list[StormSummary])
     def list_storms() -> list[StormSummary]:
