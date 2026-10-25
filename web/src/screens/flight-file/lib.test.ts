@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { JournalEntry } from "@/api/types";
-import { bandMarginText, breakdownText, draftedLiability, electionsOf, featureLabel, legalGloss, markKind, reductionOf, splitRecode, statusesOf, summaryItems, summaryText } from "./lib";
+import { bandMarginText, breakdownText, draftedLiability, electionsOf, featureLabel, legalGloss, markKind, plainHeadline, reductionOf, splitRecode, statusesOf, summaryItems, summaryText } from "./lib";
+
+describe("plainHeadline", () => {
+  it("says the verdict in plain words, power cut included", () => {
+    expect(plainHeadline("notweather", "technical")).toBe("A broken plane, not the storm.");
+    expect(plainHeadline("weather", "weather")).toBe("The storm stopped it.");
+    expect(plainHeadline("weather", "external_event")).toBe("The power cut stopped it.");
+    expect(plainHeadline("held", "knock_on")).toBe("A knock-on of the storm: Legal decides.");
+  });
+});
 
 describe("flight file helpers", () => {
   it("splits the recode so the losing code can be struck", () => {

@@ -31,6 +31,7 @@ from zoneinfo import ZoneInfo
 from contracts.models import Airport, MetarObs, World
 from world import causes as C
 from world import desk_cases as K
+from world import events as E
 from world import metar as M
 from world import network as N
 from world.airports import airport
@@ -210,6 +211,9 @@ def generate_day_full(icao: str, local_day: date, seed: int = 0, *, now: datetim
     if day > local_today:
         raise WorldError("future_date", f"{day.isoformat()} hasn't happened yet at {ap.name} ({ap.icao}); "
                                         f"it is {local_today.isoformat()} there. Choose a past day.")
+    if E.is_event_day(ap.icao, day):
+        # LPPT / LEMD / LEBL on 28 Apr 2025: the Iberian blackout scenario (World.events + its planted cases)
+        return E.desk_world(ap.icao, seed)
     hub = ap.icao == N.HUB_ICAO
     sectors, context = desk_sectors(ap, day)
     pending = [s.id for s in sectors if s.sta > now]

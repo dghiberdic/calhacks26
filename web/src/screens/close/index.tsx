@@ -21,7 +21,7 @@ import { EstimateCardView } from "./estimate";
 import { bridgeToGl, invariantsSummary, isSegment, journalTies, lockedPeriods, METHOD_NAME, rollforwardCsv, rollforwardTotals, SEGMENTS } from "./model";
 import { CloseRail, InvariantsList } from "./rail";
 import { FootingNotes, RollforwardTable } from "./rollforward";
-import { SectionHead, Segmented } from "./ui";
+import { DetailsTitle, SectionHead, Segmented } from "./ui";
 
 /** The demo's close periods (identifiers, not figures): January closes with 6 claims, February runs the BF true-up. */
 const CLOSE_PERIODS = ["2025-01", "2025-02"] as const;
@@ -294,16 +294,6 @@ function RollforwardChips({ rf }: { rf: Rollforward }) {
         <TiesChip ok={rf.ties_to_gl} />
       </span>
     </>
-  );
-}
-
-/** A Details summary that reads as a panel heading: the title in ink, a quiet note after it. */
-function DetailsTitle({ title, note }: { title: string; note?: string | null }) {
-  return (
-    <span className="text-[14.5px]">
-      <span className="font-semibold text-navy-900">{title}</span>
-      {note ? <span className="font-normal text-slate-500"> · {note}</span> : null}
-    </span>
   );
 }
 

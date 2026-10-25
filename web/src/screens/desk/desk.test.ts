@@ -3,7 +3,7 @@ import { AIRPORTS, airportLabel, resolveAirport, searchAirports } from "./airpor
 import { addMonths, dayLabel, monthGrid, parseDate, todayIn, utcOffsetLabel } from "./dates";
 import { findSpan, placeSpans, segment } from "./spans";
 import { ApiError } from "@/api/client";
-import type { InjectResponse, StormRun, StormWindow } from "@/api/types";
+import type { InjectResponse, StormRun } from "@/api/types";
 import { flightOf, normaliseInject, normaliseRun, problemOf } from "./state";
 import { windowChip } from "./windows";
 
@@ -158,9 +158,9 @@ describe("window chips", () => {
     expect(windowChip(storm, "2025-01-24")).toMatchObject({ outage: false, text: "storm window 02:30Z–15:00Z · peak gust 79 kt · 26 obs" });
   });
   it("says a grid outage by its own label, never by wind, and names the next day's end", () => {
-    const outage = { ...storm, station: "LPPT", start: "2025-04-28T10:33:00Z", end: "2025-04-29T01:00:00Z", peak_gust_kt: 0, kind: "grid_outage", label: "Grid outage (Iberian blackout)" } as StormWindow;
+    const outage = { ...storm, station: "LPPT", start: "2025-04-28T10:33:00Z", end: "2025-04-29T01:00:00Z", peak_gust_kt: 0, kind: "grid_outage", label: "Grid outage (Iberian blackout)" };
     expect(windowChip(outage, "2025-04-28")).toEqual({ outage: true, text: "Grid outage (Iberian blackout) 10:33Z–29 Apr 01:00Z", title: "Grid outage (Iberian blackout)" });
-    expect(windowChip({ ...outage, label: null } as StormWindow, "2025-04-28").text).toBe("Grid outage 10:33Z–29 Apr 01:00Z");
+    expect(windowChip({ ...outage, label: null }, "2025-04-28").text).toBe("Grid outage 10:33Z–29 Apr 01:00Z");
   });
 });
 

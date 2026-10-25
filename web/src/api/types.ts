@@ -140,7 +140,7 @@ export type OpsLogEntry = {
 };
 
 // ---------- engine ----------
-export type Cause = "weather" | "technical" | "knock_on" | "crew" | "atc" | "concurrent" | "unknown";
+export type Cause = "weather" | "technical" | "knock_on" | "crew" | "atc" | "concurrent" | "unknown" | "external_event";
 export type Extraordinary = "extraordinary" | "not_extraordinary" | "needs_legal";
 export type InWindow = "in" | "out" | "unknown";
 
