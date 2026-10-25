@@ -33,11 +33,15 @@ def facts(world: World) -> list[Fact]:
 # ---------------------------------------------------------------- fields
 def test_every_dsl_feature_is_fed_or_engine_derived():
     fed = {feat for s in fields.REGISTRY.values() for feat in s.feeds}
-    assert fed <= set(fields.DSL_FEATURES), fed - set(fields.DSL_FEATURES)
-    missing = [f for f in fields.DSL_FEATURES if f not in fed and f not in fields.ENGINE_DERIVED]
+    assert fed <= set(fields.ALL_DSL_FEATURES), fed - set(fields.ALL_DSL_FEATURES)
+    missing = [f for f in fields.ALL_DSL_FEATURES if f not in fed and f not in fields.ENGINE_DERIVED]
     assert not missing, missing
-    assert fields.ENGINE_DERIVED <= set(fields.DSL_FEATURES)
+    assert fields.ENGINE_DERIVED <= set(fields.ALL_DSL_FEATURES)
     assert len(fields.DSL_FEATURES) == len(set(fields.DSL_FEATURES)) == 38
+    # blackout v1: 3 event features, outside the drafter's 38 (its schema is part of the recorded LLM cache keys)
+    assert len(fields.ALL_DSL_FEATURES) == len(set(fields.ALL_DSL_FEATURES)) == 41
+    assert not set(fields.EVENT_DSL_FEATURES) & set(fields.DSL_FEATURES)
+    assert fields.feeding("flight.in_event_window_dep") == ["event.window_end", "event.window_start"]
 
 
 def test_registry_specs_are_well_formed():

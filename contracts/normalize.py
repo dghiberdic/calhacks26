@@ -79,6 +79,15 @@ def cohort_fact_id(cohort: str, field: str, account: str = "2140") -> str:
     return fact_id(cohort_record(cohort, account), field)
 
 
+def event_record(event_id: str, icao: str | None = None) -> str:
+    """additive (blackout v1): an external event (event.kind) or one of its airport windows (window_start/end)."""
+    return f"{event_id}:{icao}" if icao else event_id
+
+
+def event_fact_id(event_id: str, field: str, icao: str | None = None) -> str:
+    return fact_id(event_record(event_id, icao), field)
+
+
 def _utc(t: datetime) -> datetime:
     """Aware → UTC; naive is refused (a 'Z' must never be stamped on a local time)."""
     if t.tzinfo is None or t.utcoffset() is None:
@@ -451,6 +460,20 @@ def _context(b: _Builder) -> None:
                 b.add(f"CTX-{storm}", f"storm:{storm}", field, ctx[k], s, span=b.span_in(s, f"{k}: {ctx[k]}"))
 
 
+def _events(b: _Builder) -> None:
+    """additive (blackout v1): World.events → event.kind + per-airport event.window_start/end facts. The source is
+    the event's first source; a span is kept only when the notice text quotes the value."""
+    for ev in b.world.events:
+        s = next((b.source(sid) for sid in ev.source_ids if b.source(sid) is not None), None)
+        subj = f"event:{ev.id}"
+        start = min((w.start for w in ev.airports), default=None)
+        b.add(event_record(ev.id), subj, "event.kind", ev.kind, s, span=b.span_in(s, ev.kind), valid_at=start)
+        for w in ev.airports:
+            rec = event_record(ev.id, w.icao)
+            for field, t in (("event.window_start", w.start), ("event.window_end", w.end)):
+                b.add(rec, subj, field, t, s, span=b.span_in(s, _iso(t)), valid_at=w.start)
+
+
 # ---------------------------------------------------------------- public API
 def world_to_facts(world: World, *, flight_ids: Iterable[str] | None = None, include_metar: bool = True) -> list[Fact]:
     """Every fact in the world (or only those about `flight_ids`: their flights, coupons, CRM, claims, care, logs,
@@ -473,6 +496,7 @@ def world_to_facts(world: World, *, flight_ids: Iterable[str] | None = None, inc
     _crm(b, kept if fids is not None else None)
     _claims(b, kept if fids is not None else None)
     _care(b, fids)
+    _events(b)                      # additive (blackout v1): no-op on worlds without events
     if fids is None:
         _cohorts(b)
         _context(b)

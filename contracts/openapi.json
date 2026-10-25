@@ -1751,7 +1751,8 @@
           "crew",
           "atc",
           "concurrent",
-          "unknown"
+          "unknown",
+          "external_event"
         ],
         "title": "Cause"
       },
@@ -5174,7 +5175,8 @@
           "ruling",
           "manufacturer",
           "challenge",
-          "finance"
+          "finance",
+          "external_event"
         ],
         "title": "SourceKind"
       },
@@ -5285,6 +5287,17 @@
               }
             ],
             "title": "Name"
+          },
+          "event_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Id"
           }
         },
         "type": "object",
@@ -5372,6 +5385,22 @@
             "type": "integer",
             "title": "Obs Count",
             "default": 0
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "default": "weather"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
           }
         },
         "type": "object",

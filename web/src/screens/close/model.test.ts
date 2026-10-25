@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { Commit, JournalEntry, MonthEndResponse, Rollforward, RollforwardRow, TraceEvent } from "@/api/types";
-import { bridgeScale, bridgeToGl, cohortParts, footRow, journalTies, liabilityChange, lockedPeriods, monthBounds, movementCents, preparerRole, rollforwardCsv, rollforwardTotals } from "./model";
+import type { Commit, InvariantResult, JournalEntry, MonthEndResponse, Rollforward, RollforwardRow, TraceEvent } from "@/api/types";
+import { bridgeScale, bridgeToGl, cohortParts, footRow, invariantsSummary, isRateTimesEntitlement, isReleaseProposal, journalGroups, journalTies, liabilityChange, lockedPeriods, monthBounds, monthEndReason, movementCents, newStorms, preparerRole, releaseProposals, rollforwardCsv, rollforwardTotals } from "./model";
 
 const row = (over: Partial<RollforwardRow> = {}): RollforwardRow => ({
   cohort: "EIDW@2025-01-24",
@@ -78,6 +78,10 @@ describe("tick and tie to the journal", () => {
   it("ignores entries that never touch 2140", () => {
     const goodwill: JournalEntry = { ...je("JE-9", "voucher_in_lieu", 0, 0), lines: [{ account: "4090", account_name: "", dr_cents: 30_000 }, { account: "2132", account_name: "", cr_cents: 30_000 }] };
     expect(journalTies(rf, [goodwill]).settled_in_kind_cents).toBe(undefined);
+  });
+  it("doesn't tie a release proposal that isn't in 2140 yet", () => {
+    const release: JournalEntry = { ...je("JE-8", "change_in_estimate", 330_000, 0), estimate_ref: "release:EIDW@2024-01-21" };
+    expect(journalTies(rf, [je("JE-1", "change_in_estimate", 0, 399_000), release]).change_in_estimate_cents).toEqual({ ids: ["JE-1"], cents: 399_000, agrees: true });
   });
   it("writes the note as CSV, negatives signed, total column last", () => {
     const csv = rollforwardCsv(rf).split("\n");
@@ -162,20 +166,47 @@ describe("month-end result", () => {
     const down = je({ lines: [{ account: "2140", account_name: "", dr_cents: 4_749_600 }, { account: "4090", account_name: "", cr_cents: 4_749_600 }] });
     expect(liabilityChange({ entries: [down] } as unknown as MonthEndResponse)).toBe(-4_749_600);
   });
+  it("leaves out a release proposal: it moves 2140 only once the Controller approves it", () => {
+    const release = je({ estimate_ref: "release:EIDW@2024-01-21", lines: [{ account: "2140", account_name: "", dr_cents: 330_000 }, { account: "4090", account_name: "", cr_cents: 330_000 }] });
+    const res = { entries: [je({}), release] } as unknown as MonthEndResponse;
+    expect(liabilityChange(res)).toBe(399_000);
+    expect(releaseProposals(res.entries).map((e) => e.estimate_ref)).toEqual(["release:EIDW@2024-01-21"]);
+    expect(isReleaseProposal({ ...release, status: "approved" })).toBe(false);
+  });
+});
+
+describe("why the month-end moved", () => {
+  it("says claims ran ahead of the curve, so the estimate goes up", () => {
+    expect(monthEndReason(1.448, 399_000)).toBe("Claims came in faster than the curve expected (1.45×), so the estimate goes up.");
+  });
+  it("says claims ran behind, so it comes down", () => {
+    expect(monthEndReason(0.58, -2_634_700)).toBe("Claims came in slower than the curve expected (0.58×), so the estimate comes down.");
+  });
+  it("never claims a cause the numbers don't show", () => {
+    expect(monthEndReason(1.2, -100)).toBe("Claims came in faster than the curve expected (1.20×). The estimate comes down.");
+    expect(monthEndReason(null, 0)).toBe("The estimate holds.");
+  });
+});
+
+describe("controls checks summary", () => {
+  const inv = (ok: boolean) => ({ id: String(Math.random()), description: "", ok }) as InvariantResult;
+  it("counts what holds and what fails", () => {
+    expect(invariantsSummary([inv(true), inv(true)])).toBe("All 2 hold");
+    expect(invariantsSummary([inv(true), inv(false)])).toBe("1 of 2 failing");
+    expect(invariantsSummary([])).toBe(null);
+  });
 });
 
 describe("the CFO bridge scale", () => {
   it("places cash basis, drafted ± sensitivity and the full entitlement on one axis", () => {
-    const s = bridgeScale({ cash: 0, drafted: 3_465_000, full: 9_900_000, sensitivity: 495_000, range: [2_175_000, 3_726_700] });
+    const s = bridgeScale({ cash: 0, drafted: 3_465_000, full: 9_900_000, sensitivity: 495_000 });
     expect(s.max).toBe(9_900_000);
     expect(s.at(3_465_000)).toBeCloseTo(0.35, 5);
     expect(s.band).toEqual([2_970_000, 3_960_000]);
-    expect(s.range).toEqual([2_175_000, 3_726_700]);
   });
   it("never lets a band fall off either end", () => {
-    const s = bridgeScale({ cash: 0, drafted: 200_000, full: 1_000_000, sensitivity: 495_000, range: [3_465_000, 3_465_000] });
+    const s = bridgeScale({ cash: 0, drafted: 200_000, full: 1_000_000, sensitivity: 495_000 });
     expect(s.band[0]).toBe(0);
-    expect(s.range).toBe(null);
     expect(s.at(-5)).toBe(0);
     expect(s.at(5_000_000)).toBe(1);
   });
@@ -188,8 +219,56 @@ describe("bridgeToGl", () => {
     const r = bridgeToGl({ drafted_liability_cents: 3_465_000, held_for_legal_cents: 4_749_600, liability_bridge: [row("EIDW@2025-01-24", 8_214_600, 8_214_600), row("EIDW@2024-01-21", 0, 360_000)] });
     expect(r).toEqual({ total: 8_574_600, drafted: 3_465_000, held: 4_749_600, other: 360_000, earlier: ["EIDW@2024-01-21"] });
   });
+  it("names no earlier cohorts when nothing is new this period: every cohort is carried in", () => {
+    const r = bridgeToGl({ drafted_liability_cents: 100, held_for_legal_cents: 0, liability_bridge: [row("A", 0, 100), row("B", 0, 50)] });
+    expect(r).toMatchObject({ total: 150, other: 50, earlier: [] });
+  });
   it("says nothing when the parts don't add up", () => {
     expect(bridgeToGl({ drafted_liability_cents: 3_465_000, held_for_legal_cents: 4_749_600, liability_bridge: [row("A", 100, 100)] })).toBe(null);
     expect(bridgeToGl({ drafted_liability_cents: 0, held_for_legal_cents: 0, liability_bridge: [] })).toBe(null);
+  });
+});
+
+describe("the bridge's story", () => {
+  const row = (cohort: string, new_cents: number) => ({ cohort, new_cents, closing_cents: new_cents }) as RollforwardRow;
+  const names = (id: string) => ({ "EIDW@2025-01-24": "Storm Éowyn", "EIDW@2024-01-21": "Storm Isha" })[id] ?? null;
+  it("names the storms with a new estimate, once each, whatever their segments", () => {
+    expect(newStorms([row("EIDW@2025-01-24:long_haul_gt3500", 1), row("EIDW@2025-01-24:medium_1500_3500", 1), row("EIDW@2024-01-21", 0)], names)).toEqual(["Storm Éowyn"]);
+  });
+  it("falls back to the cohort id for an unnamed storm, and to nothing when no storm is new", () => {
+    expect(newStorms([row("EGLL@2024-01-21", 5)], names)).toEqual(["EGLL@2024-01-21"]);
+    expect(newStorms([row("EIDW@2024-01-21", 0)], names)).toEqual([]);
+    expect(newStorms(undefined, names)).toEqual([]);
+  });
+  it("says drafted = rate × entitlement only when it reproduces the figure to the euro", () => {
+    expect(isRateTimesEntitlement(3_465_000, 9_900_000, 0.35)).toBe(true);
+    expect(isRateTimesEntitlement(6_599_100, 29_430_000, 0.35)).toBe(false);
+    expect(isRateTimesEntitlement(3_465_000, 9_900_000, null)).toBe(false);
+  });
+});
+
+describe("journal groups", () => {
+  const je = (id: string, kind: JournalEntry["kind"], account: string, cents: number): JournalEntry => ({
+    id,
+    event_date: "2025-01-24",
+    period: "2025-01",
+    memo: "",
+    kind,
+    lines: [
+      { account: "4090", account_name: "", dr_cents: cents },
+      { account, account_name: "", cr_cents: cents },
+    ],
+    status: "draft",
+    preparer: "agent.engine",
+  });
+  it("groups by kind, the entries that move 2140 first, each with its count and total", () => {
+    const g = journalGroups([je("JE-3", "refund", "2120", 100), je("JE-1", "compensation_estimate", "2140", 3_465_000), je("JE-4", "refund", "2120", 50), je("JE-2", "compensation_estimate", "2140", 1_922_400)]);
+    expect(g.map((x) => [x.kind, x.entries.map((e) => e.id), x.cents, x.moves2140])).toEqual([
+      ["compensation_estimate", ["JE-1", "JE-2"], 5_387_400, true],
+      ["refund", ["JE-3", "JE-4"], 150, false],
+    ]);
+  });
+  it("is empty for no entries", () => {
+    expect(journalGroups([])).toEqual([]);
   });
 });

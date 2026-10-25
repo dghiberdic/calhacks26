@@ -9,7 +9,9 @@
       "end": "2025-01-26T13:00:00Z",
       "peak_gust_kt": 43,
       "definition": "gust>=35kt or sknt>=30kt or vsby<0.5sm or wx in {SN,FZ,TS,GR}; gaps<2h merged",
-      "obs_count": 3
+      "obs_count": 3,
+      "kind": "weather",
+      "label": null
     }
   ],
   "metar": [
@@ -1328,5 +1330,6 @@
       "tz": "Europe/Madrid"
     }
   ],
-  "name": "Storm Herminia"
+  "name": "Storm Herminia",
+  "event_id": null
 }

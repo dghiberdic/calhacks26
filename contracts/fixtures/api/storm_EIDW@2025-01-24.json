@@ -9,7 +9,9 @@
       "end": "2025-01-24T00:30:00Z",
       "peak_gust_kt": 38,
       "definition": "gust>=35kt or sknt>=30kt or vsby<0.5sm or wx in {SN,FZ,TS,GR}; gaps<2h merged",
-      "obs_count": 2
+      "obs_count": 2,
+      "kind": "weather",
+      "label": null
     },
     {
       "station": "EIDW",
@@ -17,7 +19,9 @@
       "end": "2025-01-24T15:00:00Z",
       "peak_gust_kt": 56,
       "definition": "gust>=35kt or sknt>=30kt or vsby<0.5sm or wx in {SN,FZ,TS,GR}; gaps<2h merged",
-      "obs_count": 24
+      "obs_count": 24,
+      "kind": "weather",
+      "label": null
     }
   ],
   "metar": [
@@ -4420,5 +4424,6 @@
       "tz": "Europe/Zurich"
     }
   ],
-  "name": "Storm Éowyn"
+  "name": "Storm Éowyn",
+  "event_id": null
 }
