@@ -1,4 +1,5 @@
 import type { Cents, Commit, CurveSegment, InvariantResult, JournalEntry, MonthEndResponse, Role, Rollforward, RollforwardRow, TraceEvent } from "@/api/types";
+import { plainIds } from "@/lib/plain";
 
 // ---------- the 2140 rollforward, read the way an IFRS liability note reads ----------
 
@@ -143,6 +144,22 @@ export function cohortName(cohort: string, segment?: string | null, name: (base:
 }
 
 // ---------- periods ----------
+
+/** The close periods: the demo's January and February, plus any later month the journal has entries in (a scenario run). */
+export function closePeriods(entries: { period: string }[] | undefined, base: readonly string[] = ["2025-01", "2025-02"]): string[] {
+  const out = new Set(base);
+  for (const e of entries ?? []) if (/^20\d{2}-(0[1-9]|1[0-2])$/.test(e.period) && e.period >= base[0]) out.add(e.period);
+  return [...out].sort();
+}
+
+/**
+ * A cohort's name in words: the storm's ("Storm Éowyn"), the Iberian blackout for 28 Apr 2025 (a grid
+ * outage, not a storm), else its place and date ("Lisbon, 28 Apr 2025"). Names only; every figure is the API's.
+ */
+export function cohortTitle(base: string, name: (base: string) => string | null): string {
+  if (/@2025-04-28$/.test(base)) return "Iberian blackout";
+  return name(base) ?? plainIds(base);
+}
 
 /** "2025-02" → first and last calendar day, for "At 1 Feb 2025" / "At 28 Feb 2025". */
 export function monthBounds(period: string) {
