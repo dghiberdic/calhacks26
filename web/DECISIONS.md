@@ -26,7 +26,14 @@ Judgment calls, newest first within each task. One line each, with the why. Requ
 - Judge's Desk: airports other than Dublin's demo days run on generated METAR, every line marked `RMK MOCK`. Injections are read by regex but labelled the way the real Reader labels things.
 - Operated flights carry a placeholder decision (cause "unknown"), so screens key off `flight.status` first.
 
+## Simplify pass (24 Oct, after "a bit convoluted and a lot of numbers")
+- **Each screen opens with one plain sentence and at most two numbers;** the arithmetic, raw codes and per-coupon tables sit behind `Details` ("How we got this"). No tile shows more than one big number, and no number repeats across tiles.
+- **Jargon is explained where it appears** with `<Explain term>` (components/explain.tsx); every definition lives in lib/glossary.ts, so all screens say the same thing.
+- **Raw ids in server prose read as words** (`plainIds`: "EIDW@2024-01-21 long_haul_gt3500" → "Storm Isha (21 Jan 2024) long-haul"). Display only; ids stay in links and the trace.
+- **Grid outage windows** (`StormWindow.kind == "grid_outage"`) are calm hatched slate, not METAR blue: a power cut isn't weather.
+
 ## J1 · Storm Run
+- The headline is now the sentence: "27 flights cancelled, 5,292 passengers stranded, all coded 'weather'." The lede then gives what each one turned out to be, counted from the same verdicts that colour the timeline. "3 questions" moved to the questions panel. The plan's "5,292 · 3 questions · 3 people" line is gone.
 - The headline's three counts sit on one line on a laptop and stack on a phone; a line never starts with a dot.
 - "Not weather. Broken plane." lands once the timeline has settled (about 4 s), beside the story rather than over the chart.
 - Phones pan the timeline, opening on NS31, instead of squeezing 30 hours into 350 px.

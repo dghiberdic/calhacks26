@@ -40,5 +40,7 @@
   "built_from": 22,
   "ties_to": [
     "2140"
-  ]
+  ],
+  "approver_role": null,
+  "period_locked": false
 }

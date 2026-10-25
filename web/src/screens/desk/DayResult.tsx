@@ -6,7 +6,8 @@ import { useStorms } from "@/api/queries";
 import type { FlightRow, Question, StormRun, TraceEvent } from "@/api/types";
 import { MicroLabel, StatusChip } from "@/components/chips";
 import { EvidenceList } from "@/components/evidence";
-import { ConfidenceLine, FeedRow, LoopFooter, Money, Panel, RoutedTo } from "@/components/kit";
+import { WhatsThis } from "@/components/explain";
+import { ConfidenceLine, Details, FeedRow, LoopFooter, Money, Panel, RoutedTo } from "@/components/kit";
 import { RouteLegend, RouteMap } from "@/components/storm/RouteMap";
 import { StormTimeline } from "@/components/storm/StormTimeline";
 import { VERDICT_COLOR, type VerdictKind, verdictChip, verdictOf } from "@/components/verdict";
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { airportByIcao } from "./airports";
 import { dayLabel } from "./dates";
 import { flightOf, useDesk } from "./state";
+import { collapseRuns } from "@/screens/trace/model";
 import { useBringIntoView } from "./useBringIntoView";
 import { isOutage, windowChip } from "./windows";
 
@@ -86,7 +88,6 @@ export function DayResult({ run }: { run: StormRun }) {
   const ref = useBringIntoView<HTMLDivElement>();
   const cited = run.feed.filter((e) => e.chip === "CITED");
   const cancelled = c.cancelled ?? run.flights.filter((r) => r.flight.status === "cancelled").length;
-  const weatherWindow = run.windows.find((w) => !isOutage(w));
 
   const select = (id: string) => {
     setOpenFlight(id);
@@ -142,13 +143,13 @@ export function DayResult({ run }: { run: StormRun }) {
                   </StatusChip>
                 );
               })}
+              {run.windows.length ? <WhatsThis term={run.windows.some(isOutage) ? "grid-outage" : "storm-window"} className="text-cloud-300" /> : null}
             </div>
             {run.windows.some(isOutage) ? (
               <p className="mt-2 text-[13.5px] leading-relaxed text-cloud-300" data-testid="desk-outage-note">
                 A national power cut, not weather.{c.questions ? " StormCheck has never seen one, so it asks Legal once." : ""}
               </p>
             ) : null}
-            {weatherWindow?.definition ? <p className="mt-2 font-mono text-[11px] leading-relaxed text-cloud-500">window = {weatherWindow.definition}</p> : null}
             <RealContext rc={rc} />
           </div>
 
@@ -300,43 +301,35 @@ function NotWeather({ rows, onOpen }: { rows: FlightRow[]; onOpen: (id: string) 
   );
 }
 
+/** The day's money as one sentence, the way Liability & Close says it; every counter one click away. */
 function MoneyRow({ run }: { run: StormRun }) {
   const c = run.counters ?? {};
+  const rows = counterRows(c, ["passengers", "drafted"]);
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1.35fr]" data-testid="desk-money">
-      <Panel>
+    <Panel className="px-0" padded={false}>
+      <div className="px-5 py-4 md:px-6" data-testid="desk-money">
         <MicroLabel>EU261 compensation liability</MicroLabel>
-        <p className="display mt-2 text-[30px] text-navy-900">
-          <Money cents={run.liability_drafted_cents} />
+        <p className="display-tight mt-2 text-[22px] leading-snug text-navy-900 md:text-[24px]">
+          <Money cents={run.liability_drafted_cents} /> drafted, pending approval.{" "}
+          <span className="text-slate-400">
+            Not <Money cents={run.entitlement_cents} /> (if every passenger claimed).
+          </span>
         </p>
-        <p className="mt-1.5 text-[12.5px] leading-relaxed text-slate-500">drafted, pending approval</p>
-      </Panel>
-      <Panel>
-        <MicroLabel>Full Art. 7 entitlement</MicroLabel>
-        <p className="display mt-2 text-[30px] text-navy-900">
-          <Money cents={run.entitlement_cents} />
-        </p>
-        <p className="mt-1.5 text-[12.5px] leading-relaxed text-slate-500">if every passenger claims</p>
-      </Panel>
-      {c.drafted !== undefined ? (
-        <Panel>
-          <MicroLabel>Payouts</MicroLabel>
-          <p className="display mt-2 text-[30px] text-navy-900">{count(c.drafted)}</p>
-          <p className="mt-1.5 text-[12.5px] leading-relaxed text-slate-500">drafted, pending Claims Lead approval</p>
-        </Panel>
-      ) : null}
-      <Panel>
-        <MicroLabel>Counters</MicroLabel>
-        <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[12.5px]">
-          {counterRows(c, ["passengers", "drafted"]).map(([k, label]) => (
-            <div key={k} className="flex items-baseline justify-between gap-2 border-b border-cloud-100 py-0.5">
-              <dt className="whitespace-nowrap text-slate-500">{label}</dt>
-              <dd className="figure font-semibold text-navy-900">{count(c[k])}</dd>
-            </div>
-          ))}
-        </dl>
-      </Panel>
-    </div>
+        {c.drafted !== undefined ? <p className="mt-1.5 text-[13.5px] text-slate-600">{count(c.drafted)} payouts drafted, pending Claims Lead approval.</p> : null}
+        {rows.length ? (
+          <Details summary="Every counter for the day" className="mt-3">
+            <dl className="grid max-w-[720px] grid-cols-2 gap-x-6 gap-y-1 text-[12.5px] sm:grid-cols-3">
+              {rows.map(([k, label]) => (
+                <div key={k} className="flex items-baseline justify-between gap-2 border-b border-cloud-100 py-0.5">
+                  <dt className="whitespace-nowrap text-slate-500">{label}</dt>
+                  <dd className="figure font-semibold text-navy-900">{count(c[k])}</dd>
+                </div>
+              ))}
+            </dl>
+          </Details>
+        ) : null}
+      </div>
+    </Panel>
   );
 }
 
@@ -514,15 +507,23 @@ function AskedList({ questions }: { questions: Question[] }) {
   );
 }
 
+/** The day's feed, newest first; a run of the same step (48 payouts drafted) shows once, with how many more. */
 function RunFeed({ events }: { events: TraceEvent[] }) {
-  const sorted = useMemo(() => [...events].sort((a, b) => b.seq - a.seq), [events]);
+  const items = useMemo(() => collapseRuns([...events].sort((a, b) => b.seq - a.seq)), [events]);
   return (
     <Panel title="What it did" padded={false}>
-      {sorted.length ? (
+      {items.length ? (
         <ol className="max-h-[360px] overflow-y-auto px-5 pb-2">
-          {sorted.map((e) => (
-            <FeedRow key={e.seq} event={e} className="border-t border-cloud-100 first:border-t-0" />
-          ))}
+          {items.flatMap((it) =>
+            it.kind === "one"
+              ? [<FeedRow key={it.event.seq} event={it.event} className="border-t border-cloud-100 first:border-t-0" />]
+              : [
+                  <FeedRow key={it.events[0].seq} event={it.events[0]} className="border-t border-cloud-100 first:border-t-0" />,
+                  <li key={`${it.key}-more`} className="pb-2 pl-[52px] text-[12px] text-slate-500">
+                    and {count(it.events.length - 1)} more like it{it.cents !== null ? <> · <Money cents={it.cents} /> in all</> : null}
+                  </li>,
+                ],
+          )}
         </ol>
       ) : (
         <p className="px-5 pb-5 text-[13px] text-slate-500">No activity for this day.</p>

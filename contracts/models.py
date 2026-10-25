@@ -341,6 +341,8 @@ class JournalEntry(BaseModel):
     status: Literal["draft", "approved", "posted"]          # view over events; StormCheck never posts beyond "approved" (parked)
     preparer: str; approver: str | None = None
     built_from: int = 0; ties_to: list[str] = []
+    approver_role: Role | None = None       # additive (server): who must approve it (claims_lead: payouts, controller: JEs)
+    period_locked: bool = False             # additive (server): its period is locked (nothing more is written to it)
 
 class RollforwardRow(BaseModel):
     cohort: str
@@ -388,6 +390,8 @@ class CfoMetrics(BaseModel):
     vouchers_outstanding_cents: Cents
     care_accrued_cents: Cents; care_invoiced_cents: Cents
     cohort: str | None = None               # additive (Justin #19): the cohort the bridge describes (None = all)
+    refund_vouchers_outstanding_cents: Cents = 0        # additive (server): GL 2131, of vouchers_outstanding_cents
+    compensation_vouchers_outstanding_cents: Cents = 0  # additive (server): GL 2132, of vouchers_outstanding_cents
 
 # ---------- API views ----------
 class TraceEvent(BaseModel):
@@ -549,9 +553,15 @@ World.model_rebuild()
 
 
 # ---------- API envelopes (additive, D0a: CONTRACTS §3 shapes that had no model) ----------
+class TraceAnchor(BaseModel):               # additive (server): the published head of the commit chain
+    head: str | None; count: int            # `make verify --expect-head <head>:<count>` checks it later
+    text: str                               # "head 1a2b3c4d5e6f · 412 commits"
+
 class Health(BaseModel):                    # GET /health
     ok: bool; mode: str                     # mode: STORMCHECK_MODE (live|cache|offline) or "stub"
     impl: dict[str, str] = {}               # {"engine","world","reader","drafter","books"} -> "fake" | "real" | "stub"
+    anchor: TraceAnchor | None = None       # additive (server); also the X-Trace-Head / X-Trace-Commits headers
+    trace_write_failures: int = 0           # additive (server): trace writes that failed since boot/reset (ok=false)
 
 class StormSummary(BaseModel):              # GET /storms item
     id: ID; station: str; date: date
@@ -581,8 +591,13 @@ class LockResponse(BaseModel):
 class ClockRequest(BaseModel):              # POST /clock (forward-only)
     known_at: UTCDateTime
 
+class ClockMark(BaseModel):                 # additive (server, Justin #2): a named moment the demo moves through
+    at: UTCDateTime; label: str             # "Iberian blackout · 28 Apr 2025"
+    note: str | None = None
+
 class ClockResponse(BaseModel):
     known_at: UTCDateTime
+    marks: list[ClockMark] = []             # additive (Justin #2): GET /clock serves them; earlier ones have passed
 
 class OkResponse(BaseModel):                # POST /reset
     ok: bool

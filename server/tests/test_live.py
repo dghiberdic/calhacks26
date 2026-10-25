@@ -108,6 +108,18 @@ def test_desk_bad_input_is_a_plain_422(golden):
         assert r.json()["error"]["message"]
 
 
+def test_desk_world_errors_keep_their_code_and_plain_message(golden, golden_app, monkeypatch):
+    from world.errors import WorldError
+    rt = golden_app.state.runtime
+    plain = "No METAR reports for Lisbon (LPPT) on 2025-04-28, so this day can't be run on real weather."
+
+    def no_metar(icao, day, seed=0):
+        raise WorldError("no_metar", plain)
+    monkeypatch.setattr(rt.impls, "generate_day", no_metar)
+    r = golden.post("/api/desk", json={"icao": "LPPT", "date": "2025-04-28"})
+    assert r.status_code == 422 and code(r) == "no_metar" and r.json()["error"]["message"] == plain
+
+
 def test_desk_golden_day_returns_the_stored_run(golden):
     r = golden.post("/api/desk", json={"icao": "EIDW", "date": "2025-01-24"})
     assert r.status_code == 200 and r.json()["counters"]["passengers"] == 5292
@@ -152,6 +164,40 @@ def test_rehearsed_injections_end_in_an_answer_or_an_escalation(golden, iid, wan
     resp = inject(golden, INJECTIONS[iid].request.model_dump(mode="json"))
     assert resp.message and want in resp.message, resp.message
     assert resp.events
+
+
+def broken_invariants(c) -> list[tuple[str, str]]:
+    return [(i["id"], i["detail"]) for i in c.get("/api/books/invariants").json() if not i["ok"]]
+
+
+def test_all_rehearsed_injections_keep_every_books_invariant(golden):
+    rehearsed = sorted((ROOT / "contracts" / "fixtures" / "injections").glob("*.json"))
+    assert len(rehearsed) == 8
+    assert broken_invariants(golden) == []
+    for path in rehearsed:
+        inj = Injection.model_validate_json(path.read_bytes())
+        inject(golden, inj.request.model_dump(mode="json"))
+        assert broken_invariants(golden) == [], inj.id
+
+
+def test_a_redecided_flight_reaches_books_decision_view(golden, golden_app, monkeypatch):
+    """INV-7 reads Books' own decision view: a recode must carry the new decision, not leave the old one."""
+    from contracts.models import Cause, Extraordinary
+    lc = golden_app.state.runtime.lifecycle
+    decide = lc._decide_one
+
+    def flips_ns110(eng, w, fid, rules, known_at, stations, cur):
+        d = decide(eng, w, fid, rules, known_at, stations, cur)
+        if fid != "NS110@2025-01-24" or d is None:
+            return d
+        return d.model_copy(update={"cause": Cause.TECHNICAL, "extraordinary": Extraordinary.NO, "outcome": "auto",
+                                    "routed_to": None, "question_id": None})
+    monkeypatch.setattr(lc, "_decide_one", flips_ns110)
+    inject(golden, INJECTIONS["01_aog_inside_window"].request.model_dump(mode="json"))
+    ff = golden.get("/api/flights/NS110@2025-01-24").json()
+    assert ff["decision"]["extraordinary"] == "not_extraordinary"
+    assert any(e["compensation_cents"] > 0 for e in ff["sample_entitlements"])
+    assert broken_invariants(golden) == []
 
 
 HOSTILE = [

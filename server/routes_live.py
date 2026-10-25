@@ -19,7 +19,7 @@ from contracts.models import (
 from contracts.stub_app import ERRORS, ApiError, SSEResponse
 
 from .desk import DeskError, run_desk
-from .store import iso
+from .store import TraceWriteError, iso
 
 log = logging.getLogger("stormcheck.server")
 
@@ -68,7 +68,7 @@ def install(app: FastAPI, rt: Any) -> None:
                 return run_desk(rt, req.icao, req.date)
             except DeskError as exc:
                 raise ApiError(422, exc.code, exc.message) from exc
-            except ApiError:
+            except (ApiError, TraceWriteError):
                 raise
             except Exception as exc:          # a judge's day must never 500
                 log.exception("desk %s %s failed", req.icao, req.date)
@@ -82,6 +82,8 @@ def install(app: FastAPI, rt: Any) -> None:
         with rt.lock:
             try:
                 return rt.live.inject(req)
+            except TraceWriteError:
+                raise                         # the record failed: 503, never an escalation that was not recorded
             except Exception as exc:          # belt and braces (non-negotiable 8)
                 log.exception("inject failed")
                 ref = f"SRC-INJ-FAILED-{len(rt.store.keys('injected_source')) + 1:04d}"
@@ -107,6 +109,8 @@ def install(app: FastAPI, rt: Any) -> None:
                 return rt.live.challenge(flight_id, req.text)
             except KeyError as exc:
                 raise ApiError(404, "not_found", f"No decision for {flight_id}.") from exc
+            except TraceWriteError:
+                raise
             except Exception as exc:
                 log.exception("challenge failed")
                 rt.live.failure("challenge", exc, flight_id)
@@ -119,6 +123,11 @@ def install(app: FastAPI, rt: Any) -> None:
                                          question=q)
 
     # ---------------------------------------------------------------- clock
+    @app.get("/api/clock", response_model=ClockResponse)
+    def get_clock() -> ClockResponse:
+        """Justin #2: the server's known-at, and every named moment of the demo (earlier ones have passed)."""
+        return ClockResponse(known_at=rt.now, marks=rt.marks())
+
     @app.post("/api/clock", response_model=ClockResponse, responses=ERRORS)
     def set_clock(req: ClockRequest, request: Request) -> ClockResponse:
         s = sess(request)
@@ -130,4 +139,4 @@ def install(app: FastAPI, rt: Any) -> None:
                 raise ApiError(422, "validation", str(exc)) from exc
             if t > prev:
                 rt.emit("info", s.principal, f"Clock moved to {iso(t)}", "INFO", "clock")
-        return ClockResponse(known_at=rt.now)
+        return ClockResponse(known_at=rt.now, marks=rt.marks())

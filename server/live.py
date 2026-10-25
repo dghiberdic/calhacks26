@@ -29,6 +29,7 @@ from contracts.models import (
 
 from . import compose
 from .impls import _module
+from .store import TraceWriteError
 
 if TYPE_CHECKING:
     from .runtime import Runtime
@@ -87,7 +88,10 @@ class Live:
         return next((f for f in (self.rt.world.flights if self.rt.world else []) if f.id == fid), None)
 
     def failure(self, stage: str, exc: BaseException, ref: str) -> None:
-        """Commit the exception class (never the payload) so the failure is on the record."""
+        """Commit the exception class (never the payload) so the failure is on the record. A failed trace write
+        is not escalated: it propagates (503), because the escalation could not be recorded either."""
+        if isinstance(exc, TraceWriteError):
+            raise exc
         cls = type(exc).__name__
         log.warning("inject %s: %s failed: %s: %s", ref, stage, cls, exc)
         self.rt.record("commit", "fact", {"source_id": ref, "stage": stage, "error": cls}, "agent.engine", [],

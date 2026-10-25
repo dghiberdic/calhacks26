@@ -41,7 +41,9 @@
     "built_from": 9,
     "ties_to": [
       "2140"
-    ]
+    ],
+    "approver_role": null,
+    "period_locked": false
   },
   "register": [
     {
@@ -57,7 +59,7 @@
   "decision_commits": [
     "13af71797abd0b19220fc0b16a1e483b3213c115f239e3915290ae7900100f04",
     "d10eefc94d21dd2dae5432c95b8ee28c37b40ca4916a5cd04a0026effdd22cbe",
-    "03ddf67c6109a4bbead3ad1ec2fda6d91a68d9187555ca3e028b8279c7b8a52b"
+    "685793a4ff3cd82a0ab3202cc593bc5b88bd6945f43a4ba1004868adf8e2f722"
   ],
   "sources": [
     "SRC-TECHLOG-EI-NSB-2025-01-23T2140Z",

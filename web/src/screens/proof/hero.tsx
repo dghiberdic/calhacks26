@@ -1,18 +1,19 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { scaleLinear } from "d3-scale";
 import { useCfo } from "@/api/queries";
 import type { EvalReport } from "@/api/types";
+import { Explain } from "@/components/explain";
 import { useWidth } from "@/components/storm/useWidth";
-import { pct } from "@/lib/format";
-import { cn } from "@/lib/utils";
-import { axisMax, euros, headline, placeLabels, readRuns, runLabel, type Runs } from "./model";
+import { count, pct } from "@/lib/format";
+import { axisMax, euros, headline, injectionSummary, placeLabels, readRuns, runLabel, sameAnswer, settledAlone, type Runs } from "./model";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 /**
  * "Plain Claude, 3 runs: €a / €b / €c. StormCheck: €34,650 ×3, same hash." The sentence, then the same
- * runs on one € axis: the baseline's land in three places, StormCheck's in one.
+ * runs on one € axis: the baseline's land in three places, StormCheck's in one. Under it, what the eval
+ * shows in three plain findings, each read from the report.
  */
 export function RunsHero({ report }: { report: EvalReport }) {
   const base = readRuns(report.baseline);
@@ -31,33 +32,52 @@ export function RunsHero({ report }: { report: EvalReport }) {
         </h2>
       </div>
       {base.values.length || sc.values.length ? <RunsPlot base={base} sc={sc} anchors={anchors} /> : <div className="h-6" />}
-      <div className="relative grid grid-cols-[minmax(0,1fr)] gap-px border-t border-white/[0.07] bg-white/[0.07] sm:grid-cols-2">
-        <RunFacts title="Plain Claude" runs={base} note={base.model ? `${base.model} on the raw documents` : "the model on the raw documents"} />
-        <RunFacts title="StormCheck" runs={sc} note="Reader facts, then the deterministic engine" strong />
-      </div>
+      <Findings report={report} base={base} sc={sc} />
     </section>
   );
 }
 
-function RunFacts({ title, runs, note, strong }: { title: string; runs: Runs; note: string; strong?: boolean }) {
+/** What the eval shows, in words: right when it settles alone, the same answer every run, injections blocked. */
+function Findings({ report, base, sc }: { report: EvalReport; base: Runs; sc: Runs }) {
+  const alone = settledAlone(report);
+  const same = sameAnswer(sc);
+  const inj = injectionSummary(report.injections);
+  const unsafe = inj?.rest.find((x) => /unsafe/.test(x.key))?.value;
   return (
-    <div className="bg-navy-900 px-5 py-4 md:px-9">
-      <p className={cn("text-[13.5px] font-semibold", strong ? "text-cloud-50" : "text-cloud-300")}>{title}</p>
-      <p className="mt-0.5 text-[12.5px] text-cloud-500">{note}</p>
-      <ul className="mt-2 flex flex-col gap-1 text-[12.5px] text-cloud-400">
-        <li>
-          {runs.hashIdentical === true ? (
-            <>
-              same hash on all {runs.runs} runs{runs.hash ? <span className="ml-1.5 font-mono text-[11.5px] text-cloud-300">{runs.hash.slice(0, 12)}</span> : null}
-            </>
-          ) : runs.hashIdentical === false ? (
-            <>a different hash on each run</>
-          ) : (
-            <>hash not reported</>
-          )}
-        </li>
-        {runs.accuracy.length ? <li>cause accuracy {runs.accuracy.map((a) => pct(a)).join(" / ")}</li> : null}
-      </ul>
+    <dl className="relative grid grid-cols-[minmax(0,1fr)] gap-px border-t border-white/[0.07] bg-white/[0.07] md:grid-cols-3" data-testid="proof-findings">
+      <Finding figure={alone ? pct(alone.share) : "—"} label="right when it settles alone" testId="finding-alone">
+        {!alone ? (
+          "Not reported yet."
+        ) : alone.basis === "auto" ? (
+          <>
+            Of the {count(alone.n)} flights it settled with no person, {count(alone.right)} were right.
+          </>
+        ) : (
+          <>
+            Of the {count(alone.n)} causes it found at {pct(alone.from)} <Explain term="confidence">confidence</Explain> or more, {count(alone.right)} were right.
+          </>
+        )}
+      </Finding>
+      <Finding figure={sc.hashIdentical ? "Same hash" : sc.allSame ? "Same answer" : "—"} label="same answer every run" testId="finding-runs">
+        {same ?? "Not reported yet."}
+        {base.values.length ? ` Plain Claude on the same documents: ${base.values.map(euros).join(" / ")}.` : base.status && base.status !== "complete" ? " Plain Claude hasn't been run on them yet." : ""}
+        {sc.hash ? <span className="mt-1 block font-mono text-[11.5px] text-cloud-500">hash {sc.hash.slice(0, 12)}</span> : null}
+      </Finding>
+      <Finding figure={inj ? (inj.total !== null ? `${count(inj.blocked)} of ${count(inj.total)}` : count(inj.blocked)) : "—"} label="injection attempts blocked" testId="finding-injections">
+        {inj ? <>Planted in claims and emails. The Reader only extracts facts, each quoting its source{unsafe === 0 ? "; nothing unsafe got through" : ""}.</> : "Not reported yet."}
+      </Finding>
+    </dl>
+  );
+}
+
+function Finding({ figure, label, children, testId }: { figure: string; label: string; children: ReactNode; testId: string }) {
+  return (
+    <div className="bg-navy-900 px-5 py-4 md:px-9" data-testid={testId}>
+      <dt>
+        <span className="display-tight block text-[26px] leading-none text-cloud-50">{figure}</span>
+        <span className="mt-1.5 block text-[13px] font-medium text-cloud-300">{label}</span>
+      </dt>
+      <dd className="mt-1 text-[12.5px] leading-relaxed text-cloud-400">{children}</dd>
     </div>
   );
 }

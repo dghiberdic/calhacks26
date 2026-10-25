@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router";
 import { motion, useReducedMotion } from "motion/react";
 import { Loader2 } from "lucide-react";
 import { MicroLabel } from "@/components/chips";
+import { Explain } from "@/components/explain";
 import { PageHeader } from "@/components/kit";
 import { cn } from "@/lib/utils";
 import { airportByIcao, choiceLabel, ICAO_SHAPE } from "./airports";
@@ -25,7 +26,7 @@ export default function DeskScreen() {
   return (
     <div className="mx-auto flex max-w-[1280px] flex-col gap-3">
       <PageHeader eyebrow={<MicroLabel>Judge&rsquo;s Desk · real METAR</MicroLabel>} title="Name an airport and a date." className="mb-2">
-        StormCheck pulls that day&rsquo;s METAR, runs Northstar&rsquo;s flights to and from the airport through the engine, and drafts what&rsquo;s owed. Then hand it a document of your own.
+        Any airport, any date, real weather. StormCheck pulls that day&rsquo;s <Explain term="metar">METAR</Explain>, flies Northstar&rsquo;s flights through it with the same engine, and drafts what&rsquo;s owed. Then hand it a document of your own.
       </PageHeader>
 
       <DayForm />

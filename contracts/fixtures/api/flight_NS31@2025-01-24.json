@@ -345,7 +345,9 @@
       "built_from": 9,
       "ties_to": [
         "2140"
-      ]
+      ],
+      "approver_role": null,
+      "period_locked": false
     },
     {
       "id": "JE-000102",
@@ -401,7 +403,9 @@
       "built_from": 4,
       "ties_to": [
         "2125"
-      ]
+      ],
+      "approver_role": null,
+      "period_locked": false
     },
     {
       "id": "JE-000103",
@@ -455,7 +459,9 @@
       "preparer": "agent.books",
       "approver": null,
       "built_from": 3,
-      "ties_to": []
+      "ties_to": [],
+      "approver_role": null,
+      "period_locked": false
     },
     {
       "id": "JE-000104",
@@ -509,7 +515,9 @@
       "preparer": "agent.books",
       "approver": null,
       "built_from": 3,
-      "ties_to": []
+      "ties_to": [],
+      "approver_role": null,
+      "period_locked": false
     },
     {
       "id": "JE-000105",
@@ -553,7 +561,9 @@
       "preparer": "agent.books",
       "approver": null,
       "built_from": 2,
-      "ties_to": []
+      "ties_to": [],
+      "approver_role": null,
+      "period_locked": false
     }
   ],
   "timeline": [
