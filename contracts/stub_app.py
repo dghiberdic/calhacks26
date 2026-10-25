@@ -35,8 +35,9 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from contracts.models import (
     AccessDecision, AccessMatrix, Airport, AnswerRequest, AnswerResponse, Blame, CfoMetrics, ChallengeRequest,
     ChallengeResponse, ClaimCurve, ClockRequest, ClockResponse, Commit, Confidence, ConfirmResponse, ControlMapping,
-    DeskRequest, Draft, ErrorBody, ErrorEnvelope, EstimateCard, EvalReport, Fact, FlightFile, Health,
-    InjectRequest, InjectResponse, Injection, InvariantResult, JournalEntry, LockResponse, MonthEndResponse,
+    DeskRequest, Draft, EffortEstimate, ErrorBody, ErrorEnvelope, EstimateCard, EvalReport, Fact, FlightFile, Health,
+    InjectRequest, InjectResponse, Injection, InvariantResult, JournalEntry, LearningStep, LockResponse,
+    MonthEndResponse,
     OkResponse, PeriodRequest, Question, RejectRequest, ReplayDiff, ReplayFlip, Role, Rollforward, Rule, RuleAction,
     RuleProposal, Ruling, Session, SessionRequest, SessionResponse, Source, SourceKind, StormRun, StormSummary,
     TraceEvent,
@@ -485,6 +486,18 @@ def injections() -> list[Injection]:
 @app.get("/api/eval", response_model=EvalReport)
 def eval_report() -> EvalReport:
     return EVAL
+
+
+# pitch insights (insights-v1): computed by the real server from a run's real data; the stub has no run data to
+# compute them from, so it declares the shapes (OpenAPI, web types) and serves nothing
+@app.get("/api/runs/{run_id}/effort", response_model=EffortEstimate, responses=ERRORS)
+def run_effort(run_id: str) -> EffortEstimate:
+    raise ApiError(404, "not_found", f"The effort estimate for {run_id} is computed by the real server (make dev).")
+
+
+@app.get("/api/learning", response_model=list[LearningStep])
+def learning() -> list[LearningStep]:
+    return []
 
 
 # ================================================================ writes
