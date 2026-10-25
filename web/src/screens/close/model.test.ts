@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Commit, InvariantResult, JournalEntry, MonthEndResponse, Rollforward, RollforwardRow, TraceEvent } from "@/api/types";
-import { bridgeScale, bridgeToGl, closePeriods, cohortParts, cohortTitle, footRow, invariantsSummary, isRateTimesEntitlement, isReleaseProposal, journalGroups, journalTies, liabilityChange, lockedPeriods, monthBounds, monthEndReason, movementCents, newStorms, preparerRole, releaseProposals, rollforwardCsv, rollforwardTotals } from "./model";
+import { bridgeScale, bridgeToGl, changeByCohort, closePeriods, cohortChangeLine, cohortParts, cohortTitle, footRow, invariantsSummary, isRateTimesEntitlement, isReleaseProposal, journalGroups, journalTies, liabilityChange, lockedPeriods, monthBounds, monthEndReason, movementCents, newStorms, preparerRole, releaseProposals, rollforwardCsv, rollforwardTotals } from "./model";
 
 const row = (over: Partial<RollforwardRow> = {}): RollforwardRow => ({
   cohort: "EIDW@2025-01-24",
@@ -185,6 +185,24 @@ describe("month-end result", () => {
     expect(liabilityChange(res)).toBe(399_000);
     expect(releaseProposals(res.entries).map((e) => e.estimate_ref)).toEqual(["release:EIDW@2024-01-21"]);
     expect(isReleaseProposal({ ...release, status: "approved" })).toBe(false);
+  });
+  it("splits February storm by storm: Éowyn's +€3,990 first, then Herminia's two segments summed", () => {
+    const line = (account: string, cohort: string, cents: number) => (cents > 0 ? { account, account_name: "", cr_cents: cents, dims: { cohort } } : { account, account_name: "", dr_cents: -cents, dims: { cohort } });
+    const cie = (id: string, cohort: string, seg: string, cents: number) => je({ id, estimate_ref: `BF:${cohort}:${seg}@2025-02`, lines: [line("2140", cohort, cents), line("4090", cohort, -cents)] });
+    const res = { entries: [cie("JE-000215", "EIDW@2025-01-26", "long_haul_gt3500", -907_200), cie("JE-000214", "EIDW@2025-01-24", "long_haul_gt3500", 399_000), cie("JE-000216", "EIDW@2025-01-26", "short_le1500", -485_730)] } as unknown as MonthEndResponse;
+    expect(changeByCohort(res, "EIDW@2025-01-24")).toEqual([
+      { cohort: "EIDW@2025-01-24", cents: 399_000 },
+      { cohort: "EIDW@2025-01-26", cents: -1_392_930 },
+    ]);
+    expect(changeByCohort(res, null)[0].cohort).toBe("EIDW@2025-01-26"); // no primary: the largest move first
+    expect(liabilityChange(res)).toBe(399_000 - 1_392_930);
+    expect(cohortChangeLine("Storm Éowyn", 399_000)).toBe("Storm Éowyn: +€3,990 change in estimate: claims came in faster than expected");
+    expect(cohortChangeLine("Storm Herminia", -1_392_930)).toBe("Storm Herminia: −€13,929 change in estimate: fewer claims than expected so far");
+  });
+  it("names the cohort from the estimate ref when a line has no cohort dim, and from the rollforward otherwise", () => {
+    expect(changeByCohort({ entries: [je({ estimate_ref: "BF:EIDW@2025-01-24:long_haul_gt3500@2025-02" })] } as unknown as MonthEndResponse)).toEqual([{ cohort: "EIDW@2025-01-24", cents: 399_000 }]);
+    const rf = { period: "2025-02", rows: [row(), row({ cohort: "EIDW@2024-01-21", change_in_estimate_cents: 0 })], closing_total_cents: 0, gl_balance_cents: 0, ties_to_gl: true };
+    expect(changeByCohort({ entries: [], rollforward: rf } as unknown as MonthEndResponse)).toEqual([{ cohort: "EIDW@2025-01-24", cents: 399_000 }]);
   });
 });
 

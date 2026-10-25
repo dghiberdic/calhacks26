@@ -1,3 +1,4 @@
+import type { APIRequestContext } from "@playwright/test";
 import { expect, test, type Page } from "./fixtures";
 
 const SEATS: [RegExp, string][] = [
@@ -79,14 +80,60 @@ test("the preparer approving their own entry is DENIED · SoD, in place", async 
   await expect(page.getByRole("heading", { name: "Liability & Close" })).toBeVisible();
 });
 
-test("month-end drafts the change in estimate: +€3,990", async ({ page }) => {
-  test.setTimeout(90_000);
+// Character for character the plan's scripted rulings (as web/scripts/record.mjs): LLM calls are cached by exact input.
+const SCRIPTED: Record<string, string> = {
+  claims_lead: "No signed acceptance, no offset: pay €600 cash; the voucher stays as goodwill.",
+  legal: "A return sector of a storm-cancelled rotation is extraordinary only if no aircraft and crew could operate it within 3 h of STD, and passengers were offered the earliest reroute on any carrier (C-74/19).",
+  controller: "Never release the tail. At M12 keep (ultimate − M12 rate) × entitlement until the six-year limitation.",
+};
+const REJECT = /^\s*reject\b|\bnever release\b|\bdo not release\b|\bdon'?t release\b|^\s*keep the (expected )?tail\b/i;
+
+type Q = { id: string; routed_to: string; status: string; reason_tag?: string; proposal_rule_id?: string | null; options: string[]; recommended_option: string };
+
+/** The scripted demo up to February, on a shared server: Q-1 and Q-2 answered, Q-3's release rejected, January closed and locked. */
+async function scriptedFlowToFebruary(request: APIRequestContext) {
+  const token: Record<string, string> = {};
+  for (const role of ["claims_lead", "legal", "controller"]) token[role] = (await (await request.post("/api/session", { data: { role, name: role } })).json()).token;
+  const post = async (role: string, path: string, data?: unknown) => {
+    const res = await request.post(`/api${path}`, { data, headers: { Authorization: `Bearer ${token[role]}` } });
+    expect(res.ok(), `${role} POST ${path}`).toBeTruthy();
+    return res.json();
+  };
+  const questions = (await (await request.get("/api/questions")).json()) as Q[];
+  for (const role of ["claims_lead", "legal", "controller"]) {
+    const q = questions.find((x) => x.routed_to === role && x.status !== "answered");
+    if (!q) continue;
+    const explanation = SCRIPTED[role];
+    const answer =
+      q.reason_tag === "release-proposal"
+        ? q.proposal_rule_id
+          ? await post(role, `/rules/${encodeURIComponent(q.proposal_rule_id)}/reject`, { explanation })
+          : await post(role, `/questions/${encodeURIComponent(q.id)}/answer`, { decision: q.options.find((o) => REJECT.test(o)) ?? q.recommended_option, explanation })
+        : await post(role, `/questions/${encodeURIComponent(q.id)}/answer`, { decision: q.recommended_option, explanation });
+    const ruleId = answer?.proposal?.rule?.id;
+    if (ruleId) await post(role, `/proposals/${encodeURIComponent(ruleId)}/confirm`);
+  }
+  await post("controller", "/books/month-end", { period: "2025-01" });
+  await post("controller", "/books/lock", { period: "2025-01" });
+}
+
+test("month-end drafts the change in estimate: +€3,990 on Storm Éowyn", async ({ page, request }) => {
+  test.setTimeout(150_000);
+  const http = (process.env.E2E_API_MODE ?? "mock") === "http";
+  if (http) await scriptedFlowToFebruary(request);
   await page.goto("/close?period=2025-02");
   await viewAs(page, "controller");
   await page.getByTestId("month-end").click();
   const result = page.getByTestId("month-end-result");
-  await expect(result).toContainText("3,990");
-  await expect(result).toContainText("change in estimate (IAS 8.36)");
+  await expect(result).toContainText("+€3,990");
+  await expect(result).toContainText("change in estimate (IAS 8.36) for Storm Éowyn");
+  if (http) {
+    // Herminia is re-estimated too (no claims by 28 Feb): one plain line per storm, Éowyn's first, then the total.
+    const rows = result.getByTestId("month-end-cohort");
+    await expect(rows.first()).toHaveText("Storm Éowyn: +€3,990 change in estimate: claims came in faster than expected");
+    await expect(rows.nth(1)).toHaveText("Storm Herminia: −€13,929 change in estimate: fewer claims than expected so far");
+    await expect(result.getByTestId("month-end-total")).toHaveText("Total: −€9,939 change in estimate");
+  }
 });
 
 test("other seats read the close; they don't act on it", async ({ page }) => {

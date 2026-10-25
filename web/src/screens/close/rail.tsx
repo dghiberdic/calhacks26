@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { count, eur, periodLabel } from "@/lib/format";
 import { stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
-import { effectOn2140, liabilityChange, METHOD_NAME, monthEndReason, releaseProposals } from "./model";
+import { changeByCohort, cohortChangeLine, cohortParts, cohortTitle, effectOn2140, METHOD_NAME, monthEndReason, releaseProposals, signedEur } from "./model";
 import { Denied } from "./ui";
 
 /** A rail block after the first: ruled above when stacked, ruled at the left when side by side. */
@@ -52,7 +52,10 @@ export function CloseRail({
       const res = await api.monthEnd(period);
       onMonthEnd(res);
       await invalidateAfterWrite();
-      toast(`${label} month-end drafted`, { description: `${eur(liabilityChange(res), { signed: true })} change in estimate (IAS 8.36), pending approval.` });
+      const { primary, headline, cohorts } = monthEndSummary(res);
+      const more = cohorts.length - (primary ? 1 : 0);
+      const others = primary && more ? `; ${count(more)} more ${more === 1 ? "storm" : "storms"} re-estimated` : "";
+      toast(`${label} month-end drafted`, { description: `${eur(headline, { signed: true })} change in estimate (IAS 8.36)${primary ? ` for ${primary.name}` : ""}${others}, pending approval.` });
     } catch (e) {
       setError({ action: "month-end", error: e });
     } finally {
@@ -214,9 +217,18 @@ function ReadyToLock({ monthEnd, pendingDrafts, tiesToGl }: { monthEnd: boolean;
   );
 }
 
-/** "+€3,990 change in estimate", read off what the month-end returned, with why it moved. */
+/** The month-end's headline: the estimate's own storm when it moved, else the total, and every storm that moved. */
+function monthEndSummary(res: MonthEndResponse) {
+  const cohorts = changeByCohort(res, res.estimate?.cohort).map((c) => ({ ...c, name: cohortTitle(c.cohort, stormName) }));
+  const total = cohorts.reduce((s, c) => s + c.cents, 0);
+  const primaryBase = res.estimate ? cohortParts(res.estimate.cohort).base : null;
+  const primary = cohorts[0] && cohorts[0].cohort === primaryBase ? cohorts[0] : null;
+  return { cohorts, total, primary, headline: primary?.cents ?? total };
+}
+
+/** "+€3,990 change in estimate for Storm Éowyn", read off what the month-end returned, with why it moved; one line per storm when more than one moved. */
 function MonthEndResult({ res }: { res: MonthEndResponse }) {
-  const change = liabilityChange(res);
+  const { cohorts, total, primary, headline: change } = monthEndSummary(res);
   const est = res.estimate;
   const drafted = res.entries?.filter((e) => e.status === "draft").length ?? 0;
   return (
@@ -224,9 +236,21 @@ function MonthEndResult({ res }: { res: MonthEndResponse }) {
       <p className="micro text-slate-500">{periodLabel(res.rollforward?.period ?? "")} month-end</p>
       <p className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
         <span className="display-tight text-[30px] leading-none text-navy-900">{eur(change, { signed: true })}</span>
-        <span className="text-[13.5px] text-navy-900">change in estimate (IAS 8.36)</span>
+        <span className="text-[13.5px] text-navy-900">change in estimate (IAS 8.36){primary ? ` for ${primary.name}` : ""}</span>
       </p>
       <p className="mt-1 text-[12.5px] text-slate-500">Drafted, pending approval.</p>
+      {cohorts.length > 1 ? (
+        <ul className="mt-2.5 flex flex-col gap-1 text-[13px] leading-relaxed text-navy-900" data-testid="month-end-cohorts">
+          {cohorts.map((c) => (
+            <li key={c.cohort} data-testid="month-end-cohort">
+              {cohortChangeLine(c.name, c.cents)}
+            </li>
+          ))}
+          <li className="border-t border-cloud-100 pt-1 font-medium" data-testid="month-end-total">
+            Total: {signedEur(total)} change in estimate
+          </li>
+        </ul>
+      ) : null}
       <p className="mt-2.5 text-[13px] leading-relaxed text-slate-600">
         {monthEndReason(est?.actual_vs_expected, change)}
         {est ? (

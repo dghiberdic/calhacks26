@@ -1,4 +1,5 @@
 import type { Cents, Commit, CurveSegment, InvariantResult, JournalEntry, MonthEndResponse, Role, Rollforward, RollforwardRow, TraceEvent } from "@/api/types";
+import { eur } from "@/lib/format";
 import { plainIds } from "@/lib/plain";
 
 // ---------- the 2140 rollforward, read the way an IFRS liability note reads ----------
@@ -223,12 +224,49 @@ export function preparerRole(principal: string | null | undefined): Role | null 
  * The change in estimate the month-end drafted, as it moves 2140 (credit = the liability goes up):
  * read off the returned change-in-estimate entries, else off the returned rollforward.
  */
-export function liabilityChange(res: Pick<MonthEndResponse, "entries"> & Partial<Pick<MonthEndResponse, "rollforward">>, account = "2140"): Cents {
+export function liabilityChange(res: MonthEndParts, account = "2140"): Cents {
+  return changeByCohort(res, null, account).reduce((s, c) => s + c.cents, 0);
+}
+
+type MonthEndParts = Pick<MonthEndResponse, "entries"> & Partial<Pick<MonthEndResponse, "rollforward">>;
+
+/** One storm's change in estimate, as it moves 2140 (its segments summed). */
+export type CohortChange = { cohort: string; cents: Cents };
+
+/**
+ * The change in estimate storm by storm, read the way liabilityChange reads it (the drafted change-in-estimate
+ * entries, else the rollforward). The estimate's own storm (`primary`) comes first, then the largest move.
+ */
+export function changeByCohort(res: MonthEndParts, primary?: string | null, account = "2140"): CohortChange[] {
+  const by = new Map<string, Cents>();
+  const add = (cohort: string, cents: Cents) => {
+    const base = cohortParts(cohort).base;
+    by.set(base, (by.get(base) ?? 0) + cents);
+  };
   const cie = (res.entries ?? []).filter((e) => (e.kind === "change_in_estimate" || e.ias8_class === "change_in_estimate") && !isReleaseProposal(e));
   if (cie.length) {
-    return cie.reduce((s, e) => s + e.lines.filter((l) => l.account === account).reduce((t, l) => t + (l.cr_cents ?? 0) - (l.dr_cents ?? 0), 0), 0);
+    for (const e of cie) {
+      // "BF:EIDW@2025-01-24:long_haul_gt3500@2025-02" names the cohort when a line carries no cohort dim
+      const fromRef = e.estimate_ref?.split(":")[1] ?? "";
+      for (const l of e.lines) if (l.account === account) add(l.dims?.cohort ?? fromRef, (l.cr_cents ?? 0) - (l.dr_cents ?? 0));
+    }
+  } else {
+    for (const r of res.rollforward?.rows ?? []) add(r.cohort, r.change_in_estimate_cents ?? 0);
   }
-  return (res.rollforward?.rows ?? []).reduce((s, r) => s + (r.change_in_estimate_cents ?? 0), 0);
+  const first = primary ? cohortParts(primary).base : null;
+  return [...by]
+    .filter(([, cents]) => cents !== 0)
+    .map(([cohort, cents]) => ({ cohort, cents }))
+    .sort((a, b) => Number(b.cohort === first) - Number(a.cohort === first) || Math.abs(b.cents) - Math.abs(a.cents) || a.cohort.localeCompare(b.cohort));
+}
+
+/** +€3,990 / −€13,929: a change in words, with a real minus sign (the tables keep the accounting brackets). */
+export const signedEur = (cents: Cents) => (cents < 0 ? `−${eur(-cents)}` : eur(cents, { signed: true }));
+
+/** "Storm Éowyn: +€3,990 change in estimate: claims came in faster than expected". */
+export function cohortChangeLine(name: string, cents: Cents) {
+  const why = cents > 0 ? "claims came in faster than expected" : "fewer claims than expected so far";
+  return `${name}: ${signedEur(cents)} change in estimate: ${why}`;
 }
 
 /** The three estimate methods, by EstimateCard.selected. */
