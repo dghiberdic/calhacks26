@@ -2,15 +2,16 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight } from "lucide-react";
-import type { FlightRow, StormRun } from "@/api/types";
+import type { StormRun } from "@/api/types";
 import { Explain } from "@/components/explain";
+import { FaultLine } from "@/components/fault-line";
 import { ConfidenceLine, Details } from "@/components/kit";
 import { mainWindowOf, windowName } from "@/components/storm/model";
 import { StormTimeline } from "@/components/storm/StormTimeline";
 import { RouteLegend } from "@/components/storm/RouteMap";
 import { VERDICT_COLOR } from "@/components/verdict";
 import { airport, iataOf } from "@/lib/airports";
-import { count, longDate, zulu, zuluDay } from "@/lib/format";
+import { count, longDate, zulu } from "@/lib/format";
 import { stormName } from "@/lib/storms";
 import { stormStory } from "./story";
 
@@ -32,27 +33,6 @@ function RealContext({ run }: { run: StormRun }) {
         {run.station}, {longDate(run.date)}: {parts.join("; ")}. The weather, traffic and EU law are real; Northstar&rsquo;s flights, logs and passengers are simulated on top.
       </p>
     </Details>
-  );
-}
-
-/** "The plane was grounded by a fault logged 23 Jan 21:40Z, before the storm, with no MEL relief." From the evidence. */
-function faultLine(row: FlightRow): React.ReactNode {
-  const ev = row.decision?.evidence ?? [];
-  const logged = ev.find((e) => e.field === "aog.logged_at")?.value;
-  const noMel = ev.some((e) => e.field === "aog.mel_relief" && e.value === false);
-  const before = (row.decision?.confidence.features ?? {}).aog_before_window === 1;
-  if (typeof logged !== "string") return row.decision?.reason ?? null;
-  return (
-    <>
-      The plane was grounded by a fault in its <Explain term="tech-log">tech log</Explain> at {zuluDay(logged)}
-      {before ? ", before the storm began" : ""}
-      {noMel ? (
-        <>
-          , with <Explain term="no-mel-relief">no MEL relief</Explain>: it wasn&rsquo;t allowed to fly
-        </>
-      ) : null}
-      .
-    </>
   );
 }
 
@@ -137,7 +117,7 @@ export function Hero({ run, onSelectFlight }: { run: StormRun; onSelectFlight: (
                   {focus.decision?.recode_label}
                 </Explain>
               </p>
-              <p className="mt-2 text-[13px] leading-snug text-cloud-300">{faultLine(focus)}</p>
+              {focus.decision ? <p className="mt-2 text-[13px] leading-snug text-cloud-300"><FaultLine decision={focus.decision} /></p> : null}
               {focus.decision ? <ConfidenceLine confidence={focus.decision.confidence} showCaps={false} className="mt-2 text-cloud-400 [&_span.font-bold]:text-cloud-50" /> : null}
               <Link to={`/flights/${encodeURIComponent(focus.flight.id)}`} className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-medium text-cloud-50 hover:underline" tabIndex={settled ? 0 : -1}>
                 Open the flight file <ArrowRight className="size-3.5" aria-hidden="true" />

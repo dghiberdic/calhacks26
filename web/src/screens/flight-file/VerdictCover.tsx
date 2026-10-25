@@ -4,11 +4,13 @@ import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown, ChevronLeft } from "lucide-react";
 import type { FlightFile } from "@/api/types";
 import { MicroLabel, StatusChip } from "@/components/chips";
-import { RoleAvatar } from "@/components/kit";
+import { Explain } from "@/components/explain";
+import { FaultLine } from "@/components/fault-line";
+import { ConfidenceLine, RoleAvatar } from "@/components/kit";
 import { VERDICT_COLOR, verdictChip, type VerdictKind } from "@/components/verdict";
 import { count, duration, longDate, routedTo, zulu } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { cityOf, consequence, splitRecode, summaryText, VERDICT_HEADLINE } from "./lib";
+import { capitalize, cityOf, consequence, plainHeadline, splitRecode, summaryText, VERDICT_HEADLINE } from "./lib";
 import { Recode } from "./Recode";
 
 const HEADLINE_INK: Record<VerdictKind, string> = {
@@ -31,10 +33,47 @@ function payoutsDrafted(summary: Record<string, unknown>): number | null {
 function windowChip(file: FlightFile): string | null {
   const d = file.decision;
   const margin = d.window_margin_min;
+  // A flight stopped by an external event sits in its outage window, not a storm window.
+  const name = d.cause === "external_event" ? "outage window" : "storm window";
   if (d.in_window_dep === "unknown") return "no METAR within 60 min of departure";
-  if (d.in_window_dep === "in") return d.in_window_arr === "in" ? "inside the storm window at both ends" : "departure inside the storm window";
-  if (d.in_window_arr === "in") return "arrival inside the storm window";
-  return margin !== null && margin !== undefined ? `outside the storm window · ${duration(Math.abs(margin))} clear` : "outside the storm window at both ends";
+  if (d.in_window_dep === "in") return d.in_window_arr === "in" ? `inside the ${name} at both ends` : `departure inside the ${name}`;
+  if (d.in_window_arr === "in") return `arrival inside the ${name}`;
+  return margin !== null && margin !== undefined ? `outside the ${name} · ${duration(Math.abs(margin))} clear` : `outside the ${name} at both ends`;
+}
+
+/** Two plain sentences under the headline: what happened, and what it means under EU261. */
+function PlainWhy({ file, kind }: { file: FlightFile; kind: VerdictKind }) {
+  const d = file.decision;
+  const extraordinary = <Explain term="extraordinary">extraordinary circumstance</Explain>;
+  if (kind === "notweather")
+    return (
+      <>
+        {d.cause === "technical" ? (
+          <>
+            <FaultLine decision={d} />{" "}
+          </>
+        ) : null}
+        That isn&rsquo;t an {extraordinary}, so <Explain term="eu261">EU261</Explain> compensation is owed.
+      </>
+    );
+  if (kind === "weather") {
+    const where = windowChip(file);
+    return (
+      <>
+        {where ? `${capitalize(where)}: ` : ""}an {extraordinary}, so no compensation; refunds and <Explain term="care">care</Explain> still due.
+      </>
+    );
+  }
+  if (kind === "held" && d.cause === "knock_on")
+    return (
+      <>
+        This plane never got out: its earlier leg was cancelled by the storm
+        {d.in_window_dep === "out" && d.in_window_arr === "out" ? ", though both ends of this flight were outside the storm window" : ""}. Whether a{" "}
+        <Explain term="knock-on">knock-on flight</Explain> is an {extraordinary} is a question of law, so it waits on Legal.
+      </>
+    );
+  if (kind === "held") return <>It waits on a person&rsquo;s ruling before anything is paid.</>;
+  return null;
 }
 
 export function VerdictCover({ file, kind, stormLabel, stormId }: { file: FlightFile; kind: VerdictKind; stormLabel: string | null; stormId?: string }) {
@@ -99,18 +138,31 @@ export function VerdictCover({ file, kind, stormLabel, stormId }: { file: Flight
                 <span className="size-1.5 rounded-full" style={{ background: VERDICT_COLOR[kind] }} aria-hidden="true" />
                 {VERDICT_HEADLINE[kind]}
               </MicroLabel>
-              <p className="display-tight mt-2 max-w-[44ch] text-[22px] leading-snug text-navy-900 md:text-[24px]">{sentence(decision.reason)}</p>
+              <p className="display-tight mt-2 text-[24px] leading-snug text-navy-900 md:text-[28px]" data-testid="plain-verdict">
+                {plainHeadline(kind, decision.cause)}
+              </p>
+              <p className="mt-2 max-w-[68ch] text-[15px] leading-relaxed text-slate-600">
+                <PlainWhy file={file} kind={kind} />
+              </p>
             </div>
-            {recode ? <Recode from={recode.from} to={recode.to} size="lg" className="shrink-0" /> : null}
+            {recode ? (
+              <span className="flex shrink-0 flex-col items-end gap-1">
+                <Recode from={recode.from} to={recode.to} size="lg" />
+                <Explain term="delay-codes" className="text-[11.5px] text-slate-500">
+                  delay code recoded
+                </Explain>
+              </span>
+            ) : null}
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <StatusChip tone={chip.tone}>{chip.text}</StatusChip>
-            {window ? (
+            {window && kind !== "weather" ? (
               <StatusChip tone="metar" dot={false}>
                 {window}
               </StatusChip>
             ) : null}
+            {kind !== "operated" ? <ConfidenceLine confidence={decision.confidence} showCaps={false} className="ml-1" /> : null}
             {decision.routed_to && kind === "held" ? (
               <Link to="/questions" className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-[13px] text-slate-600 hover:bg-cloud-50">
                 <RoleAvatar role={decision.routed_to} size="sm" />
@@ -142,16 +194,17 @@ function sentence(text: string) {
   return /[.!?]$/.test(head) ? head : `${head}.`;
 }
 
-/** The consequence line, and the Drafter's plain-language explanation behind a "Why?" disclosure. */
+/** The consequence line; behind "Why?", the engine's exact reason and the Drafter's explanation. */
 function Why({ file, effect }: { file: FlightFile; effect: string | null }) {
   const [open, setOpen] = useState(false);
   const id = useId();
   const draft = file.explanation;
+  const reason = file.decision.reason?.trim();
   return (
     <div className="mt-4">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         {effect ? <p className="text-[14px] text-slate-600">{effect.charAt(0).toUpperCase() + effect.slice(1)}</p> : null}
-        {draft ? (
+        {draft || reason ? (
           <button
             type="button"
             aria-expanded={open}
@@ -165,7 +218,7 @@ function Why({ file, effect }: { file: FlightFile; effect: string | null }) {
         ) : null}
       </div>
       <AnimatePresence initial={false}>
-        {draft && open ? (
+        {(draft || reason) && open ? (
           <motion.div
             id={id}
             key="why"
@@ -175,15 +228,26 @@ function Why({ file, effect }: { file: FlightFile; effect: string | null }) {
             transition={{ duration: 0.28, ease: [0.25, 1, 0.5, 1] }}
             className="overflow-hidden"
           >
-            <div className="mt-3 rounded-lg bg-cloud-50 px-4 py-3.5 shadow-[inset_0_0_0_1px_var(--color-cloud-200)]">
-              <p className="max-w-[72ch] whitespace-pre-line text-[14.5px] leading-relaxed text-navy-900">{draft.text}</p>
-              <p className="mt-2.5 font-mono text-[11px] text-slate-400">
-                {draft.template_fallback
-                  ? "template wording · a drafted number didn't match the evidence"
-                  : draft.numbers_verified
-                    ? "drafted by the Drafter agent · every number checked against the evidence"
-                    : "drafted by the Drafter agent · numbers not yet checked"}
-              </p>
+            <div className="mt-3 flex flex-col gap-3 rounded-lg bg-cloud-50 px-4 py-3.5 shadow-[inset_0_0_0_1px_var(--color-cloud-200)]">
+              {reason ? (
+                <div>
+                  <MicroLabel>The engine&rsquo;s reason</MicroLabel>
+                  <p className="mt-1 max-w-[72ch] font-mono text-[12.5px] leading-relaxed text-navy-900">{sentence(reason)}</p>
+                </div>
+              ) : null}
+              {draft ? (
+                <div>
+                  <MicroLabel>In words</MicroLabel>
+                  <p className="mt-1 max-w-[72ch] whitespace-pre-line text-[14.5px] leading-relaxed text-navy-900">{draft.text}</p>
+                  <p className="mt-2 font-mono text-[11px] text-slate-400">
+                    {draft.template_fallback
+                      ? "template wording · a drafted number didn't match the evidence"
+                      : draft.numbers_verified
+                        ? "drafted by the Drafter agent · every number checked against the evidence"
+                        : "drafted by the Drafter agent · numbers not yet checked"}
+                  </p>
+                </div>
+              ) : null}
             </div>
           </motion.div>
         ) : null}
