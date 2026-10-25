@@ -26,8 +26,18 @@ test("the honest label is on the page, not hidden", async ({ page }) => {
   await expect(label).toContainText(/calibrated on synthetic labels; validates the pipeline, not the world/i);
 });
 
+test("what the eval shows leads, in words, each read from the report", async ({ page }) => {
+  await page.goto("/proof");
+  await expect(page.getByTestId("finding-alone")).toContainText("right when it settles alone");
+  await expect(page.getByTestId("finding-runs")).toContainText("same answer every run");
+  await expect(page.getByTestId("finding-injections")).toContainText("injection attempts blocked");
+  await expect(page.getByRole("heading", { name: "Real vs simulated" })).toBeVisible();
+});
+
 test("the scorecard and the reliability bins render from the eval", async ({ page }) => {
   await page.goto("/proof");
+  // The detail is one click away.
+  await page.getByText("Detailed scorecard").click();
   for (const tile of ["Straight-through", "Miscodes caught", "False holds", "Repeat questions", "Out-of-scope automated", "Liability vs actual"]) {
     await expect(page.getByText(tile, { exact: true })).toBeVisible();
   }

@@ -90,9 +90,11 @@ export const ROLE_INITIALS: Record<Role, string> = {
   "agent.crm_bot": "CB",
 };
 
-/** "Routed to the Claims Lead" — people get "the". */
-/** "Routed to the Claims Lead", "Routed to Legal" (plan §2: departments and agents take no article). */
-export const routedTo = (role: Role) => `Routed to ${role.startsWith("agent.") || role === "legal" || role === "ops" ? "" : "the "}${ROLE_LABEL[role]}`;
+/** "the Claims Lead", "Legal": people get "the"; departments and agents take no article (plan §2). */
+export const theSeat = (role: Role) => `${role.startsWith("agent.") || role === "legal" || role === "ops" ? "" : "the "}${ROLE_LABEL[role]}`;
+
+/** "Routed to the Claims Lead", "Routed to Legal". */
+export const routedTo = (role: Role) => `Routed to ${theSeat(role)}`;
 
 /** Minutes → "1 h 30 min". */
 export function duration(min: number | null | undefined): string {

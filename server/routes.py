@@ -9,14 +9,14 @@ import re
 from datetime import UTC, datetime, timedelta
 from typing import Any, Callable
 
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Query, Request, Response
 
 from contracts import stub_app as stub
 from contracts.models import (
     AccessDecision, AccessMatrix, AnswerRequest, AnswerResponse, Blame, CfoMetrics, ClaimCurve, Commit,
     ConfirmResponse, ControlMapping, EstimateCard, EvalReport, Injection, InvariantResult, JournalEntry,
     LockResponse, MonthEndResponse, PeriodRequest, Question, RejectRequest, ReplayDiff, Role, Rollforward, Rule,
-    RuleProposal, Session, SessionRequest, SessionResponse, TraceEvent,
+    RuleProposal, Session, SessionRequest, SessionResponse, TraceAnchor, TraceEvent,
 )
 from contracts.stub_app import ERRORS, ERRORS_AUTH, ApiError
 
@@ -94,11 +94,13 @@ def install(app: FastAPI, rt: Any) -> None:
         return lc.rules_view()
 
     @app.get("/api/trace", response_model=list[TraceEvent])
-    def get_trace(since: int = Query(0, ge=0)) -> list[TraceEvent]:
+    def get_trace(response: Response, since: int = Query(0, ge=0)) -> list[TraceEvent]:
+        anchor_headers(response, rt.anchor())
         return rt.store.trace(since)
 
     @app.get("/api/commits", response_model=list[Commit])
-    def list_commits(limit: int = Query(100, ge=1, le=1000)) -> list[Commit]:
+    def list_commits(response: Response, limit: int = Query(100, ge=1, le=1000)) -> list[Commit]:
+        anchor_headers(response, rt.anchor())
         return list(rt.trace.log(limit))
 
     @app.get("/api/blame", response_model=Blame, responses=ERRORS)
@@ -351,6 +353,13 @@ def install(app: FastAPI, rt: Any) -> None:
 
     def access_check(s: Session, action: str, resource: str, *, preparer: str | None = None) -> None:
         check_approval(rt, s, action, resource, preparer=preparer)
+
+
+def anchor_headers(response: Response, anchor: TraceAnchor | None) -> None:
+    """The chain anchor beside the commit log, the trace and /health (ASCII: the full head and the count)."""
+    if anchor is not None:
+        response.headers["X-Trace-Head"] = anchor.head or ""
+        response.headers["X-Trace-Commits"] = str(anchor.count)
 
 
 def is_persona(principal: str | None) -> bool:

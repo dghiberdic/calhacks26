@@ -70,6 +70,10 @@ def content_hash(obj: Any) -> str:
 
 
 
+class TraceWriteError(RuntimeError):
+    """A trace commit could not be written. The request that caused it answers 503 `upstream`, never success."""
+
+
 class Store:
     def __init__(self, path: str | Path):
         self.path = str(path)
@@ -183,9 +187,12 @@ class Store:
         return [f"trigger {t}_{suffix} missing" for t in TABLES for suffix in ("no_update", "no_delete", "no_replace")
                 if f"{t}_{suffix}" not in have]
 
-    def verify_chain(self) -> tuple[int, list[str]]:
-        """(commits checked, problems) via `engine.trace` over this file's chain, plus the server tables'
-        append-only protections."""
+    def verify_chain(self, expected_head: str | None = None, expected_count: int | None = None
+                     ) -> tuple[int, list[str]]:
+        """(commits checked, problems) via `engine.trace` over this file's chain: the hash of each broken commit,
+        then the trace's own issues (index rows no commit wrote or that disagree with it, a published anchor
+        `expected_head`/`expected_count` the chain no longer holds), then the server tables' append-only
+        protections."""
         problems = self.protections()
         try:
             from engine.trace import TraceStore
@@ -193,9 +200,10 @@ class Store:
             return 0, problems
         ts = TraceStore(self.path, engine_sha="verify", cal_version="verify")
         try:
-            v = ts.verify()
+            v = ts.verify(expected_head=expected_head, expected_count=expected_count)
             commits = ts.all_commits()
-            return v.checked, [commits[i].hash if i < len(commits) else f"#{i}" for i in v.broken] + problems
+            broken = [commits[i].hash if i < len(commits) else f"#{i}" for i in v.broken]
+            return v.checked, broken + list(v.issues) + problems
         finally:
             ts.close()
 

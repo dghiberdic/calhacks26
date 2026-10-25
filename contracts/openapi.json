@@ -1838,6 +1838,16 @@
               }
             ],
             "title": "Cohort"
+          },
+          "refund_vouchers_outstanding_cents": {
+            "type": "integer",
+            "title": "Refund Vouchers Outstanding Cents",
+            "default": 0
+          },
+          "compensation_vouchers_outstanding_cents": {
+            "type": "integer",
+            "title": "Compensation Vouchers Outstanding Cents",
+            "default": 0
           }
         },
         "type": "object",
@@ -1992,6 +2002,36 @@
         ],
         "title": "ClaimCurve"
       },
+      "ClockMark": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "at",
+          "label"
+        ],
+        "title": "ClockMark"
+      },
       "ClockRequest": {
         "properties": {
           "known_at": {
@@ -2012,6 +2052,14 @@
             "type": "string",
             "format": "date-time",
             "title": "Known At"
+          },
+          "marks": {
+            "items": {
+              "$ref": "#/components/schemas/ClockMark"
+            },
+            "type": "array",
+            "title": "Marks",
+            "default": []
           }
         },
         "type": "object",
@@ -3756,6 +3804,21 @@
             "type": "object",
             "title": "Impl",
             "default": {}
+          },
+          "anchor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TraceAnchor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trace_write_failures": {
+            "type": "integer",
+            "title": "Trace Write Failures",
+            "default": 0
           }
         },
         "type": "object",
@@ -4040,6 +4103,21 @@
             "type": "array",
             "title": "Ties To",
             "default": []
+          },
+          "approver_role": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Role"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "period_locked": {
+            "type": "boolean",
+            "title": "Period Locked",
+            "default": false
           }
         },
         "type": "object",
@@ -5333,6 +5411,36 @@
           "peak_gust_kt"
         ],
         "title": "StormWindow"
+      },
+      "TraceAnchor": {
+        "properties": {
+          "head": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Head"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "head",
+          "count",
+          "text"
+        ],
+        "title": "TraceAnchor"
       },
       "TraceEvent": {
         "properties": {

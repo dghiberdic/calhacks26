@@ -7,5 +7,7 @@
     "reader": "stub",
     "drafter": "stub",
     "books": "stub"
-  }
+  },
+  "anchor": null,
+  "trace_write_failures": 0
 }

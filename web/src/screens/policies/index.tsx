@@ -5,10 +5,12 @@ import { MotionConfig, useReducedMotion } from "motion/react";
 import { api } from "@/api/client";
 import { useRules } from "@/api/queries";
 import type { Rule } from "@/api/types";
-import { Empty, ErrorNote, PageHeader, Shimmer } from "@/components/kit";
+import { Explain } from "@/components/explain";
+import { Details, Empty, ErrorNote, PageHeader, Shimmer } from "@/components/kit";
 import { cn } from "@/lib/utils";
 import { RevertDialog, WidenDialog } from "./dialogs";
 import { ORIGIN_COPY, ORIGIN_ORDER, byOrigin, familyFromHash, type Origin, type RuleFamily } from "./model";
+import { DetailsTitle } from "@/screens/close/ui";
 import { StatusLifecycle } from "./parts";
 import { HardControls, StaticRegulationCard } from "./regulation";
 import { RuleCard, type CardActions } from "./RuleCard";
@@ -43,9 +45,11 @@ export default function PoliciesScreen() {
   return (
     <MotionConfig reducedMotion="user">
       <div className="mx-auto max-w-[1120px]">
-        <PageHeader title="Policies" actions={<StatusLifecycle className="hidden lg:flex" />}>
-          Rules come only from history, rulings, rejections and regulation. There is no rule editor.
+        <PageHeader title="Policies">
+          Every rule StormCheck applies, by where it came from: Northstar&rsquo;s own history, a person&rsquo;s ruling, a rejected proposal or the law. There is no rule editor.
         </PageHeader>
+
+        <HowRulesWork />
 
         {rules.isLoading ? (
           <Skeleton />
@@ -125,27 +129,49 @@ function useDeepLinkFlash(ready: boolean) {
   return flash;
 }
 
+/** Where rules come from, which wins, where each applies and how it lives: one click away, in words. */
+function HowRulesWork() {
+  return (
+    <section aria-label="How rules work" className="mt-6 rounded-xl bg-card px-5 py-3.5 shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04)]">
+      <Details summary={<DetailsTitle title="How rules work" note="where they come from, which wins, where they apply" />}>
+        <ul className="flex max-w-[86ch] flex-col gap-2 text-[13.5px] leading-relaxed text-slate-600">
+          <li>
+            <span className="font-medium text-navy-900">Where they come from.</span> Patterns mined from Northstar&rsquo;s past decisions, a person&rsquo;s answer to a question, a proposal someone rejected, or a version of the law. Hard controls are code and sit above all of them.
+          </li>
+          <li>
+            <span className="font-medium text-navy-900">Which one wins.</span> When two rules match a case, <Explain term="rule-precedence">the stronger source wins</Explain>.
+          </li>
+          <li>
+            <span className="font-medium text-navy-900">Where each applies.</span> Every rule has a <Explain term="rule-scope">scope</Explain>; a case outside it is asked again rather than guessed.
+          </li>
+          <li>
+            <span className="font-medium text-navy-900">How a rule lives.</span> A widened version runs in shadow first, recording what it would change, and applies once someone confirms it. A replay or a challenge can mark it suspect; a revert retires it, kept for replay.
+            <StatusLifecycle className="mt-2" />
+          </li>
+        </ul>
+      </Details>
+    </section>
+  );
+}
+
+/** Jump to each origin: its name and how many rules it holds. */
 function OriginIndex({ groups }: { groups: Record<Origin, RuleFamily[]> }) {
   const shown = ORIGIN_ORDER.filter((o) => o !== "hard" || groups.hard.length > 0);
   return (
-    <nav aria-label="Policies by origin" className="mt-7">
-      <ol className={cn("grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-cloud-200 shadow-[0_0_0_1px_var(--color-cloud-200)] sm:grid-cols-3", shown.length === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4")}>
-        {shown.map((origin, i) => {
+    <nav aria-label="Policies by origin" className="mt-4">
+      <ol className="flex flex-wrap gap-1.5">
+        {shown.map((origin) => {
           const list = groups[origin];
-          const cited = list.reduce((s, f) => s + (f.current.times_cited ?? 0), 0);
+          const title = origin === "hard" ? "Hard controls" : ORIGIN_COPY[origin].title;
           return (
-            <li key={origin} className={cn("bg-card", i === shown.length - 1 && shown.length % 2 === 1 && "col-span-2 sm:col-span-1")}>
+            <li key={origin}>
               <a
                 href={`#origin-${origin}`}
-                aria-label={`${origin === "hard" ? "Hard controls" : ORIGIN_COPY[origin].title}: ${list.length} ${list.length === 1 ? "rule" : "rules"}${origin !== "hard" && cited > 0 ? `, cited ${cited} times` : ""}`}
-                className="group flex h-full flex-col px-4 py-3.5 transition-colors hover:bg-cloud-25 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-metar-ink">
-                <span className="flex items-baseline justify-between gap-2">
-                  <span className={cn("figure text-[26px] font-semibold leading-none", list.length ? "text-navy-900" : "text-cloud-400")}>{list.length}</span>
-                  {origin !== "hard" && cited > 0 ? <span className="font-mono text-[11px] text-slate-400">cited {cited}×</span> : null}
-                </span>
-                <span className="mt-2 text-[13px] font-medium text-navy-900 group-hover:underline group-hover:decoration-cloud-300 group-hover:underline-offset-2">
-                  {origin === "hard" ? "Hard controls" : ORIGIN_COPY[origin].title}
-                </span>
+                aria-label={`${title}: ${list.length} ${list.length === 1 ? "rule" : "rules"}`}
+                className="inline-flex h-8 items-center gap-2 rounded-full bg-white px-3 text-[13px] font-medium text-navy-900 shadow-[inset_0_0_0_1px_var(--color-cloud-200)] transition-colors hover:bg-cloud-50 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-metar-ink"
+              >
+                {title}
+                <span className={cn("figure text-[12px]", list.length ? "text-slate-500" : "text-cloud-400")}>{list.length}</span>
               </a>
             </li>
           );

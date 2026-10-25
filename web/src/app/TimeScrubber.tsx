@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 export const MOMENTS: ClockMark[] = [
   { at: "2025-01-24T05:12:00Z", label: "OCC cancel list", note: "All 27 coded weather" },
   { at: "2025-01-25T09:00:00Z", label: "The morning after", note: "Storm run done" },
-  { at: "2025-01-26T13:00:00Z", label: "Storm Herminia", note: "Same ruling, next storm" },
+  { at: "2025-01-27T06:00:00Z", label: "Storm Herminia", note: "Same ruling, next storm" },
   { at: "2025-01-31T23:59:00Z", label: "January close", note: "6 claims approved" },
   { at: "2025-02-28T23:59:00Z", label: "February month-end", note: "Bornhuetter-Ferguson true-up" },
   { at: "2025-04-29T06:00:00Z", label: "Iberian blackout · 28 Apr 2025", note: "A power cut, not a storm: asks Legal once" },

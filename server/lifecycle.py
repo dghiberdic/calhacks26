@@ -15,13 +15,14 @@ The engine decides; the server never computes an amount (Books does) and never p
 """
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Iterator
 
 from contracts.models import (
-    Entitlement, Extraordinary, FlightDecision, FlightFile, Question, ReplayDiff, ReplayFlip, Role, Rule,
-    RuleAction, RuleProposal, Ruling, StormRun, World,
+    Entitlement, Extraordinary, FlightDecision, FlightFile, JournalEntry, Question, ReplayDiff, ReplayFlip, Role,
+    Rule, RuleAction, RuleProposal, Ruling, StormRun, World,
 )
 
 from . import compose
@@ -30,6 +31,7 @@ from .impls import _module, call
 if TYPE_CHECKING:
     from .runtime import Runtime
 
+log = logging.getLogger("stormcheck.server")
 FLIGHT_ACTIONS = {RuleAction.SET_EXTRAORDINARY: Extraordinary.YES,
                   RuleAction.SET_NOT_EXTRAORDINARY: Extraordinary.NO}
 COHORT_ACTIONS = {RuleAction.KEEP_TAIL, RuleAction.DENY_RELEASE}
@@ -168,7 +170,7 @@ class Lifecycle:
         change). Features do not depend on the rule set: rules only adjust a finding after it is made."""
         rt = self.rt
         eng = rt.impls.engine
-        key = (rt.now, len(rt.store.keys("injected_fact")))
+        key = (rt.now, len(rt.store.keys("injected_fact")), id(rt.world))
         cache = getattr(self, "_feat_cache", None)
         if cache is not None and cache[0] == key:
             return cache[1]
@@ -226,6 +228,7 @@ class Lifecycle:
         if not fids and not coupons:
             return []
         links = [link] if link else []
+        decided: list[FlightDecision] = []
         for fid in fids:
             d = run.after[fid]
             if not persisted:
@@ -234,6 +237,7 @@ class Lifecycle:
                 stored = rt.trace.decision(fid)
                 d = stored if stored is not None else d
             rt.store.put("decision", fid, d, now)
+            decided.append(d)
         by_flight: dict[str, list[Entitlement]] = defaultdict(list)
         for c in coupons:
             by_flight[run.after_entitlements[c].flight_id].append(run.after_entitlements[c])
@@ -243,16 +247,15 @@ class Lifecycle:
             cur = {e.coupon_id: e for e in self.ents(fid)}
             cur.update({e.coupon_id: e for e in changed})
             rt.store.put("entitlements", fid, [cur[k] for k in sorted(cur)], now)
+        recoded = set(coupons)
         if jes is None:
-            jes = []
-            if rt.books is not None and coupons:
-                before = [run.before_entitlements[c] for c in coupons if c in run.before_entitlements]
-                after = [run.after_entitlements[c] for c in coupons]
-                try:
-                    jes = list(call(rt.books.post_recode, before, after, now, rule_ref=rule_ref))
-                except Exception:
-                    jes = []
-                rt.commit_journal(jes, "agent.books", now, inputs=links)
+            before = [run.before_entitlements[c] for c in coupons if c in run.before_entitlements]
+            before += [e for d in decided for e in self.ents(d.flight_id) if e.coupon_id not in recoded]
+            jes = self.post_recode(before, [run.after_entitlements[c] for c in coupons], decided, rule_ref=rule_ref)
+            rt.commit_journal(jes, "agent.books", now, inputs=links)
+        elif decided:
+            # revert: TraceStore.revert posted its recode before these decisions had commits; pass them on now
+            self.post_recode([e for d in decided for e in self.ents(d.flight_id)], [], decided, rule_ref=rule_ref)
         for je in jes:
             amt = sum(line.cr_cents - line.dr_cents for line in je.lines if line.account == "2140")
             rt.emit("journal", "agent.books", f"Drafted {je.id} · {je.kind.replace('_', ' ')} · "
@@ -263,6 +266,20 @@ class Lifecycle:
             self.refresh_flight(fid)
         self.refresh_runs(touched)
         return [je.id for je in jes]
+
+    def post_recode(self, before: list[Entitlement], after: list[Entitlement], decisions: list[FlightDecision], *,
+                    rule_ref: str | None) -> list[JournalEntry]:
+        """`Books.post_recode` with the re-decided flights' decisions, so Books' decision view (INV-7: extraordinary
+        → no compensation) and the register's cause / decision-commit provenance follow them. A coupon in `before`
+        but not in `after` is unchanged: it only names its flight for that provenance update."""
+        rt = self.rt
+        if rt.books is None or not (after or decisions):
+            return []
+        try:
+            return list(call(rt.books.post_recode, before, after, rt.now, rule_ref=rule_ref, decisions=decisions))
+        except Exception as exc:
+            log.warning("books.post_recode (%s) failed: %s", rule_ref, exc)
+            return []
 
     def refresh_flight(self, fid: str) -> None:
         rt = self.rt
@@ -481,8 +498,8 @@ class Lifecycle:
         rt = self.rt
         decs = self.decisions()
         now = rt.now
-        n = 0
         before_all, after_all = [], []
+        decided: list[FlightDecision] = []
         for fid in q.case_refs:
             if fid not in decs or self.world is None:
                 continue
@@ -498,18 +515,13 @@ class Lifecycle:
             after_all += ae
             rt.store.put("decision", fid, ad, now)
             rt.store.put("entitlements", fid, ae, now)
-            n += 1
-        jes = []
-        if rt.books is not None and after_all:
-            try:
-                jes = list(call(rt.books.post_recode, before_all, after_all, now, rule_ref=ruling.id))
-            except Exception:
-                jes = []
-            rt.commit_journal(jes, "agent.books", now)
+            decided.append(ad)
+        jes = self.post_recode(before_all, after_all, decided, rule_ref=ruling.id)
+        rt.commit_journal(jes, "agent.books", now)
         for fid in q.case_refs:
             self.refresh_flight(fid)
         self.refresh_runs(set(q.case_refs))
-        return n
+        return len(decided)
 
     # ---- confirm / reject / widen / revert ----------------------------------
     def confirm(self, rule_id: str, principal: str) -> tuple[Rule, ReplayDiff]:
