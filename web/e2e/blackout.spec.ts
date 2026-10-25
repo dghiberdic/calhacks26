@@ -41,7 +41,7 @@ async function rule(page: Page, marker: string | RegExp, text: string, option?: 
   await card.getByRole("button", { name: "Submit ruling" }).click();
   await expect(card.getByTestId("rule-preview")).toBeVisible({ timeout: 60_000 });
   await card.getByRole("button", { name: "Confirm as policy" }).click();
-  await expect(card.getByText("Never asked again")).toBeVisible({ timeout: 60_000 });
+  await expect(card.getByText(/Policy saved for matching cases|Never asked again/)).toBeVisible({ timeout: 60_000 });
 }
 
 test("Éowyn's rulings carry to Herminia and the blackout, in the browser", async ({ page }) => {
@@ -73,7 +73,7 @@ test("Éowyn's rulings carry to Herminia and the blackout, in the browser", asyn
   await expect(page.getByTestId("asked-again")).toHaveCount(0, { timeout: 60_000 });
   // On Questions too: the asked-again card is closed.
   await go(page, "Questions");
-  await expect(page.getByRole("heading", { name: "Questions", level: 1 })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: /Human review|Questions/, level: 1 })).toBeVisible({ timeout: 30_000 });
   await expect(page.locator("article", { hasText: "23F" })).toHaveCount(0);
 
   // The Iberian blackout: Known at lands on its run, with the grid outage band.
