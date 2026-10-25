@@ -1,13 +1,15 @@
 import { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { ArrowRight } from "lucide-react";
-import { useCfo, useEffort, useLearning, useStormRun, useStorms } from "@/api/queries";
+import { useCfo, useEffort, useLearning, useQuestions, useStormRun, useStorms } from "@/api/queries";
+import { useSession } from "@/app/session";
 import { ErrorNote, Panel, Shimmer } from "@/components/kit";
 import { RouteLegend, RouteMap } from "@/components/storm/RouteMap";
 import { isOutage, mainWindowOf } from "@/components/storm/model";
 import { airport, iataOf } from "@/lib/airports";
 import { count } from "@/lib/format";
 import { HERO_STORM } from "@/lib/storms";
+import { AskedAgainBanner } from "@/screens/questions/AskedAgain";
 import { reuseFor } from "./effort";
 import { Hero } from "./Hero";
 import { FeedPanel, LearnsStrip, LiabilityTiles, QuestionsPreview } from "./Sections";
@@ -26,6 +28,19 @@ export default function StormRunScreen() {
   const effort = useEffort(run.data && !run.data.effort ? run.data.id : undefined);
   const learning = useLearning();
   const navigate = useNavigate();
+  const role = useSession((s) => s.role);
+  const openQs = useQuestions("open");
+  // Asked again past a rule's scope: said here too, with the one-click widen, while it is still open. The open
+  // list is this seat's; another seat's question shows from the run (with a "View as" to widen it).
+  const askedAgain = useMemo(() => {
+    const open = new Map((openQs.data ?? []).map((q) => [q.id, q]));
+    return (run.data?.questions ?? []).flatMap((q) => {
+      const live = open.get(q.id);
+      if (live?.asked_again) return [live];
+      if (!live && q.asked_again && q.routed_to !== role && q.status !== "answered") return [q];
+      return [];
+    });
+  }, [run.data?.questions, openQs.data, role]);
   const openFlight = (id: string) => navigate(`/flights/${encodeURIComponent(id)}`);
 
   // The storm's own feed, scoped by the server. The stream refetches it as things happen; the whole live trace
@@ -77,6 +92,9 @@ export default function StormRunScreen() {
           <p className="-mt-1 mb-3 text-[13px] text-slate-500">
             {count(data.questions.length)} {data.questions.length === 1 ? "question" : "questions"}, each to the person who owns the answer. Everything else it decided on its own.
           </p>
+          {askedAgain.map((q) => (
+            <AskedAgainBanner key={q.id} question={q} canAnswer={role === q.routed_to} boxed className="mb-3" />
+          ))}
           <QuestionsPreview questions={data.questions} />
         </Panel>
         <FeedPanel events={feed} />

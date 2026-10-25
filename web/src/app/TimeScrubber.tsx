@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { Clock3 } from "lucide-react";
 import { toast } from "sonner";
 import { create } from "zustand";
@@ -15,11 +16,22 @@ import { cn } from "@/lib/utils";
 const MOMENTS: ClockMark[] = [
   { at: "2025-01-24T05:12:00Z", label: "OCC cancel list", note: "All 27 coded weather" },
   { at: "2025-01-25T09:00:00Z", label: "The morning after", note: "Storm run done" },
-  { at: "2025-01-27T06:00:00Z", label: "Storm Herminia", note: "Same ruling, next storm" },
+  { at: "2025-01-27T06:00:00Z", label: "Storm Herminia", note: "Same ruling, next storm", run_id: "EIDW@2025-01-26" },
   { at: "2025-01-31T23:59:00Z", label: "January close", note: "6 claims approved" },
   { at: "2025-02-28T23:59:00Z", label: "February month-end", note: "Bornhuetter-Ferguson true-up" },
-  { at: "2025-04-29T06:00:00Z", label: "Iberian blackout · 28 Apr 2025", note: "A power cut, not a storm: asks Legal once" },
+  { at: "2025-04-29T06:00:00Z", label: "Iberian blackout · 28 Apr 2025", note: "A power cut, not a storm: asks Legal once", run_id: "EIDW@2025-04-28" },
 ];
+
+/** The storm run a mark starts, for a server that doesn't send `run_id` on its marks. */
+const RUN_BY_LABEL: [RegExp, string][] = [
+  [/^Storm Herminia/i, "EIDW@2025-01-26"],
+  [/^Iberian blackout/i, "EIDW@2025-04-28"],
+];
+
+/** Where choosing a mark lands: its run's page when the mark triggers a run, else nowhere (stay put). */
+export function runOfMark(m: Pick<ClockMark, "label" | "run_id">): string | null {
+  return m.run_id ?? RUN_BY_LABEL.find(([re]) => re.test(m.label))?.[1] ?? null;
+}
 
 type ClockState = { knownAt: string | null; setKnownAt: (at: string | null) => void };
 /** What this tab last set, for servers without GET /clock; the server's answer wins when there is one. */
@@ -34,8 +46,9 @@ export function TimeScrubber({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const [custom, setCustom] = useState("");
   const [busy, setBusy] = useState(false);
+  const navigate = useNavigate();
 
-  const move = async (at: string) => {
+  const move = async (at: string, runId?: string | null) => {
     setBusy(true);
     try {
       const res = await api.clock(at);
@@ -44,6 +57,8 @@ export function TimeScrubber({ className }: { className?: string }) {
       await invalidateAfterWrite();
       toast(`Known at ${zuluDay(res.known_at)}`, { description: "Every screen now shows what StormCheck knew then." });
       setOpen(false);
+      // A mark that triggers a storm run lands on that run, so Herminia or the blackout opens by itself.
+      if (runId) void navigate(`/run/${encodeURIComponent(runId)}`);
     } catch (e) {
       toast.error(e instanceof ApiError ? e.message : "The clock didn't move.");
     } finally {
@@ -71,7 +86,7 @@ export function TimeScrubber({ className }: { className?: string }) {
               <button
                 type="button"
                 disabled={busy || passed(m.at)}
-                onClick={() => void move(m.at)}
+                onClick={() => void move(m.at, runOfMark(m))}
                 className="flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2 text-left hover:bg-cloud-50 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <span>

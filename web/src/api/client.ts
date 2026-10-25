@@ -46,7 +46,7 @@ import type {
  */
 export type ApiMode = "http" | "mock" | "recorded";
 /** A named moment on the server's clock (additive: GET /clock → marks), e.g. "Iberian blackout · 28 Apr 2025". */
-export type ClockMark = { at: string; label: string; note?: string | null };
+export type ClockMark = { at: string; label: string; note?: string | null; run_id?: string | null };
 
 export type ApiFetch = (path: string, init: RequestInit) => Promise<Response>;
 

@@ -5,6 +5,18 @@ import { stormName } from "@/lib/storms";
 /** "sources-disagree" → "sources disagree", for `confidence 39% · sources disagree`. */
 export const reasonText = (tag: string) => tag.replace(/-/g, " ");
 
+/** Shown as "outside your rule's scope" when the server says the question came back past a rule's scope. */
+export const ASKED_AGAIN_REASON = "outside your rule's scope";
+
+/** The reason a question shows on its card and in previews: the asked-again wording wins over the raw tag. */
+export const questionReason = (q: Pick<Question, "reason_tag" | "asked_again">) => (q.asked_again ? ASKED_AGAIN_REASON : reasonText(q.reason_tag));
+
+/** The widen button's words: the server's widen question without its question mark, else the arrivals wording. */
+export function widenLabel(q: Pick<Question, "asked_again">): string {
+  const words = q.asked_again?.widen?.question?.trim().replace(/\?$/, "").trim();
+  return words || "Also cover flights arriving into the EU";
+}
+
 /** The six RuleProposal checks, as sentences a ruler can read. */
 const CHECK_LABEL: Record<string, string> = {
   compiles: "Compiles to the rule language",

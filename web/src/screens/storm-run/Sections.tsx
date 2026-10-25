@@ -182,8 +182,8 @@ export function QuestionsPreview({ questions }: { questions: Question[] }) {
   return (
     <ul className="flex flex-col divide-y divide-cloud-100">
       {questions.map((q) => {
-        const reason = q.reason_tag.replace(/-/g, " ");
-        const term = REASON_TERM[q.reason_tag];
+        const reason = q.asked_again ? "asked again · outside your rule's scope" : q.reason_tag.replace(/-/g, " ");
+        const term = q.asked_again ? "rule-scope" : REASON_TERM[q.reason_tag];
         return (
           <li key={q.id} className="py-3.5 first:pt-0 last:pb-0">
             <Link to="/questions" className="text-[14.5px] font-medium leading-snug text-navy-900 hover:underline">

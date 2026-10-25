@@ -11,7 +11,8 @@ import { count, ROLE_LABEL, zuluDay } from "@/lib/format";
 import { plainIds } from "@/lib/plain";
 import { cn } from "@/lib/utils";
 import { AnswerFlow, type Flow } from "./AnswerFlow";
-import { caseCount, caseHref, caseKind, caseLabel, reasonText, reminderText } from "./lib";
+import { AskedAgainBanner } from "./AskedAgain";
+import { caseCount, caseHref, caseKind, caseLabel, questionReason, reminderText } from "./lib";
 import { MaskedText } from "./MaskedText";
 
 const REASON_TERM: Partial<Record<Question["reason_tag"], Term>> = { "sources-disagree": "sources-disagree", "no-precedent": "no-precedent" };
@@ -36,6 +37,7 @@ export function QuestionCard({ question, role, flow, onFlow }: { question: Quest
         resolved && "shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04)]",
       )}
     >
+      {!resolved ? <AskedAgainBanner question={question} canAnswer={canAnswer} /> : null}
       <div className="grid lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_440px]">
         <div className="min-w-0 p-5 md:p-6">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
@@ -53,7 +55,7 @@ export function QuestionCard({ question, role, flow, onFlow }: { question: Quest
           </h2>
 
           <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <ConfidenceLine confidence={question.confidence} reason={reasonText(question.reason_tag)} reasonTerm={REASON_TERM[question.reason_tag]} showCaps={false} />
+            <ConfidenceLine confidence={question.confidence} reason={questionReason(question)} reasonTerm={question.asked_again ? "rule-scope" : REASON_TERM[question.reason_tag]} showCaps={false} />
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-1.5">

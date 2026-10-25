@@ -240,6 +240,16 @@ export type Question = {
   others_settled?: number;
   /** Additive (#11): the pending proposal a release question is about, when there is one. */
   proposal_rule_id?: string | null;
+  /** Additive (read-time view): this case falls outside an active rule's scope, so the question was asked again. */
+  asked_again?: AskedAgain | null;
+};
+
+/** Why a question came back although a rule covers its pattern, and the one-rung widening that would cover it. */
+export type AskedAgain = {
+  rule_ref: string;
+  rule_title: string;
+  reason: string;
+  widen?: { rule_id: string; question: string } | null;
 };
 
 export type Ruling = {

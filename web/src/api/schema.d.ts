@@ -719,6 +719,16 @@ export interface components {
             ruling: components["schemas"]["Ruling"];
             proposal: components["schemas"]["RuleProposal"] | null;
         };
+        /** AskedAgain */
+        AskedAgain: {
+            /** Rule Ref */
+            rule_ref: string;
+            /** Rule Title */
+            rule_title: string;
+            /** Reason */
+            reason: string;
+            widen?: components["schemas"]["WidenOffer"] | null;
+        };
         /** Blame */
         Blame: {
             /** Target */
@@ -852,6 +862,8 @@ export interface components {
             label: string;
             /** Note */
             note?: string | null;
+            /** Run Id */
+            run_id?: string | null;
         };
         /** ClockRequest */
         ClockRequest: {
@@ -1796,6 +1808,7 @@ export interface components {
             others_settled: number;
             /** Proposal Rule Id */
             proposal_rule_id?: string | null;
+            asked_again?: components["schemas"]["AskedAgain"] | null;
         };
         /** RejectRequest */
         RejectRequest: {
@@ -2250,6 +2263,13 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** WidenOffer */
+        WidenOffer: {
+            /** Rule Id */
+            rule_id: string;
+            /** Question */
+            question: string;
         };
     };
     responses: never;
