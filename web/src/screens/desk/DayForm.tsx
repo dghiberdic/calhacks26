@@ -16,6 +16,8 @@ import { useDesk } from "./state";
 const PICKS: { icao: string; date: string; label: string }[] = [
   { icao: "EIDW", date: "2025-01-24", label: stormName("EIDW@2025-01-24") ?? "Dublin" },
   { icao: "EIDW", date: "2025-01-26", label: stormName("EIDW@2025-01-26") ?? "Dublin" },
+  // Not a storm: the 28 Apr 2025 Iberian grid outage, a cause StormCheck has never seen.
+  { icao: "LPPT", date: "2025-04-28", label: "Iberian blackout" },
   { icao: "EGLL", date: "2024-01-21", label: "Storm Isha" },
   { icao: "EIDW", date: "2024-07-14", label: "A calm day" },
 ];

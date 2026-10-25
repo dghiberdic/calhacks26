@@ -13,16 +13,17 @@ export type MovementKey =
 
 /**
  * Movements between opening and closing, in note order. `out` lines only ever reduce 2140, so they are
- * shown negative whatever sign the API stores them with; `signed` lines keep the API's sign.
+ * shown negative whatever sign the API stores them with; `signed` lines keep the API's sign. `plain` says
+ * what the line means in words (the summary); `note` gives its accounts (the detail).
  */
-export const MOVEMENTS: { key: MovementKey; label: string; note?: string; direction: "in" | "out" | "signed" }[] = [
-  { key: "new_cents", label: "New cohorts", note: "day-1 estimate · Dr 4090 / Cr 2140", direction: "in" },
-  { key: "claims_approved_cents", label: "Claims approved", note: "Dr 2140 / Cr 2141, at face value", direction: "out" },
-  { key: "settled_in_kind_cents", label: "Settled in kind", note: "signed vouchers · Dr 2140 / Cr 2132", direction: "out" },
-  { key: "change_in_estimate_cents", label: "Change in estimate (IAS 8.36)", note: "BF true-up, prospective · 4090 ↔ 2140", direction: "signed" },
-  { key: "recode_cents", label: "Recodes", note: "cause corrected · change in estimate (IAS 8.36)", direction: "signed" },
-  { key: "out_of_period_cents", label: "Prior-period error, corrected in current period (immaterial)", note: "IAS 8.42 · locked period untouched", direction: "signed" },
-  { key: "derecognised_cents", label: "Derecognised at limitation", note: "6-year limitation · Dr 2140 / Cr 4090", direction: "out" },
+export const MOVEMENTS: { key: MovementKey; label: string; plain: string; note?: string; direction: "in" | "out" | "signed" }[] = [
+  { key: "new_cents", label: "New storms", plain: "first estimate of what passengers will claim", note: "day-1 estimate · Dr 4090 / Cr 2140", direction: "in" },
+  { key: "claims_approved_cents", label: "Claims approved", plain: "moved out to claims payable, at face value", note: "Dr 2140 / Cr 2141, at face value", direction: "out" },
+  { key: "settled_in_kind_cents", label: "Settled in kind", plain: "the passenger signed for a voucher instead", note: "signed vouchers · Dr 2140 / Cr 2132", direction: "out" },
+  { key: "change_in_estimate_cents", label: "Change in estimate (IAS 8.36)", plain: "re-estimated as claims came in; applies from this month on", note: "BF true-up, prospective · 4090 ↔ 2140", direction: "signed" },
+  { key: "recode_cents", label: "Recodes", plain: "a flight's cause was corrected", note: "cause corrected · change in estimate (IAS 8.36)", direction: "signed" },
+  { key: "out_of_period_cents", label: "Prior-period error, corrected in current period (immaterial)", plain: "a miss fixed this month; the locked month is untouched", note: "IAS 8.42 · locked period untouched", direction: "signed" },
+  { key: "derecognised_cents", label: "Derecognised at limitation", plain: "the six-year window to claim has closed", note: "6-year limitation · Dr 2140 / Cr 4090", direction: "out" },
 ];
 
 const DIRECTION = Object.fromEntries(MOVEMENTS.map((m) => [m.key, m.direction])) as Record<MovementKey, "in" | "out" | "signed">;
@@ -69,6 +70,10 @@ const KIND_MOVEMENT: Partial<Record<JournalEntry["kind"], MovementKey>> = {
 /** An entry's effect on the liability: credits to 2140 raise it, debits lower it. */
 export const effectOn2140 = (je: JournalEntry, account = "2140") => je.lines.filter((l) => l.account === account).reduce((s, l) => s + (l.cr_cents ?? 0) - (l.dr_cents ?? 0), 0);
 
+/** A drafted release proposal ("reduce to nil at M12"): gated, so it moves 2140 only once the Controller approves it. */
+export const isReleaseProposal = (je: Pick<JournalEntry, "status" | "estimate_ref">) => je.status === "draft" && !!je.estimate_ref?.startsWith("release:");
+export const releaseProposals = (entries: JournalEntry[] | undefined) => (entries ?? []).filter(isReleaseProposal);
+
 /**
  * Tick and tie: for each movement, the period's journals of that kind and whether their effect on 2140
  * agrees with the movement's total. Only entries that touch 2140 count.
@@ -78,7 +83,7 @@ export function journalTies(rf: Rollforward, entries: JournalEntry[]) {
   const out: Partial<Record<MovementKey, { ids: string[]; cents: Cents; agrees: boolean }>> = {};
   for (const je of entries) {
     const key = KIND_MOVEMENT[je.kind];
-    if (!key || je.period !== rf.period) continue;
+    if (!key || je.period !== rf.period || isReleaseProposal(je)) continue;
     const effect = effectOn2140(je);
     if (!effect) continue;
     const t = (out[key] ??= { ids: [], cents: 0, agrees: false });
@@ -202,11 +207,30 @@ export function preparerRole(principal: string | null | undefined): Role | null 
  * read off the returned change-in-estimate entries, else off the returned rollforward.
  */
 export function liabilityChange(res: Pick<MonthEndResponse, "entries"> & Partial<Pick<MonthEndResponse, "rollforward">>, account = "2140"): Cents {
-  const cie = (res.entries ?? []).filter((e) => e.kind === "change_in_estimate" || e.ias8_class === "change_in_estimate");
+  const cie = (res.entries ?? []).filter((e) => (e.kind === "change_in_estimate" || e.ias8_class === "change_in_estimate") && !isReleaseProposal(e));
   if (cie.length) {
     return cie.reduce((s, e) => s + e.lines.filter((l) => l.account === account).reduce((t, l) => t + (l.cr_cents ?? 0) - (l.dr_cents ?? 0), 0), 0);
   }
   return (res.rollforward?.rows ?? []).reduce((s, r) => s + (r.change_in_estimate_cents ?? 0), 0);
+}
+
+/** The three estimate methods, by EstimateCard.selected. */
+export const METHOD_NAME: Record<string, string> = { expected_loss: "Expected loss", bf: "Bornhuetter-Ferguson", chain_ladder: "Chain ladder" };
+
+/** Why the estimate moved, in words: claims against the curve, then the direction; "so" only when the two agree. */
+export function monthEndReason(ae: number | null | undefined, change: Cents) {
+  const dir = change > 0 ? "goes up" : change < 0 ? "comes down" : "holds";
+  if (ae === null || ae === undefined) return `The estimate ${dir}.`;
+  const pace = ae > 1.005 ? "faster than" : ae < 0.995 ? "slower than" : "in line with";
+  const agrees = (pace === "faster than" && change > 0) || (pace === "slower than" && change < 0) || (pace === "in line with" && change === 0);
+  return `Claims came in ${pace} the curve expected (${ae.toFixed(2)}×)${agrees ? `, so the estimate ${dir}` : `. The estimate ${dir}`}.`;
+}
+
+/** "All 17 hold" / "2 of 17 failing", for the Controls checks header. */
+export function invariantsSummary(items: InvariantResult[] | undefined) {
+  if (!items?.length) return null;
+  const failing = items.filter((i) => !i.ok).length;
+  return failing ? `${failing} of ${items.length} failing` : `All ${items.length} hold`;
 }
 
 /** The contract's `*_pct` floats: read 0–1 as a fraction and anything above 1 as a percentage. */
@@ -214,13 +238,12 @@ export const asFraction = (x: number | null | undefined) => (x === null || x ===
 
 // ---------- the CFO bridge ----------
 
-/** One axis from €0 to the full entitlement: where cash basis, drafted ± sensitivity and the method range sit. */
-export function bridgeScale({ cash, drafted, full, sensitivity, range }: { cash: Cents; drafted: Cents; full: Cents; sensitivity: Cents; range: [Cents, Cents] | null | undefined }) {
+/** One axis from €0 to the full entitlement: where cash basis and drafted ± sensitivity sit. */
+export function bridgeScale({ cash, drafted, full, sensitivity }: { cash: Cents; drafted: Cents; full: Cents; sensitivity: Cents }) {
   const band: [Cents, Cents] = [Math.max(0, drafted - Math.abs(sensitivity)), drafted + Math.abs(sensitivity)];
-  const r = range && range[1] > range[0] ? ([Math.max(0, range[0]), range[1]] as [Cents, Cents]) : null;
-  const max = Math.max(full, cash, band[1], r?.[1] ?? 0, 1);
+  const max = Math.max(full, cash, band[1], 1);
   const at = (v: Cents) => Math.max(0, Math.min(1, v / max));
-  return { max, at, band, range: r };
+  return { max, at, band };
 }
 
 /**
@@ -233,7 +256,49 @@ export function bridgeToGl(m: { drafted_liability_cents: Cents; held_for_legal_c
   const total = rows.reduce((s, r) => s + r.closing_cents, 0);
   const other = total - m.drafted_liability_cents - m.held_for_legal_cents;
   if (other < 0) return null;
-  // Cohorts carried in from before (opening balances, no new estimate) explain the rest.
-  const earlier = rows.filter((r) => !r.new_cents && r.closing_cents).map((r) => r.cohort);
+  // Cohorts carried in from before (opening balances, no new estimate) explain the rest, when some cohort is
+  // new this period; when none is, every cohort is carried in and the rest has no single name.
+  const someNew = rows.some((r) => r.new_cents);
+  const earlier = someNew ? rows.filter((r) => !r.new_cents && r.closing_cents).map((r) => r.cohort) : [];
   return { total, drafted: m.drafted_liability_cents, held: m.held_for_legal_cents, other, earlier };
+}
+
+/** The storms with a new estimate in the bridge, named once each ("Storm Éowyn"), for "What we owe after …". */
+export function newStorms(rows: RollforwardRow[] | null | undefined, name: (base: string) => string | null): string[] {
+  const out: string[] = [];
+  for (const r of rows ?? []) {
+    if (!r.new_cents) continue;
+    const base = cohortParts(r.cohort).base;
+    const label = name(base) ?? base;
+    if (!out.includes(label)) out.push(label);
+  }
+  return out;
+}
+
+/** Is the drafted liability exactly rate × entitlement (to the euro)? Then the bridge can say "35% × €99,000". */
+export const isRateTimesEntitlement = (drafted: Cents, full: Cents, rate: number | null | undefined) =>
+  rate !== null && rate !== undefined && full > 0 && Math.abs(Math.round(rate * full) - drafted) < 100;
+
+// ---------- journal groups ----------
+
+/** The order a controller reads a period's journals in: what moves 2140 first, then everything around it. */
+const KIND_ORDER: JournalEntry["kind"][] = ["change_in_estimate", "compensation_estimate", "recode", "out_of_period_adjustment", "claim_approved", "derecognition", "voucher_in_lieu", "voucher_void"];
+export const kindRank = (k: JournalEntry["kind"]) => {
+  const i = KIND_ORDER.indexOf(k);
+  return i < 0 ? KIND_ORDER.length : i;
+};
+
+export type JournalGroup = { kind: JournalEntry["kind"]; entries: JournalEntry[]; cents: Cents; moves2140: boolean };
+
+/** Entries grouped by kind, each with its count and total (Σ debits); the groups that move 2140 come first. */
+export function journalGroups(entries: JournalEntry[]): JournalGroup[] {
+  const by = new Map<JournalEntry["kind"], JournalGroup>();
+  for (const je of entries) {
+    const g = by.get(je.kind) ?? { kind: je.kind, entries: [], cents: 0, moves2140: false };
+    g.entries.push(je);
+    g.cents += je.lines.reduce((t, l) => t + (l.dr_cents ?? 0), 0);
+    g.moves2140 ||= effectOn2140(je) !== 0;
+    by.set(je.kind, g);
+  }
+  return [...by.values()].sort((a, b) => Number(b.moves2140) - Number(a.moves2140) || kindRank(a.kind) - kindRank(b.kind) || a.kind.localeCompare(b.kind));
 }

@@ -1280,7 +1280,9 @@ if __name__ == "__main__":  # pragma: no cover
 
     ap = argparse.ArgumentParser(description="Rewrite the Drafter's demo recordings (data/cache/demo/drafter/).")
     ap.add_argument("--live", action="store_true", help="call the real API (needs ANTHROPIC_API_KEY)")
+    ap.add_argument("--out-dir", type=Path, default=DRAFTER_DEMO_DIR,
+                    help="write the recordings here instead (e.g. a scratch dir to review live output first)")
     ap.add_argument("names", nargs="*", help="only these scenarios")
     a = ap.parse_args()
-    for k, v in record_demo(live=a.live, names=a.names or None).items():
+    for k, v in record_demo(live=a.live, out_dir=a.out_dir, names=a.names or None).items():
         print(f"{k}: {v}")

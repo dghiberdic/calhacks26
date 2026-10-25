@@ -40,10 +40,16 @@ async function viewAs(page: Page, role: string) {
 
 test("the CFO bridge, the 2140 rollforward and the estimate render from the API", async ({ page }) => {
   await page.goto("/close");
-  await expect(page.getByRole("heading", { name: /Cash basis .* full entitlement .* drafted .*±5pp/ })).toBeVisible();
+  // The bridge as one sentence: drafted, neither the cash basis nor the full entitlement.
+  await expect(page.getByRole("heading", { name: /What we owe after .*: €[\d,]+ drafted\. Not €[\d,]+ \(cash basis\), and not €[\d,]+ \(if every passenger claimed\)\./ })).toBeVisible();
   await expect(page.getByRole("table", { name: /2140 EU261 compensation liability rollforward/ })).toBeVisible();
   await expect(page.getByTestId("ties-to-gl")).toContainText(/ties to GL 2140/i);
+  // The detail is one click away: by cohort, every line with its accounts.
+  await page.getByRole("radio", { name: "Rollforward detail" }).click();
+  await expect(page.getByRole("table", { name: /2140 EU261 compensation liability rollforward by cohort/ })).toBeVisible();
+  // How the estimate works and the controls checks sit behind their own disclosures, named in the summary.
   await expect(page.getByText("Bornhuetter-Ferguson").first()).toBeVisible();
+  await page.getByText("Controls checks").click();
   await expect(page.getByTestId("invariants")).toBeVisible();
 });
 

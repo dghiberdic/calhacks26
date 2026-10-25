@@ -53,34 +53,38 @@ function CohortHead({ cohort, segment }: { cohort: string; segment?: string | nu
 }
 
 /**
- * The 2140 rollforward as an accounts note: movements down, cohorts across, total on the right;
- * closing ruled off (single rule above, double below), then the GL balance and a memo line.
+ * The 2140 rollforward as an accounts note: opening, the movements, closing ruled off (single rule above,
+ * double below), then the GL balance. The summary shows the total and the lines that moved, each said in
+ * words; the detail adds a column per cohort, every line with its accounts, the J ticks and a memo line.
  */
-export function RollforwardTable({ rf, highlight, ties = {}, segments = {} }: { rf: Rollforward; highlight?: MovementKey | null; ties?: Ties; segments?: Record<string, string> }) {
+export function RollforwardTable({ rf, detail = false, highlight, ties = {}, segments = {} }: { rf: Rollforward; detail?: boolean; highlight?: MovementKey | null; ties?: Ties; segments?: Record<string, string> }) {
   const totals = rollforwardTotals(rf);
   const { first, last } = monthBounds(rf.period);
   const reduce = useReducedMotion();
-  const cols = rf.rows.length + 2;
+  const cohorts = detail ? rf.rows : [];
+  const lines = detail ? MOVEMENTS : MOVEMENTS.filter((m) => !isNilLine(rf, m.key));
+  const cols = cohorts.length + 2;
+  const tick = (tie?: { ids: string[]; agrees: boolean }) => (detail ? <Tick tie={tie} /> : null);
 
   return (
     <div className="-mx-5 overflow-x-auto md:-mx-6" role="region" aria-label={`2140 rollforward, ${periodLabel(rf.period)}`} tabIndex={0}>
-      <table className="w-full min-w-[560px] border-collapse text-[13.5px]">
+      <table className={cn("w-full border-collapse text-[13.5px]", detail && "min-w-[560px]")}>
         <caption className="sr-only">
-          2140 EU261 compensation liability rollforward by cohort, {periodLabel(rf.period)}. Negatives in parentheses.
+          2140 EU261 compensation liability rollforward{detail ? " by cohort" : ""}, {periodLabel(rf.period)}. Negatives in parentheses.
         </caption>
         <thead>
           <tr className="border-b border-cloud-200">
             <th scope="col" className={cn(label, "pb-2.5 pt-1 align-bottom")}>
               <span className="micro whitespace-nowrap text-slate-400">€ · movement</span>
             </th>
-            {rf.rows.map((r) => (
+            {cohorts.map((r) => (
               <th key={r.cohort} scope="col" className={cn(cell, "pb-2.5 pt-1 align-bottom font-normal")}>
                 <CohortHead cohort={r.cohort} segment={segments[r.cohort]} />
               </th>
             ))}
             <th scope="col" className={cn(cell, "pb-2.5 pt-1 align-bottom")}>
-              <span className="block pr-4 text-[13px] font-semibold text-navy-900">Total</span>
-              <span className="mt-0.5 block pr-4 font-mono text-[10.5px] font-normal text-slate-400">GL 2140</span>
+              <span className={cn("block text-[13px] font-semibold text-navy-900", detail && "pr-4")}>{detail ? "Total" : periodLabel(rf.period)}</span>
+              <span className={cn("mt-0.5 block font-mono text-[10.5px] font-normal text-slate-400", detail && "pr-4")}>{detail ? "GL 2140" : "€"}</span>
             </th>
           </tr>
         </thead>
@@ -89,17 +93,17 @@ export function RollforwardTable({ rf, highlight, ties = {}, segments = {} }: { 
             <th scope="row" className={cn(label, "pt-3 text-navy-900")}>
               At {longDate(first)} <span className="ml-1 text-[11.5px] text-slate-400">opening</span>
             </th>
-            {rf.rows.map((r) => (
+            {cohorts.map((r) => (
               <td key={r.cohort} className={cn(cell, "pt-3")}>
                 <Amount cents={r.opening_cents} />
               </td>
             ))}
             <td className={cn(cell, "pt-3")}>
               <Amount cents={totals.opening} />
-              <Tick />
+              {tick()}
             </td>
           </tr>
-          {MOVEMENTS.map((m) => {
+          {lines.map((m) => {
             const nil = isNilLine(rf, m.key);
             const flash = highlight === m.key && !reduce;
             return (
@@ -109,18 +113,18 @@ export function RollforwardTable({ rf, highlight, ties = {}, segments = {} }: { 
                 animate={flash ? { backgroundColor: ["rgba(13,21,36,0.07)", "rgba(13,21,36,0)"] } : undefined}
                 transition={{ duration: 2.6, ease: "easeOut" }}
               >
-                <th scope="row" className={cn(label, "max-w-[212px]", nil ? "text-slate-400" : "text-navy-900")}>
+                <th scope="row" className={cn(label, detail && "max-w-[212px]", nil ? "text-slate-400" : "text-navy-900")}>
                   <span className="block leading-snug">{m.label}</span>
-                  {m.note ? <span className={cn("block text-[11.5px] leading-snug", nil ? "text-slate-300" : "text-slate-400")}>{m.note}</span> : null}
+                  <span className={cn("block text-[11.5px] leading-snug", nil ? "text-slate-300" : "text-slate-400")}>{detail ? m.note : m.plain}</span>
                 </th>
-                {rf.rows.map((r) => (
+                {cohorts.map((r) => (
                   <td key={r.cohort} className={cell}>
                     <Amount cents={movementCents(r, m.key)} />
                   </td>
                 ))}
                 <td className={cell}>
                   <Amount cents={totals.movements[m.key]} />
-                  <Tick tie={totals.movements[m.key] ? ties[m.key] : undefined} />
+                  {tick(totals.movements[m.key] ? ties[m.key] : undefined)}
                 </td>
               </motion.tr>
             );
@@ -131,7 +135,7 @@ export function RollforwardTable({ rf, highlight, ties = {}, segments = {} }: { 
             <th scope="row" className={cn(label, "pt-2.5 font-semibold text-navy-900")}>
               At {longDate(last)} <span className="ml-1 text-[11.5px] font-normal text-slate-400">closing</span>
             </th>
-            {rf.rows.map((r) => (
+            {cohorts.map((r) => (
               <td key={r.cohort} className={cn(cell, "pt-1")}>
                 <Ruled>
                   <Amount cents={r.closing_cents} strong />
@@ -141,38 +145,40 @@ export function RollforwardTable({ rf, highlight, ties = {}, segments = {} }: { 
             <td className={cn(cell, "pt-1")}>
               <Ruled>
                 <Amount cents={rf.closing_total_cents} strong />
-                <Tick />
+                {tick()}
               </Ruled>
             </td>
           </tr>
           <tr>
             <th scope="row" className={cn(label, "pt-3 text-slate-600")}>
-              GL 2140 balance{" "}
-              {rf.ties_to_gl ? <span className="ml-1 text-[11.5px] font-medium text-tie">ties to GL ✓</span> : <span className="ml-1 text-[11.5px] font-medium text-held-ink">doesn't tie</span>}
+              General ledger, account 2140{" "}
+              {rf.ties_to_gl ? <span className="ml-1 text-[11.5px] font-medium text-tie">ties ✓</span> : <span className="ml-1 text-[11.5px] font-medium text-held-ink">doesn't tie</span>}
             </th>
-            <td colSpan={cols - 2} className={cn(cell, "pt-3")} />
+            {cols > 2 ? <td colSpan={cols - 2} className={cn(cell, "pt-3")} /> : null}
             <td className={cn(cell, "pt-3")}>
               <span className="inline-flex items-center justify-end gap-1.5">
                 {rf.ties_to_gl ? <Check className="size-3.5 text-tie" aria-label="ties" /> : null}
                 <Money cents={rf.gl_balance_cents} className={cn("text-[13.5px]", rf.ties_to_gl ? "text-navy-900" : "font-semibold text-navy-900")} />
-                <Tick />
+                {tick()}
               </span>
             </td>
           </tr>
-          <tr>
-            <th scope="row" className={cn(label, "pb-1 pt-4 text-[12.5px] text-slate-500")}>
-              Memo: unclaimed entitlement
-            </th>
-            {rf.rows.map((r) => (
-              <td key={r.cohort} className={cn(cell, "pb-1 pt-4")}>
-                <Amount cents={r.unclaimed_entitlement_cents} quiet />
+          {detail ? (
+            <tr>
+              <th scope="row" className={cn(label, "pb-1 pt-4 text-[12.5px] text-slate-500")}>
+                Memo: unclaimed entitlement
+              </th>
+              {cohorts.map((r) => (
+                <td key={r.cohort} className={cn(cell, "pb-1 pt-4")}>
+                  <Amount cents={r.unclaimed_entitlement_cents} quiet />
+                </td>
+              ))}
+              <td className={cn(cell, "pb-1 pt-4")}>
+                <Amount cents={totals.unclaimed} quiet />
+                {tick()}
               </td>
-            ))}
-            <td className={cn(cell, "pb-1 pt-4")}>
-              <Amount cents={totals.unclaimed} quiet />
-              <Tick />
-            </td>
-          </tr>
+            </tr>
+          ) : null}
         </tfoot>
       </table>
     </div>

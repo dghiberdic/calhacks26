@@ -236,16 +236,22 @@ def _inj(n: str, kind: SourceKind, text: str) -> Source:
     return make_source(f"SRC-INJ-{n}", kind, text, INJ_AT, f"Injected {kind.value}")
 
 
-INJECTION_DOCS: list[DemoDoc] = [
-    DemoDoc("inj01_aog_inside_window", None, {
+def _inj01(label: str, hhmm: str) -> DemoDoc:
+    """Injection 01: an AOG logged inside the storm window. 04:05Z is the rehearsed time (an AOG logged after the
+    05:12Z OCC weather batch can't be the cause); 08:05Z is the fixture's previous text (LEGACY_DOCS)."""
+    return DemoDoc(label, None, {
         "tail": S("EI-NSH", "EI-NSH"),
-        "logged_at": S("2025-01-24T08:05:00Z", "24JAN 08:05Z"),
+        "logged_at": S(f"2025-01-24T{hhmm}:00Z", f"24JAN {hhmm}Z"),
         "station": S("DUB", "DUB"),
         "mel_relief": S(False, "NO MEL RELIEF"),
         "aog": S(True, "A/C AOG"),
         "defect_text": S("BIRD STRIKE ENG 1 ON TAXI-IN. BORESCOPE REQD", "BIRD STRIKE ENG 1 ON TAXI-IN. BORESCOPE REQD"),
     }, {"flight_id": "NS110@2025-01-24"}, _inj("01", SourceKind.TECH_LOG,
-        "24JAN 08:05Z EI-NSH DUB N/S. BIRD STRIKE ENG 1 ON TAXI-IN. BORESCOPE REQD. NO MEL RELIEF. A/C AOG.")),
+        f"24JAN {hhmm}Z EI-NSH DUB N/S. BIRD STRIKE ENG 1 ON TAXI-IN. BORESCOPE REQD. NO MEL RELIEF. A/C AOG."))
+
+
+INJECTION_DOCS: list[DemoDoc] = [
+    _inj01("inj01_aog_inside_window", "04:05"),
     DemoDoc("inj02_duplicate_direct_plus_agency", None, {
         "flight": S("NS31@2025-01-24", "NS31 24 Jan 2025"),
         "passengers": [P(("9B", "passenger 9B"))],
@@ -292,4 +298,8 @@ INJECTION_DOCS: list[DemoDoc] = [
                                                 "UK261 claim: NS100 DUB-LHR 24 Jan 2025 cancelled, claiming £520.")),
 ]
 
-READER_DOCS: list[DemoDoc] = GOLDEN_DOCS + GOLDEN_LINES + INJECTION_DOCS
+# Recorded too, so the server reads whichever text contracts/fixtures/api/injections.json holds while it moves to
+# 04:05Z. Remove once the fixture has moved.
+LEGACY_DOCS: list[DemoDoc] = [_inj01("inj01_aog_inside_window_0805", "08:05")]
+
+READER_DOCS: list[DemoDoc] = GOLDEN_DOCS + GOLDEN_LINES + INJECTION_DOCS + LEGACY_DOCS

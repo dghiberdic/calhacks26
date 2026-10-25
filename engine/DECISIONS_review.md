@@ -27,10 +27,16 @@ Judgment calls made while fixing the confirmed findings, one line of reasoning e
 
 - **Only a tier-1 tech-log/MCC fact becomes a tech-log line.** Any other `aog.*` fact is an AOG claim (`FlightCase.aog_claims`). It never grounds a flight: the decision becomes `aog_unverified`, routed to Ops (sources disagree), and the claim is cited at its real tier. Claims count only within 48 h before the cancellation and while not returned to service.
 - **Spare hours from facts below tier 2 are evidence only.**
-- **A source the world doesn't know is tier 4** (fail closed), in `find_source` as well. So the server must add injected sources to the world it hands the engine, or their facts read as passenger e-mail.
+- **A source found nowhere is tier 4** (fail closed), in `find_source` as well. "Nowhere" means not in the world and not registered (see "Injected documents" below), so an injected document's facts never read as tier 1 unless the trace holds that document.
 - **Earliest reroute: the carrier's own records decide.** That means tier ≤ 2 (PSS, schedule, spares) or a genuine OCC/IROPS-desk line (the coordinator's "PSS/OCC"; the OCC log is tier 3). Passenger, agency and CRM lines never count. Best tier wins, then the latest.
   - An overlaid verdict counts at its fact's tier; one from an OCC-log source counts like an OCC line.
   - The negation is an explicit "not/never offered", "no (earliest) reroute" or "reroute not offered". "no hotel needed; earliest reroute offered" reads as offered.
+- **Injected documents (regression on rehearsed injection 01).** A fact's source is looked up in the world first, then among documents registered outside it:
+  - those in the trace: `TraceStore._run` binds `trace.sources()` (`engine.case.registered_sources`) while any `decide_fn` runs, so the server's overlay resolves an injected tech-log line without naming it;
+  - those passed explicitly: `Engine.decide(..., sources=[...])`, `overlay_facts(..., sources)`.
+
+  A registered document may not claim a better tier than its kind allows (`case.KIND_TIER`: tech log / MCC / METAR 1; schedule, manifest, PSS, BSP, spares, manufacturer 2; OCC log, CRM 3; claim, e-mail, challenge 4; any other kind 4). So an injected e-mail that declares tier 1 is still tier 4: a claim for Ops, never a flip. The curated world keeps its own tiers (golden has tier-2/3 operational e-mails), and a world source id always wins over a registered one. A source found nowhere is still tier 4.
+- **Injection 01's 08:05Z timing is legally wrong.** The OCC put NS110@2025-01-24 in the 05:12Z weather CNL batch, so an AOG logged at 08:05Z cannot have caused the cancellation (E3; `test_injected_sources::test_an_aog_logged_after_the_occ_cancellation_does_not_flip_ns110_even_at_tier_1`). The same line at 04:05Z sits inside the 02:30Z–15:00Z DUB window and before the cancellation decision, so the weather and the grounded aircraft are concurrent causes: Legal. The fixture moves to 04:05Z together with the Reader's recording of the new text (`llm/demo_inputs.py`, `data/cache/demo/`); the expected outcome does not change.
 - **Provenance:** an overlaid world carries `meta["_overlay"]` with each synthetic line's fact ids per field, its source and its tier. AOG and spares evidence cite the injected fact id and source, so `blame` reaches the injection.
 
 ## Cause rules settle only what they ruled on (domain 1 and 10)

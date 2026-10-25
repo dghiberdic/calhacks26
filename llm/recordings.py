@@ -60,7 +60,9 @@ def reader_recordings() -> Iterator[Recording]:
     for doc in READER_DOCS:
         schema = SCHEMAS[doc.source.kind]
         yield Recording(doc.label, "reader",
-                        lambda client, d=doc: Reader(client).read(d.source, ReaderContext(**(d.context or {}))),
+                        # no 8 s server budget while recording: a live call that times out would record nothing
+                        lambda client, d=doc: Reader(client, timeout_s=None).read(d.source,
+                                                                                   ReaderContext(**(d.context or {}))),
                         doc.output, schema)
 
 
@@ -125,6 +127,9 @@ def record(dest: Path = DEMO_CACHE_DIR, *, live: bool = False, only: str | None 
         client.call = spy  # type: ignore[method-assign]
         rec.run(client)
         if not keys:
+            if live:     # a refusal, timeout or unusable live answer: keep going, report it, record the rest
+                print(f"recording {rec.label!r}: no usable live answer; not recorded", file=sys.stderr)
+                continue
             raise RuntimeError(f"recording {rec.label!r} made no successful LLM call (bad hand-written output?)")
         for k in keys:
             prev = index.get(k, {}).get("label")

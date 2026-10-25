@@ -29,6 +29,7 @@ from contracts.models import (
     Rule,
     RuleAction,
     RuleProposal,
+    Source,
     StormRun,
     TraceEvent,
     World,
@@ -116,10 +117,12 @@ class Engine:
     # ---------- EngineAPI ----------
 
     def decide(self, flight_id: str, facts: list[Fact], rules: list[Rule], known_at: datetime,
-               calibration_version: str | None = None) -> FlightDecision:
+               calibration_version: str | None = None, *, sources: Sequence[Source] = ()) -> FlightDecision:
+        """``sources``: documents the facts come from that the base world doesn't hold (an injected tech-log line).
+        Their kind caps their tier; a fact whose source is found nowhere is tier 4."""
         if self.world is None:
             raise ValueError("Engine.decide needs the base world (Engine(world=...))")
-        world = overlay_facts(self.world, facts, known_at)
+        world = overlay_facts(self.world, facts, known_at, sources)
         return self.decide_in(world, flight_id, rules, known_at)
 
     def entitlements(self, decision: FlightDecision, world: World, rules: list[Rule]) -> list[Entitlement]:

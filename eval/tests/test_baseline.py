@@ -132,3 +132,25 @@ def test_live_refuses_without_a_key(monkeypatch, tmp_path):
     monkeypatch.setattr(B, "load_env", lambda path=None: None)
     with pytest.raises(SystemExit, match="ANTHROPIC_API_KEY"):
         B.main(["--live"])
+
+
+def test_stormcheck_is_scored_on_the_same_flights_by_the_same_rule():
+    from eval.baseline import summarize_results
+
+    day = "2025-01-24"
+    rows = [
+        {"day": day, "flight_id": "A", "truth_cause": "technical", "truth_extraordinary": "not_extraordinary",
+         "predicted_cause": "technical", "predicted_extraordinary": "not_extraordinary", "preview_cents": 60000,
+         "ultimate_cents": 21000},
+        {"day": day, "flight_id": "B", "truth_cause": "weather", "truth_extraordinary": "extraordinary",
+         "expected_route": "legal", "predicted_cause": "knock_on", "predicted_extraordinary": "needs_legal",
+         "preview_cents": 25000, "ultimate_cents": 0},
+        {"day": day, "flight_id": "C", "truth_cause": "technical", "truth_extraordinary": "not_extraordinary",
+         "predicted_cause": "weather", "predicted_extraordinary": "extraordinary", "preview_cents": 0,
+         "ultimate_cents": 14000},
+    ]
+    s = summarize_results({}, rows, days=[day])
+    storm = s["storms"][day]
+    assert s["status"] == "pending" and s["runs"] == 0 and storm["liability_eur"] == []
+    assert storm["flights"] == 3 and storm["stormcheck_accuracy"] == round(2 / 3, 6)
+    assert storm["stormcheck_preview_eur"] == 850.0 and storm["key_ultimate_expected_eur"] == 350.0
