@@ -10,6 +10,7 @@ import orjson
 
 from contracts.models import World
 from world.airports import airport, distance_km
+from world.events import blackout_world
 from world.generate import generate_day
 from world.metar import fetch_metar
 
@@ -21,6 +22,7 @@ class WorldImpl:
     distance_km = staticmethod(distance_km)
     fetch_metar = staticmethod(fetch_metar)
     generate_day = staticmethod(generate_day)
+    blackout_world = staticmethod(blackout_world)     # the Iberian blackout scenario (world.events)
 
     def load(self, path: str | os.PathLike[str]) -> World:
         """A World from `.json` or gzip-compressed `.json.gz` (detected by content, not by name)."""

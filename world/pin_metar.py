@@ -6,6 +6,7 @@
     uv run python -m world.pin_metar recent         # last 7 complete UTC days at EIDW (re-run before the demo)
     uv run python -m world.pin_metar storm-days     # data/pinned/STORM_DAYS.md from the EIDW bundle (no network)
     uv run python -m world.pin_metar network        # outstation METAR for every generator world day (F3a)
+    uv run python -m world.pin_metar blackout       # LPPT/LEMD/LEBL 28-29 Apr 2025 (Iberian blackout scenario)
 
 IEM allows 1 request/second/IP: every request goes through `metar.IEM_THROTTLE`, set here to 1.5 s spacing.
 Raw responses are kept in `--raw-dir` (default /tmp/stormcheck_iem_raw) so re-runs don't re-fetch.
@@ -340,9 +341,24 @@ def write_judge_md(picks: list[JudgePick]) -> None:
     (PINNED_DIR / "JUDGE_DAYS.md").write_text("\n".join(lines) + "\n")
 
 
+BLACKOUT_STATIONS = ("LPPT", "LEMD", "LEBL")
+BLACKOUT_DAYS = (date(2025, 4, 28), date(2025, 4, 30))      # [start, end) UTC days: 28 and 29 April 2025
+
+
+def cmd_blackout(raw_dir: Path) -> None:
+    """Real METAR for the Iberian blackout scenario (world.events): one IEM request per station, daily pins.
+    Outside the full world's days (its outstation pins stop at 2025-04-27), so the answer key is unaffected."""
+    start, end = BLACKOUT_DAYS
+    for icao in BLACKOUT_STATIONS:
+        text = _canonical(fetch_raw(icao, start, end, raw_dir))
+        for d, lines in sorted(split_by_day(text).items()):
+            if start <= d < end:
+                print(f"  blackout {write_daily(icao, d, lines).name} ({len(lines)} rows)")
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", choices=["all", "eidw", "judge", "recent", "storm-days", "network"])
+    ap.add_argument("command", choices=["all", "eidw", "judge", "recent", "storm-days", "network", "blackout"])
     ap.add_argument("--raw-dir", type=Path, default=Path("/tmp/stormcheck_iem_raw"))
     args = ap.parse_args(argv)
     metar.IEM_THROTTLE.min_interval = PIN_SPACING_S
@@ -357,6 +373,8 @@ def main(argv: list[str] | None = None) -> int:
         cmd_recent(args.raw_dir)
     if args.command in ("all", "network"):
         cmd_network(args.raw_dir)
+    if args.command in ("all", "blackout"):
+        cmd_blackout(args.raw_dir)
     return 0
 
 
