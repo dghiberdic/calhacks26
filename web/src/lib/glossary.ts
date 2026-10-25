@@ -144,6 +144,10 @@ export const GLOSSARY = {
     term: "Judge's Desk",
     plain: "Pick any airport and date: StormCheck fetches the real weather reports for it, simulates the airline's flights on that weather and runs the same engine.",
   },
+  "loaded-cost": {
+    term: "Loaded cost",
+    plain: "What an hour of a person's time costs the airline: salary plus about 30% on top for employer taxes, pension and a desk, over 1,700 working hours a year. Rates from Irish salary surveys.",
+  },
   "preparer-approver": {
     term: "Preparer ≠ approver",
     plain: "Segregation of duties: whoever drafts an entry can never approve it, person or agent. Enforced in code, not by habit.",

@@ -13,6 +13,7 @@ import type {
   ConfirmResponse,
   ControlMapping,
   CurveSegment,
+  EffortEstimate,
   EstimateCard,
   EvalReport,
   FlightFile,
@@ -22,6 +23,7 @@ import type {
   Injection,
   InvariantResult,
   JournalEntry,
+  LearningStep,
   MonthEndResponse,
   Question,
   ReplayDiff,
@@ -190,6 +192,10 @@ export const api = {
   airports: () => get<Airport[]>("/airports"),
   /** Additive (contracts/requests/justin.md #2): the current known-at; absent on a server without it. */
   clockNow: () => get<{ known_at: string; marks?: ClockMark[] }>("/clock"),
+  /** Additive (insights spec): what the run would take by hand, computed on read. A server without it answers 404. */
+  effort: (runId: string) => get<EffortEstimate>(`/runs/${seg(runId)}/effort`),
+  /** Additive (insights spec): storm by storm, what was asked, learned and reused. */
+  learning: () => get<LearningStep[]>("/learning"),
   reset: () => post<{ ok: boolean }>("/reset"),
 };
 

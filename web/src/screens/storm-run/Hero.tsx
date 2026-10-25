@@ -36,7 +36,24 @@ function RealContext({ run }: { run: StormRun }) {
   );
 }
 
-export function Hero({ run, onSelectFlight }: { run: StormRun; onSelectFlight: (id: string) => void }) {
+/** "Reused 2 learned rules: 31 cases settled without asking." Runs after the first only. */
+function ReuseLine({ reuse }: { reuse: { rules: number; cases: number } }) {
+  return (
+    <p className="mt-3 flex items-start gap-2 text-[14px] leading-relaxed text-cloud-300" data-testid="reuse-line">
+      <span aria-hidden="true" className="font-mono text-cloud-500">
+        ↻
+      </span>
+      <span>
+        <Link to="/policies" className="text-cloud-100 underline decoration-white/30 underline-offset-[3px] hover:decoration-white">
+          Reused {plural(reuse.rules, "learned rule", "learned rules")}
+        </Link>
+        : {plural(reuse.cases, "case", "cases")} settled without asking.
+      </span>
+    </p>
+  );
+}
+
+export function Hero({ run, onSelectFlight, reuse }: { run: StormRun; onSelectFlight: (id: string) => void; reuse?: { rules: number; cases: number } | null }) {
   const reduce = useReducedMotion();
   // The callout lands once the timeline has settled (about 4 s), per storm.
   const [settledFor, setSettledFor] = useState<string | null>(null);
@@ -96,6 +113,7 @@ export function Hero({ run, onSelectFlight }: { run: StormRun; onSelectFlight: (
                 </Fragment>
               ))}
             </p>
+            {reuse ? <ReuseLine reuse={reuse} /> : null}
           </div>
 
           {focus ? (
