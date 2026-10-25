@@ -335,3 +335,26 @@ definition, recomputed in `world/` because world may not import the engine. A te
    - **22 claims, F3c key right.** These are lead-booker PNR-scope claims. The rule ignores `pnr_scope`, so it pays the lead booker for one coupon only (e.g. CLM-NS167-23B-2023-09-07T0746Z: rule €400, key €1,200 covering 23B/23C/23D). It then wrongly accepts the members' later claims (e.g. CLM-NS167-23C-2023-09-27T1734Z: rule €400, key duplicate €0).
    - **25 claims, no money disagreement.** These are claims on coupons settled in kind by a signed voucher. The key labels them valid with €0 due; the rule labels them invalid with €0. Only the label differs.
    The cross-check found no case where the key is wrong, so it stays out.
+
+## Blackout scenario (world.events, Iberian blackout 28 Apr 2025)
+- **The event is pinned, not generated.** `data/pinned/events/iberian_blackout_2025-04-28.json` holds the `ExternalEvent` and 10 `Source`s (kind `external_event`). Each text is a short verbatim quote, checked character for character against the page at its `uri` on 2026-10-24, plus the URL.
+  - **Primary (`source_ids[0]`, tier 1): ANA's same-day statement.** At 12:55 Lisbon (11:55Z) on 28 Apr, ANA told Lusa that its airports had switched on emergency generators and that Lisbon was operating with limitations. The source quotes the Portuguese original (Record/Lusa) and Lusa's English text. It is the operator's own words, so it is tier 1, and it is known before the run's 29 Apr 06:00Z mark.
+  - Corroborating tier 1, later: ENTSO-E (onset; restoration timeline, 9 May), Red Eléctrica (restoration, 29 Apr), the IAA (EU261 advice, 29 Apr).
+  - Tier 2: press reports of ANA, Aena and daa statements and Cirium data.
+  - `received_at` is the publication date; the hour is approximate where a page gives none. Only ANA's statement, ANA's "until 10 pm" (Reuters, received 01:39Z on 29 Apr) and daa's 20:00 count arrive before 06:00Z on 29 Apr. The rest corroborate afterwards. The LEMD/LEBL window ends rest on Red Eléctrica's later notes, which is one more reason they are labelled approximate.
+- **Windows.** Every start is ENTSO-E's 12:33 CEST = 10:33Z. No airport published when its operations normalised, so each end is a **conservative (short) estimate, labelled `approximate:` in its note**. A short window books more liability, never less.
+  - LPPT 21:00Z: ANA said flights would not take off from Lisbon until 10 pm local.
+  - LEMD 16:00Z: Red Eléctrica reported supply back in areas of Madrid "barely an hour" after its ~5:00 PM local note.
+  - LEBL 15:00Z: Red Eléctrica's ~5:00 PM local note included Catalonia.
+  - Later anchors are quoted but not used. ENTSO-E: Portugal's grid restored at 00:22 on 29 Apr, Spain's around 04:00. ENTSO-E's 9 May release labels its times "CET", but its 12:33:24 matches the 12:33 CEST onset, so they are read as UTC+2.
+- **Not invented:** the 44.78 % Lisbon departures cancelled (Cirium via IAR) and the 13 Dublin cancellations by 20:00 (daa: 6 inbound + 7 outbound) go only into `real_context`, each with its source id.
+- **Schedule.**
+  - The network's NS108/110/112 morning and NS128/130 afternoon rotations, plus one scenario-only midday rotation per city (NS170/171 LIS, NS172/173 BCN, NS174/175 MAD; the numbers are unused by the network).
+  - Outcomes are fixed in `events.PLAN`, so the planted cases never depend on a random draw. The seed only drives passengers, claims and care amounts.
+  - 16 flights: 8 cancelled in a window (RSN 87), 2 cancelled after power returned for internal reasons, 6 operated.
+- **Post-restoration plants**, both with an internal cause in Northstar's own logs, so `internal_cause_logged` fires.
+  - NS128: OCC RSN 93 "A/C EI-NSH OUT OF POSITION", and a spares line saying the DUB spare EI-NTB was serviceable at STD+0h00 but not assigned. Truth: cause `knock_on`, not extraordinary (a spare existed, so either reading gives owed).
+  - NS129: crew control RSN 64 "CREW OUT OF FDP … NO RESERVE CREW CALLED", logged at 16:35Z, after Madrid's 16:00Z end. Truth: cause `crew`, not extraordinary.
+  - NS128's decision (13:30Z) falls inside the Madrid window, but both of its scheduled ends are outside every window.
+- **Run and known_at.** The scenario run is Dublin's day (`EIDW@2025-04-28`: every DUB<->Iberia sector), with known_at 2025-04-29T06:00Z, the morning after (the demo's clock mark and the desk's day+1 06:00Z convention). Every `meta.storms[*].known_at` matches. `meta.storms` also lists LPPT/LEMD/LEBL@2025-04-28. `generate_day(LPPT|LEMD|LEBL, 2025-04-28)` returns the same world with `meta.desk` for that station. Truth is `events.answer_key()` / `blackout_generated().truth`, never part of the World.
+- **Real METAR.** LPPT, LEMD and LEBL for 28-29 Apr are pinned from IEM (`pin_metar blackout`, one request per station). All calm, so there is no storm window. The full world's outstation pins stop at 2025-04-27, and its 27 Apr day loads only that UTC day at the outstations, so the new daily pins leave the full world and its answer key byte-identical.

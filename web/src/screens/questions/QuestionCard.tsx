@@ -6,11 +6,15 @@ import type { Question, Role } from "@/api/types";
 import { MicroLabel, StatusChip } from "@/components/chips";
 import { EvidenceList } from "@/components/evidence";
 import { ConfidenceLine, RoutedTo } from "@/components/kit";
+import type { Term } from "@/lib/glossary";
 import { count, ROLE_LABEL, zuluDay } from "@/lib/format";
+import { plainIds } from "@/lib/plain";
 import { cn } from "@/lib/utils";
 import { AnswerFlow, type Flow } from "./AnswerFlow";
 import { caseCount, caseHref, caseKind, caseLabel, reasonText, reminderText } from "./lib";
 import { MaskedText } from "./MaskedText";
+
+const REASON_TERM: Partial<Record<Question["reason_tag"], Term>> = { "sources-disagree": "sources-disagree", "no-precedent": "no-precedent" };
 
 /**
  * One question per pattern: what it found, why it flagged it, what it recommends, the evidence, and
@@ -45,11 +49,11 @@ export function QuestionCard({ question, role, flow, onFlow }: { question: Quest
           </div>
 
           <h2 id={titleId} className="display-tight mt-3 text-[21px] leading-snug text-navy-900 md:text-[23px]">
-            <MaskedText text={question.title} />
+            <MaskedText text={plainIds(question.title)} />
           </h2>
 
           <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <ConfidenceLine confidence={question.confidence} reason={reasonText(question.reason_tag)} />
+            <ConfidenceLine confidence={question.confidence} reason={reasonText(question.reason_tag)} reasonTerm={REASON_TERM[question.reason_tag]} showCaps={false} />
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
@@ -95,7 +99,7 @@ function Block({ label, text, emphasis }: { label: string; text: string; emphasi
     <div className={cn("grid gap-1 md:grid-cols-[148px_minmax(0,1fr)] md:gap-4", emphasis && "rounded-lg bg-cloud-25 py-2.5 pr-3 shadow-[inset_0_0_0_1px_var(--color-cloud-100)] md:-ml-3 md:pl-3")}>
       <dt className="micro pt-[3px] text-slate-500">{label}</dt>
       <dd className={cn("max-w-[68ch] text-[14.5px] leading-relaxed", emphasis ? "font-medium text-navy-900" : "text-slate-600")}>
-        <MaskedText text={text} />
+        <MaskedText text={plainIds(text)} />
       </dd>
     </div>
   );
@@ -112,8 +116,9 @@ function PiiChip({ role }: { role: Role }) {
   );
 }
 
+/** The evidence starts folded: what it found and why already say it in words; the raw lines are one click away. */
 function EvidenceDisclosure({ question }: { question: Question }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const id = useId();
   const struck = question.evidence.filter((e) => e.struck).length;
   return (
@@ -121,7 +126,7 @@ function EvidenceDisclosure({ question }: { question: Question }) {
       <button type="button" aria-expanded={open} aria-controls={id} onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between gap-3 rounded-md text-left">
         <span className="flex items-baseline gap-2">
           <MicroLabel>Evidence · {count(question.evidence.length)}</MicroLabel>
-          <span className="text-[12px] text-slate-400">ranked by trust tier{struck ? ", the losing source struck" : ""}</span>
+          <span className="text-[12px] text-slate-400">best sources first{struck ? ", the losing source struck" : ""}</span>
         </span>
         <ChevronDown className={cn("size-4 text-slate-400 transition-transform", open && "rotate-180")} aria-hidden="true" />
       </button>

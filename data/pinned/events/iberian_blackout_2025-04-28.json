@@ -1,0 +1,190 @@
+{
+  "version": "blackout-event-v1",
+  "note": "Pinned for the StormCheck blackout scenario. Source texts are short verbatim quotes from the pages at `uri` (retrieved 2026-10-24). Window starts are ENTSO-E's 12:33 CEST (10:33Z). Every window end is an estimate and says so in its note. ENTSO-E's 9 May release labels its times 'CET' but its 12:33:24 matches the 12:33 CEST onset, so those are read as local (UTC+2) times. received_at is the publication date; the hour is approximate where the page gives none. The primary source is ANA's same-day statement (28 Apr 12:55 Lisbon = 11:55Z, via Lusa), known before the 29 Apr 06:00Z run; ENTSO-E, Red Eléctrica, the IAA and the 29 Apr-1 May reports corroborate it later.",
+  "event": {
+    "id": "EVT-IBERIA-BLACKOUT@2025-04-28",
+    "kind": "grid_outage",
+    "title": "Iberian Peninsula blackout",
+    "airports": [
+      {
+        "icao": "LPPT",
+        "start": "2025-04-28T10:33:00Z",
+        "end": "2025-04-28T21:00:00Z",
+        "note": "approximate: conservative (short) end. ANA said flights would not take off from Lisbon until 10 pm local (21:00Z); ENTSO-E puts the end of Portugal's grid restoration at 00:22 on 29 April (22:22Z); ANA reported normal operations on 29 April. Lisbon's exact return to normal operations is not published."
+      },
+      {
+        "icao": "LEMD",
+        "start": "2025-04-28T10:33:00Z",
+        "end": "2025-04-28T16:00:00Z",
+        "note": "approximate: conservative (short) end. Aena kept Madrid-Barajas operating on backup power; Red Eléctrica reported supply back in areas of Madrid barely an hour after its ~5:00 PM local announcement (about 16:00Z); Spain's grid restoration ended around 04:00 local on 29 April (ENTSO-E). Barajas's own return to normal operations is not published."
+      },
+      {
+        "icao": "LEBL",
+        "start": "2025-04-28T10:33:00Z",
+        "end": "2025-04-28T15:00:00Z",
+        "note": "approximate: conservative (short) end. Aena kept Barcelona-El Prat operating on backup power; Red Eléctrica reported supply restored to areas of Catalonia at approximately 5:00 PM local (15:00Z). El Prat's own return to normal operations is not published."
+      }
+    ],
+    "source_ids": [
+      "SRC-EVT-ANA-GENERATORS",
+      "SRC-EVT-ENTSOE-BLACKOUT",
+      "SRC-EVT-ENTSOE-RESTORATION",
+      "SRC-EVT-REE-RESTORATION",
+      "SRC-EVT-IAA-ADVICE",
+      "SRC-EVT-ANA-LISBON",
+      "SRC-EVT-ANA-RECOVERY",
+      "SRC-EVT-LIS-DISRUPTION",
+      "SRC-EVT-AENA-STATUS",
+      "SRC-EVT-DAA-DUBLIN"
+    ]
+  },
+  "sources": [
+    {
+      "id": "SRC-EVT-ANA-GENERATORS",
+      "kind": "external_event",
+      "title": "ANA Aeroportos de Portugal: emergency generators on, Lisbon operating with limitations",
+      "text": "ANA Aeroportos de Portugal · statement to Lusa, 28 April 2025 12:55 (Lisbon)\n\"Os aeroportos da ANA acionaram os geradores de emergência o que para já possibilita a manutenção do essencial da operação aeroportuária nos aeroportos do Porto e de Faro. Em Lisboa a operação está a decorrer mas com limitações.\"\nhttps://www.record.pt/fora-de-campo/detalhe/apagao-ana-aciona-geradores-de-emergencia-aeroporto-de-lisboa-com-mais-limitacoes\nLusa (English): \"ANA's airports have activated the emergency generators, which, for the time being, allow the essential airport operations to be maintained at Porto and Faro airports. In Lisbon, operations are ongoing but with limitations.\"\nhttps://aman-alliance.org/Home/ContentDetail/89158\n",
+      "sha256": "b4f3365900daf8d8f74182d9aae603128c287a1a262f00c65e614ad84c315afb",
+      "received_at": "2025-04-28T11:55:00Z",
+      "trust_tier": 1,
+      "acl_tags": [
+        "ops",
+        "legal"
+      ],
+      "uri": "https://www.record.pt/fora-de-campo/detalhe/apagao-ana-aciona-geradores-de-emergencia-aeroporto-de-lisboa-com-mais-limitacoes"
+    },
+    {
+      "id": "SRC-EVT-ENTSOE-BLACKOUT",
+      "kind": "external_event",
+      "title": "ENTSO-E: Iberian Peninsula Blackout 28 April 2025",
+      "text": "ENTSO-E · Iberian Peninsula Blackout 28 April 2025\n\"On 28 April 2025, at 12:33 CEST, the power systems of continental Spain and Portugal experienced a total blackout.\"\nhttps://www.entsoe.eu/publications/blackout/28-april-2025-Iberian-blackout\n",
+      "sha256": "fe909950acd720590dc3a1c2d025ba1f3594e5e2e726f2ffd082159bc21567e8",
+      "received_at": "2025-05-09T12:00:00Z",
+      "trust_tier": 1,
+      "acl_tags": [
+        "ops",
+        "legal"
+      ],
+      "uri": "https://www.entsoe.eu/publications/blackout/28-april-2025-Iberian-blackout"
+    },
+    {
+      "id": "SRC-EVT-ENTSOE-RESTORATION",
+      "kind": "external_event",
+      "title": "ENTSO-E: Expert panel initiates the investigation into the causes of Iberian blackout",
+      "text": "ENTSO-E · Expert panel initiates the investigation into the causes of Iberian blackout\n\"At 12:33:24 CET, the Iberian electricity system collapsed completely and the HVDC lines between France and Spain stopped transmitting power.\"\n\"At 00:22 CET on 29 April 2025, the restoration process of the transmission grid was completed in Portugal.\"\n\"At around 04:00 CET, the restoration process of the transmission grid was completed in Spain.\"\nhttps://www.entsoe.eu/news/2025/05/09/entso-e-expert-panel-initiates-the-investigation-into-the-causes-of-iberian-blackout/\n",
+      "sha256": "bcbe11d69fb09f6b326df1bda146b01e8470cc1a4c42f0d3d9210070baaea78c",
+      "received_at": "2025-05-09T12:00:00Z",
+      "trust_tier": 1,
+      "acl_tags": [
+        "ops",
+        "legal"
+      ],
+      "uri": "https://www.entsoe.eu/news/2025/05/09/entso-e-expert-panel-initiates-the-investigation-into-the-causes-of-iberian-blackout/"
+    },
+    {
+      "id": "SRC-EVT-REE-RESTORATION",
+      "kind": "external_event",
+      "title": "Red Eléctrica: Red Eléctrica's response to the incident of 28 April",
+      "text": "Red Eléctrica · Red Eléctrica's response to the incident of 28 April\n\"At approximately 5:00 PM, Red Eléctrica announced via social media that the electricity supply had already been restored to areas of Catalonia, Aragon, the Basque Country, Galicia, La Rioja, Asturias, Navarre, Castile and Leon, Extremadura, and Andalusia.\"\n\"Barely an hour later, it also reported that other areas in Madrid, the Valencian Community, Murcia, and Castile-La Mancha had been added to this list.\"\n\"by 4:00 AM, 100% of the transmission grid's substations were energised\"\nhttps://www.ree.es/en/press-office/news/press-release/2025/04/red-electrica-response-to-the-incident-of-28-april\n",
+      "sha256": "aaccab255e46e1083d93e96f369c28db4102f1649eabb4112305d9f707ed7b82",
+      "received_at": "2025-04-29T08:00:00Z",
+      "trust_tier": 1,
+      "acl_tags": [
+        "ops",
+        "legal"
+      ],
+      "uri": "https://www.ree.es/en/press-office/news/press-release/2025/04/red-electrica-response-to-the-incident-of-28-april"
+    },
+    {
+      "id": "SRC-EVT-IAA-ADVICE",
+      "kind": "external_event",
+      "title": "Irish Aviation Authority: IAA issues advice for passengers affected by power outage in Spain, Portugal and France",
+      "text": "Irish Aviation Authority · IAA issues advice for passengers affected by power outage in Spain, Portugal and France\n\"No compensation is due beyond care, assistance and re-routing in the circumstances where the event is outside the control of the airlines affected and is deemed an extraordinary circumstance.\"\n\"meals & refreshments in reasonable relation to the waiting time; hotel accommodation where an overnight stay becomes necessary; transport between the hotel accommodation and the airport\"\nhttps://www.iaa.ie/media/2025/04/29/iaa-issues-advice-for-passengers-affected-by-power-outage-in-spain--portugal-and-france\n",
+      "sha256": "c328cb1acd46571184d4c183baa8e5e8eaee0a20de569c64ff1efe820110ca5e",
+      "received_at": "2025-04-29T12:00:00Z",
+      "trust_tier": 1,
+      "acl_tags": [
+        "ops",
+        "legal"
+      ],
+      "uri": "https://www.iaa.ie/media/2025/04/29/iaa-issues-advice-for-passengers-affected-by-power-outage-in-spain--portugal-and-france"
+    },
+    {
+      "id": "SRC-EVT-ANA-LISBON",
+      "kind": "external_event",
+      "title": "ANA via Reuters: Flights will not take off from Lisbon until 10 pm, says airport operator (Reuters)",
+      "text": "ANA via Reuters · Flights will not take off from Lisbon until 10 pm, says airport operator (Reuters)\n\"Flights will not take off from Lisbon until 10 pm, says airport operator\"\n\"It said in a statement operations continued at both Porto and Faro airports, but with limitations.\"\nhttps://www.deccanherald.com/world/flights-will-not-take-off-from-lisbon-until-10-pm-says-airport-operator-3515393\n",
+      "sha256": "b847759bb751d84a91c192f8098174e6c9c18f894da58c7a9e012602562776d3",
+      "received_at": "2025-04-29T01:39:00Z",
+      "trust_tier": 2,
+      "acl_tags": [
+        "ops",
+        "legal"
+      ],
+      "uri": "https://www.deccanherald.com/world/flights-will-not-take-off-from-lisbon-until-10-pm-says-airport-operator-3515393"
+    },
+    {
+      "id": "SRC-EVT-ANA-RECOVERY",
+      "kind": "external_event",
+      "title": "ANA via ECO/Lusa: Airports fully operational after Monday's power outage (Lusa)",
+      "text": "ANA via ECO/Lusa · Airports fully operational after Monday's power outage (Lusa)\n\"Operations at Portuguese airports are running smoothly, with all operational systems up and running\"\n\"recovery of yesterday’s flights [Monday] presents greater challenges, but the situation is under control\"\nhttps://econews.pt/2025/04/29/airports-fully-operational-after-mondays-power-outage/\n",
+      "sha256": "b51ef10d3e7fe35b77c10c4a1a29ac66a49b1e94358a00ff0f7f1d475df59125",
+      "received_at": "2025-04-29T12:00:00Z",
+      "trust_tier": 2,
+      "acl_tags": [
+        "ops",
+        "legal"
+      ],
+      "uri": "https://econews.pt/2025/04/29/airports-fully-operational-after-mondays-power-outage/"
+    },
+    {
+      "id": "SRC-EVT-LIS-DISRUPTION",
+      "kind": "external_event",
+      "title": "International Airport Review (Cirium data): Lisbon airport faces major disruption as Iberian power outage grounds flights",
+      "text": "International Airport Review (Cirium data) · Lisbon airport faces major disruption as Iberian power outage grounds flights\n\"Lisbon – 44.78% of departures cancelled\"\n\"travellers were reportedly asked to leave the terminal and contact their airlines remotely\"\nhttps://www.internationalairportreview.com/news/260732/lisbon-airport-faces-major-disruption-as-iberian-power-outage-grounds-flights-and-halts-operations/\n",
+      "sha256": "60fa1ded5e732707e505046c6267b9dbf0a1230c9acab31d0a30eca14b0646c0",
+      "received_at": "2025-05-01T12:00:00Z",
+      "trust_tier": 2,
+      "acl_tags": [
+        "ops",
+        "legal"
+      ],
+      "uri": "https://www.internationalairportreview.com/news/260732/lisbon-airport-faces-major-disruption-as-iberian-power-outage-grounds-flights-and-halts-operations/"
+    },
+    {
+      "id": "SRC-EVT-AENA-STATUS",
+      "kind": "external_event",
+      "title": "Aena via The Local: Which flights and airports have been affected by Spain's blackout",
+      "text": "Aena via The Local · Which flights and airports have been affected by Spain's blackout\n\"most of the major airports had backup generators\"\n\"Airport operator AENA reported this morning that “all airports remain operational”.\"\nhttps://www.thelocal.es/20250429/which-flights-and-airports-have-been-affected-by-spains-blackout\n",
+      "sha256": "34e628f70a2c677bef99b70ed1ef8c12bbafef75280f0266d43184c73486dd07",
+      "received_at": "2025-04-29T10:00:00Z",
+      "trust_tier": 2,
+      "acl_tags": [
+        "ops",
+        "legal"
+      ],
+      "uri": "https://www.thelocal.es/20250429/which-flights-and-airports-have-been-affected-by-spains-blackout"
+    },
+    {
+      "id": "SRC-EVT-DAA-DUBLIN",
+      "kind": "external_event",
+      "title": "daa via Meath Chronicle: Spain-Portugal power outage: Flights to Dublin cancelled",
+      "text": "daa via Meath Chronicle · Spain-Portugal power outage: Flights to Dublin cancelled\n\"Dublin Airport said, as of 8pm, a total of six inbound flights to Dublin Airport have been cancelled.\"\n\"Seven outbound flights - to Faro, Alicante, Madrid, Santiago, Marrakech and Lisbon - have also been cancelled.\"\nhttps://www.meathchronicle.ie/2025/04/28/spain-portugal-power-outage-flights-to-dublin-cancelled-as-exact-cause-of-blackout-unknown/\n",
+      "sha256": "c1655be05162404ec53e02b1a73c35ea93e52a3c6fad92ed8067fd7d284f2491",
+      "received_at": "2025-04-28T19:44:00Z",
+      "trust_tier": 2,
+      "acl_tags": [
+        "ops",
+        "legal"
+      ],
+      "uri": "https://www.meathchronicle.ie/2025/04/28/spain-portugal-power-outage-flights-to-dublin-cancelled-as-exact-cause-of-blackout-unknown/"
+    }
+  ],
+  "real_context": {
+    "lisbon_departures_cancelled_pct": 44.78,
+    "lisbon_departures_cancelled_source": "SRC-EVT-LIS-DISRUPTION",
+    "dublin_cancellations_by_20z": 13,
+    "dublin_cancellations_note": "6 inbound + 7 outbound as of 8pm (daa)",
+    "dublin_cancellations_source": "SRC-EVT-DAA-DUBLIN"
+  }
+}

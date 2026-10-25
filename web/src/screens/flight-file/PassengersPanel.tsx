@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import type { Entitlement, FlightFile } from "@/api/types";
 import { MicroLabel, StatusChip } from "@/components/chips";
-import { Money } from "@/components/kit";
+import { Details, Money } from "@/components/kit";
 import { entitlementChip } from "@/components/verdict";
 import { count } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -32,19 +32,31 @@ export function PassengersPanel({ file }: { file: FlightFile }) {
   if (!items.length && !sample.length && !elections.length) return null;
   return (
     <section aria-labelledby="pax-title" className="rounded-xl bg-card shadow-[0_0_0_1px_var(--color-cloud-200),0_1px_2px_rgba(13,21,36,0.04)]">
-      <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-5 pt-4">
+      <header className="px-5 pt-4">
         <h2 id="pax-title" className="text-[14.5px] font-semibold text-navy-900">
           Passengers
         </h2>
-        <p className="text-[12.5px] text-slate-500">EU261 entitlement per coupon, worked out by the engine</p>
+        <p className="mt-0.5 text-[12.5px] text-slate-500">What each passenger is owed under EU261, worked out ticket by ticket by the engine.</p>
       </header>
 
       <Elections pairs={elections} />
       <Statuses pairs={statusesOf(file.entitlements_summary)} />
-      {items.length ? <SummaryGrid items={items} /> : null}
 
-      {sample.length ? (
-        <div className="mt-4 border-t border-cloud-100">
+      {items.length || sample.length ? (
+        <Details summary="Per-passenger detail" className="px-5 pb-4 pt-3.5">
+          {items.length ? <SummaryGrid items={items} /> : null}
+          {sample.length ? <SampleTable sample={sample} total={total} /> : null}
+        </Details>
+      ) : (
+        <div className="pb-4" />
+      )}
+    </section>
+  );
+}
+
+function SampleTable({ sample, total }: { sample: Entitlement[]; total: number }) {
+  return (
+        <div className="-mx-5 mt-4 border-t border-cloud-100">
           <div className="flex items-baseline justify-between px-5 pb-2 pt-3.5">
             <MicroLabel>
               Sample entitlements · {count(sample.length)} of {count(total)}
@@ -80,8 +92,6 @@ export function PassengersPanel({ file }: { file: FlightFile }) {
             ))}
           </ul>
         </div>
-      ) : null}
-    </section>
   );
 }
 
@@ -136,7 +146,7 @@ function Statuses({ pairs }: { pairs: [string, number][] }) {
 
 function SummaryGrid({ items }: { items: SummaryItem[] }) {
   return (
-    <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-cloud-100 px-5 pt-4 sm:grid-cols-3 xl:grid-cols-4">
+    <dl className="mt-1 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 xl:grid-cols-4">
       {items.map((i) => (
         <div key={i.key} className="min-w-0">
           <dt className="text-[12px] leading-snug text-slate-500">{i.label}</dt>

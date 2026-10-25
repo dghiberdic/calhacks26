@@ -3,9 +3,11 @@ import { AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import type { Cents, Confidence, Role, TraceEvent } from "@/api/types";
 import { ApiError } from "@/api/client";
 import { eur, pct, ROLE_INITIALS, ROLE_LABEL, routedTo, shortId, zulu } from "@/lib/format";
+import type { Term } from "@/lib/glossary";
 import { plainIds } from "@/lib/plain";
 import { cn } from "@/lib/utils";
 import { StatusChip, TraceChip } from "./chips";
+import { Explain } from "./explain";
 
 // ---------- money ----------
 /** Integer cents as euros in tabular Archivo; negatives in parentheses. */
@@ -14,14 +16,17 @@ export function Money({ cents, className, signed, withCents }: { cents: Cents | 
 }
 
 // ---------- confidence ----------
-/** "cause-finding confidence 91% · fault logged before storm"; "uncalibrated" when there is no model for the kind. */
-export function ConfidenceLine({ confidence, reason, className, showCaps = true }: { confidence: Confidence; reason?: string | null; className?: string; showCaps?: boolean }) {
+/**
+ * "cause-finding confidence 91% · fault logged before storm"; "uncalibrated" when there is no model for the kind.
+ * `reasonTerm` explains the reason ("sources disagree", "no precedent") on hover.
+ */
+export function ConfidenceLine({ confidence, reason, reasonTerm, className, showCaps = true }: { confidence: Confidence; reason?: string | null; reasonTerm?: Term; className?: string; showCaps?: boolean }) {
   const score = confidence.score === null ? "uncalibrated" : pct(confidence.score);
   return (
     <span className={cn("inline-flex flex-wrap items-center gap-x-1.5 gap-y-1 font-mono text-[12px] text-slate-600", className)}>
       <span>
         {confidence.label} <span className="font-bold text-navy-900">{score}</span>
-        {reason ? <span className="text-slate-500"> · {reason}</span> : null}
+        {reason ? <span className="text-slate-500"> · {reasonTerm ? <Explain term={reasonTerm}>{reason}</Explain> : reason}</span> : null}
       </span>
       {showCaps && (confidence.caps ?? []).map((cap) => <StatusChip key={cap} tone="outline" dot={false} className="h-5 text-[10.5px]">{cap}</StatusChip>)}
     </span>
