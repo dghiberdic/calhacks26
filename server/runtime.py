@@ -28,7 +28,7 @@ from contracts.models import (
     Session, StormRun, StormSummary, TraceAnchor, TraceEvent, World,
 )
 
-from . import compose, scenario
+from . import compose, ledger, scenario
 from .config import ROOT, Settings
 from .impls import Impls, _module, call, find, instantiate, select
 from .store import Store, TraceWriteError, iso
@@ -976,7 +976,23 @@ class Runtime:
                                     liability_drafted_cents=run.liability_drafted_cents))
         return out
 
+    def storm_cohorts(self) -> list[str]:
+        """The demo's storm cohorts that have happened by now (Books' default CFO scope); desk days are not."""
+        out = []
+        for key in self.store.keys("storm_run"):
+            run = self.store.get("storm_run", key)
+            if not (run.get("real_context") or {}).get("desk") and run.get("date", "") <= self.now.date().isoformat():
+                out.append(key)
+        return sorted(out)
+
     def flight_file(self, flight_id: str) -> FlightFile | None:
+        ff = self._flight_file(flight_id)
+        if ff is None or self.books is None:
+            return ff
+        return ff.model_copy(update={"journal_preview": ledger.entries(ff.journal_preview,
+                                                                       ledger.locked_periods(self.books))})
+
+    def _flight_file(self, flight_id: str) -> FlightFile | None:
         data = self.store.get("flight_file", flight_id)
         if data is None:
             return None
@@ -1011,7 +1027,8 @@ class Runtime:
         out = []
         for data in self.store.all("question"):
             q = Question.model_validate(data)
-            out.append(q.model_copy(update={"status": self.question_status(q)}))
+            out.append(q.model_copy(update={"status": self.question_status(q),
+                                            "proposal_rule_id": self.lifecycle.reject_target(q)}))
         return out
 
     def health_impl(self) -> dict[str, str]:
