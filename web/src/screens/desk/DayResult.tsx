@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { useStorms } from "@/api/queries";
-import type { FlightRow, Question, StormRun, StormWindow, TraceEvent } from "@/api/types";
+import type { FlightRow, Question, StormRun, TraceEvent } from "@/api/types";
 import { MicroLabel, StatusChip } from "@/components/chips";
 import { EvidenceList } from "@/components/evidence";
 import { ConfidenceLine, FeedRow, LoopFooter, Money, Panel, RoutedTo } from "@/components/kit";
@@ -11,13 +11,14 @@ import { RouteLegend, RouteMap } from "@/components/storm/RouteMap";
 import { StormTimeline } from "@/components/storm/StormTimeline";
 import { VERDICT_COLOR, type VerdictKind, verdictChip, verdictOf } from "@/components/verdict";
 import { airport as mapAirport, iataOf } from "@/lib/airports";
-import { count, longDate, zulu, zuluDay } from "@/lib/format";
+import { count, longDate, zulu } from "@/lib/format";
 import { stormName } from "@/lib/storms";
 import { cn } from "@/lib/utils";
 import { airportByIcao } from "./airports";
 import { dayLabel } from "./dates";
 import { flightOf, useDesk } from "./state";
 import { useBringIntoView } from "./useBringIntoView";
+import { isOutage, windowChip } from "./windows";
 
 /** Counter keys the StormRun carries (CONTRACTS §1), in reading order, with their words. */
 const COUNTERS: [string, string][] = [
@@ -45,15 +46,10 @@ function counterRows(c: Record<string, number>, skip: string[]) {
 
 /** Cool blue on the navy readout; wraps on a phone instead of running off the panel. */
 const WINDOW_CHIP = "h-auto min-h-6 whitespace-normal bg-metar/15 py-1 text-[#9ccbf2]";
+/** A grid outage isn't weather: the same chip in plain cloud, so it never reads as METAR. */
+const OUTAGE_CHIP = "h-auto min-h-6 whitespace-normal bg-white/[0.08] py-1 text-cloud-100";
 
 const runKey = (run: StormRun) => run.id.match(/[A-Z0-9]{4}@\d{4}-\d{2}-\d{2}/)?.[0] ?? `${run.station}@${run.date}`;
-
-function windowSpan(w: StormWindow, runDate: string) {
-  const sameDay = (iso: string) => iso.slice(0, 10) === runDate;
-  const a = sameDay(w.start) ? zulu(w.start) : zuluDay(w.start);
-  const b = sameDay(w.end) ? zulu(w.end) : zuluDay(w.end);
-  return `${a}–${b}`;
-}
 
 function useIsNarrow() {
   const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches);
@@ -90,6 +86,7 @@ export function DayResult({ run }: { run: StormRun }) {
   const ref = useBringIntoView<HTMLDivElement>();
   const cited = run.feed.filter((e) => e.chip === "CITED");
   const cancelled = c.cancelled ?? run.flights.filter((r) => r.flight.status === "cancelled").length;
+  const weatherWindow = run.windows.find((w) => !isOutage(w));
 
   const select = (id: string) => {
     setOpenFlight(id);
@@ -137,13 +134,21 @@ export function DayResult({ run }: { run: StormRun }) {
               <StatusChip tone="metar" className={WINDOW_CHIP} title={metarSource ?? undefined}>
                 {metarLabel} · {count(run.metar.length)} obs
               </StatusChip>
-              {run.windows.map((w, i) => (
-                <StatusChip key={i} tone="metar" dot={false} className={WINDOW_CHIP} title={w.definition}>
-                  storm window {windowSpan(w, run.date)} · peak gust {w.peak_gust_kt} kt{w.obs_count ? ` · ${w.obs_count} obs` : ""}
-                </StatusChip>
-              ))}
+              {run.windows.map((w, i) => {
+                const chip = windowChip(w, run.date);
+                return (
+                  <StatusChip key={i} tone={chip.outage ? "slate" : "metar"} dot={false} className={chip.outage ? OUTAGE_CHIP : WINDOW_CHIP} title={chip.title}>
+                    {chip.text}
+                  </StatusChip>
+                );
+              })}
             </div>
-            {run.windows[0]?.definition ? <p className="mt-2 font-mono text-[11px] leading-relaxed text-cloud-500">window = {run.windows[0].definition}</p> : null}
+            {run.windows.some(isOutage) ? (
+              <p className="mt-2 text-[13.5px] leading-relaxed text-cloud-300" data-testid="desk-outage-note">
+                A national power cut, not weather.{c.questions ? " StormCheck has never seen one, so it asks Legal once." : ""}
+              </p>
+            ) : null}
+            {weatherWindow?.definition ? <p className="mt-2 font-mono text-[11px] leading-relaxed text-cloud-500">window = {weatherWindow.definition}</p> : null}
             <RealContext rc={rc} />
           </div>
 
