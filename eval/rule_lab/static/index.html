@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>StormCheck · Rule Lab</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/" aria-label="StormCheck Rule Lab home"><span class="brand-mark">S</span>StormCheck<span class="slash">/</span><span class="muted">Rule Lab</span></a><span class="mode"><i></i>Isolated demo</span></header>
+  <main>
+    <section class="intro"><div><p class="eyebrow">BEFORE A RULE BECOMES A HABIT</p><h1>Let the agent learn.<br><span>Make it prove the boundaries.</span></h1><p class="lead">A ruling should resolve the right accounting cases and leave everything else alone. Test both before a person confirms it.</p></div><div class="intro-note"><span class="number">01</span><p>One human ruling.<br>Its own regression pack.<br>Evidence you can inspect.</p></div></section>
+    <section class="workspace">
+      <aside class="panel scenario-panel"><div class="section-label">01 / CHOOSE A CANDIDATE</div><h2>The voucher ruling</h2><p class="aside-copy">Compare the original draft with deliberate mistakes. These are test scenarios, not a rule editor.</p><div id="scenarios" role="group" aria-label="Candidate scenarios"></div><button id="run" class="primary" type="button">Run checks <span aria-hidden="true">↗</span></button><p id="run-state" class="small" role="status" aria-live="polite"></p><div class="isolation-note"><span class="lock-icon" aria-hidden="true">◇</span><div><strong>Existing project preserved</strong><p>Real engine. Temporary ledger.<br>No rule activation or payment.</p></div></div></aside>
+      <div class="results">
+        <section class="panel ruling"><div><div class="section-label">SOURCE / CLAIMS LEAD RULING</div><blockquote>“No signed acceptance, no offset: pay €600 cash; the voucher stays as goodwill.”</blockquote><p class="small">Original case: NS31 · 14C &nbsp; / &nbsp; EU departure &nbsp; / &nbsp; unsigned €300 voucher</p></div><span class="source-badge">Q1 · simulated</span></section>
+        <section id="verdict" class="verdict neutral" aria-live="polite"><div class="verdict-symbol" id="verdict-symbol">↗</div><div><p class="eyebrow" id="verdict-kicker">REGRESSION GATE</p><h2 id="verdict-title">Checking the original draft…</h2><p id="verdict-description">Every expected result comes from the ruling and fixed cases, independently of the candidate.</p></div><button id="download" class="secondary" disabled>Export evidence ↓</button></section>
+        <section class="stats" aria-label="Run summary"><div><span id="intended-count">—</span><p>cases it should resolve</p></div><div><span id="protected-count">—</span><p>cases it must protect</p></div><div><span id="check-count">—</span><p>checks passed</p></div><div><span id="liability">—</span><p>whole-storm estimate</p></div></section>
+        <section class="panel evidence"><div class="panel-heading"><div><div class="section-label">02 / INSPECT THE EVIDENCE</div><h2>Where does this rule reach?</h2></div><div class="tabs" role="group" aria-label="Filter cases"><button class="selected" data-filter="highlights" aria-pressed="true">Highlights</button><button data-filter="all" aria-pressed="false">All cases</button><button data-filter="failed" aria-pressed="false">Failures</button></div></div><div id="case-list"><p class="placeholder">Running the real engine against the fixed case pack…</p></div><div id="scope-note" class="scope-note"></div></section>
+        <section class="panel controls"><div class="section-label">03 / ACCOUNTING &amp; EXISTING CONTROLS</div><div id="control-list"></div></section>
+        <details class="panel provenance"><summary>Evidence fingerprints &amp; limits <span>+</span></summary><div id="fingerprints"></div><p class="small">Fingerprints detect changed inputs. They are not a signature, approval, certification, or guarantee on production cases. This first pack supports the Q1 voucher rule family.</p></details>
+      </div>
+    </section>
+    <footer><span>STORMCHECK / RULE LAB</span><p>Simulated demo cases · real deterministic Engine &amp; Books · evidence for human review</p></footer>
+  </main>
+</body>
+</html>
