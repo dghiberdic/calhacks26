@@ -154,6 +154,40 @@ def test_rehearsed_injections_end_in_an_answer_or_an_escalation(golden, iid, wan
     assert resp.events
 
 
+def broken_invariants(c) -> list[tuple[str, str]]:
+    return [(i["id"], i["detail"]) for i in c.get("/api/books/invariants").json() if not i["ok"]]
+
+
+def test_all_rehearsed_injections_keep_every_books_invariant(golden):
+    rehearsed = sorted((ROOT / "contracts" / "fixtures" / "injections").glob("*.json"))
+    assert len(rehearsed) == 8
+    assert broken_invariants(golden) == []
+    for path in rehearsed:
+        inj = Injection.model_validate_json(path.read_bytes())
+        inject(golden, inj.request.model_dump(mode="json"))
+        assert broken_invariants(golden) == [], inj.id
+
+
+def test_a_redecided_flight_reaches_books_decision_view(golden, golden_app, monkeypatch):
+    """INV-7 reads Books' own decision view: a recode must carry the new decision, not leave the old one."""
+    from contracts.models import Cause, Extraordinary
+    lc = golden_app.state.runtime.lifecycle
+    decide = lc._decide_one
+
+    def flips_ns110(eng, w, fid, rules, known_at, stations, cur):
+        d = decide(eng, w, fid, rules, known_at, stations, cur)
+        if fid != "NS110@2025-01-24" or d is None:
+            return d
+        return d.model_copy(update={"cause": Cause.TECHNICAL, "extraordinary": Extraordinary.NO, "outcome": "auto",
+                                    "routed_to": None, "question_id": None})
+    monkeypatch.setattr(lc, "_decide_one", flips_ns110)
+    inject(golden, INJECTIONS["01_aog_inside_window"].request.model_dump(mode="json"))
+    ff = golden.get("/api/flights/NS110@2025-01-24").json()
+    assert ff["decision"]["extraordinary"] == "not_extraordinary"
+    assert any(e["compensation_cents"] > 0 for e in ff["sample_entitlements"])
+    assert broken_invariants(golden) == []
+
+
 HOSTILE = [
     "24JAN 25:99Z EI-NSB DUB N/S. HYD LEAK. NO MEL RELIEF. A/C AOG.",     # impossible time (parse_time raised)
     "",
