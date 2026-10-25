@@ -72,6 +72,7 @@ from contracts.models import (
     Source,
 )
 from engine import dsl
+from engine.case import registered_sources
 
 SCHEMA = "trace/2"            # trace/1 hashed only (kind, parent, payload_hash, inputs, at, actor)
 HASHED_FIELDS = ("kind", "parent", "payload_hash", "payload_ref", "inputs", "at", "actor", "message")
@@ -1268,18 +1269,21 @@ class TraceStore:
             "SELECT source_id, MIN(received_key) FROM sources GROUP BY source_id")}
         return {f.id: recv.get(f.source_id, utc(f.recorded_at)) for f in facts}
 
-    @staticmethod
-    def _run(decide_fn: DecideFn, facts: list[Fact], rules: list[Rule], known_at: datetime
+    def _run(self, decide_fn: DecideFn, facts: list[Fact], rules: list[Rule], known_at: datetime
              ) -> tuple[dict[str, FlightDecision], dict[str, Entitlement]]:
+        """Run ``decide_fn`` with the sources registered here bound (``engine.case.registered_sources``): a fact
+        from an injected document resolves to that document's kind-capped tier instead of failing closed to 4."""
         decs: dict[str, FlightDecision] = {}
         ents: dict[str, Entitlement] = {}
-        for out in decide_fn(list(facts), list(rules), known_at):
-            if isinstance(out, FlightDecision):
-                decs[out.flight_id] = out
-            elif isinstance(out, Entitlement):
-                ents[out.coupon_id] = out
-            else:
-                raise TraceError(f"decide_fn yielded {type(out).__name__}; expected FlightDecision or Entitlement")
+        with registered_sources(self.sources().values()):
+            for out in decide_fn(list(facts), list(rules), known_at):
+                if isinstance(out, FlightDecision):
+                    decs[out.flight_id] = out
+                elif isinstance(out, Entitlement):
+                    ents[out.coupon_id] = out
+                else:
+                    raise TraceError(f"decide_fn yielded {type(out).__name__}; expected FlightDecision or "
+                                     "Entitlement")
         return dict(sorted(decs.items())), dict(sorted(ents.items()))
 
     def replay(self, known_at: datetime, decide_fn: DecideFn, rules_override: Iterable[Rule] | None = None,
