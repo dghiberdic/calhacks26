@@ -33,6 +33,8 @@ MANIFEST = ROOT / "eval/cache/manifest.json"
 PROOF, NUMBERS = ROOT / "eval/proof.json", ROOT / "eval/NUMBERS.md"
 DATA_CALIBRATION = ROOT / "data/calibration.json"
 SOURCE_DIRS = ("world", "engine", "books", "eval", "contracts", "llm")
+CACHE_VERSION = "eval-v2"          # what full_run writes and numbers() reads
+STALE = "stale proof: regenerate with `uv run python -m eval.run`"
 
 
 def injection_check() -> dict:
@@ -297,7 +299,7 @@ def full_run(progress=print) -> tuple[dict, dict]:
     curves = load_curves(ROOT / "data/answer_key/curves_train.json")
     test_cal = [r for r in rows if r["split"] == "test"]
     slim = ("split", "kind", "day", "features", "correct")
-    cache = {"version": "eval-v2", "seed": 0, "calibration_rows": [{k: r[k] for k in slim if k in r} for r in rows],
+    cache = {"version": CACHE_VERSION, "seed": 0, "calibration_rows": [{k: r[k] for k in slim if k in r} for r in rows],
         "scored_rows": [r for r in scored if r["kind"] == "cause"], "replay": replay, "controls_golden": controls_golden, "controls": ledger["controls"],
         "rulings": ledger["rulings"], "repeats": ledger["repeats"], "out_of_scope": ledger["out_of_scope"],
         "questions": ledger["questions"], "storm_runs": storm_runs,
@@ -332,6 +334,55 @@ def build(cache: dict, fitted: dict) -> tuple[bytes, bytes]:
     return dump_json(report.model_dump(mode="json")), numbers(report, cache, fitted).encode()
 
 
+def _read_bytes(path: Path) -> bytes | None:
+    try:
+        return path.read_bytes()
+    except OSError:
+        return None
+
+
+def load_current_cache() -> tuple[dict, dict] | str:
+    """The committed cache and fitted model, or why they cannot build the current proof (stale, legacy, missing)."""
+    try:
+        cache, fitted = orjson.loads(CACHE.read_bytes()), orjson.loads(FITTED.read_bytes())
+    except (OSError, orjson.JSONDecodeError) as e:
+        return f"cannot read the cache ({type(e).__name__}: {e})"
+    version = cache.get("version") if isinstance(cache, dict) else None
+    if version != CACHE_VERSION:
+        return f"eval/cache/results.json is {version!r}; this code builds {CACHE_VERSION!r}"
+    return cache, fitted
+
+
+def check(full: bool = False) -> list[str]:
+    """Every reason the committed proof is not a byte-exact rebuild of the committed cache. Never raises on a cache
+    that predates the code: that is reported as a stale proof."""
+    try:
+        bad = stale_inputs()
+        problems = [f"input changed since the proof was built: {n}" for n in bad[:10]]
+        problems += [f"… and {len(bad) - 10} more changed inputs"] if len(bad) > 10 else []
+    except (OSError, orjson.JSONDecodeError, KeyError, TypeError) as e:
+        problems = [f"eval/cache/manifest.json is missing or unreadable ({type(e).__name__})"]
+    loaded = load_current_cache()
+    if isinstance(loaded, str):
+        return [*problems, loaded]
+    try:
+        proof, nums = build(*loaded)
+    except (KeyError, TypeError, ValueError, AttributeError, IndexError, ZeroDivisionError) as e:
+        # pydantic.ValidationError is a ValueError
+        return [*problems, f"the cache predates the code ({type(e).__name__}: {e})"]
+    if _read_bytes(PROOF) != proof:
+        problems.append("eval/proof.json differs from a rebuild from eval/cache")
+    if _read_bytes(NUMBERS) != nums:
+        problems.append("eval/NUMBERS.md differs from a rebuild from eval/cache")
+    if full:
+        cache, fitted = full_run(progress=lambda s: print(s, file=sys.stderr, flush=True))
+        if dump_json(cache) != _read_bytes(CACHE):
+            problems.append("a full rerun changed eval/cache/results.json")
+        if build(cache, fitted)[0] != _read_bytes(PROOF):
+            problems.append("a full rerun changed eval/proof.json")
+    return problems
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--from-cache", action="store_true")
@@ -339,28 +390,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--full", action="store_true", help="with --check: rerun everything and byte-compare")
     args = parser.parse_args(argv)
     if args.check:
-        problems = [f"input changed since the proof was built: {n}" for n in stale_inputs()]
-        proof, nums = build(orjson.loads(CACHE.read_bytes()), orjson.loads(FITTED.read_bytes()))
-        if PROOF.read_bytes() != proof:
-            problems.append("eval/proof.json differs from a rebuild from eval/cache")
-        if NUMBERS.read_bytes() != nums:
-            problems.append("eval/NUMBERS.md differs from a rebuild from eval/cache")
-        if args.full:
-            cache, fitted = full_run(progress=lambda s: print(s, file=sys.stderr, flush=True))
-            if dump_json(cache) != CACHE.read_bytes():
-                problems.append("a full rerun changed eval/cache/results.json")
-            if build(cache, fitted)[0] != PROOF.read_bytes():
-                problems.append("a full rerun changed eval/proof.json")
+        problems = check(full=args.full)
         for p in problems:
             print(f"eval --check: {p}")
-        print("eval --check: OK" if not problems else f"eval --check: {len(problems)} problem(s); regenerate with "
-              "`uv run python -m eval.run`")
+        print("eval --check: OK" if not problems else f"eval --check: {STALE} ({len(problems)} problem(s))")
         return 1 if problems else 0
     if args.from_cache:
         bad = stale_inputs()
         if bad:
             raise SystemExit(f"Input hash mismatch: {bad[0]} (+{len(bad) - 1} more); rerun without --from-cache")
-        cache, fitted = orjson.loads(CACHE.read_bytes()), orjson.loads(FITTED.read_bytes())
+        loaded = load_current_cache()
+        if isinstance(loaded, str):
+            raise SystemExit(f"{STALE}: {loaded}")
+        cache, fitted = loaded
     else:
         cache, fitted = full_run(progress=lambda s: print(s, flush=True))
         write_json(CACHE, cache)
