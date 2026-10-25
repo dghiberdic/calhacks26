@@ -80,9 +80,9 @@ export function QuestionCard({ question, role, flow, onFlow }: { question: Quest
           </div>
 
           <dl className="mt-6 flex flex-col gap-4">
-            <Block label="What it found" text={question.found} />
-            <Block label="Why it flagged it" text={question.why_flagged} />
-            <Block label="What it recommends" text={question.recommends} emphasis />
+            <Block label="The evidence" text={question.found} />
+            <Block label="Why a person is needed" text={question.why_flagged} />
+            <Block label="Suggested decision" text={question.recommends} emphasis />
           </dl>
 
           {question.evidence.length ? <EvidenceDisclosure question={question} /> : null}
@@ -113,7 +113,7 @@ function PiiChip({ role }: { role: Role }) {
   return (
     <StatusChip tone={visible ? "slate" : "outline"} dot={false} className="h-6 gap-1 text-[11px]" title={visible ? "Passenger data is visible to the Claims Lead" : "The server masks passenger data for this seat"}>
       {visible ? <LockOpen className="size-3" aria-hidden="true" /> : <Lock className="size-3" aria-hidden="true" />}
-      {visible ? "PII visible to this role" : `PII masked for ${ROLE_LABEL[role]}`}
+      {visible ? "Passenger details visible" : `Passenger details hidden for ${ROLE_LABEL[role]}`}
     </StatusChip>
   );
 }
@@ -127,8 +127,8 @@ function EvidenceDisclosure({ question }: { question: Question }) {
     <div className="mt-6 border-t border-cloud-100 pt-4">
       <button type="button" aria-expanded={open} aria-controls={id} onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between gap-3 rounded-md text-left">
         <span className="flex items-baseline gap-2">
-          <MicroLabel>Evidence · {count(question.evidence.length)}</MicroLabel>
-          <span className="text-[12px] text-slate-400">best sources first{struck ? ", the losing source struck" : ""}</span>
+          <MicroLabel>Source records · {count(question.evidence.length)}</MicroLabel>
+          <span className="text-[12px] text-slate-400">ranked by reliability{struck ? "; rejected sources crossed out" : ""}</span>
         </span>
         <ChevronDown className={cn("size-4 text-slate-400 transition-transform", open && "rotate-180")} aria-hidden="true" />
       </button>

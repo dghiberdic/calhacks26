@@ -513,11 +513,11 @@ export function Hero() {
         </p>
         <h1 className="text-balance display mt-4 max-w-[12ch] text-[clamp(46px,8.4vw,148px)] text-cloud-50">Storm Éowyn</h1>
         <p className="mt-6 max-w-[46ch] text-[16.5px] leading-relaxed text-cloud-300 md:text-[19px]">
-          StormCheck finds the real cause of every cancelled flight and drafts what each passenger is owed. It asks a person only when the evidence disagrees.
+          The airline called it weather. The maintenance log told a different story. StormCheck checks the cause, calculates compensation and prepares drafts for approval.
         </p>
       </div>
       <div className="hero-cue pointer-events-none absolute bottom-10 right-16 hidden items-center gap-3 text-[13px] text-cloud-400 md:flex">
-        <span>Scroll</span>
+        <span>Follow the evidence</span>
         <span className="relative block h-10 w-px overflow-hidden bg-white/15">
           <span className="story-cue absolute inset-0 bg-cloud-200" />
         </span>

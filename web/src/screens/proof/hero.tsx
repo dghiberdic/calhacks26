@@ -45,26 +45,26 @@ function Findings({ report, base, sc }: { report: EvalReport; base: Runs; sc: Ru
   const unsafe = inj?.rest.find((x) => /unsafe/.test(x.key))?.value;
   return (
     <dl className="relative grid grid-cols-[minmax(0,1fr)] gap-px border-t border-white/[0.07] bg-white/[0.07] md:grid-cols-3" data-testid="proof-findings">
-      <Finding figure={alone ? pct(alone.share) : "—"} label="right when it settles alone" testId="finding-alone">
+      <Finding figure={alone ? pct(alone.share) : "—"} label={alone?.basis === "confidence" ? "correct high-confidence decisions" : "correct automatic decisions"} testId="finding-alone">
         {!alone ? (
           "Not reported yet."
         ) : alone.basis === "auto" ? (
           <>
-            Of the {count(alone.n)} flights it settled with no person, {count(alone.right)} were right.
+            {count(alone.right)} of {count(alone.n)} automatically decided flights matched the test answer key.
           </>
         ) : (
           <>
-            Of the {count(alone.n)} causes it found at {pct(alone.from)} <Explain term="confidence">confidence</Explain> or more, {count(alone.right)} were right.
+            {count(alone.right)} of {count(alone.n)} causes at {pct(alone.from)} <Explain term="confidence">confidence</Explain> or above matched the test answer key.
           </>
         )}
       </Finding>
-      <Finding figure={sc.hashIdentical ? "Same hash" : sc.allSame ? "Same answer" : "—"} label="same answer every run" testId="finding-runs">
+      <Finding figure={sc.hashIdentical ? "Same hash" : sc.allSame ? "Same answer" : "—"} label="repeatability across test runs" testId="finding-runs">
         {same ?? "Not reported yet."}
         {base.values.length ? ` Plain Claude on the same documents: ${base.values.map(euros).join(" / ")}.` : base.status && base.status !== "complete" ? " Plain Claude hasn't been run on them yet." : ""}
         {sc.hash ? <span className="mt-1 block font-mono text-[11.5px] text-cloud-500">hash {sc.hash.slice(0, 12)}</span> : null}
       </Finding>
       <Finding figure={inj ? (inj.total !== null ? `${count(inj.blocked)} of ${count(inj.total)}` : count(inj.blocked)) : "—"} label="injection attempts blocked" testId="finding-injections">
-        {inj ? <>Planted in claims and emails. The Reader only extracts facts, each quoting its source{unsafe === 0 ? "; nothing unsafe got through" : ""}.</> : "Not reported yet."}
+        {inj ? <>Test attacks embedded in claims and emails{unsafe === 0 ? "; no unsafe outputs recorded in these tests" : ""}.</> : "Not reported yet."}
       </Finding>
     </dl>
   );

@@ -24,7 +24,7 @@ function ApiNote() {
   if (!runError) return null;
   return (
     <p role="status" className="fixed inset-x-0 bottom-4 z-50 mx-auto w-fit max-w-[calc(100vw-32px)] rounded-full bg-navy-900/90 px-4 py-2 text-[13px] text-cloud-300 shadow-lg ring-1 ring-white/10 backdrop-blur">
-      The storm run didn&rsquo;t load, so the numbers are waiting on the StormCheck API.
+      The results could not load. Refresh to try again.
     </p>
   );
 }

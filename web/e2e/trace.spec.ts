@@ -63,7 +63,7 @@ test("view as Ops: passenger PII stays masked for Ops, in the clear only for the
 
 test("controls are a SOC 2 mapping, not a certification", async ({ page }) => {
   await page.goto("/trace?tab=controls");
-  await expect(page.getByRole("heading", { name: "SOC 2 is the floor" })).toBeVisible(FIRST_PAINT);
+  await expect(page.getByRole("heading", { name: "Controls and evidence" })).toBeVisible(FIRST_PAINT);
   await expect(page.getByText("mapping · not a certification")).toBeVisible();
   await expect(page.getByRole("list", { name: "Control mapping" }).locator("li").first()).toBeVisible();
 });

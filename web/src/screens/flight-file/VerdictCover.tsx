@@ -67,9 +67,9 @@ function PlainWhy({ file, kind }: { file: FlightFile; kind: VerdictKind }) {
   if (kind === "held" && d.cause === "knock_on")
     return (
       <>
-        This plane never got out: its earlier leg was cancelled by the storm
+        The storm cancelled this aircraft&rsquo;s earlier flight
         {d.in_window_dep === "out" && d.in_window_arr === "out" ? ", though both ends of this flight were outside the storm window" : ""}. Whether a{" "}
-        <Explain term="knock-on">knock-on flight</Explain> is an {extraordinary} is a question of law, so it waits on Legal.
+        <Explain term="knock-on">knock-on cancellation</Explain> qualifies as an {extraordinary} requires Legal&rsquo;s ruling.
       </>
     );
   if (kind === "held") return <>It waits on a person&rsquo;s ruling before anything is paid.</>;

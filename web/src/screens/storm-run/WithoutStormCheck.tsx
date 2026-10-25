@@ -16,15 +16,18 @@ export function WithoutStormCheck({ effort, noun = "storm" }: { effort: EffortEs
   return (
     <Panel>
       <div data-testid="without-stormcheck">
-        <MicroLabel>Without StormCheck</MicroLabel>
+        <MicroLabel>Estimated review workload</MicroLabel>
         <p className="mt-2 max-w-[72ch] text-[17px] leading-snug text-navy-900" data-testid="effort-headline">
-          Done by hand, this {noun} is {roughHours(effort.manual_hours)} of work (≈{" "}
+          Manual review of this {noun}: {roughHours(effort.manual_hours)}. With StormCheck: {roughHours(effort.with_stormcheck_hours)}.
+        </p>
+        <p className="mt-2 text-[12px] leading-relaxed text-slate-500">Modelled estimate, not measured airline savings.</p>
+        <Details className="mt-3" summary="How we got this">
+          <p className="mb-3 text-[13px] text-slate-500">Estimated manual cost:{" "}
           <Explain term="loaded-cost" className="figure">
             {roughEur(effort.manual_cost_cents)}
           </Explain>
-          ). With StormCheck: {roughHours(effort.with_stormcheck_hours)} of review.
-        </p>
-        <Details className="mt-3" summary="How we got this">
+          .
+          </p>
           <div className="-mx-1 overflow-x-auto px-1">
             <table className="w-full min-w-[600px] border-collapse text-left text-[12.5px] leading-snug">
               <thead>
@@ -54,7 +57,7 @@ export function WithoutStormCheck({ effort, noun = "storm" }: { effort: EffortEs
 
           {effort.errors_caught.length ? (
             <div className="mt-4">
-              <p className="text-[12.5px] font-semibold text-navy-900">What it caught that a busy person could miss</p>
+              <p className="text-[12.5px] font-semibold text-navy-900">Errors flagged in this run</p>
               <ul className="mt-1.5 flex list-disc flex-col gap-1 pl-5 text-[12.5px] leading-relaxed text-slate-600" data-testid="errors-caught">
                 {effort.errors_caught.map((e) => (
                   <li key={e.label}>

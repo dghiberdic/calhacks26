@@ -8,7 +8,10 @@ import { gsap, MEDIA, PLOTTED, prefersReducedMotion, UNPLOTTED, useGSAP } from "
 import { PIN_PRIORITY } from "../motion/useAutoRefresh";
 import { Contained, Pending } from "../ui";
 import type { AircraftProgress } from "./AircraftScene";
-import { A321, HYDRAULICS, LEAK, type HydSystem } from "./hydraulics";
+import { HYDRAULICS, LEAK, type HydSystem } from "./hydraulics";
+
+import { AIRCRAFT, POSTER_LARGE } from "./model";
+const DIMENSIONS = AIRCRAFT.dimensions;
 
 const AircraftScene = lazy(() => import("./AircraftScene"));
 const INK = "#e8f0fa";
@@ -34,7 +37,7 @@ function Copy({ log, reg }: { log: ReturnType<typeof useStory>["log"]; reg: stri
  * The aircraft as evidence. A cyanotype drawing plots itself, the three hydraulic systems trace in,
  * and the yellow system's engine-2 pump pulses next to the tech-log entry from the night before.
  * Then the drawing hands over to the real-time model from the same camera: it inks in and the camera
- * walks around the nose to the leaking engine. If the 3D can't load, the Cycles render stands in.
+ * walks around the nose to the leaking engine. If the 3D can't load, the matching still render stands in.
  */
 export function Blueprint() {
   const story = useStory();
@@ -138,49 +141,49 @@ export function Blueprint() {
               <Contained
                 fallback={
                   <div className="absolute inset-0 grid place-items-center">
-                    <img src={asset("ns31-render-2560.webp")} alt="Rendering of EI-NSB on a wet stand at Dublin" className="aspect-video w-full rounded-xl object-cover shadow-[0_30px_80px_-30px_rgba(0,0,0,0.8)]" />
+                    <img src={POSTER_LARGE} alt="StormCheck A320neo family illustration of the grounded aircraft" className="aspect-video w-full rounded-xl object-cover shadow-[0_30px_80px_-30px_rgba(0,0,0,0.8)]" />
                   </div>
                 }
               >
                 <Suspense fallback={null}>
-                  <AircraftScene progress={progress} leak={leak} fallback={asset("ns31-render-2560.webp")} className="absolute inset-0" />
+                  <AircraftScene progress={progress} leak={leak} fallback={POSTER_LARGE} className="absolute inset-0" />
                 </Suspense>
               </Contained>
             ) : null}
           </div>
 
           {/* port elevation */}
-          <svg ref={sideRef} viewBox="-3 -13.4 53 15.6" className="bp-side relative w-full" role="img" aria-label={`Port elevation of the Airbus A321 ${reg ?? ""}, ${A321.length.toFixed(2)} metres long and ${A321.height.toFixed(2)} metres tall.`}>
-            <path className="bp-frame" d="M-2.6,-13.1 H49.6 V1.9 H-2.6 Z" fill="none" stroke={INK} strokeOpacity="0.5" strokeWidth="0.04" {...PLOTTED} />
-            <g transform={`scale(${SIDE_VIEW.mpp}) translate(${-SIDE_VIEW.noseX} ${-SIDE_VIEW.groundY})`}>
+          <svg ref={sideRef} viewBox={SIDE_VIEW.join(" ")} className="bp-side relative w-full" role="img" aria-label={`Port elevation of the StormCheck Airbus A320neo illustration, ${DIMENSIONS.length.toFixed(2)} metres long and ${DIMENSIONS.height.toFixed(2)} metres tall.`}>
+            <path className="bp-frame" d="M-2.6,-13.1 H41.6 V1.9 H-2.6 Z" fill="none" stroke={INK} strokeOpacity="0.5" strokeWidth="0.04" {...PLOTTED} />
+            <g>
               {SIDE_LINES.map((d, i) => (
-                <path key={i} className="bp-side-line" d={d} fill="none" stroke={INK} strokeWidth={2.4} strokeLinejoin="round" strokeLinecap="round" {...PLOTTED} />
+                <path key={i} className="bp-side-line" d={d} fill="none" stroke={INK} strokeWidth={0.045} strokeLinejoin="round" strokeLinecap="round" {...PLOTTED} />
               ))}
             </g>
             <g className="bp-dim" stroke={INK} strokeWidth="0.03" fill="none" opacity="0.8">
-              <path d={`M0,0.6 L0,1.7 M${A321.length},0.6 L${A321.length},1.7 M0,1.35 L${A321.length},1.35`} />
-              <path d={`M-0.25,1.6 L0.25,1.1 M${A321.length - 0.25},1.6 L${A321.length + 0.25},1.1`} />
+              <path d={`M0,0.6 L0,1.7 M${DIMENSIONS.length},0.6 L${DIMENSIONS.length},1.7 M0,1.35 L${DIMENSIONS.length},1.35`} />
+              <path d={`M-0.25,1.6 L0.25,1.1 M${DIMENSIONS.length - 0.25},1.6 L${DIMENSIONS.length + 0.25},1.1`} />
             </g>
-            <text className="bp-dim font-mono" x={A321.length / 2} y="2.05" textAnchor="middle" fill={INK} style={{ fontSize: 0.62 }}>
-              {A321.length.toFixed(2)} m
+            <text className="bp-dim font-mono" x={DIMENSIONS.length / 2} y="2.05" textAnchor="middle" fill={INK} style={{ fontSize: 0.62 }}>
+              {DIMENSIONS.length.toFixed(2)} m
             </text>
             <g className="bp-dim" stroke={INK} strokeWidth="0.03" fill="none" opacity="0.8">
-              <path d={`M45.4,0 L46.9,0 M43.2,-${A321.height} L46.9,-${A321.height} M46.5,0 L46.5,-${A321.height}`} />
+              <path d={`M38.2,0 L39.2,0 M37.8,-${DIMENSIONS.height} L39.2,-${DIMENSIONS.height} M38.9,0 L38.9,-${DIMENSIONS.height}`} />
             </g>
-            <text className="bp-dim font-mono" x="47.1" y="-5.7" fill={INK} style={{ fontSize: 0.62 }}>
-              {A321.height.toFixed(2)} m
+            <text className="bp-dim font-mono" x="39.4" y="-5.7" fill={INK} style={{ fontSize: 0.62 }}>
+              {DIMENSIONS.height.toFixed(2)} m
             </text>
             <text className="bp-dim font-mono" x="-2.2" y="-12.2" fill={INK} fillOpacity="0.7" style={{ fontSize: 0.5, letterSpacing: "0.08em" }}>
-              PORT ELEVATION{story.aircraftType ? ` · ${story.aircraftType}` : ""}{reg ? ` · ${reg}` : ""}
+              PORT ELEVATION · A320NEO · STORMCHECK
             </text>
-            <path d="M-2.4,0 L49.4,0" stroke={INK} strokeOpacity="0.4" strokeWidth="0.03" strokeDasharray="0.5 0.3" className="bp-dim" />
+            <path d="M-2.4,0 L41.4,0" stroke={INK} strokeOpacity="0.4" strokeWidth="0.03" strokeDasharray="0.5 0.3" className="bp-dim" />
           </svg>
 
           {/* plan view with the hydraulic systems */}
-          <svg viewBox="-2 -19.4 49 38.8" className="bp-plan mx-auto mt-4 max-h-[46svh] w-[76%] max-lg:max-h-[25svh]" role="img" aria-label="Plan view with the three hydraulic systems. The yellow system's engine-2 driven pump, on the starboard engine, is marked as the leak.">
-            <g transform={`scale(${TOP_VIEW.mpp}) translate(${-TOP_VIEW.noseX} ${-TOP_VIEW.centreY})`}>
+          <svg viewBox={TOP_VIEW.join(" ")} className="bp-plan mx-auto mt-4 max-h-[46svh] w-[76%] max-lg:max-h-[25svh]" role="img" aria-label="Plan view with the three hydraulic systems. The yellow system's engine-2 driven pump, on the starboard engine, is marked as the leak.">
+            <g>
               {TOP_LINES.map((d, i) => (
-                <path key={i} className="bp-plan-line" d={d} fill="none" stroke={INK} strokeOpacity={0.9} strokeWidth={2.6} strokeLinejoin="round" {...PLOTTED} />
+                <path key={i} className="bp-plan-line" d={d} fill="none" stroke={INK} strokeOpacity={0.9} strokeWidth={0.05} strokeLinejoin="round" {...PLOTTED} />
               ))}
             </g>
             {(["blue", "green", "yellow"] as const).map((s) => (
@@ -204,7 +207,7 @@ export function Blueprint() {
               </text>
             </g>
             <text className="bp-dim font-mono" x="-1.6" y="-17.9" fill={INK} fillOpacity="0.7" style={{ fontSize: 0.85, letterSpacing: "0.08em" }}>
-              PLAN · HYDRAULIC SYSTEMS
+              PLAN · HYDRAULICS (SCHEMATIC)
             </text>
             <text className="bp-dim font-mono" x="27.6" y="-18.2" fill={INK} fillOpacity="0.5" style={{ fontSize: 0.75 }}>
               STBD
@@ -259,7 +262,8 @@ export function Blueprint() {
                 </figure>
               </div>
               <p className="bp-caption-3d max-w-[34ch] self-start text-[15px] leading-relaxed text-[var(--story-ink-soft)] opacity-0 [grid-area:1/1] motion-reduce:hidden">
-                The same A321 in 3D. The leak is at the engine-2 driven pump, low on the starboard engine.
+                Engine-2 driven pump, low on the starboard engine. A320neo family illustration; the case aircraft is an A321.
+                <a href={asset("idg-a320neo/CREDITS.txt")} target="_blank" rel="noreferrer" className="mt-3 block text-xs underline decoration-white/30 underline-offset-4">3D model: IDG / FlightGear</a>
               </p>
             </div>
           </div>

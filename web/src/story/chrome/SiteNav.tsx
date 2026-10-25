@@ -4,7 +4,7 @@ import { Logo } from "@/components/brand/Logo";
 import { cn } from "@/lib/utils";
 
 /**
- * Fixed, quiet, and readable on night and paper alike (difference blending). It slides away while
+ * Fixed, quiet, and readable on night and paper alike. It slides away while
  * you scroll down through the story, so headings never run under it, and comes back on the way up.
  */
 export function SiteNav() {
@@ -37,7 +37,7 @@ export function SiteNav() {
       </a>
       <header
         className={cn(
-          "pointer-events-none fixed inset-x-0 top-0 z-50 flex items-center justify-between px-5 py-4 text-white mix-blend-difference transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] focus-within:translate-y-0 motion-reduce:transition-none md:px-10 md:py-5",
+          "story-nav fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-white/10 bg-navy-950/85 px-5 py-4 text-cloud-50 backdrop-blur-xl transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] focus-within:translate-y-0 motion-reduce:transition-none md:px-10 md:py-5",
           hidden && "-translate-y-full",
         )}
       >
@@ -48,10 +48,10 @@ export function SiteNav() {
         <nav className="pointer-events-auto flex items-center gap-4 text-[14.5px]" aria-label="Story">
           <a href="#rule-lab" className="whitespace-nowrap text-[12px] opacity-80 transition-opacity hover:opacity-100 sm:text-[14.5px]">Rule Lab</a>
           <Link to="/pitch" className="hidden opacity-80 transition-opacity hover:opacity-100 sm:inline">
-            Pitch
+            Presentation
           </Link>
-          <Link to="/" className="whitespace-nowrap rounded-full px-4 py-2 font-medium shadow-[inset_0_0_0_1.5px_currentColor] transition-colors hover:bg-white hover:text-black">
-            <span className="hidden sm:inline">Open the storm run</span>
+          <Link to="/" className="whitespace-nowrap rounded-lg border border-white/20 bg-white/5 px-4 py-2 font-medium transition-colors hover:border-white/40 hover:bg-white/10">
+            <span className="hidden sm:inline">Open the results</span>
             <span className="sm:hidden">Open app</span>
           </Link>
         </nav>

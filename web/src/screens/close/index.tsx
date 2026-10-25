@@ -123,7 +123,7 @@ export default function CloseScreen() {
           />
         }
       >
-        What Northstar expects to pay passengers in EU261 compensation, drafted for approval and checked against the ledger before the month closes.
+        Estimate the airline&rsquo;s compensation liability, review the entries, and close the month. Drafts require approval.
       </PageHeader>
 
       {!canAct ? <ReadOnlyHint role={role} /> : null}

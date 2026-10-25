@@ -1,11 +1,10 @@
 import { copyProblem } from "../src/pitch/copy";
 import { expect, test, type Page } from "./fixtures";
 
-// THREAD_JUSTIN J11: the /pitch deck. Arrow keys move through every slide, the seats line and
-// "2 Claude roles + 1 deterministic engine" are on their slides, and the URL keeps the slide.
+// The judge-facing deck keeps the product explanation, approval boundary and API figures visible.
 const SLIDES = ["cover", "business", "judged", "architecture", "real", "cfo"];
 const SEATS_LINE =
-  "StormCheck fills two seats at Northstar Air, the Passenger Claims Accountant and the Revenue Accountant, with one step between them: what really caused each cancellation. It drafts every payout and the EU261 compensation liability; the Claims Lead approves every payment.";
+  "StormCheck checks cancellation records against weather and maintenance evidence, then drafts passenger compensation and accounting entries. People approve the payments.";
 
 // These tests type and click, so they run in order in one worker, after one warm-up: a cold Vite server
 // pre-bundles dependencies on first load (and may reload the page once), which would swallow key presses.
@@ -32,10 +31,10 @@ test("arrow keys walk the whole deck, forward and back", async ({ page }) => {
     await expect(page).toHaveURL(new RegExp(`/pitch/${i}$`));
     await expect(page.getByTestId(`slide-${SLIDES[i]}`)).toBeVisible();
     if (SLIDES[i] === "architecture") {
-      const headline = page.getByRole("heading", { name: "2 Claude roles + 1 deterministic engine." });
+      const headline = page.getByRole("heading", { name: "Claude reads. The engine calculates." });
       await expect(headline).toBeVisible();
-      await expect(headline).toHaveText(/2 Claude roles\s*\+\s*1 deterministic engine/);
-      await expect(page.getByTestId("sits-on-top")).toHaveText(/Sits on top of\s*Altéa\/Navitaire,\s*NetLine,\s*AMOS,\s*Accelya;\s*writes only parked journals\./);
+      await expect(headline).toHaveText(/Claude reads\.\s*The engine calculates\./);
+      await expect(page.getByTestId("sits-on-top")).toHaveText(/Simulated feeds model\s*Altéa\/Navitaire,\s*NetLine,\s*AMOS,\s*Accelya;\s*outputs are drafts, not payments\./);
     }
   }
 
@@ -105,7 +104,7 @@ test("the figures on the slides come from the API (golden numbers)", async ({ pa
   await expect(bridge).toContainText("€34,650");
   await expect(bridge).toContainText("€99,000");
   await expect(bridge).toContainText("€0");
-  await expect(page.getByRole("heading", { name: "Not €0. Not €99,000." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Record the expected cost." })).toBeVisible();
 });
 
 test("out-of-range slides land on the deck, and Esc goes back to the app", async ({ page }) => {
@@ -139,9 +138,14 @@ test("each slide names itself in the tab, and none of its words read as generate
   await page.keyboard.press("Home");
   await page.keyboard.press("ArrowRight");
   const business = page.getByTestId("slide-business");
-  for (const tag of ["from its own history", "overnight", "asks a person", "becomes policy"]) await expect(business.getByText(tag, { exact: true })).toBeVisible();
+  for (const tag of ["past decisions", "checks the evidence", "human review", "saved ruling"]) await expect(business.getByText(tag, { exact: true })).toBeVisible();
   await expect(business).not.toContainText("self-learning");
   await expect(business).not.toContainText("ai-automated");
+  await expect(business).not.toContainText("Never asked again");
+  await page.goto("/pitch/2");
+  const caseSlide = page.getByTestId("slide-judged");
+  await expect(caseSlide).not.toContainText("Hireable");
+  await expect(caseSlide).not.toContainText("Wow");
 });
 
 /** The marker's distance along the CFO line, from its transform. */

@@ -6,8 +6,8 @@
  */
 .story {
   --story-night: var(--color-navy-950);
-  --story-cyan: #11355a;
-  --story-cyan-deep: #0b2641;
+  --story-cyan: #0c1b2a;
+  --story-cyan-deep: #08131f;
   --story-ink: #e8f0fa;
   --story-ink-soft: #b4c8de;
   --hyd-green: #79d6a2;
@@ -15,6 +15,19 @@
   --hyd-yellow: #f2c94c;
   background: var(--story-night);
   color: var(--color-cloud-50);
+}
+
+.story :where(a, button):focus-visible {
+  outline: 2px solid var(--color-metar);
+  outline-offset: 5px;
+}
+
+.story-nav {
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.08);
+}
+
+.story [data-section] {
+  scroll-margin-top: 88px;
 }
 
 /* Lenis */
@@ -156,7 +169,7 @@ html.lenis body {
     animation: board-scan calc(var(--rows) * 90ms + 240ms) linear 120ms both;
   }
   .flap-row[data-tone="notweather"]::before {
-    animation: ns31-breathe 2.8s ease-in-out 1.6s infinite;
+    animation: ns31-breathe 2.8s ease-in-out 1.6s 2;
   }
 }
 @keyframes board-sheen {

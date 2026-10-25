@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { count, zulu } from "@/lib/format";
-import { asset } from "../data/assets";
-import { HERO_LINES } from "../data/lineart";
+import { POSTER_LARGE, POSTER_SMALL } from "../aircraft/model";
+import HERO_LINES from "../data/aircraftHeroLines.json";
 import { nearestObs } from "../data/model";
 import { useStory } from "../data/context";
 import { gsap, MEDIA, PLOTTED, prefersReducedMotion, UNPLOTTED, useGSAP } from "../motion/gsap";
@@ -10,8 +10,8 @@ import { Pending } from "../ui";
 import { Rain } from "./Rain";
 
 /**
- * Drawing → photograph, belgradearbor-style but with our own render: the Blender line art plots itself
- * stroke by stroke, then the Cycles render from the very same camera washes in from the nose. Rain falls
+ * Drawing → photograph, belgradearbor-style but with our own render: the projected line art plots itself
+ * stroke by stroke, then the render from the very same camera washes in from the nose. Rain falls
  * on a canvas over it and the camera drifts slowly while the section is on screen. The clock, the METAR
  * and the counts are the API's.
  */
@@ -84,12 +84,12 @@ export function Interlude() {
       <div className="story-drift absolute inset-0">
         {/* the render, revealed by a soft radial wash centred on the nose */}
         <img
-          src={asset("ns31-render-2560.webp")}
-          srcSet={`${asset("ns31-render-1280.webp")} 1280w, ${asset("ns31-render-2560.webp")} 2560w, ${asset("ns31-render.webp")} 3840w`}
+          src={POSTER_LARGE}
+          srcSet={`${POSTER_SMALL} 1280w, ${POSTER_LARGE} 2560w`}
           sizes="(max-aspect-ratio: 16/9) 178vh, 100vw"
           loading="lazy"
           decoding="async"
-          alt={`Rendering of Northstar\u2019s A321 ${f?.aircraft ?? ""} parked on a wet stand at Dublin, in the rain`}
+          alt={`StormCheck A320neo family illustration of ${f?.aircraft ?? "the aircraft"} grounded at Dublin in the rain`}
           className="il-img absolute inset-0 h-full w-full object-cover [@media(max-aspect-ratio:1/1)]:object-left"
           style={{
             ["--r" as string]: "175%",
@@ -108,10 +108,10 @@ export function Interlude() {
       <div className="il-copy absolute inset-x-0 bottom-0 px-5 pb-16 md:px-16 md:pb-24">
         <p className="font-mono text-[12px] text-cloud-400 md:text-[13.5px]">{obs ? obs.raw : <Pending ch={36} />}</p>
         <h2 className="text-balance display mt-5 max-w-[18ch] text-[clamp(38px,5.2vw,92px)] text-cloud-50">
-          At {std ? zulu(std) : <Pending ch={5} />}, {f?.aircraft ?? "the aircraft"} was still on stand.
+          At {std ? zulu(std) : <Pending ch={5} />}, the aircraft was still grounded.
         </h2>
         <p className="mt-5 max-w-[50ch] text-[16.5px] leading-relaxed text-cloud-300 md:text-[19px]">
-          The storm window had closed at {win ? zulu(win.end) : <Pending ch={5} />}, and {operated !== undefined ? count(operated) : <Pending ch={2} />} Northstar departures flew after it. {f?.aircraft ?? "The aircraft"} needed a new pump, so {f?.number ?? "the flight"} was cancelled and its {f ? count(f.pax) : <Pending ch={3} />} passengers are owed compensation.
+          {operated !== undefined ? count(operated) : <Pending ch={2} />} Northstar departures flew after the storm window ended at {win ? zulu(win.end) : <Pending ch={5} />}. {f?.number ?? "This flight"} could not: its aircraft needed a replacement hydraulic pump.
         </p>
       </div>
     </section>

@@ -70,13 +70,15 @@ describe("effort rounding", () => {
 describe("WithoutStormCheck", () => {
   it("leads with one sentence and explains the loaded cost", async () => {
     wrap(<WithoutStormCheck effort={EOWYN} />);
-    expect(screen.getByTestId("effort-headline")).toHaveTextContent("Done by hand, this storm is about 450 hours of work (≈ €17,400). With StormCheck: about 45 hours of review.");
+    expect(screen.getByTestId("effort-headline")).toHaveTextContent("Manual review of this storm: about 450 hours. With StormCheck: about 45 hours.");
+    expect(screen.getByText("Modelled estimate, not measured airline savings.")).toBeVisible();
+    await userEvent.click(screen.getByText("How we got this"));
     await userEvent.click(screen.getByRole("button", { name: "€17,400" }));
     expect((await screen.findAllByText(/salary plus about 30%/)).length).toBeGreaterThan(0);
   });
   it("folds the lines, the errors caught and the assumptions behind Details", async () => {
     wrap(<WithoutStormCheck effort={EOWYN} noun="power cut" />);
-    expect(screen.getByTestId("effort-headline")).toHaveTextContent(/^Done by hand, this power cut is/);
+    expect(screen.getByTestId("effort-headline")).toHaveTextContent(/^Manual review of this power cut:/);
     const details = screen.getByText("How we got this").closest("details")!;
     expect(details.open).toBe(false);
     await userEvent.click(screen.getByText("How we got this"));

@@ -64,7 +64,7 @@ describe("Policies screen", () => {
     for (const title of ["Learned", "Ruled", "Rejected", "Regulation", "Hard controls are code"]) expect(screen.getByRole("heading", { level: 2, name: title })).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/new rule/i);
     expect(screen.queryByRole("textbox")).toBeNull();
-    expect(screen.getByText("There is no rule editor.", { exact: false })).toBeInTheDocument();
+    expect(screen.getByText("Reuse a decision without losing who made it, why, or where it applies.")).toBeInTheDocument();
   });
 
   it("gives each card its versioned ref as its id, for links like /policies#R-CL-1@1", async () => {

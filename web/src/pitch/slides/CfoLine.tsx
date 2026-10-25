@@ -17,22 +17,13 @@ export function CfoLine({ data }: { data: PitchData }) {
   const flight = recodedRow(run)?.flight.number;
 
   return (
-    <SlideFrame eyebrow="the cfo line" footer={<p className="text-[25px] text-cloud-300">It drafts. It never pays.</p>}>
+    <SlideFrame eyebrow="the financial result" footer={<p className="text-[25px] text-cloud-300">Drafted, pending approval. No payment released.</p>}>
       <Reveal className="mt-12">
-        {/* The headline is made of the two numbers it rejects; until they arrive it is just the slide's name. */}
-        <h2 className="display text-[124px] text-cloud-50">
-          {cfo ? (
-            <>
-              Not <Num>{eur(cfo.cash_basis_cents)}</Num>. Not <Num>{eur(cfo.full_entitlement_cents)}</Num>.
-            </>
-          ) : (
-            "The CFO line."
-          )}
-        </h2>
+        <h2 className="display text-[108px] text-cloud-50">Record the expected cost.</h2>
       </Reveal>
       <Reveal className="mt-7">
         <p className="text-[34px] leading-tight text-cloud-200">
-          {flight ? `${flight}’s` : "The"} EU261 compensation liability, drafted the morning after.
+          {flight ? `${flight}: ` : ""}expected claims determine the EU261 compensation liability.
         </p>
       </Reveal>
 
@@ -42,13 +33,13 @@ export function CfoLine({ data }: { data: PitchData }) {
 
       <Reveal className="mt-16 grid grid-cols-2 gap-6 border-t border-white/10 pt-8">
         <div>
-          <p className="font-mono text-[17px] uppercase tracking-[0.16em] text-cloud-500">Who doesn&rsquo;t need it</p>
-          <p className="mt-3 text-[32px] leading-[1.3] text-cloud-50">A three-route charter that rarely cancels.</p>
+          <p className="font-mono text-[17px] uppercase tracking-[0.16em] text-cloud-500">The estimate</p>
+          <p className="mt-3 text-[28px] leading-[1.35] text-cloud-200">Claim history informs the liability. Each passenger&rsquo;s entitlement is still assessed.</p>
         </div>
         <div>
-          <p className="font-mono text-[17px] uppercase tracking-[0.16em] text-cloud-500">Where it goes next</p>
+          <p className="font-mono text-[17px] uppercase tracking-[0.16em] text-cloud-500">Human approval</p>
           <p className="mt-3 text-[28px] leading-[1.35] text-cloud-200">
-            The same seat, more causes: three-hour delays, strikes and ATC as new evidence feeds; UK261, Canada and the 2027 EU261 rules as dated rule packs.
+            Claims Lead: payouts. Controller: accounting entries. Every decision keeps its evidence.
           </p>
         </div>
       </Reveal>

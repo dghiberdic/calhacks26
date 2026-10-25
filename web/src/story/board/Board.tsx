@@ -111,10 +111,10 @@ export function Board() {
     <section ref={root} aria-label="The cancel list, as coded" data-section="board" className="relative bg-navy-950 px-5 pb-28 pt-32 md:px-16 md:pb-36 md:pt-40">
       <div className="board-head mx-auto max-w-[1180px]">
         <h2 className="text-balance display max-w-[15ch] text-[clamp(38px,5.4vw,88px)] text-cloud-50">
-          OCC coded all {cancelled !== undefined ? count(cancelled) : <Pending ch={2} />} as weather.
+          All {cancelled !== undefined ? count(cancelled) : <Pending ch={2} />} cancellations. One reason: weather.
         </h2>
         <p className="mt-6 max-w-[46ch] text-[16.5px] leading-relaxed text-cloud-400 md:text-[19px]">
-          Operations control (OCC) sent the cancel list{occAt ? ` at ${occAt}` : ""} with the same reason on every line. StormCheck checks each flight against Dublin&rsquo;s METAR and the aircraft&rsquo;s own logs.
+          The airline sent this list{occAt ? ` at ${occAt}` : ""}. StormCheck checks each cancellation against airport weather reports and maintenance logs.
         </p>
       </div>
 
@@ -132,7 +132,7 @@ export function Board() {
         </span>
         <span className={cn("flex items-center gap-2 transition-opacity duration-700", phase === "checked" ? "opacity-100" : "opacity-0")}>
           <span className="size-2 rounded-full bg-held" aria-hidden="true" />
-          LEGAL · {held ? `${count(held)} knock-on returns` : "knock-on returns"}, held for one ruling
+          LEGAL · {held ? `${count(held)} return flights` : "return flights"} affected by earlier cancellations, awaiting a ruling
         </span>
         <span className={cn("flex items-center gap-2 transition-opacity duration-700", phase === "checked" ? "opacity-100" : "opacity-0")}>
           <span className="size-2 rounded-full bg-notweather" aria-hidden="true" />

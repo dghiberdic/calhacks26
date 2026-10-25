@@ -13,9 +13,9 @@ export type Slide = { id: string; label: string; Component: ComponentType<{ data
 /** The deck, in order. `/pitch/<index>` addresses a slide; 0 is the cover. */
 export const SLIDES: Slide[] = [
   { id: "cover", label: "StormCheck", Component: Cover, usesData: false },
-  { id: "business", label: "The business", Component: Business, usesData: true },
-  { id: "judged", label: "The airline, judged", Component: Judged, usesData: true },
+  { id: "business", label: "The review process", Component: Business, usesData: true },
+  { id: "judged", label: "A case from the demo", Component: Judged, usesData: true },
   { id: "architecture", label: "How it works", Component: Architecture, usesData: false },
-  { id: "real", label: "Real, simulated, and how we know", Component: RealSimulated, usesData: true },
-  { id: "cfo", label: "The CFO line", Component: CfoLine, usesData: true },
+  { id: "real", label: "Data and test results", Component: RealSimulated, usesData: true },
+  { id: "cfo", label: "The financial result", Component: CfoLine, usesData: true },
 ];

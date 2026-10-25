@@ -30,8 +30,8 @@ function Tile({ label, figure, children, details, testId }: { label: ReactNode; 
 }
 
 /**
- * The three numbers a CFO asks about, one each: what the recoded flight books (not €0, not the full
- * entitlement), the payouts waiting on the Claims Lead, and the whole storm. The arithmetic sits behind Details.
+ * Current-period compensation, payouts awaiting review, and the selected storm's day-one estimate.
+ * The period total may include other storm cohorts; the hero shows the individual flight estimate.
  */
 export function LiabilityTiles({ run, cfo, recodedFlight }: { run: StormRun; cfo: CfoMetrics | undefined; recodedFlight: string | null }) {
   const c = run.counters ?? {};
@@ -41,7 +41,7 @@ export function LiabilityTiles({ run, cfo, recodedFlight }: { run: StormRun; cfo
   return (
     <div className="grid gap-3 md:grid-cols-3">
       <Tile
-        label={<>{recodedFlight ? `${recodedFlight} · ` : ""}EU261 compensation liability</>}
+        label="Current-period compensation"
         testId="ns31-liability"
         figure={
           <>
@@ -52,11 +52,14 @@ export function LiabilityTiles({ run, cfo, recodedFlight }: { run: StormRun; cfo
           cfo ? (
             <div className="flex flex-col gap-3 text-[12.5px] leading-relaxed text-slate-500">
               <p>
+                Not <Money cents={cfo.cash_basis_cents} /> on a cash basis or <Money cents={cfo.full_entitlement_cents} /> if every passenger claims. The estimate uses the expected claim rate.
+              </p>
+              <p>
                 <span className="font-mono text-[12px] text-navy-900">Dr 4090 / Cr 2140</span>: a reduction of passenger revenue, and the EU261 compensation liability (2140), drafted, pending approval. If the claim rate moves 5 points, the amount moves <Money cents={cfo.sensitivity_5pp_cents} className="text-navy-900" />.
               </p>
               <Glossary terms={terms} />
               <span className="flex flex-wrap gap-x-4 gap-y-1">
-                {recodedFlightId ? <ArrowLink to={`/trace?target=${encodeURIComponent(recodedFlightId)}`}>Why this amount?</ArrowLink> : null}
+                {recodedFlightId ? <ArrowLink to={`/trace?target=${encodeURIComponent(recodedFlightId)}`}>Example: {recodedFlight}</ArrowLink> : null}
                 <ArrowLink to="/close">Liability & Close</ArrowLink>
               </span>
             </div>
@@ -65,20 +68,20 @@ export function LiabilityTiles({ run, cfo, recodedFlight }: { run: StormRun; cfo
       >
         {cfo ? (
           <>
-            Not <Money cents={cfo.cash_basis_cents} className="text-navy-900" /> on a <Explain term="cash-basis">cash basis</Explain>, and not <Money cents={cfo.full_entitlement_cents} className="text-navy-900" /> as if <Explain term="full-entitlement">every passenger claims</Explain>: StormCheck books the share <Explain term="claim-rate">expected to claim</Explain>.
+            EU261 compensation liability across applicable flights, based on the share of passengers <Explain term="claim-rate">expected to claim</Explain>. Pending approval.
           </>
         ) : null}
       </Tile>
 
-      <Tile label="Payouts" figure={count(c.drafted)} details={<p className="text-[12.5px] leading-relaxed text-slate-500">StormCheck drafts the payouts and the journal entries; it never releases a payment run. Whoever drafts an entry can&rsquo;t approve it (<Explain term="preparer-approver">preparer ≠ approver</Explain>).</p>}>
-        drafted, pending Claims Lead approval.
+      <Tile label="Payout drafts" figure={count(c.drafted)} details={<p className="text-[12.5px] leading-relaxed text-slate-500">StormCheck drafts the payouts and the journal entries; it never releases a payment run. Whoever drafts an entry can&rsquo;t approve it (<Explain term="preparer-approver">preparer ≠ approver</Explain>).</p>}>
+        Ready for the Claims Lead to review. No payments are sent.
         <span className="mt-2 flex items-center gap-2 text-[12.5px] text-slate-500">
-          <RoleAvatar role="claims_lead" size="sm" decorative /> The Claims Lead approves every payment.
+          <RoleAvatar role="claims_lead" size="sm" decorative /> Human approval required
         </span>
       </Tile>
 
       <Tile
-        label="The whole storm · day 1"
+        label="All flights · day-one liability"
         figure={<Money cents={run.liability_drafted_cents} />}
         details={
           <div className="flex flex-col gap-2 text-[12.5px] leading-relaxed text-slate-500">
@@ -91,41 +94,39 @@ export function LiabilityTiles({ run, cfo, recodedFlight }: { run: StormRun; cfo
           </div>
         }
       >
-        EU261 compensation liability for every flight, including those waiting on a ruling. Weather flights: no compensation; refunds and <Explain term="care">care</Explain> still due.
+        Includes cases still awaiting a ruling. Weather flights: no compensation; refunds and <Explain term="care">care</Explain> still due.
       </Tile>
     </div>
   );
 }
 
 /** Plain tags for the four steps (FINAL_IDEA's workshop words, said the way an airline would). */
-const LEARN_LABEL = ["from its own history", "overnight", "asks a person", "becomes policy"] as const;
+const LEARN_LABEL = ["history", "evidence", "human review", "reuse"] as const;
 
 /** Learns → Runs → Escalates → Improves ↻, four small cards in a row (THREAD_JUSTIN J1, plan §6). One sentence each. */
 export function LearnsStrip({ run }: { run: StormRun }) {
-  const c = run.counters ?? {};
   const roles = [...new Set(run.questions.map((q) => q.routed_to))] as Role[];
-  const [first] = run.learned;
   const cards: { label: (typeof LEARN_LABEL)[number]; title: string; body: ReactNode; highlight?: boolean }[] = [
     {
-      label: "from its own history",
-      title: "Learns",
+      label: "history",
+      title: "Learn airline policy",
       body: (
         <>
-          {first ? `${first.text}.` : "Mined from the airline's own history at onboarding."}{" "}
+          Use past claims and approved rulings.{" "}
           <Link to="/policies" className="font-medium text-metar-ink hover:underline">
-            What it learned
+            View policies
           </Link>
         </>
       ),
     },
     {
-      label: "overnight",
-      title: "Runs",
-      body: <>Checked all {count(c.cancelled)} cancellations overnight, then drafted the payouts and the liability.</>,
+      label: "evidence",
+      title: "Check each flight",
+      body: <>Compare records, determine the cause, and calculate compensation.</>,
     },
     {
-      label: "asks a person",
-      title: "Escalates",
+      label: "human review",
+      title: "Ask when unclear",
       highlight: true,
       body: (
         <>
@@ -134,16 +135,16 @@ export function LearnsStrip({ run }: { run: StormRun }) {
               <RoleAvatar key={r} role={r} size="sm" className="ring-2 ring-white" />
             ))}
           </span>
-          Sent each unclear case to the person who owns the answer.
+          Conflicting evidence goes to the person authorised to decide.
         </>
       ),
     },
     {
-      label: "becomes policy",
-      title: "Improves",
+      label: "reuse",
+      title: "Apply the ruling",
       body: (
         <>
-          Each answer becomes a rule, so the same question isn&rsquo;t asked twice. Repeat questions: <span className="figure font-semibold text-navy-900">{count(c.repeat_questions ?? 0)}</span>.
+          Reuse the approved rule where it applies. New situations still need review.
         </>
       ),
     },
@@ -176,7 +177,7 @@ export function LearnsStrip({ run }: { run: StormRun }) {
 
 const REASON_TERM: Partial<Record<Question["reason_tag"], Term>> = { "sources-disagree": "sources-disagree", "no-precedent": "no-precedent" };
 
-/** The 1% it asked about: what each question is, who it went to and what it holds. The detail is on Questions. */
+/** What needs a ruling, who can give it and what is held. */
 export function QuestionsPreview({ questions }: { questions: Question[] }) {
   if (!questions.length) return <Empty title="Nothing to ask">Every decision was clear enough to draft.</Empty>;
   return (
@@ -206,7 +207,7 @@ export function QuestionsPreview({ questions }: { questions: Question[] }) {
 /** The latest few things it did. Everything, every storm, is on Trace. */
 export function FeedPanel({ events }: { events: TraceEvent[] }) {
   return (
-    <Panel title="What it did" actions={<ArrowLink to="/trace">Everything, in Trace</ArrowLink>} padded={false}>
+    <Panel title="Recent decisions" actions={<ArrowLink to="/trace">Audit trail</ArrowLink>} padded={false}>
       <ol className="px-5 pb-2" aria-live="polite">
         {events.slice(0, 4).map((e) => (
           <FeedRow key={e.seq} event={e} className="border-t border-cloud-100 first:border-t-0" />
