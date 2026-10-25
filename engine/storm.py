@@ -23,6 +23,7 @@ from contracts.models import (
 )
 from engine import questions as qs
 from engine.case import station_obs, stations_for
+from engine.cause import event_window_text
 from engine.engine import cohort_question_id, expected_liability, local_day_span, question_id, station_airport
 from engine.geo import UnknownAirport, airport
 from engine.timeline import storm_windows
@@ -106,8 +107,11 @@ def run_storm(engine: Engine, world: World, station: str, local_day: date, rules
     start, end = local_day_span(ap, local_day)
     obs = [o for o in station_obs(world, icao, known_at) if start - METAR_PAD <= o.valid < end + METAR_PAD]
     windows = storm_windows(obs)
-
     stations = stations_for(world, known_at)
+    # external-event windows (a grid outage) at this station that overlap its local day join the storm windows
+    events = [e for e in stations.get(icao).events if e.window.start < end and e.window.end >= start]
+    windows = sorted([*windows, *(e.window for e in events)], key=lambda w: (w.start, w.kind))
+
     flights = storm_flights(world, station, local_day)
     rows: list[FlightRow] = []
     decisions: list[FlightDecision] = []
@@ -173,11 +177,15 @@ def run_storm(engine: Engine, world: World, station: str, local_day: date, rules
         except UnknownAirport:
             pass
     message = None
-    if not windows:
+    if not any(w.kind == "weather" for w in windows):
         peak = max((o.gust if o.gust is not None else (o.sknt or 0) for o in obs), default=None)
         message = f"max gust {peak} kt · no storm window" if peak is not None else "no METAR · no storm window"
+        if events:
+            message = " · ".join([f"{e.window.label} {event_window_text(e)}" for e in events] + [message])
+    event = events[0].event if events else None
     return StormRun(
         id=storm_id, station=icao, date=local_day, windows=windows, metar=obs, flights=rows, counters=counters,
         entitlement_cents=entitlement, liability_drafted_cents=sum(liability.values()),
         learned=[], questions=questions, feed=feed, real_context=world.real_context.get(storm_id, {}),
-        message=message, airports=airports, name=storm_name(world, storm_id))
+        message=message, airports=airports, name=storm_name(world, storm_id) or (event.title if event else None),
+        event_id=event.id if event else None)

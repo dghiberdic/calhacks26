@@ -216,6 +216,8 @@ class Engine:
             "precedent_count": precedent,
             "knock_on": 1.0 if f.cause == Cause.KNOCK_ON else 0.0,
             "concurrent_causes": 1.0 if f.cause == Cause.CONCURRENT else 0.0,
+            "in_event_window": 1.0 if case.event_in else 0.0,
+            "internal_cause_logged": 1.0 if f.pattern == "internal_cause_logged" else 0.0,
         }
         caps = list(f.caps)
         if precedent == 0 and f.extraordinary == Extraordinary.NEEDS_LEGAL and f.reason_tag == "no-precedent":
@@ -235,7 +237,7 @@ class Engine:
             flight_id=case.flight.id, cause=f.cause, extraordinary=f.extraordinary,
             ops_cause_code=case.ops_code, recoded=f.recoded, recode_label=recode_label(case.ops_code, f.new_code)
             if f.recoded else None,
-            in_window_dep=case.dep.position, in_window_arr=case.arr.position,
+            in_window_dep=case.any_position("dep"), in_window_arr=case.any_position("arr"),
             window_margin_min=deciding_margin(case), confidence=c, reason=f.reason, evidence=f.evidence,
             rules_applied=list(dict.fromkeys(ev.rules_applied)), legal_basis=f.legal_basis, outcome="auto",
             routed_to=None, question_id=None, known_at=known_at)
@@ -257,7 +259,10 @@ class Engine:
                           role=f.route, settled_by_rule=ev.settled_by is not None)
         qid = None
         if r.outcome == "escalated":
-            qid = question_id(world, storm_id or default_storm_id(world, case), f.pattern)
+            # one question per external event, whichever station's run asks it
+            sid = (case.event.event.id if f.pattern == "external_event_window" and case.event is not None
+                   else storm_id or default_storm_id(world, case))
+            qid = question_id(world, sid, f.pattern)
         return dec.model_copy(update={"outcome": r.outcome, "routed_to": r.routed_to, "question_id": qid})
 
 
@@ -288,6 +293,9 @@ def flight_features(world: World, case: FlightCase, finding: Finding, prev: Find
         "aog.ata_chapter": aog.cls.chapter if aog else None,
         "aog.root_cause_internal": aog.cls.internal if aog else None,
         "aog.mel_relief": aog.entry.mel_relief if aog else None,
+        "flight.in_event_window_dep": case.dep_event.position if case.dep_event else None,
+        "flight.in_event_window_arr": case.arr_event.position if case.arr_event else None,
+        "event.kind": case.event.event.kind if case.event else None,
         "rotation.prev_cancelled": (case.prev.status == "cancelled") if case.prev else None,
         "rotation.prev_cause": prev.cause.value if prev else None,
         "spare.available_within_h": None if technical else case.spare_within_h,

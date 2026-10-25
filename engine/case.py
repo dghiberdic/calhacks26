@@ -16,6 +16,10 @@ A fact's source is looked up in the world, then among the documents registered o
 trace's registry while it replays, ``registered_sources``). A registered document's kind caps the tier it may
 claim (``KIND_TIER``); a source found nowhere is tier 4 (fail closed).
 
+External events (``World.events``, e.g. a grid outage) add their airport windows to the station (``StationView.events``)
+once an operator notice (tier ≤ 2) is on file. The flight's positions against them are ``dep_event`` / ``arr_event``;
+``event`` is the window it sits in (``event_in``) or closed less than 24 h before it (``after_event``).
+
 Pure: no wall clock, no randomness.
 """
 from __future__ import annotations
@@ -30,6 +34,8 @@ from typing import Any
 
 from contracts.models import (
     Airport,
+    EventAirportWindow,
+    ExternalEvent,
     Fact,
     Flight,
     MetarObs,
@@ -57,6 +63,9 @@ KIND_TIER = {SourceKind.TECH_LOG: 1, SourceKind.MCC_LOG: 1, SourceKind.METAR: 1,
              SourceKind.MANUFACTURER: 2, SourceKind.OCC_LOG: 3, SourceKind.CRM: 3, SourceKind.CLAIM: 4,
              SourceKind.EMAIL: 4, SourceKind.CHALLENGE: 4}
 _REGISTERED: ContextVar[Mapping[str, Source] | None] = ContextVar("engine_registered_sources", default=None)
+EVENT_MAX_TIER = 2                     # an external event counts only on an operator notice (tier 1-2), never hearsay
+POST_EVENT = timedelta(hours=24)       # a flight this soon after an event window closed is judged "after the event"
+EVENT_KIND_LABEL = {"grid_outage": "Grid outage"}
 _CNL = re.compile(r"\bCNL\b|\bCANCEL", re.I)
 _RTS = re.compile(r"\bRTS\b|\bRETURNED TO SERVICE\b|\bA/C S/S\b|\bRELEASED TO SERVICE\b", re.I)
 
@@ -87,11 +96,31 @@ class AogClaim:
     text: str
 
 
+@dataclass(frozen=True)
+class EventWindow:
+    """One airport window of an external event (a grid outage), as a ``StormWindow`` of that kind."""
+    window: StormWindow
+    event: ExternalEvent
+    airport: EventAirportWindow
+
+    @property
+    def approximate(self) -> bool:
+        return (self.airport.note or "").strip().lower().startswith("approx")
+
+
 @dataclass
 class StationView:
     icao: str
     obs: list[MetarObs]
-    windows: list[StormWindow]
+    windows: list[StormWindow]                                # METAR storm windows
+    events: list[EventWindow] = field(default_factory=list)   # external-event windows at this station
+
+    @property
+    def event_windows(self) -> list[StormWindow]:
+        return [e.window for e in self.events]
+
+    def event_at(self, t: datetime) -> EventWindow | None:
+        return next((e for e in self.events if e.window.start <= t <= e.window.end), None)
 
 
 @dataclass
@@ -116,6 +145,14 @@ class FlightCase:
     aog_claims: list[AogClaim] = field(default_factory=list)
     overlay: dict[str, Any] = field(default_factory=dict)   # provenance of overlaid lines (see OVERLAY)
     decided_at: datetime | None = None  # when the flight was cancelled: OCC cancel entry, else STD
+    # external events (blackout v1): positions against the event windows at each end, and the event the flight sits
+    # in (``event_in``) or was cancelled soon after (``after_event``)
+    dep_event: EndPosition | None = None
+    arr_event: EndPosition | None = None
+    event: EventWindow | None = None
+    event_in: bool = False
+    after_event: bool = False
+    occ_lines: list[OpsLogEntry] = field(default_factory=list)
 
     @property
     def ops_code(self) -> str | None:
@@ -124,6 +161,12 @@ class FlightCase:
     @property
     def positions(self) -> tuple[str, str]:
         return self.dep.position, self.arr.position
+
+    def any_position(self, end: str) -> str:
+        """``in`` if that end sits in a storm or an event window, else its storm-window position (the decision's
+        ``in_window_*``)."""
+        weather, event = (self.dep, self.dep_event) if end == "dep" else (self.arr, self.arr_event)
+        return "in" if event is not None and event.position == "in" else weather.position
 
 
 # ---------- METAR per station ----------
@@ -141,6 +184,36 @@ def station_obs(world: World, icao: str, known_at: datetime | None) -> list[Meta
     return [seen[k] for k in sorted(seen)]
 
 
+def event_label(event: ExternalEvent) -> str:
+    """'Grid outage (Iberian Peninsula blackout)'."""
+    kind = EVENT_KIND_LABEL.get(event.kind, event.kind.replace("_", " ").capitalize())
+    return f"{kind} ({event.title})"
+
+
+def event_known(world: World, event: ExternalEvent, known_at: datetime | None) -> bool:
+    """An event counts once an operator notice (a source of tier ≤ 2 in the world) was received by ``known_at``.
+    Hearsay (a passenger saying the power went out) or an event with no notice on file never opens a window."""
+    srcs = {s.id: s for s in world.sources}
+    return any((s := srcs.get(sid)) is not None and s.trust_tier <= EVENT_MAX_TIER
+               and (known_at is None or s.received_at <= known_at) for sid in event.source_ids)
+
+
+def event_windows(world: World, icao: str, known_at: datetime | None) -> list[EventWindow]:
+    """The airport windows of every known external event at ``icao``, sorted by start."""
+    out = []
+    for ev in world.events:
+        if not event_known(world, ev, known_at):
+            continue
+        for a in ev.airports:
+            if a.icao != icao:
+                continue
+            definition = f"{event_label(ev)} from the operator notice" + (f"; end {a.note}" if a.note else "")
+            out.append(EventWindow(StormWindow(station=icao, start=a.start, end=a.end, peak_gust_kt=0,
+                                               definition=definition, obs_count=0, kind=ev.kind,
+                                               label=event_label(ev)), ev, a))
+    return sorted(out, key=lambda e: (e.window.start, e.event.id))
+
+
 class _StationCache:
     def __init__(self, world: World, known_at: datetime | None):
         self.world, self.known_at = world, known_at
@@ -149,7 +222,7 @@ class _StationCache:
     def get(self, icao: str) -> StationView:
         if icao not in self._c:
             obs = station_obs(self.world, icao, self.known_at)
-            self._c[icao] = StationView(icao, obs, storm_windows(obs))
+            self._c[icao] = StationView(icao, obs, storm_windows(obs), event_windows(self.world, icao, self.known_at))
         return self._c[icao]
 
 
@@ -487,6 +560,9 @@ def build_case(world: World, flight_id: str, known_at: datetime, stations: _Stat
     relevant = relevant_window(dep, arr, dep_st, arr_st)
     decided = decision_time(world, flight, known_at)
     overlay = dict(world.meta.get(OVERLAY) or {})
+    dep_ev = departure_position(flight, dep_st.obs, dep_st.event_windows)
+    arr_ev = arrival_position(flight, arr_st.obs, arr_st.event_windows)
+    event, event_in, after_event = _event_for(dep_ev, arr_ev, dep_st, arr_st)
     return FlightCase(
         flight=flight, origin=origin, dest=dest, dep_station=dep_st, arr_station=arr_st, dep=dep, arr=arr,
         aog=_aog_for(world, flight, known_at, stations, relevant, decided),
@@ -499,7 +575,24 @@ def build_case(world: World, flight_id: str, known_at: datetime, stations: _Stat
         window=relevant,
         aog_claims=_aog_claims(world, flight, known_at, decided, overlay),
         overlay=overlay, decided_at=decided,
+        dep_event=dep_ev, arr_event=arr_ev, event=event, event_in=event_in, after_event=after_event, occ_lines=occ,
     )
+
+
+def _event_for(dep: EndPosition, arr: EndPosition, dep_st: StationView, arr_st: StationView
+               ) -> tuple[EventWindow | None, bool, bool]:
+    """(event window, in it?, after it?): the window the flight sits in at either end, else the latest one that
+    closed at its origin or destination less than ``POST_EVENT`` before that end's time."""
+    for end, st in ((dep, dep_st), (arr, arr_st)):
+        if end.position == "in":
+            hit = st.event_at(end.at)
+            if hit is not None:
+                return hit, True, False
+    closed = [(end.at - e.window.end, e) for end, st in ((dep, dep_st), (arr, arr_st)) for e in st.events
+              if e.window.end <= end.at and end.at - e.window.end < POST_EVENT]
+    if closed:
+        return min(closed, key=lambda x: (x[0], x[1].event.id))[1], False, True
+    return None, False, False
 
 
 def stations_for(world: World, known_at: datetime | None) -> _StationCache:
