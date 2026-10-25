@@ -35,7 +35,7 @@ const SOURCE_NAME: [RegExp, string][] = [
 ];
 
 /** Name the source's kind from its id, for the label; never used for logic. */
-export function sourceKind(sourceId: string): string {
+function sourceKind(sourceId: string): string {
   const s = sourceId.toLowerCase();
   return SOURCE_NAME.find(([re]) => re.test(s))?.[1] ?? sourceId.split(":")[0] ?? sourceId;
 }

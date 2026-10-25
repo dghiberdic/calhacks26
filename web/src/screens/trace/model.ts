@@ -198,7 +198,7 @@ export function compareFrameworkRef(a: string, b: string) {
 export type StepKind = "money" | "entitlement" | "rule" | "ruling" | "decision" | "fact" | "span" | "metar" | "other";
 
 /** A raw METAR line ("EIDW 241630Z 24012KT …"). */
-export const METAR_LINE = /\b[A-Z]{4} \d{6}Z\b/;
+const METAR_LINE = /\b[A-Z]{4} \d{6}Z\b/;
 
 /** How a blame step reads on the receipt. The API gives labels and commits; this only picks the styling. */
 export function stepKind(step: Pick<BlameStep, "label" | "quote"> & { commit: Pick<Commit, "kind"> }): StepKind {

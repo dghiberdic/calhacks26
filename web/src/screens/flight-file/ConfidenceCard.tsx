@@ -92,7 +92,7 @@ const MEASURE = /(_h|_min|_count|_months?|_km|_days?|_kt)$|^precedent/;
  * - weights or contributions (a negative, or a fraction): bars by magnitude, growing left (against) or right (for);
  * - raw model inputs: flags as full or empty bars with yes/no, measures as their value with a unit.
  */
-export function FeatureBars({ features, className }: { features: Record<string, number>; className?: string }) {
+function FeatureBars({ features, className }: { features: Record<string, number>; className?: string }) {
   const entries = Object.entries(features ?? {}).filter(([, v]) => typeof v === "number" && Number.isFinite(v));
   if (!entries.length) return null;
   const weighted = entries.some(([, v]) => v < 0) || entries.some(([k, v]) => v > 0 && v < 1 && !MEASURE.test(k));

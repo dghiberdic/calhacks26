@@ -216,14 +216,3 @@ export function ActionPair({ onEdit, onApprove, approveLabel = "Approve", editLa
     </span>
   );
 }
-
-/** Big number with a caption, for headline tiles. */
-export function Stat({ label, children, sub, className }: { label: ReactNode; children: ReactNode; sub?: ReactNode; className?: string }) {
-  return (
-    <div className={cn("min-w-0", className)}>
-      <div className="text-[12.5px] text-slate-500">{label}</div>
-      <div className="display-tight mt-1 text-[26px] leading-none text-navy-900">{children}</div>
-      {sub ? <div className="mt-1.5 text-[12.5px] text-slate-500">{sub}</div> : null}
-    </div>
-  );
-}

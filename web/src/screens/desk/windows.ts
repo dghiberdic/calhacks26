@@ -4,7 +4,7 @@ import { zulu, zuluDay } from "@/lib/format";
 export const isOutage = (w: StormWindow) => w.kind === "grid_outage";
 
 /** "02:30Z–15:00Z", with the day on either end that isn't the run's own. */
-export function windowSpan(w: StormWindow, runDate: string) {
+function windowSpan(w: StormWindow, runDate: string) {
   const sameDay = (iso: string) => iso.slice(0, 10) === runDate;
   const a = sameDay(w.start) ? zulu(w.start) : zuluDay(w.start);
   const b = sameDay(w.end) ? zulu(w.end) : zuluDay(w.end);

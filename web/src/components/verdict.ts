@@ -13,13 +13,6 @@ export function verdictOf(row: FlightRow): VerdictKind {
   return "weather";
 }
 
-export const VERDICT_TONE: Record<VerdictKind, Tone> = {
-  weather: "weather",
-  notweather: "notweather",
-  held: "held",
-  operated: "slate",
-  pending: "outline",
-};
 
 /** Mono kebab-case chip text: `weather · no-compensation`, `technical · owed`, `knock-on · needs-ruling`. */
 export function verdictChip(d: FlightDecision | null | undefined): { text: string; tone: Tone } {

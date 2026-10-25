@@ -1,4 +1,4 @@
-import type { Entitlement, Flight, FlightDecision, JournalEntry, TimelineMark } from "@/api/types";
+import type { Entitlement, FlightDecision, JournalEntry, TimelineMark } from "@/api/types";
 import type { VerdictKind } from "@/components/verdict";
 import { airport } from "@/lib/airports";
 import { count, eur, pct } from "@/lib/format";
@@ -11,7 +11,6 @@ import { count, eur, pct } from "@/lib/format";
 /** Airport name for an IATA code (shared reference list); the code itself when it isn't listed. */
 export const cityOf = (iata: string) => airport(iata)?.name ?? iata;
 
-export const routeText = (f: Pick<Flight, "origin" | "dest">) => `${cityOf(f.origin)} → ${cityOf(f.dest)}`;
 
 /** The one-word headline over a verdict. */
 export const VERDICT_HEADLINE: Record<VerdictKind, string> = {
@@ -157,7 +156,7 @@ const SUMMARY_LABEL: Record<string, string> = {
   ultimate_claim_rate: "Expected ultimate claim rate",
 };
 
-export function summaryLabel(key: string) {
+function summaryLabel(key: string) {
   return SUMMARY_LABEL[key] ?? featureLabel(key);
 }
 

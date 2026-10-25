@@ -14,7 +14,7 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-export const toIso = (y: number, m: number, d: number): IsoDate => `${y}-${pad(m)}-${pad(d)}`;
+const toIso = (y: number, m: number, d: number): IsoDate => `${y}-${pad(m)}-${pad(d)}`;
 
 export function parts(iso: IsoDate): { y: number; m: number; d: number } {
   const [y, m, d] = iso.split("-").map(Number);
@@ -27,7 +27,7 @@ export function isValidDate(y: number, m: number, d: number): boolean {
   return d <= daysInMonth(y, m);
 }
 
-export const daysInMonth = (y: number, m: number) => new Date(Date.UTC(y, m, 0)).getUTCDate();
+const daysInMonth = (y: number, m: number) => new Date(Date.UTC(y, m, 0)).getUTCDate();
 
 /** Day of week for a calendar date (0 = Sunday), independent of any time zone. */
 export const weekday = (iso: IsoDate) => {
@@ -61,7 +61,6 @@ export function editLabel(iso: IsoDate): string {
   return `${d} ${SHORT_MONTHS[m - 1]} ${y}`;
 }
 
-export const monthTitle = (y: number, m: number) => `${MONTH_NAMES[m - 1]} ${y}`;
 export const monthName = (m: number) => MONTH_NAMES[m - 1];
 export const WEEKDAY_SHORT = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 

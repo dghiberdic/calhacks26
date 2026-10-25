@@ -38,12 +38,12 @@ export function statusLabel(je: Pick<JournalEntry, "status" | "built_from">) {
 export const STATUS_WORD: Record<string, string> = { draft: "draft · parked", approved: "approved · parked", posted: "posted", rejected: "rejected" };
 
 /** Who must approve: payouts and claim approvals need the Claims Lead; every other kind the Controller (books SoD). */
-export function approverSeat(kind: JournalEntry["kind"]): Role {
+function approverSeat(kind: JournalEntry["kind"]): Role {
   return kind === "claim_approved" || kind === "claim_paid" ? "claims_lead" : "controller";
 }
 
 /** "agent.engine" → "Engine"; seats by their name; anything else as given. */
-export const principalName = (p: string | null | undefined) => (p ? ((ROLE_LABEL as Record<string, string>)[p] ?? (p === "system.pss" ? "PSS / revenue accounting" : p)) : "—");
+const principalName = (p: string | null | undefined) => (p ? ((ROLE_LABEL as Record<string, string>)[p] ?? (p === "system.pss" ? "PSS / revenue accounting" : p)) : "—");
 
 /** "2140" → GL 2140; "register:NS113@2025-01-24" → the obligation register for NS113. */
 function tieLabel(t: string) {

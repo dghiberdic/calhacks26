@@ -42,7 +42,6 @@ export const qk = {
 };
 
 /** The World's airports (GET /airports, additive). Static per run; a server without it 404s and callers fall back. */
-export const useAirports = () => useQuery({ queryKey: qk.airports, queryFn: api.airports, retry: false, staleTime: Infinity });
 /** The server's known-at (GET /clock, additive). A server without it answers 404 and the scrubber says "server clock". */
 export const useServerClock = () => useQuery({ queryKey: qk.clock, queryFn: api.clockNow, retry: false, staleTime: 30_000 });
 export const useHealth = () => useQuery({ queryKey: qk.health, queryFn: api.health, staleTime: 60_000, retry: false });

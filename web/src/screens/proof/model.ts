@@ -120,7 +120,7 @@ export function runLabel(valueEur: number, anchors: { cashCents: number; fullCen
 }
 
 /** Where a label sits on an axis of width `iw`: start-anchored at the left edge, end-anchored at the right, centred between. */
-export function labelSpan(x: number, w: number, iw: number): [number, number] {
+function labelSpan(x: number, w: number, iw: number): [number, number] {
   if (x < 24) return [x - 7, x - 7 + w];
   if (x > iw - 24) return [x + 7 - w, x + 7];
   return [x - w / 2, x + w / 2];

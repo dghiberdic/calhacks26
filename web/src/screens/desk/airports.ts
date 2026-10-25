@@ -313,7 +313,7 @@ export type AirportRow = {
 };
 
 /** "Málaga" → "malaga"; punctuation becomes a space. */
-export function fold(s: string): string {
+function fold(s: string): string {
   return s
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
@@ -334,7 +334,7 @@ const BY_ICAO = new Map(AIRPORTS.map((a) => [a.icao, a]));
 const BY_IATA = new Map(AIRPORTS.map((a) => [a.iata, a]));
 
 export const airportByIcao = (icao: string | null | undefined) => (icao ? BY_ICAO.get(icao.trim().toUpperCase()) : undefined);
-export const airportByIata = (iata: string | null | undefined) => (iata ? BY_IATA.get(iata.trim().toUpperCase()) : undefined);
+const airportByIata = (iata: string | null | undefined) => (iata ? BY_IATA.get(iata.trim().toUpperCase()) : undefined);
 
 /** "DUB · EIDW · Dublin". */
 export const airportLabel = (a: Pick<AirportRow, "iata" | "icao" | "name">) => `${a.iata} · ${a.icao} · ${a.name}`;
@@ -348,7 +348,7 @@ export const ICAO_SHAPE = /^[A-Z][A-Z0-9]{3}$/;
 
 /** Shown before anything is typed: the hub and the places the demo goes. */
 const SUGGESTED = ["EIDW", "EGLL", "LFPG", "EHAM", "EDDF", "KBOS", "KJFK", "KSFO"];
-export const suggestedAirports = () => SUGGESTED.map((c) => BY_ICAO.get(c)).filter((a): a is AirportRow => !!a);
+const suggestedAirports = () => SUGGESTED.map((c) => BY_ICAO.get(c)).filter((a): a is AirportRow => !!a);
 
 function score(a: AirportRow, q: string, code: string, terms: string[]): number {
   if (a.iata === code) return 100;

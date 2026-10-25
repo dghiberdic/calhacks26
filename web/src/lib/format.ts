@@ -62,7 +62,7 @@ export function shortId(id: string | null | undefined): string {
 }
 
 /** "2025-01-24" → "24 Jan". */
-export function dayMonth(isoDate: string | null | undefined): string {
+function dayMonth(isoDate: string | null | undefined): string {
   return longDate(isoDate).replace(/ \d{4}$/, "");
 }
 

@@ -11,7 +11,7 @@ export type Tone = ReturnType<typeof markKind>["tone"];
 export type Item = { at: number; iso: string; key: MarkKey; kind: string; label: string; text: string; machine: boolean; tone: Tone };
 
 /** Which marks earn a label first when the strip is crowded: the flight itself, then the evidence that decided it. */
-export const PRIORITY: Record<MarkKey, number> = { schedule: 0, tech: 1, occ: 2, mcc: 3, crm: 4, operated: 5, metar: 6, spares: 7, pss: 8, claim: 9, other: 10, window: 11 };
+const PRIORITY: Record<MarkKey, number> = { schedule: 0, tech: 1, occ: 2, mcc: 3, crm: 4, operated: 5, metar: 6, spares: 7, pss: 8, claim: 9, other: 10, window: 11 };
 
 /** `hub` is the storm station's airport: the end of a sector where its storm window applies. */
 export function toItems(marks: TimelineMark[], flight: Flight, hub: string): Item[] {
@@ -37,14 +37,14 @@ export function when(iso: string, flightDate: string) {
   return iso.slice(0, 10) === flightDate ? zulu(iso) : zuluDay(iso);
 }
 
-export const MAX_LANES = 4;
-export const LABEL_MAX = 168;
+const MAX_LANES = 4;
+const LABEL_MAX = 168;
 const LABEL_FONT = '500 12.5px "Archivo Variable", ui-sans-serif, system-ui, sans-serif';
 const META_FONT = '400 11px "Archivo Variable", ui-sans-serif, system-ui, sans-serif';
 
 let canvas: CanvasRenderingContext2D | null | undefined;
 /** Rendered text width (canvas, the page's own font); a per-character estimate where there is no canvas. */
-export function textWidth(text: string, font: string) {
+function textWidth(text: string, font: string) {
   if (canvas === undefined) {
     try {
       // jsdom (unit tests) has no canvas: estimate there instead of asking.
@@ -63,7 +63,7 @@ export type Placed = { it: Item; cx: number; cy: number; left: number; w: number
 type Sized = Item & { cx: number; cy: number; w: number; meta: string };
 
 /** Would this label (or its leader line) touch one already placed? Leaders run from a label down to its mark. */
-export function clashes(c: Placed, placed: Placed[], width: number) {
+function clashes(c: Placed, placed: Placed[], width: number) {
   if (c.left < 0 || c.left + c.w > width) return true;
   for (const p of placed) {
     if (p.lane === c.lane && c.left < p.left + p.w + 8 && c.left + c.w + 8 > p.left) return true;

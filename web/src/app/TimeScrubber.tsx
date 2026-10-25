@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
  * Moments the demo moves through, for a server that doesn't serve its own marks (GET /clock → marks). The
  * server clock is forward-only, so earlier ones disable once passed.
  */
-export const MOMENTS: ClockMark[] = [
+const MOMENTS: ClockMark[] = [
   { at: "2025-01-24T05:12:00Z", label: "OCC cancel list", note: "All 27 coded weather" },
   { at: "2025-01-25T09:00:00Z", label: "The morning after", note: "Storm run done" },
   { at: "2025-01-27T06:00:00Z", label: "Storm Herminia", note: "Same ruling, next storm" },

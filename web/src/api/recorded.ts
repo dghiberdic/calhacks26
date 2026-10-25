@@ -17,7 +17,7 @@ const STEP_KEY = "stormcheck.recorded-step";
 let manifest: Manifest | null = null;
 let manifestLoad: Promise<Manifest | null> | null = null;
 
-export function slug(path: string) {
+function slug(path: string) {
   const [route, query = ""] = path.split("?");
   const s = route.replace(/^\//, "").replace(/[^A-Za-z0-9@._-]+/g, "_") || "root";
   return query ? `${s}__${query.replace(/[^A-Za-z0-9@._=-]+/g, "_")}` : s;
@@ -44,7 +44,7 @@ function setStep(step: number) {
 }
 
 /** Back to the start of the recorded demo (POST /reset in recorded mode). */
-export const resetRecorded = () => setStep(0);
+const resetRecorded = () => setStep(0);
 
 async function loadManifest() {
   if (manifest) return manifest;

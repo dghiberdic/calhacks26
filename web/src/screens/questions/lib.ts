@@ -6,7 +6,7 @@ import { stormName } from "@/lib/storms";
 export const reasonText = (tag: string) => tag.replace(/-/g, " ");
 
 /** The six RuleProposal checks, as sentences a ruler can read. */
-export const CHECK_LABEL: Record<string, string> = {
+const CHECK_LABEL: Record<string, string> = {
   compiles: "Compiles to the rule language",
   reproduces_case: "Reproduces your ruling on this case",
   no_hard_control: "Overrides no hard control",
@@ -80,7 +80,7 @@ export const caseLabel = (ref: string) => {
 };
 
 /** Every feature a DSL condition names ({all|any|not} trees of {f, op, v} clauses). */
-export function conditionFeatures(node: unknown, out = new Set<string>()): Set<string> {
+function conditionFeatures(node: unknown, out = new Set<string>()): Set<string> {
   if (!node || typeof node !== "object") return out;
   const n = node as Record<string, unknown>;
   if (typeof n.f === "string") out.add(n.f);

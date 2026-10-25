@@ -68,8 +68,8 @@ const ROWS: [string, string, string, number, number][] = [
   ["YVR", "CYVR", "Vancouver", 49.19, -123.18],
 ];
 
-export const AIRPORTS: Record<string, AirportRef> = Object.fromEntries(ROWS.map(([iata, icao, name, lat, lon]) => [iata, { iata, icao, name, lat, lon }]));
-export const AIRPORTS_BY_ICAO: Record<string, AirportRef> = Object.fromEntries(ROWS.map(([iata, icao, name, lat, lon]) => [icao, { iata, icao, name, lat, lon }]));
+const AIRPORTS: Record<string, AirportRef> = Object.fromEntries(ROWS.map(([iata, icao, name, lat, lon]) => [iata, { iata, icao, name, lat, lon }]));
+const AIRPORTS_BY_ICAO: Record<string, AirportRef> = Object.fromEntries(ROWS.map(([iata, icao, name, lat, lon]) => [icao, { iata, icao, name, lat, lon }]));
 
 export const airport = (code: string | null | undefined): AirportRef | undefined => (code ? (AIRPORTS[code.toUpperCase()] ?? AIRPORTS_BY_ICAO[code.toUpperCase()]) : undefined);
 

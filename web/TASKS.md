@@ -16,7 +16,7 @@
 | J9 Recorded mode + Vercel | B | done in code; recording waits for the server (CP3); preview deploys the mock world until then |
 | J11 `/pitch` slides | B | done |
 | `/story`: the scroll story on Éowyn (beyond the plan) | B | done |
-| Switch off mocks: `pnpm gen:api`, CP1 against the stub, then the server | A | waiting on David (CP0a) |
-| Record the demo (`pnpm record` against `make demo`) and redeploy | B | waiting on CP3 |
+| Switch off mocks: `pnpm gen:api`, CP1 against the stub, then the server | A | done |
+| Record the demo (`pnpm record` against `make demo`) and redeploy | B | done (recorded Sat 16:18 on the real engine; re-record after the February month-end fix) |
 
-Tests: `pnpm test` (221 unit), `pnpm e2e` (51 in 1.6 min, including `e2e/demo.spec.ts`, the 3:00 script clicked end to end).
+Tests: `pnpm test` (265 unit), `pnpm e2e` (including `e2e/demo.spec.ts`, the 3:00 script clicked end to end).
