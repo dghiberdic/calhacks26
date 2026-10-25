@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
-import { BadgeCheck, Clapperboard, CloudLightning, Gavel, GitCommitVertical, Landmark, Menu, MessagesSquare, Plane, Presentation, RotateCcw, ScrollText, X } from "lucide-react";
+import { BadgeCheck, Clapperboard, CloudLightning, FlaskConical, Gavel, GitCommitVertical, Landmark, Menu, MessagesSquare, Plane, Presentation, RotateCcw, ScrollText, X } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiMode } from "@/api/client";
 import { invalidateAfterWrite, useHealth, useQuestions, useStorms } from "@/api/queries";
@@ -20,6 +20,7 @@ const NAV = [
   { to: "/flights", label: "Flight File", icon: Plane },
   { to: "/questions", label: "Questions", icon: MessagesSquare, badge: "questions" as const },
   { to: "/policies", label: "Policies", icon: ScrollText },
+  { to: "/rule-lab", label: "Rule Lab", icon: FlaskConical },
   { to: "/trace", label: "Trace", icon: GitCommitVertical },
   { to: "/close", label: "Liability & Close", icon: Landmark },
   { to: "/desk", label: "Judge's Desk", icon: Gavel },

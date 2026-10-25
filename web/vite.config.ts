@@ -39,7 +39,11 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss(), recordedDemo(mode), siteUrl()],
     resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
-    server: { port: Number(env.PORT) || 5173, proxy: { "/api": { target, changeOrigin: true } } },
+    server: { port: Number(env.PORT) || 5173, proxy: {
+      "/api": { target, changeOrigin: true },
+      "/rule-lab-api": { target: env.RULE_LAB_TARGET || "http://127.0.0.1:4186", changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/rule-lab-api/, "/api") },
+    } },
     preview: { port: 4173 },
     // Crawl every screen for dependencies at startup: otherwise the first visit to a lazy route (three.js on
     // /story) discovers new deps and reloads the page mid-test.

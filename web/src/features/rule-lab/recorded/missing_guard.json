@@ -1,0 +1,1739 @@
+{
+  "accounting": {
+    "agent_approval_blocked": true,
+    "approved_entries": 0,
+    "journal_entries": 115,
+    "liability_after_cents": 8214600,
+    "liability_before_cents": 8214600,
+    "new_entries_on_retry": 0,
+    "unbalanced_entries": 0
+  },
+  "candidate": {
+    "action": "deny_offset",
+    "action_arg": null,
+    "authority_required": "claims_lead",
+    "cases_settled_by_storm": {},
+    "condition": {
+      "all": [
+        {
+          "f": "voucher.in_lieu",
+          "op": "eq",
+          "v": true
+        }
+      ]
+    },
+    "grounding": {
+      "action=deny_offset": "Pay €600 cash",
+      "voucher.in_lieu=true": "the voucher",
+      "voucher.signed=false": "No signed acceptance"
+    },
+    "id": "R-CL-1",
+    "kind": "voucher",
+    "origin_example": "NS31@2025-01-24:14C",
+    "origin_quote": "No signed acceptance, no offset: pay €600 cash; the voucher stays as goodwill.",
+    "origin_ruling_id": "RUL-Q-1-1",
+    "recorded_at": "2025-01-25T09:30:00Z",
+    "scope": {
+      "flight.departs_eu": "case:true"
+    },
+    "static_card": false,
+    "status": "proposed",
+    "supersedes": null,
+    "support": null,
+    "tier": "claims_lead_ruling",
+    "times_cited": 0,
+    "title": "Pay €600 cash; the voucher stays as goodwill",
+    "valid_from": null,
+    "version": 1
+  },
+  "cases": [
+    {
+      "after": {
+        "cash_cents": 60000,
+        "compensation_cents": 60000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 60000,
+        "compensation_cents": 60000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS31@2025-01-24:14C",
+      "expected": "Resolve this unsigned EU-departure voucher; €600 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 60000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "original-ruling",
+      "label": "Original ruling · unsigned voucher",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:12D",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-01",
+      "label": "Next storm · eligible case 01",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:15C",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-02",
+      "label": "Next storm · eligible case 02",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:16A",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-03",
+      "label": "Next storm · eligible case 03",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:16F",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-04",
+      "label": "Next storm · eligible case 04",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:19B",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-05",
+      "label": "Next storm · eligible case 05",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:20D",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-06",
+      "label": "Next storm · eligible case 06",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:21C",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-07",
+      "label": "Next storm · eligible case 07",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:23D",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-08",
+      "label": "Next storm · eligible case 08",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:24F",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-09",
+      "label": "Next storm · eligible case 09",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:25E",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-10",
+      "label": "Next storm · eligible case 10",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:26C",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-11",
+      "label": "Next storm · eligible case 11",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:28F",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-12",
+      "label": "Next storm · eligible case 12",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:30A",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-13",
+      "label": "Next storm · eligible case 13",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:3E",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-14",
+      "label": "Next storm · eligible case 14",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:6B",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-15",
+      "label": "Next storm · eligible case 15",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:7D",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-16",
+      "label": "Next storm · eligible case 16",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS106@2025-01-26:8C",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-17",
+      "label": "Next storm · eligible case 17",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS110@2025-01-26:16B",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-18",
+      "label": "Next storm · eligible case 18",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS110@2025-01-26:16F",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-19",
+      "label": "Next storm · eligible case 19",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS110@2025-01-26:20D",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-20",
+      "label": "Next storm · eligible case 20",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS110@2025-01-26:25B",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-21",
+      "label": "Next storm · eligible case 21",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS110@2025-01-26:25E",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-22",
+      "label": "Next storm · eligible case 22",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS110@2025-01-26:27B",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-23",
+      "label": "Next storm · eligible case 23",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS110@2025-01-26:27F",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-24",
+      "label": "Next storm · eligible case 24",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS110@2025-01-26:28F",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-25",
+      "label": "Next storm · eligible case 25",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS110@2025-01-26:2C",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-26",
+      "label": "Next storm · eligible case 26",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS110@2025-01-26:3E",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-27",
+      "label": "Next storm · eligible case 27",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS110@2025-01-26:6B",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-28",
+      "label": "Next storm · eligible case 28",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS110@2025-01-26:7B",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-29",
+      "label": "Next storm · eligible case 29",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS110@2025-01-26:8F",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-30",
+      "label": "Next storm · eligible case 30",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [
+          "R-CL-1@1"
+        ],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 25000,
+        "compensation_cents": 25000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS110@2025-01-26:9C",
+      "expected": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "expected_match": true,
+      "expected_result": {
+        "cash_cents": 25000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "intended",
+      "id": "future-31",
+      "label": "Next storm · eligible case 31",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 60000,
+        "compensation_cents": 60000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 60000,
+        "compensation_cents": 60000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": false,
+      "coupon_id": "NS30@2025-01-25:23F",
+      "expected": "Preserve the existing result; this ruling gives no new authority here.",
+      "expected_match": false,
+      "expected_result": {
+        "cash_cents": 60000,
+        "status": "needs_ruling",
+        "voucher_offset_cents": 0
+      },
+      "group": "protected",
+      "id": "non-eu-boundary",
+      "label": "Non-EU departure · needs its own ruling",
+      "passed": true,
+      "source": "golden demo fixture"
+    },
+    {
+      "after": {
+        "cash_cents": 30000,
+        "compensation_cents": 60000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "owed",
+        "voucher_offset_cents": 30000
+      },
+      "before": {
+        "cash_cents": 30000,
+        "compensation_cents": 60000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "owed",
+        "voucher_offset_cents": 30000
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS31@2025-01-24:14C",
+      "expected": "Do not match signed vouchers; preserve €300 signed offset and €300 residual cash. The engine already protects the amount even if this draft matches too broadly.",
+      "expected_match": false,
+      "expected_result": {
+        "cash_cents": 30000,
+        "status": "owed",
+        "voucher_offset_cents": 30000
+      },
+      "group": "protected",
+      "id": "signed-consent",
+      "label": "Signed acceptance · preserve the €300 offset",
+      "passed": false,
+      "source": "synthetic counterexample"
+    },
+    {
+      "after": {
+        "cash_cents": 60000,
+        "compensation_cents": 60000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 60000,
+        "compensation_cents": 60000,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": false,
+      "coupon_id": "NS31@2025-01-24:14C",
+      "expected": "Preserve the existing result; this ruling gives no new authority here.",
+      "expected_match": false,
+      "expected_result": {
+        "cash_cents": 60000,
+        "status": "owed",
+        "voucher_offset_cents": 0
+      },
+      "group": "protected",
+      "id": "no-voucher",
+      "label": "No compensation voucher · unchanged",
+      "passed": true,
+      "source": "synthetic counterexample"
+    },
+    {
+      "after": {
+        "cash_cents": 0,
+        "compensation_cents": 0,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "staff_ticket",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 0,
+        "compensation_cents": 0,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "staff_ticket",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS31@2025-01-24:14C",
+      "expected": "Preserve the existing result; this ruling gives no new authority here.",
+      "expected_match": null,
+      "expected_result": {
+        "cash_cents": 0,
+        "status": "staff_ticket",
+        "voucher_offset_cents": 0
+      },
+      "group": "protected",
+      "id": "staff-fare",
+      "label": "Staff fare · retain the existing exclusion",
+      "passed": true,
+      "source": "synthetic counterexample"
+    },
+    {
+      "after": {
+        "cash_cents": 0,
+        "compensation_cents": 0,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "exempt_notice",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 0,
+        "compensation_cents": 0,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "exempt_notice",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": true,
+      "coupon_id": "NS31@2025-01-24:14C",
+      "expected": "Preserve the existing result; this ruling gives no new authority here.",
+      "expected_match": null,
+      "expected_result": {
+        "cash_cents": 0,
+        "status": "exempt_notice",
+        "voucher_offset_cents": 0
+      },
+      "group": "protected",
+      "id": "early-notice",
+      "label": "15 days notice · retain the existing exemption",
+      "passed": true,
+      "source": "synthetic counterexample"
+    },
+    {
+      "after": {
+        "cash_cents": 0,
+        "compensation_cents": 0,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "no_compensation",
+        "voucher_offset_cents": 0
+      },
+      "before": {
+        "cash_cents": 0,
+        "compensation_cents": 0,
+        "refund_due_cents": 0,
+        "rules_applied": [],
+        "status": "no_compensation",
+        "voucher_offset_cents": 0
+      },
+      "candidate_matches": false,
+      "coupon_id": "NS40@2025-01-23:1A",
+      "expected": "Preserve the existing result; this ruling gives no new authority here.",
+      "expected_match": null,
+      "expected_result": {
+        "cash_cents": 0,
+        "status": "no_compensation",
+        "voucher_offset_cents": 0
+      },
+      "group": "protected",
+      "id": "weather",
+      "label": "Weather cancellation · unchanged",
+      "passed": true,
+      "source": "golden demo fixture"
+    }
+  ],
+  "checks": [
+    {
+      "detail": "Existing StormCheck proposal gate.",
+      "group": "existing_engine",
+      "id": "engine:compiles",
+      "label": "Compiles",
+      "passed": true
+    },
+    {
+      "detail": "Existing StormCheck proposal gate.",
+      "group": "existing_engine",
+      "id": "engine:reproduces_case",
+      "label": "Reproduces case",
+      "passed": true
+    },
+    {
+      "detail": "Existing StormCheck proposal gate.",
+      "group": "existing_engine",
+      "id": "engine:no_hard_control",
+      "label": "No hard control",
+      "passed": true
+    },
+    {
+      "detail": "Existing StormCheck proposal gate.",
+      "group": "existing_engine",
+      "id": "engine:grounded",
+      "label": "Grounded",
+      "passed": true
+    },
+    {
+      "detail": "Existing StormCheck proposal gate.",
+      "group": "existing_engine",
+      "id": "engine:author_has_authority",
+      "label": "Author has authority",
+      "passed": true
+    },
+    {
+      "detail": "Existing StormCheck proposal gate.",
+      "group": "existing_engine",
+      "id": "engine:no_conflict",
+      "label": "No conflict",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €600 cash, no offset.",
+      "group": "intended",
+      "id": "case:original-ruling",
+      "label": "Original ruling · unsigned voucher",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-01",
+      "label": "Next storm · eligible case 01",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-02",
+      "label": "Next storm · eligible case 02",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-03",
+      "label": "Next storm · eligible case 03",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-04",
+      "label": "Next storm · eligible case 04",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-05",
+      "label": "Next storm · eligible case 05",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-06",
+      "label": "Next storm · eligible case 06",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-07",
+      "label": "Next storm · eligible case 07",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-08",
+      "label": "Next storm · eligible case 08",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-09",
+      "label": "Next storm · eligible case 09",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-10",
+      "label": "Next storm · eligible case 10",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-11",
+      "label": "Next storm · eligible case 11",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-12",
+      "label": "Next storm · eligible case 12",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-13",
+      "label": "Next storm · eligible case 13",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-14",
+      "label": "Next storm · eligible case 14",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-15",
+      "label": "Next storm · eligible case 15",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-16",
+      "label": "Next storm · eligible case 16",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-17",
+      "label": "Next storm · eligible case 17",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-18",
+      "label": "Next storm · eligible case 18",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-19",
+      "label": "Next storm · eligible case 19",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-20",
+      "label": "Next storm · eligible case 20",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-21",
+      "label": "Next storm · eligible case 21",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-22",
+      "label": "Next storm · eligible case 22",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-23",
+      "label": "Next storm · eligible case 23",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-24",
+      "label": "Next storm · eligible case 24",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-25",
+      "label": "Next storm · eligible case 25",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-26",
+      "label": "Next storm · eligible case 26",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-27",
+      "label": "Next storm · eligible case 27",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-28",
+      "label": "Next storm · eligible case 28",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-29",
+      "label": "Next storm · eligible case 29",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-30",
+      "label": "Next storm · eligible case 30",
+      "passed": true
+    },
+    {
+      "detail": "Resolve this unsigned EU-departure voucher; €250 cash, no offset.",
+      "group": "intended",
+      "id": "case:future-31",
+      "label": "Next storm · eligible case 31",
+      "passed": true
+    },
+    {
+      "detail": "Preserve the existing result; this ruling gives no new authority here.",
+      "group": "protected",
+      "id": "case:non-eu-boundary",
+      "label": "Non-EU departure · needs its own ruling",
+      "passed": true
+    },
+    {
+      "detail": "Do not match signed vouchers; preserve €300 signed offset and €300 residual cash. The engine already protects the amount even if this draft matches too broadly.",
+      "group": "protected",
+      "id": "case:signed-consent",
+      "label": "Signed acceptance · preserve the €300 offset",
+      "passed": false
+    },
+    {
+      "detail": "Preserve the existing result; this ruling gives no new authority here.",
+      "group": "protected",
+      "id": "case:no-voucher",
+      "label": "No compensation voucher · unchanged",
+      "passed": true
+    },
+    {
+      "detail": "Preserve the existing result; this ruling gives no new authority here.",
+      "group": "protected",
+      "id": "case:staff-fare",
+      "label": "Staff fare · retain the existing exclusion",
+      "passed": true
+    },
+    {
+      "detail": "Preserve the existing result; this ruling gives no new authority here.",
+      "group": "protected",
+      "id": "case:early-notice",
+      "label": "15 days notice · retain the existing exemption",
+      "passed": true
+    },
+    {
+      "detail": "Preserve the existing result; this ruling gives no new authority here.",
+      "group": "protected",
+      "id": "case:weather",
+      "label": "Weather cancellation · unchanged",
+      "passed": true
+    },
+    {
+      "detail": "Q1 changes voucher handling, not the €82,146 whole-storm estimate.",
+      "group": "accounting",
+      "id": "accounting:liability",
+      "label": "Liability estimate unchanged",
+      "passed": true
+    },
+    {
+      "detail": "Run the same accounting work twice in the scratch ledger.",
+      "group": "accounting",
+      "id": "accounting:retry",
+      "label": "Retry creates no duplicate entries",
+      "passed": true
+    },
+    {
+      "detail": "Sum of debits equals sum of credits for each entry.",
+      "group": "accounting",
+      "id": "accounting:balance",
+      "label": "Every journal entry balances",
+      "passed": true
+    },
+    {
+      "detail": "The real Books approval gate rejects the agent session.",
+      "group": "accounting",
+      "id": "accounting:approval",
+      "label": "Agent cannot approve a journal",
+      "passed": true
+    },
+    {
+      "detail": "All lab-created proposals remain unapproved.",
+      "group": "accounting",
+      "id": "accounting:unapproved",
+      "label": "No journal approval from testing",
+      "passed": true
+    },
+    {
+      "detail": "Read-only source fixture.",
+      "group": "isolation",
+      "id": "isolation:fixture",
+      "label": "Golden inputs unchanged",
+      "passed": true
+    },
+    {
+      "detail": "No confirmation event is written, even to the temporary rule store.",
+      "group": "isolation",
+      "id": "isolation:proposal",
+      "label": "Candidate remains a proposal",
+      "passed": true
+    }
+  ],
+  "existing_gate_problems": [],
+  "fingerprints": {
+    "candidate_sha256": "d4bd001174718aa89dbf12eb31d4ab1a90b84dc845e68bf90fad45a62c801b70",
+    "curves_sha256": "b6213a18728648d7933c2a8dab42a01677a6de594a6b086cfe1cc4f6671cc748",
+    "implementation_sha256": "bb1c9c6ceae892a20a43933f9249229b653e8f1cd9ab135b4c2c2dbb3658cd49",
+    "report_sha256": "803886cfb32f613256fbe04618487d01e1c4aa5124ef6608e3b22835ed46c57c",
+    "test_pack_sha256": "bc6cc40db9633f1c99d13ff7a773fa4bf4cf764934f82299c09cb1bb661d0c47",
+    "world_sha256": "5fcc4bb2c32a1e2a4b5a59dc452377d29d9e91e2c1c76e7e10f8a90bc64da27d"
+  },
+  "isolation": {
+    "activated_rules": 0,
+    "fixture_unchanged": true,
+    "model_calls": 0,
+    "persistent_writes": 0,
+    "storage": ":memory:",
+    "stored_candidate_status": "proposed"
+  },
+  "label": "StormCheck simulated demo · regression evidence, not approval or certification",
+  "limitations": [
+    "Supports the Q1 unsigned-voucher rule family only.",
+    "Fixed simulated cases cannot establish correctness on unseen production data.",
+    "Passing only produces evidence for a human reviewer; it never confirms a rule."
+  ],
+  "preset": "missing_guard",
+  "ruling": {
+    "at": "2025-01-25T09:30:00Z",
+    "author": "claims_lead:lab-reviewer",
+    "author_role": "claims_lead",
+    "decision": "Pay €600 cash; the voucher stays as goodwill",
+    "explanation": "No signed acceptance, no offset: pay €600 cash; the voucher stays as goodwill.",
+    "id": "RUL-Q-1-1",
+    "kind": "answer",
+    "question_id": "Q-1"
+  },
+  "scenario": {
+    "description": "Test mutation: remove the unsigned-consent condition from the draft.",
+    "title": "Drop the consent condition"
+  },
+  "schema": "stormcheck-rule-lab-v1",
+  "simulation_ran": true,
+  "submitted_author_role": "claims_lead",
+  "summary": {
+    "failed_checks": 1,
+    "intended_cases": 32,
+    "passed_checks": 50,
+    "protected_cases": 6,
+    "total_checks": 51
+  },
+  "verdict": "blocked"
+}
