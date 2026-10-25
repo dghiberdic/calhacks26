@@ -68,6 +68,36 @@ def test_the_mark_runs_the_blackout_once_into_the_queue_books_and_trace(golden, 
     assert rt.world is rt.base_world and RUN not in {s["id"] for s in golden.get("/api/storms").json()}
 
 
+def test_legal_rules_once_and_the_outage_window_settles(golden):
+    """The demo: Legal answers the one blackout question; the rule settles every in-window flight and cites it,
+    the two cancelled after power returned stay owed, and care is booked in the blackout cohort."""
+    from world.events import EVENT_WINDOW_FLIGHTS, POST_RESTORATION_FLIGHTS
+    blackout(golden)
+    legal = {"Authorization": "Bearer " + golden.post("/api/session", json={"role": "legal", "name": "Aoife"}
+                                                     ).json()["token"]}
+    qid = f"Q-{EVENT}:external_event_window"
+    q = next((q for q in golden.get("/api/questions", headers=legal).json() if q["id"] == qid), None)
+    assert q is not None and q["routed_to"] == "legal" and q["status"] in ("open", "reminded")
+    r = golden.post(f"/api/questions/{qid}/answer", headers=legal,
+                    json={"decision": "Extraordinary inside the outage window", "explanation": "C-12/11 McDonagh"})
+    assert r.status_code == 200, r.text
+    rule = r.json()["proposal"]["rule"]
+    assert rule["kind"] == "cause" and rule["action"] == "set_extraordinary" and rule["authority_required"] == "legal"
+    c = golden.post(f"/api/proposals/{rule['id']}/confirm", headers=legal)
+    assert c.status_code == 200, c.text
+    ref = f"{rule['id']}@{rule['version']}"
+    for fid in EVENT_WINDOW_FLIGHTS:
+        d = golden.get(f"/api/flights/{fid}").json()["decision"]
+        assert d["extraordinary"] == "extraordinary" and ref in d["rules_applied"], (fid, d["cause"], d["outcome"])
+    for fid in POST_RESTORATION_FLIGHTS:
+        ff = golden.get(f"/api/flights/{fid}").json()
+        assert ff["decision"]["extraordinary"] == "not_extraordinary", fid
+        assert any(e["status"] == "owed" and e["compensation_cents"] > 0 for e in ff["sample_entitlements"]), fid
+    care = [j for j in golden.get("/api/books/journal?period=2025-04").json() if j["kind"] == "care_accrual"]
+    assert care and all(RUN in j["memo"] for j in care)
+    golden.post("/api/reset")
+
+
 def test_blackout_commits_replay_identical(golden, golden_app):
     spec = importlib.util.spec_from_file_location("verify", ROOT / "scripts" / "verify.py")
     verify = importlib.util.module_from_spec(spec)
