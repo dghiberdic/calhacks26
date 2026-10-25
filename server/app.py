@@ -21,7 +21,7 @@ from contracts import stub_app as stub
 from contracts.models import FlightFile, Health, OkResponse, StormRun, StormSummary
 from contracts.stub_app import ERRORS, ApiError, envelope
 
-from . import routes, routes_live
+from . import routes, routes_insights, routes_live
 from .config import Settings
 from .runtime import Runtime
 from .store import TraceWriteError
@@ -138,6 +138,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     routes.install(app, rt)                       # D10b: the rest of the API on the real pipeline
     routes_live.install(app, rt)                  # D10c: SSE, desk, inject, challenge, clock
+    routes_insights.install(app, rt)              # pitch insights: effort and learning (computed views)
     app.state.stub_routes = add_stub_fallbacks(app)
     app.state.web = install_web(app, settings.web_dist)
     _fix_openapi(app)

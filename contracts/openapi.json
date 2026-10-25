@@ -781,6 +781,77 @@
         }
       }
     },
+    "/api/runs/{run_id}/effort": {
+      "get": {
+        "summary": "Run Effort",
+        "operationId": "run_effort_api_runs__run_id__effort_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EffortEstimate"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad input (plain message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/learning": {
+      "get": {
+        "summary": "Learning",
+        "operationId": "learning_api_learning_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LearningStep"
+                  },
+                  "type": "array",
+                  "title": "Response Learning Api Learning Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/session": {
       "post": {
         "summary": "Create Session",
@@ -2347,6 +2418,133 @@
           "numbers_verified"
         ],
         "title": "Draft"
+      },
+      "EffortEstimate": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "inputs": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Inputs"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/EffortLine"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "manual_hours": {
+            "type": "number",
+            "title": "Manual Hours"
+          },
+          "with_stormcheck_hours": {
+            "type": "number",
+            "title": "With Stormcheck Hours"
+          },
+          "hours_saved": {
+            "type": "number",
+            "title": "Hours Saved"
+          },
+          "manual_cost_cents": {
+            "type": "integer",
+            "title": "Manual Cost Cents"
+          },
+          "with_stormcheck_cost_cents": {
+            "type": "integer",
+            "title": "With Stormcheck Cost Cents"
+          },
+          "cost_saved_cents": {
+            "type": "integer",
+            "title": "Cost Saved Cents"
+          },
+          "errors_caught": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Errors Caught"
+          },
+          "assumptions_note": {
+            "type": "string",
+            "title": "Assumptions Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "name",
+          "inputs",
+          "lines",
+          "manual_hours",
+          "with_stormcheck_hours",
+          "hours_saved",
+          "manual_cost_cents",
+          "with_stormcheck_cost_cents",
+          "cost_saved_cents",
+          "errors_caught",
+          "assumptions_note"
+        ],
+        "title": "EffortEstimate"
+      },
+      "EffortLine": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "basis": {
+            "type": "string",
+            "title": "Basis"
+          },
+          "manual_hours": {
+            "type": "number",
+            "title": "Manual Hours"
+          },
+          "with_stormcheck_hours": {
+            "type": "number",
+            "title": "With Stormcheck Hours"
+          },
+          "rate_eur_per_hour": {
+            "type": "integer",
+            "title": "Rate Eur Per Hour"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task",
+          "role",
+          "basis",
+          "manual_hours",
+          "with_stormcheck_hours",
+          "rate_eur_per_hour"
+        ],
+        "title": "EffortLine"
       },
       "Entitlement": {
         "properties": {
@@ -4204,6 +4402,61 @@
         ],
         "title": "LearnedItem"
       },
+      "LearningStep": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "known_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Known At"
+          },
+          "questions_asked": {
+            "type": "integer",
+            "title": "Questions Asked"
+          },
+          "cases_settled_by_reused_rules": {
+            "type": "integer",
+            "title": "Cases Settled By Reused Rules"
+          },
+          "reused": {
+            "items": {
+              "$ref": "#/components/schemas/RuleReuse"
+            },
+            "type": "array",
+            "title": "Reused"
+          },
+          "new_rules": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "New Rules"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "name",
+          "known_at",
+          "questions_asked",
+          "cases_settled_by_reused_rules",
+          "reused",
+          "new_rules",
+          "note"
+        ],
+        "title": "LearningStep"
+      },
       "LockResponse": {
         "properties": {
           "locked": {
@@ -4965,6 +5218,34 @@
           "would_flip"
         ],
         "title": "RuleProposal"
+      },
+      "RuleReuse": {
+        "properties": {
+          "rule_ref": {
+            "type": "string",
+            "title": "Rule Ref"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "learned_from": {
+            "type": "string",
+            "title": "Learned From"
+          },
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule_ref",
+          "title",
+          "learned_from",
+          "cases"
+        ],
+        "title": "RuleReuse"
       },
       "Ruling": {
         "properties": {

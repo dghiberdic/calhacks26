@@ -602,6 +602,40 @@ class ClockResponse(BaseModel):
 class OkResponse(BaseModel):                # POST /reset
     ok: bool
 
+# ---------- pitch insights (additive, insights-v1): computed on read from a run's real data, never stored ----------
+class EffortLine(BaseModel):                # one task of a storm run, by hand vs with StormCheck
+    task: str                               # "Find what really caused each cancellation"
+    role: str                               # "ops analyst" | "claims handler" | "in-house counsel" | "revenue accountant"
+    basis: str                              # plain words: "27 flights × 1.5 h"
+    manual_hours: float
+    with_stormcheck_hours: float
+    rate_eur_per_hour: int                  # loaded cost
+    source: str | None = None               # citation for the assumption, if any
+
+class EffortEstimate(BaseModel):            # GET /runs/{run_id}/effort
+    run_id: str
+    name: str                               # "Storm Éowyn · 24 Jan 2025"
+    inputs: dict[str, int]                  # cancelled_flights, passengers, expected_claims, questions, refunds, cohorts, month_ends
+    lines: list[EffortLine]
+    manual_hours: float; with_stormcheck_hours: float; hours_saved: float          # totals rounded to the nearest 5 h
+    manual_cost_cents: Cents; with_stormcheck_cost_cents: Cents; cost_saved_cents: Cents   # rounded to the nearest €100
+    errors_caught: list[dict[str, Any]]     # [{label, amount_cents (int | None), detail}] from the run, never invented
+    assumptions_note: str                   # "Estimate from the assumptions below; not measured at a real airline."
+
+class RuleReuse(BaseModel):
+    rule_ref: str                           # "R-CL-1@1"
+    title: str                              # "No signed acceptance, no offset"
+    learned_from: str                       # "Claims Lead ruling on Storm Éowyn (Q-1)" | "18 months of history (41 of 42)"
+    cases: int                              # cases this rule settled on this run, with no question asked
+
+class LearningStep(BaseModel):              # GET /learning item: one storm or event run the clock has reached
+    run_id: str; name: str; known_at: UTCDateTime
+    questions_asked: int                    # new questions this run raised
+    cases_settled_by_reused_rules: int
+    reused: list[RuleReuse]
+    new_rules: list[str]                    # rule refs first confirmed on this run
+    note: str                               # one plain sentence or two
+
 class ErrorBody(BaseModel):
     code: Literal["sod_violation", "forbidden", "not_found", "validation", "upstream",
                   "no_metar", "future_date", "unknown_airport"]
