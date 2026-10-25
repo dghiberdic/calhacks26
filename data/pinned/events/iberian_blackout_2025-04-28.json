@@ -1,6 +1,6 @@
 {
   "version": "blackout-event-v1",
-  "note": "Pinned for the StormCheck blackout scenario. Source texts are short verbatim quotes from the pages at `uri` (retrieved 2026-10-24). Window starts are ENTSO-E's 12:33 CEST (10:33Z). Every window end is an estimate and says so in its note. ENTSO-E's 9 May release labels its times 'CET' but its 12:33:24 matches the 12:33 CEST onset, so those are read as local (UTC+2) times. received_at is the publication date; the hour is approximate where the page gives none.",
+  "note": "Pinned for the StormCheck blackout scenario. Source texts are short verbatim quotes from the pages at `uri` (retrieved 2026-10-24). Window starts are ENTSO-E's 12:33 CEST (10:33Z). Every window end is an estimate and says so in its note. ENTSO-E's 9 May release labels its times 'CET' but its 12:33:24 matches the 12:33 CEST onset, so those are read as local (UTC+2) times. received_at is the publication date; the hour is approximate where the page gives none. The primary source is ANA's same-day statement (28 Apr 12:55 Lisbon = 11:55Z, via Lusa), known before the 29 Apr 06:00Z run; ENTSO-E, Red Eléctrica, the IAA and the 29 Apr-1 May reports corroborate it later.",
   "event": {
     "id": "EVT-IBERIA-BLACKOUT@2025-04-28",
     "kind": "grid_outage",
@@ -26,6 +26,7 @@
       }
     ],
     "source_ids": [
+      "SRC-EVT-ANA-GENERATORS",
       "SRC-EVT-ENTSOE-BLACKOUT",
       "SRC-EVT-ENTSOE-RESTORATION",
       "SRC-EVT-REE-RESTORATION",
@@ -38,6 +39,20 @@
     ]
   },
   "sources": [
+    {
+      "id": "SRC-EVT-ANA-GENERATORS",
+      "kind": "external_event",
+      "title": "ANA Aeroportos de Portugal: emergency generators on, Lisbon operating with limitations",
+      "text": "ANA Aeroportos de Portugal · statement to Lusa, 28 April 2025 12:55 (Lisbon)\n\"Os aeroportos da ANA acionaram os geradores de emergência o que para já possibilita a manutenção do essencial da operação aeroportuária nos aeroportos do Porto e de Faro. Em Lisboa a operação está a decorrer mas com limitações.\"\nhttps://www.record.pt/fora-de-campo/detalhe/apagao-ana-aciona-geradores-de-emergencia-aeroporto-de-lisboa-com-mais-limitacoes\nLusa (English): \"ANA's airports have activated the emergency generators, which, for the time being, allow the essential airport operations to be maintained at Porto and Faro airports. In Lisbon, operations are ongoing but with limitations.\"\nhttps://aman-alliance.org/Home/ContentDetail/89158\n",
+      "sha256": "b4f3365900daf8d8f74182d9aae603128c287a1a262f00c65e614ad84c315afb",
+      "received_at": "2025-04-28T11:55:00Z",
+      "trust_tier": 1,
+      "acl_tags": [
+        "ops",
+        "legal"
+      ],
+      "uri": "https://www.record.pt/fora-de-campo/detalhe/apagao-ana-aciona-geradores-de-emergencia-aeroporto-de-lisboa-com-mais-limitacoes"
+    },
     {
       "id": "SRC-EVT-ENTSOE-BLACKOUT",
       "kind": "external_event",

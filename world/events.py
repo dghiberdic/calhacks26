@@ -4,8 +4,10 @@
     w = blackout_world()          # World slice: World.events + Northstar DUB<->LIS/MAD/BCN + logs, pax, care, METAR
 
 **The event** is pinned in `data/pinned/events/iberian_blackout_2025-04-28.json`: an `ExternalEvent`
-(kind `grid_outage`) with one outage window per airport, and its `Source` texts (short verbatim quotes with URLs;
-tier 1 for the grid operators and the Irish regulator, tier 2 for press reports of airport-operator statements).
+(kind `grid_outage`) with one outage window per airport, and its `Source` texts (short verbatim quotes with URLs).
+The primary source is ANA's same-day statement (28 Apr 12:55 Lisbon = 11:55Z, via Lusa: emergency generators on,
+Lisbon operating with limitations), tier 1 and known before the run. ENTSO-E (9 May), Red Eléctrica and the IAA
+(tier 1) and press reports of ANA, Aena and daa statements (tier 2) corroborate it, some only after the run.
 Every window starts at ENTSO-E's 12:33 CEST (10:33Z). Every window end is an estimate and its note says so.
 
 **The weather** is the real IEM METAR for LPPT, LEMD, LEBL (28-29 Apr, pinned) and EIDW: calm, so there is no storm
@@ -23,8 +25,8 @@ Outcomes are fixed by `PLAN` (deterministic; the seed only drives passengers, cl
 - 6 operated, including the afternoon Barcelona rotation after power came back ("everyone else flew").
 - Care (hotel, meals, transport) for every cancelled flight's passengers, owed either way (`world.pax`).
 
-The run is Dublin's day (`RUN_ID` = "EIDW@2025-04-28", every DUB<->LIS/MAD/BCN sector) as of `KNOWN_AT` (the
-morning after ENTSO-E published the restoration timeline). `meta.storms` also lists each Iberian station's day.
+The run is Dublin's day (`RUN_ID` = "EIDW@2025-04-28", every DUB<->LIS/MAD/BCN sector) as of `KNOWN_AT`
+(2025-04-29T06:00Z, the morning after: the demo's clock mark). `meta.storms` also lists each Iberian station's day.
 Under 2 s of CPU; nothing here touches the network.
 """
 from __future__ import annotations
@@ -59,7 +61,8 @@ EVENT_ID = "EVT-IBERIA-BLACKOUT@2025-04-28"
 DAY = date(2025, 4, 28)
 STATIONS = ("LPPT", "LEMD", "LEBL")
 RUN_ID = f"{N.HUB_ICAO}@{DAY.isoformat()}"
-KNOWN_AT = datetime(2025, 5, 10, 6, 0, tzinfo=UTC)
+KNOWN_AT = datetime(2025, 4, 29, 6, 0, tzinfo=UTC)          # the morning after (demo clock mark, desk convention)
+PRIMARY_SOURCE = "SRC-EVT-ANA-GENERATORS"                     # same-day operator statement, received before KNOWN_AT
 NAME = "Iberian blackout · 28 Apr 2025"
 VERSION = "blackout@1"
 CHAPTER_LABEL = "Grid outage (Iberian blackout)"
