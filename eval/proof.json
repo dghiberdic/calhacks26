@@ -1,96 +1,360 @@
 {
   "baseline": {
-    "cause_accuracy": [],
-    "hash_identical": null,
-    "liability_eur": [],
+    "cause_accuracy": [
+      0.7777777777777778,
+      0.7777777777777778,
+      1.0
+    ],
+    "completed_requests": 9,
+    "effort": "medium",
+    "hash_identical": false,
+    "liability_eur": [
+      34650.0,
+      82146.0,
+      34650.0
+    ],
     "model": "claude-opus-5-5",
-    "runs": 0,
-    "status": "not_run_missing_credentials"
+    "phase": "initial estimate before human rulings",
+    "runs": 3,
+    "status": "complete",
+    "storms": {
+      "2025-01-24": {
+        "cause_accuracy": [
+          0.7777777777777778,
+          0.7777777777777778,
+          1.0
+        ],
+        "flights": 27,
+        "hash_identical": false,
+        "hashes": [
+          "5aa5ba371ff492e1d74e7d73532b111dee1769abc099d3e7cf5069f6dd3165ed",
+          "d3d29e13256339207ab68c554fe2a1efcea097e7c4cb0e967f932bf4dcbc187b",
+          "c9ad1d40c4769dc561f924e7582d5e5825f4598da8502354012b7cc666dd9755"
+        ],
+        "key_ultimate_expected_eur": 34650.0,
+        "liability_eur": [
+          34650.0,
+          82146.0,
+          34650.0
+        ],
+        "stormcheck_accuracy": 1.0,
+        "stormcheck_preview_eur": 82146.0
+      },
+      "2025-01-26": {
+        "cause_accuracy": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "flights": 4,
+        "hash_identical": true,
+        "hashes": [
+          "b5eb093bc3fc9b93fc9a77967c2a5e5d1409da19e7143e25c9a160c1c1345842",
+          "b5eb093bc3fc9b93fc9a77967c2a5e5d1409da19e7143e25c9a160c1c1345842",
+          "b5eb093bc3fc9b93fc9a77967c2a5e5d1409da19e7143e25c9a160c1c1345842"
+        ],
+        "key_ultimate_expected_eur": 54180.0,
+        "liability_eur": [
+          74052.0,
+          74052.0,
+          74052.0
+        ],
+        "stormcheck_accuracy": 1.0,
+        "stormcheck_preview_eur": 54180.0
+      },
+      "2025-02-26": {
+        "cause_accuracy": [
+          0.21428571428571427,
+          0.21428571428571427,
+          0.2857142857142857
+        ],
+        "flights": 14,
+        "hash_identical": false,
+        "hashes": [
+          "dafd21912657e9e84306d9739415df4ef503eb49ff765eea6ca9fff5d25086c2",
+          "dafd21912657e9e84306d9739415df4ef503eb49ff765eea6ca9fff5d25086c2",
+          "3793afd774137099644ef8ec0ae1843a915c79da861a0457dbe3ca42095f9c14"
+        ],
+        "key_ultimate_expected_eur": 94715.5,
+        "liability_eur": [
+          172202.0,
+          172202.0,
+          392500.0
+        ],
+        "stormcheck_accuracy": 0.5,
+        "stormcheck_preview_eur": 92014.0
+      }
+    }
   },
   "calibration": {
     "cause": [
       {
-        "accuracy": 0.0,
-        "hi": 0.2,
+        "accuracy": 0.212121,
+        "hi": 0.6,
         "lo": 0.0,
-        "n": 34.0,
-        "wilson_hi": 0.101515,
+        "mean_score": 0.078767,
+        "n": 33.0,
+        "wilson_hi": 0.377516,
+        "wilson_lo": 0.10676
+      },
+      {
+        "accuracy": 1.0,
+        "hi": 0.75,
+        "lo": 0.6,
+        "mean_score": 0.712133,
+        "n": 3.0,
+        "wilson_hi": 1.0,
+        "wilson_lo": 0.438503
+      },
+      {
+        "accuracy": 0.5,
+        "hi": 0.9,
+        "lo": 0.75,
+        "mean_score": 0.845975,
+        "n": 16.0,
+        "wilson_hi": 0.720004,
+        "wilson_lo": 0.279996
+      },
+      {
+        "accuracy": 0.928571,
+        "hi": 0.97,
+        "lo": 0.9,
+        "mean_score": 0.911393,
+        "n": 14.0,
+        "wilson_hi": 0.987278,
+        "wilson_lo": 0.685313
+      },
+      {
+        "accuracy": 1.0,
+        "hi": 1.0,
+        "lo": 0.97,
+        "mean_score": 0.988693,
+        "n": 29.0,
+        "wilson_hi": 1.0,
+        "wilson_lo": 0.88303
+      }
+    ],
+    "claim_validity": [
+      {
+        "accuracy": 0.749482,
+        "hi": 0.6,
+        "lo": 0.0,
+        "mean_score": 0.375777,
+        "n": 966.0,
+        "wilson_hi": 0.775783,
+        "wilson_lo": 0.721206
+      },
+      {
+        "accuracy": 0.982759,
+        "hi": 0.75,
+        "lo": 0.6,
+        "mean_score": 0.689564,
+        "n": 174.0,
+        "wilson_hi": 0.994119,
+        "wilson_lo": 0.950542
+      },
+      {
+        "accuracy": 0.978417,
+        "hi": 0.9,
+        "lo": 0.75,
+        "mean_score": 0.829009,
+        "n": 139.0,
+        "wilson_hi": 0.992633,
+        "wilson_lo": 0.938469
+      },
+      {
+        "accuracy": 0.983051,
+        "hi": 0.97,
+        "lo": 0.9,
+        "mean_score": 0.944014,
+        "n": 118.0,
+        "wilson_hi": 0.99534,
+        "wilson_lo": 0.940303
+      },
+      {
+        "accuracy": 0.981818,
+        "hi": 1.0,
+        "lo": 0.97,
+        "mean_score": 0.98995,
+        "n": 165.0,
+        "wilson_hi": 0.993798,
+        "wilson_lo": 0.947914
+      }
+    ],
+    "release": [
+      {
+        "accuracy": 0.0,
+        "hi": 0.6,
+        "lo": 0.0,
+        "mean_score": 0.0,
+        "n": 0.0,
+        "wilson_hi": 1.0,
         "wilson_lo": 0.0
       },
       {
-        "accuracy": 0.714286,
-        "hi": 0.4,
-        "lo": 0.2,
-        "n": 7.0,
-        "wilson_hi": 0.917781,
-        "wilson_lo": 0.358934
-      },
-      {
-        "accuracy": 0.571429,
-        "hi": 0.6,
-        "lo": 0.4,
-        "n": 7.0,
-        "wilson_hi": 0.84178,
-        "wilson_lo": 0.250458
-      },
-      {
-        "accuracy": 0.428571,
-        "hi": 0.8,
+        "accuracy": 0.0,
+        "hi": 0.75,
         "lo": 0.6,
-        "n": 14.0,
-        "wilson_hi": 0.674094,
-        "wilson_lo": 0.213808
+        "mean_score": 0.0,
+        "n": 0.0,
+        "wilson_hi": 1.0,
+        "wilson_lo": 0.0
       },
       {
-        "accuracy": 0.939394,
+        "accuracy": 0.0,
+        "hi": 0.9,
+        "lo": 0.75,
+        "mean_score": 0.0,
+        "n": 0.0,
+        "wilson_hi": 1.0,
+        "wilson_lo": 0.0
+      },
+      {
+        "accuracy": 0.0,
+        "hi": 0.97,
+        "lo": 0.9,
+        "mean_score": 0.0,
+        "n": 0.0,
+        "wilson_hi": 1.0,
+        "wilson_lo": 0.0
+      },
+      {
+        "accuracy": 0.0,
         "hi": 1.0,
-        "lo": 0.8,
-        "n": 33.0,
-        "wilson_hi": 0.983219,
-        "wilson_lo": 0.803938
+        "lo": 0.97,
+        "mean_score": 0.0,
+        "n": 0.0,
+        "wilson_hi": 1.0,
+        "wilson_lo": 0.0
       }
     ],
-    "claim_validity": [],
-    "release": [],
-    "voucher": []
+    "voucher": [
+      {
+        "accuracy": 0.893617,
+        "hi": 0.6,
+        "lo": 0.0,
+        "mean_score": 0.2401,
+        "n": 47.0,
+        "wilson_hi": 0.953695,
+        "wilson_lo": 0.774057
+      },
+      {
+        "accuracy": 0.0,
+        "hi": 0.75,
+        "lo": 0.6,
+        "mean_score": 0.0,
+        "n": 0.0,
+        "wilson_hi": 1.0,
+        "wilson_lo": 0.0
+      },
+      {
+        "accuracy": 0.0,
+        "hi": 0.9,
+        "lo": 0.75,
+        "mean_score": 0.0,
+        "n": 0.0,
+        "wilson_hi": 1.0,
+        "wilson_lo": 0.0
+      },
+      {
+        "accuracy": 1.0,
+        "hi": 0.97,
+        "lo": 0.9,
+        "mean_score": 0.9011,
+        "n": 20.0,
+        "wilson_hi": 1.0,
+        "wilson_lo": 0.838875
+      },
+      {
+        "accuracy": 0.0,
+        "hi": 1.0,
+        "lo": 0.97,
+        "mean_score": 0.0,
+        "n": 0.0,
+        "wilson_hi": 1.0,
+        "wilson_lo": 0.0
+      }
+    ]
   },
   "coverage_at_90": {
-    "cause": 0.263158,
-    "claim_validity": 0.0,
+    "cause": 0.452632,
+    "claim_validity": 0.181178,
     "release": 0.0,
-    "voucher": 0.0
+    "voucher": 0.298507
   },
-  "false_holds": 40,
+  "false_holds": 35,
   "injections": {
-    "attempted": 2,
+    "approvals_by_injection": 0,
+    "as_expected": 8,
+    "attempted": 8,
+    "auto_flips": 0,
+    "blocked_or_escalated": 8,
+    "dropped_unverifiable": 0,
+    "errors": 0,
+    "facts_extracted": 27,
     "facts_only": 2,
+    "fuzz": 20,
+    "fuzz_auto_flips": 0,
+    "fuzz_errors": 0,
+    "recorded_reader_outputs": 8,
+    "regex_fallbacks": 0,
     "unsafe_extractions": 0
   },
   "label": "calibrated on synthetic labels; validates the pipeline, not the world",
   "liability_vs_actual": {
+    "ambiguous_auto_wrong": 2.0,
+    "ambiguous_by_design": 7.0,
+    "auto_correct": 47.0,
+    "auto_flights_pct": 57.894737,
+    "auto_precision": 0.854545,
+    "auto_wrong": 8.0,
     "curated_golden_cancellations": 31.0,
-    "flight_cause_and_extraordinary_accuracy": 0.4842105263157895,
+    "escalated_correct": 5.0,
+    "flight_cause_and_extraordinary_accuracy": 0.5789473684210527,
+    "generated_auto_correct": 19.0,
+    "generated_auto_flights_pct": 42.1875,
+    "generated_auto_precision": 0.703704,
+    "generated_auto_wrong": 8.0,
+    "generated_escalated_correct": 2.0,
+    "generated_held_other": 35.0,
+    "generated_right_or_correctly_escalated": 0.328125,
+    "held_other": 35.0,
+    "m1_actual_eur": 126450.0,
+    "m1_actual_over_expected": 0.7395,
+    "m1_expected_eur": 170997.17,
+    "m3_actual_eur": 239700.0,
+    "m3_actual_over_expected": 0.7478,
+    "m3_expected_eur": 320540.04,
+    "m6_actual_eur": 337325.0,
+    "m6_actual_over_expected": 0.7428,
+    "m6_expected_eur": 454135.4,
+    "miscodes_caught_auto": 4.0,
     "non_golden_cancellations": 64.0,
-    "non_golden_cause_accuracy": 0.28125,
-    "preview_eur": 826616.0,
+    "non_golden_cause_accuracy": 0.421875,
+    "preview_eur": 798038.0,
+    "refund_disagree_other_coupons": 1662.0,
+    "refund_drafted_unsigned_non_web_voucher_coupons": 288.0,
+    "refund_drafted_unsigned_non_web_voucher_eur": 75765.0,
+    "right_or_correctly_escalated": 0.547368,
     "ultimate_expected_eur": 578650.0,
     "valid_claims_through_2026_06_30_eur": 438575.0
   },
-  "miscodes_caught": 7,
-  "miscodes_eur_cents": 34160000,
+  "miscodes_caught": 9,
+  "miscodes_eur_cents": 43012500,
   "miscodes_total": 9,
   "n_passengers": 17593,
   "n_storms": 4,
   "out_of_scope_auto": 0,
   "real_vs_simulated": {
     "real": [
-      "pinned METAR observations",
-      "airport coordinates and timezones"
+      "pinned METAR observations (IEM)",
+      "airport coordinates and timezones",
+      "EU261 articles and CJEU case law as rules"
     ],
     "simulated": [
       "airline, flights, faults, passengers, claims and accounting estimates",
-      "explicit human rulings in control replay",
-      "Reader injection outputs are hand-written recordings, not live model results"
+      "explicit human rulings in the held-out and control replays",
+      "Reader outputs for the rehearsed injections are hand-written recordings, not live model results"
     ]
   },
   "repeat_questions": 0,
@@ -101,9 +365,9 @@
   "stormcheck_runs": {
     "hash_identical": true,
     "hashes": [
-      "4006d5c9a106053e99a5da5237e799af50d68db40a8ea16f20b87c96b33a4bd9",
-      "4006d5c9a106053e99a5da5237e799af50d68db40a8ea16f20b87c96b33a4bd9",
-      "4006d5c9a106053e99a5da5237e799af50d68db40a8ea16f20b87c96b33a4bd9"
+      "494359bdba349cc165a08b75644eb550054eff000d7fd10d9f7ee9c13f5b94cc",
+      "494359bdba349cc165a08b75644eb550054eff000d7fd10d9f7ee9c13f5b94cc",
+      "494359bdba349cc165a08b75644eb550054eff000d7fd10d9f7ee9c13f5b94cc"
     ],
     "liability_eur": [
       34650.0,
@@ -118,6 +382,59 @@
       82146.0
     ],
     "runs": 3,
+    "storms": {
+      "hash_identical": true,
+      "phase": "initial engine estimate before any ruling (the baseline's phase)",
+      "processes": "a fresh interpreter per run, PYTHONHASHSEED 1..3",
+      "runs": 3,
+      "storms": {
+        "2025-01-24": {
+          "cancelled": 27,
+          "hash_identical": true,
+          "hashes": [
+            "d1ba53078efda5c3383519b1aae68d90246d52667323c448ab2a3c646f5484e8",
+            "d1ba53078efda5c3383519b1aae68d90246d52667323c448ab2a3c646f5484e8",
+            "d1ba53078efda5c3383519b1aae68d90246d52667323c448ab2a3c646f5484e8"
+          ],
+          "liability_eur": [
+            82146.0,
+            82146.0,
+            82146.0
+          ],
+          "questions": 3
+        },
+        "2025-01-26": {
+          "cancelled": 4,
+          "hash_identical": true,
+          "hashes": [
+            "2c0823222e656c25113470f0ae9985e4697469de5c1fd606dcbfdd685e044ed6",
+            "2c0823222e656c25113470f0ae9985e4697469de5c1fd606dcbfdd685e044ed6",
+            "2c0823222e656c25113470f0ae9985e4697469de5c1fd606dcbfdd685e044ed6"
+          ],
+          "liability_eur": [
+            54180.0,
+            54180.0,
+            54180.0
+          ],
+          "questions": 2
+        },
+        "2025-02-26": {
+          "cancelled": 14,
+          "hash_identical": true,
+          "hashes": [
+            "c455c850c2cc8768a12321691863054726cb7863856ed09a26c310be521abc40",
+            "c455c850c2cc8768a12321691863054726cb7863856ed09a26c310be521abc40",
+            "c455c850c2cc8768a12321691863054726cb7863856ed09a26c310be521abc40"
+          ],
+          "liability_eur": [
+            92014.0,
+            92014.0,
+            92014.0
+          ],
+          "questions": 3
+        }
+      }
+    },
     "tail_kept_eur": [
       3600.0,
       3600.0,
@@ -125,5 +442,5 @@
     ],
     "unconfirmed_widen_applied": false
   },
-  "straight_through_pct": 28.016825
+  "straight_through_pct": 58.631274
 }

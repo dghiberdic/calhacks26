@@ -107,3 +107,14 @@ The exact cause-and-extraordinary accuracy compares the initial output to final 
      test fails, and the corrected rights notice lacks "That was wrong".
    - Personas: Q-1 and Q-3 chose options other than the scripted ones.
    - No test was changed to fit. No recorded file contains an API key (grep `sk-ant-`: 0 files).
+6. **Final regeneration (eval-v2)**, on main as of 21:01 PDT 24 Oct, after the engine's injected-source fix
+   (16fbf3d): a full `eval.run`, then `--from-cache` (canonical NUMBERS.md), then `--check` OK.
+   - Headline: 95 held-out cancelled flights. 47 auto-correct, 5 correct escalations, 35 conservative escalations,
+     8 auto-wrong. Auto-precision 85.5% (generated only 70.4%). Straight-through 58.63% of passengers. 7 ambiguous
+     by design (2 of them auto-wrong). Injections 8/8 as expected, 0 automatic flips.
+   - Plain Claude on Éowyn: 77.8% / 77.8% / 100% at €34,650 / €82,146 / €34,650, `hash_identical=false`. StormCheck:
+     100%, €82,146 ×3, same hash. The key's € there is €34,650, and StormCheck's initial estimate accrues the held
+     knock-ons until Legal rules. Herminia: plain Claude 75% ×3 at €74,052 ×3 (identical hash) against StormCheck's
+     100% at €54,180, which equals the key. 2025-02-26: plain Claude 21–29% at €172,202 / €172,202 / €392,500, against
+     StormCheck's 50% at €92,014 (key €94,716). On one storm out of three, plain Claude was as close to the key's €
+     as StormCheck, or closer. That is reported as is.
