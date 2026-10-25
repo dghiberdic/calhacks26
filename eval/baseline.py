@@ -30,6 +30,9 @@ ROOT = Path(__file__).resolve().parents[1]
 DAYS = ["2025-01-24", "2025-01-26", "2025-02-26"]       # Éowyn, Herminia, a generated held-out storm (= StormCheck ×3)
 RUNS = 3
 MODEL, EFFORT, PROMPT = "claude-opus-5-5", "medium", "plain-baseline-v2"
+# Adaptive thinking counts toward max_tokens; a 27-flight storm with ~110k input tokens needs room. Batches have no
+# HTTP timeout, and max_tokens is not part of the cache key.
+MAX_TOKENS = 32000
 REQUESTS_PATH = ROOT / "eval/cache/baseline_requests.json"
 RESULTS_PATH = ROOT / "eval/cache/baseline_results.json"
 LIVE_COMMAND = "uv run python -m eval.baseline --live"
@@ -120,7 +123,7 @@ def batch_items(requests: list[dict]) -> list:
 
     return [BatchItem(custom_id=r["custom_id"], role="eval_baseline", system=r["system"], messages=r["messages"],
                       schema=BaselineResult, effort=EFFORT, prompt_version=r["prompt_version"],
-                      principal="eval:plain-baseline", max_tokens=16000) for r in requests]
+                      principal="eval:plain-baseline", max_tokens=MAX_TOKENS) for r in requests]
 
 
 def run_batch(requests: list[dict], client) -> dict[str, dict]:
@@ -135,6 +138,15 @@ def run_batch(requests: list[dict], client) -> dict[str, dict]:
                        "record": record.model_dump(mode="json") if record else None,
                        "error": str(outcome.error) if outcome.error else None}
     return output
+
+
+def right(p: dict, t: dict) -> bool:
+    """One flight scored against the key: cause (root-aware) and extraordinary status, or a ``needs_legal``
+    answer on a flight the key routes to a person. The same rule scores plain Claude and StormCheck."""
+    if p["extraordinary"] == "needs_legal":
+        return bool(t.get("expected_route"))
+    return p["extraordinary"] == t["truth_extraordinary"] and cause_matches(
+        p["cause"], {"cause": t["truth_cause"], "latent": t.get("latent"), "root_latent": t.get("root_latent")})
 
 
 def summarize_results(results: dict, rows: list[dict], days=None) -> dict:
@@ -153,19 +165,20 @@ def summarize_results(results: dict, rows: list[dict], days=None) -> dict:
             if len(predictions) != len(flights) or set(predictions) != set(truth):
                 continue
             liabilities.append(sum(p["liability_cents"] for p in predictions.values()) / 100)
-
-            def right(p, t) -> bool:
-                if p["extraordinary"] == "needs_legal":
-                    return bool(t.get("expected_route"))
-                return p["extraordinary"] == t["truth_extraordinary"] and cause_matches(
-                    p["cause"], {"cause": t["truth_cause"], "latent": t.get("latent"),
-                                 "root_latent": t.get("root_latent")})
             accuracies.append(sum(right(p, truth[fid]) for fid, p in predictions.items()) / len(truth))
             canonical = [predictions[k] for k in sorted(predictions)]
             hashes.append(sha256(orjson.dumps(canonical, option=orjson.OPT_SORT_KEYS)).hexdigest())
             completed += 1
+        scored = truth and all("predicted_cause" in t and "predicted_extraordinary" in t for t in truth.values())
         storms[day] = {"liability_eur": liabilities, "cause_accuracy": accuracies, "hashes": hashes,
-                       "hash_identical": len(set(hashes)) == 1 if len(hashes) == RUNS else None}
+                       "hash_identical": len(set(hashes)) == 1 if len(hashes) == RUNS else None,
+                       "flights": len(truth),
+                       # StormCheck's initial output on the same flights, scored by the same rule, and the key's €
+                       "stormcheck_accuracy": round(sum(right({"cause": t["predicted_cause"],
+                                                               "extraordinary": t["predicted_extraordinary"]}, t)
+                                                         for t in truth.values()) / len(truth), 6) if scored else None,
+                       "stormcheck_preview_eur": sum(t.get("preview_cents", 0) for t in truth.values()) / 100,
+                       "key_ultimate_expected_eur": sum(t.get("ultimate_cents", 0) for t in truth.values()) / 100}
     complete = completed == len(days) * RUNS
     return {"model": MODEL, "effort": EFFORT, "status": "complete" if complete else "partial" if completed
             else "pending", "runs": RUNS if complete else 0, "completed_requests": completed,
