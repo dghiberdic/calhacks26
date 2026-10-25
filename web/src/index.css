@@ -33,10 +33,10 @@
   --color-slate-600: #33445e;
   --color-slate-500: #4f617a;
   --color-slate-400: #73839a;
-  --color-cloud-25: #fafbfc;
-  --color-cloud-50: #f4f6f9;
-  --color-cloud-100: #eceff4;
-  --color-cloud-200: #dfe4eb;
+  --color-cloud-25: #fcfcfb;
+  --color-cloud-50: #f5f6f5;
+  --color-cloud-100: #edf0f1;
+  --color-cloud-200: #dfe4e7;
   --color-cloud-300: #c8d0db;
   --color-cloud-400: #a5b0bf;
   --color-cloud-500: #85919f;
@@ -102,7 +102,7 @@
 }
 
 :root {
-  --background: #f4f6f9;
+  --background: #f5f6f5;
   --foreground: #0d1524;
   --card: #ffffff;
   --card-foreground: #0d1524;
@@ -117,7 +117,7 @@
   --accent: #eceff4;
   --accent-foreground: #0d1524;
   --destructive: #b8301b;
-  --border: #dfe4eb;
+  --border: #dfe4e7;
   --input: #c8d0db;
   --ring: #2565a3;
   --chart-1: #4f9fe0;
@@ -149,12 +149,411 @@
     @apply bg-background text-foreground;
     font-feature-settings: "ss01";
   }
+  :where(a, button, input, select, textarea, summary, [role="button"], [tabindex]):focus-visible {
+    outline: 2px solid var(--color-metar-ink);
+    outline-offset: 4px;
+  }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
   ::selection {
     background: color-mix(in srgb, var(--color-metar) 28%, transparent);
+  }
+}
+
+/* Presentation and operations share the same night-flight visual language.
+   Scope the workspace theme at the body so Radix menus/dialogs (portalled outside
+   the shell) inherit it too; leaving the workspace restores the story's tokens. */
+body:has(.app-shell) {
+  color-scheme: dark;
+  --background: #080d17;
+  --foreground: #e8f0fa;
+  --card: #111c2d;
+  --card-foreground: #e8f0fa;
+  --popover: #172438;
+  --popover-foreground: #e8f0fa;
+  --primary: #dceafa;
+  --primary-foreground: #0d1524;
+  --secondary: #1c2b40;
+  --secondary-foreground: #dae6f4;
+  --muted: #172438;
+  --muted-foreground: #a8b9cd;
+  --accent: #24364d;
+  --accent-foreground: #edf4fc;
+  --border: #2b3b51;
+  --input: #35475f;
+  --ring: #9ccbf2;
+  --destructive: #ff927f;
+  --color-metar-ink: #a9d6f7;
+  --color-metar-wash: #173149;
+  --color-held-ink: #f5cf86;
+  --color-held-wash: #352b1b;
+  --color-notweather-ink: #ffab99;
+  --color-notweather-wash: #382326;
+  --color-tie-ink: #9bdfb7;
+  --color-tie-wash: #17362c;
+  --color-weather-ink: #c0cddd;
+  --color-weather-wash: #253246;
+  --workspace-ink: #e8f0fa;
+  --workspace-muted: #a8b9cd;
+  --workspace-border: #2b3b51;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.app-shell {
+  background: radial-gradient(ellipse at 85% 0%, rgb(34 67 105 / 14%), transparent 55%), var(--background);
+}
+
+/* Existing components use explicit utility colours. Map surface and text roles
+   separately: changing the shared navy/cloud palette would invert the hero,
+   status chips and charts that are already designed for dark backgrounds. */
+body:has(.app-shell) :where(.bg-white) {
+  background-color: #172438;
+}
+
+body:has(.app-shell) :where(.bg-cloud-25, .bg-cloud-50) {
+  background-color: #142135;
+}
+
+/* The access matrix highlights the current principal via a parent utility;
+   airport suggestions use a data variant rather than a literal child class. */
+body:has(.app-shell) [class~="[&>*]:bg-cloud-50"] > * {
+  background-color: #142135;
+}
+
+body:has(.app-shell) [data-selected="true"][class~="data-[selected=true]:bg-cloud-50"] {
+  background-color: #23364d;
+}
+
+body:has(.app-shell) :where(.bg-cloud-100) {
+  background-color: #1c2c42;
+}
+
+body:has(.app-shell) :where(.bg-cloud-200, .bg-cloud-300) {
+  background-color: #34465d;
+}
+
+/* @theme inline emits these named status utilities as literal light colours.
+   Override the utilities as well as tokens, including the translucent banners. */
+body:has(.app-shell) :where(.text-held-ink, .text-held) {
+  color: var(--color-held-ink);
+}
+
+body:has(.app-shell) :where(.text-notweather-ink, .text-notweather) {
+  color: var(--color-notweather-ink);
+}
+
+body:has(.app-shell) :where(.text-metar-ink, .text-metar) {
+  color: var(--color-metar-ink);
+}
+
+body:has(.app-shell) :where(.text-tie-ink, .text-tie) {
+  color: var(--color-tie-ink);
+}
+
+body:has(.app-shell) :where(.text-weather-ink, .text-weather) {
+  color: var(--color-weather-ink);
+}
+
+body:has(.app-shell) .bg-held-wash {
+  background-color: var(--color-held-wash);
+}
+
+body:has(.app-shell) [class~="bg-held-wash/40"] {
+  background-color: rgb(53 43 27 / 40%);
+}
+
+body:has(.app-shell) [class~="bg-held-wash/60"] {
+  background-color: rgb(53 43 27 / 60%);
+}
+
+body:has(.app-shell) .bg-notweather-wash {
+  background-color: var(--color-notweather-wash);
+}
+
+body:has(.app-shell) .bg-metar-wash {
+  background-color: var(--color-metar-wash);
+}
+
+body:has(.app-shell) [class~="bg-metar-wash/60"] {
+  background-color: rgb(23 49 73 / 60%);
+}
+
+body:has(.app-shell) .bg-tie-wash {
+  background-color: var(--color-tie-wash);
+}
+
+body:has(.app-shell) .bg-weather-wash {
+  background-color: var(--color-weather-wash);
+}
+
+body:has(.app-shell) :where(.border-held, .border-held-ink) {
+  border-color: #99743b;
+}
+
+body:has(.app-shell) :where(.border-notweather, .border-notweather-ink) {
+  border-color: #aa5f53;
+}
+
+body:has(.app-shell) :where(.border-metar, .border-metar-ink) {
+  border-color: #4b779d;
+}
+
+body:has(.app-shell) :where(.border-tie, .border-tie-ink) {
+  border-color: #4c8b70;
+}
+
+body:has(.app-shell) :where(.border-weather, .border-weather-ink) {
+  border-color: #65788f;
+}
+
+body:has(.app-shell) :where(.text-navy-900, .text-navy-800) {
+  color: var(--workspace-ink);
+}
+
+body:has(.app-shell) :where(.text-slate-600, .text-slate-700) {
+  color: #c5d3e4;
+}
+
+body:has(.app-shell) :where(.text-slate-500) {
+  color: var(--workspace-muted);
+}
+
+body:has(.app-shell) :where(.text-slate-400, .text-slate-300, .text-cloud-500) {
+  color: #94a8c0;
+}
+
+body:has(.app-shell) :where(.border-cloud-100, .border-cloud-200, .border-cloud-300, .border-cloud-400) {
+  border-color: var(--workspace-border);
+}
+
+body:has(.app-shell) :where(.divide-cloud-100, .divide-cloud-200) > :not(:last-child) {
+  border-color: var(--workspace-border);
+}
+
+body:has(.app-shell) :where([class*="shadow-"][class*="color-cloud"]):not([class*="color-held"]):not([class*="color-notweather"]) {
+  --tw-shadow-color: var(--workspace-border);
+}
+
+body:has(.app-shell) :where([class*="shadow-"][class*="color-navy-900"]) {
+  --tw-shadow-color: #6f97bb;
+}
+
+body:has(.app-shell) .bg-metar-ink {
+  background-color: #326a99;
+}
+
+.app-main .bg-navy-800,
+.app-main :where(span.bg-navy-900, div.bg-navy-900):empty {
+  background-color: #aac4df;
+}
+
+body:has(.app-shell) :where(.hover\:bg-white, .hover\:bg-white\/70, .hover\:bg-cloud-25, .hover\:bg-cloud-50, .hover\:bg-cloud-100, .hover\:bg-cloud-200):hover {
+  background-color: #23364d;
+}
+
+body:has(.app-shell) :where(.hover\:text-navy-900, .hover\:text-navy-800):hover {
+  color: #fff;
+}
+
+body:has(.app-shell) .focus\:bg-white:focus {
+  background-color: #1b2b42;
+}
+
+body:has(.app-shell) :where(input, textarea)::placeholder {
+  color: #8fa2ba;
+}
+
+body:has(.app-shell) [data-state="on"].data-\[state\=on\]\:bg-white {
+  background-color: #2c405a;
+}
+
+body:has(.app-shell) :where([data-state="on"], [data-state="checked"]).data-\[state\=on\]\:text-navy-900 {
+  color: #f1f6fc;
+}
+
+body:has(.app-shell) [data-state="active"].data-\[state\=active\]\:text-navy-900 {
+  color: #f1f6fc;
+}
+
+body:has(.app-shell) [data-slot="tabs-trigger"][data-state="active"]::after {
+  background-color: #a9d6f7;
+}
+
+body:has(.app-shell) :where(button.bg-navy-900, a.bg-navy-900, [role="button"].bg-navy-900) {
+  background-color: #253c58;
+  box-shadow: inset 0 0 0 1px #405875;
+}
+
+body:has(.app-shell) :where(button.bg-navy-900, a.bg-navy-900, [role="button"].bg-navy-900):hover {
+  background-color: #304b6a;
+}
+
+body:has(.app-shell) [data-state="on"].data-\[state\=on\]\:bg-navy-900 {
+  background-color: #304964;
+}
+
+body:has(.app-shell) [data-state="checked"].data-\[state\=checked\]\:bg-navy-900 {
+  background-color: #6ba9d9;
+  border-color: #a9d6f7;
+}
+
+body:has(.app-shell) :where(.ring-white) {
+  --tw-ring-color: #172438;
+}
+
+/* Chart primitives retain their data colours; only their former paper/ink
+   surfaces and neutral grid lines are adapted to the dark workspace. */
+body:has(.app-shell) svg :where(.fill-navy-900, .fill-navy-800, [fill="var(--color-navy-900)"], [fill="var(--color-navy-800)"]) {
+  fill: #d9e9fa;
+}
+
+body:has(.app-shell) svg :where(.fill-slate-400, .fill-slate-500, .fill-slate-600, [fill="var(--color-slate-500)"]) {
+  fill: #a8b9cd;
+}
+
+body:has(.app-shell) svg :where(.fill-metar-ink, [fill="#2565a3"]) {
+  fill: var(--color-metar-ink);
+}
+
+body:has(.app-shell) svg :where(.fill-held-ink, [fill="#8a5a00"]) {
+  fill: var(--color-held-ink);
+}
+
+body:has(.app-shell) svg :where(.fill-notweather-ink, [fill="#b8301b"]) {
+  fill: var(--color-notweather-ink);
+}
+
+body:has(.app-shell) svg :where(.fill-tie-ink, [fill="#1f6b42"]) {
+  fill: var(--color-tie-ink);
+}
+
+body:has(.app-shell) svg :where(.fill-weather-ink, [fill="#556172"]) {
+  fill: var(--color-weather-ink);
+}
+
+body:has(.app-shell) svg :where([stroke="var(--color-navy-900)"], [stroke="var(--color-navy-800)"]) {
+  stroke: #d9e9fa;
+}
+
+body:has(.app-shell) svg :where(rect, path)[fill="var(--color-cloud-25)"],
+body:has(.app-shell) svg :where(rect, path)[fill="var(--color-cloud-50)"],
+body:has(.app-shell) svg :where(rect, path)[fill="var(--color-cloud-100)"],
+body:has(.app-shell) svg :where(rect, path)[fill="var(--color-cloud-200)"] {
+  fill: #1b2a40;
+}
+
+body:has(.app-shell) svg :where(line, path, rect)[stroke="var(--color-cloud-100)"],
+body:has(.app-shell) svg :where(line, path, rect)[stroke="var(--color-cloud-200)"],
+body:has(.app-shell) svg :where(line, path, rect)[stroke="var(--color-cloud-300)"] {
+  stroke: #33465e;
+}
+
+body:has(.app-shell) svg text[stroke="var(--color-cloud-50)"] {
+  stroke: #142135;
+}
+
+body:has(.app-shell) [data-slot="dialog-overlay"] {
+  background: rgb(2 7 14 / 65%);
+}
+
+body:has(.app-shell) :where([data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="dialog-content"], [data-slot="sheet-content"]) {
+  border: 1px solid #35465e;
+  box-shadow: 0 16px 48px rgb(0 0 0 / 36%);
+}
+
+.app-sidebar {
+  background: linear-gradient(165deg, #111e31 0%, #0b1524 52%, #080f1a 100%);
+  border-right: 1px solid #253248;
+}
+
+.app-sidebar :where(a, button):focus-visible {
+  outline-color: #b7d8f3;
+  outline-offset: 2px;
+}
+
+.app-nav-item {
+  letter-spacing: -0.005em;
+}
+
+.app-nav-item-active {
+  background: #22334d;
+  box-shadow: inset 0 0 0 1px #344760, 0 3px 8px rgb(0 0 0 / 7%);
+}
+
+.app-nav-item-active::before {
+  position: absolute;
+  left: 0;
+  top: 13px;
+  bottom: 13px;
+  width: 2px;
+  border-radius: 2px;
+  background: #c8deee;
+  content: "";
+}
+
+.app-topbar {
+  background: rgb(11 20 34 / 94%);
+  border-color: #26364c;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 15%);
+}
+
+.app-toolbar-control {
+  border-radius: 9px;
+  flex-shrink: 0;
+  background: #172438;
+  box-shadow: inset 0 0 0 1px #32455f, 0 1px 2px rgb(0 0 0 / 12%);
+}
+
+.app-main section.bg-card {
+  border-radius: 14px;
+  background: linear-gradient(145deg, #152235, #111c2d);
+  box-shadow: 0 0 0 1px #2b3b51, 0 5px 20px rgb(0 0 0 / 12%);
+}
+
+.app-main h1 {
+  letter-spacing: -0.035em;
+}
+
+.app-main :where(th) {
+  font-weight: 600;
+}
+
+.app-main :where(input, textarea, select) {
+  accent-color: #9ccbf2;
+}
+
+.app-skip-link {
+  position: fixed;
+  left: 16px;
+  top: 12px;
+  z-index: 100;
+  transform: translateY(-150%);
+  border-radius: 8px;
+  padding: 10px 16px;
+  background: #fff;
+  color: var(--color-navy-900);
+  font-weight: 600;
+}
+
+.app-skip-link:focus {
+  transform: translateY(0);
+}
+
+@media (max-width: 639px) {
+  .app-topbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .app-topbar > .min-w-0 {
+    flex-basis: calc(100% - 44px);
+  }
+
+  .app-topbar [data-testid="time-scrubber"] {
+    margin-left: auto;
   }
 }
 
