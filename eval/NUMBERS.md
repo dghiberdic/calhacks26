@@ -58,10 +58,10 @@ Initial EU261 compensation liability estimate (all held-out flights): €798,038
 
 ## Same input, same answer
 
-- StormCheck ×3 on 2025-01-24 (27 cancelled), fresh process each: €82,146 / €82,146 / €82,146, same hash `d1ba53078efda5c3…`.
-- StormCheck ×3 on 2025-01-26 (4 cancelled), fresh process each: €54,180 / €54,180 / €54,180, same hash `2c0823222e656c25…`.
-- StormCheck ×3 on 2025-02-26 (14 cancelled), fresh process each: €92,014 / €92,014 / €92,014, same hash `c455c850c2cc8768…`.
-- Golden control replay (real Engine + TraceStore + Books, scripted Claims Lead/Legal/Controller rulings): **€34,650 ×3, same hash** `494359bdba349cc1…`. Before the Legal ruling it is €82,146 (held knock-ons accrued); €34,650 is after it. The Isha tail kept: €3,600.
+- StormCheck ×3 on 2025-01-24 (27 cancelled), fresh process each: €82,146 / €82,146 / €82,146, same hash `ff1b12de83728efd…`.
+- StormCheck ×3 on 2025-01-26 (4 cancelled), fresh process each: €54,180 / €54,180 / €54,180, same hash `c1af4427b7d5e2de…`.
+- StormCheck ×3 on 2025-02-26 (14 cancelled), fresh process each: €92,014 / €92,014 / €92,014, same hash `5757b7f52fbbbb72…`.
+- Golden control replay (real Engine + TraceStore + Books, scripted Claims Lead/Legal/Controller rulings): **€34,650 ×3, same hash** `f468e14e120590a6…`. Before the Legal ruling it is €82,146 (held knock-ons accrued); €34,650 is after it. The Isha tail kept: €3,600.
 
 ### Plain Claude vs StormCheck on the same raw documents
 
