@@ -123,6 +123,11 @@ def install(app: FastAPI, rt: Any) -> None:
                                          question=q)
 
     # ---------------------------------------------------------------- clock
+    @app.get("/api/clock", response_model=ClockResponse)
+    def get_clock() -> ClockResponse:
+        """Justin #2: the server's known-at, and every named moment of the demo (earlier ones have passed)."""
+        return ClockResponse(known_at=rt.now, marks=rt.marks())
+
     @app.post("/api/clock", response_model=ClockResponse, responses=ERRORS)
     def set_clock(req: ClockRequest, request: Request) -> ClockResponse:
         s = sess(request)
@@ -134,4 +139,4 @@ def install(app: FastAPI, rt: Any) -> None:
                 raise ApiError(422, "validation", str(exc)) from exc
             if t > prev:
                 rt.emit("info", s.principal, f"Clock moved to {iso(t)}", "INFO", "clock")
-        return ClockResponse(known_at=rt.now)
+        return ClockResponse(known_at=rt.now, marks=rt.marks())

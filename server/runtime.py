@@ -24,13 +24,13 @@ from pathlib import Path
 from typing import Any
 
 from contracts.models import (
-    AccessDecision, Draft, Entitlement, Fact, FlightDecision, FlightFile, JournalEntry, Question, Role, Rule, Session,
-    StormRun, StormSummary, TraceAnchor, TraceEvent, World,
+    AccessDecision, ClockMark, Draft, Entitlement, Fact, FlightDecision, FlightFile, JournalEntry, Question, Role, Rule,
+    Session, StormRun, StormSummary, TraceAnchor, TraceEvent, World,
 )
 
-from . import compose
+from . import compose, scenario
 from .config import ROOT, Settings
-from .impls import Impls, _module, call, instantiate, select
+from .impls import Impls, _module, call, find, instantiate, select
 from .store import Store, TraceWriteError, iso
 
 log = logging.getLogger("stormcheck.server")
@@ -93,6 +93,7 @@ class Runtime:
         self._fresh_db()
         self.store = Store(settings.db_path)
         self.world: World | None = self._load_world()
+        self.base_world = self.world                 # what reset returns to (a scenario merges into `world`)
         self.clock = ServerClock(self.store, self._boot_known_at())
         # STORMCHECK_MODE=live|cache|offline sets the LLM client's mode unless LLM_MODE is given explicitly
         os.environ.setdefault("LLM_MODE", settings.mode)
@@ -158,6 +159,21 @@ class Runtime:
         if cls is None:
             return None
         return instantiate(cls, db_path=str(self.settings.db_path), clock=self.clock)
+
+    def adopt_world(self, world: World | None) -> None:
+        """Make `world` the one every later decision, replay and claims batch reads (a scenario merged in, or the
+        base world again on reset). Caches derived from the old world are dropped; the mined rules carry over when
+        the history is unchanged."""
+        if world is self.world:
+            return
+        mined = getattr(self, "_mined_cache", None)
+        self.world = world
+        eng = self.impls.engine
+        if eng is not None and world is not None and hasattr(eng, "world"):
+            eng.world = world
+        self._norm_index = None
+        if mined is not None and world is not None and mined[0].history_cases == world.history_cases:
+            self._mined_cache = (world, mined[1])
 
     def bind_engine(self) -> None:
         eng = self.impls.engine
@@ -266,6 +282,7 @@ class Runtime:
             if close is not None:
                 close()
             self.store.restore(self.settings.baseline)
+            self.adopt_world(self.base_world)            # the baseline holds no scenario
             self.clock.invalidate()
             self.trace = self._open_trace()
             self.trace_failures.clear()
@@ -405,12 +422,16 @@ class Runtime:
             self.record("record_metar", obs, "agent.reader", now, source_id=f"SRC-METAR-{key}")
 
     # storm run --------------------------------------------------------
-    def storm_days(self, world: World) -> list[tuple[str, date]]:
+    @staticmethod
+    def hub(world: World) -> str:
         hub = str(world.meta.get("hub_icao") or world.meta.get("hub") or "EIDW")
         if len(hub) == 3:
             a = compose.airport_by(world, hub)
             hub = a.icao if a else "EIDW"
-        return compose.storm_days(world, hub)
+        return hub
+
+    def storm_days(self, world: World) -> list[tuple[str, date]]:
+        return compose.storm_days(world, self.hub(world))
 
     @staticmethod
     def storm_run_at(world: World, station: str, day: date) -> datetime:
@@ -806,8 +827,60 @@ class Runtime:
     def process_due(self) -> None:
         with self.lock:
             self._run_pending_storms()
+            self._run_due_scenarios()
             self._process_claims()
             self._remind()
+
+    def marks(self) -> list[ClockMark]:
+        """The named moments the demo moves through (`GET /api/clock`), in time order."""
+        return scenario.marks(self.base_world, self.storm_run_at)
+
+    def _run_due_scenarios(self) -> None:
+        if self.base_world is None or not self.base_world.meta.get("golden_version"):
+            return
+        for sc in scenario.SCENARIOS:
+            if sc.at <= self.now and self.store.get("scenario", sc.id) is None:
+                self.run_scenario(sc)
+
+    def run_scenario(self, sc: scenario.Scenario) -> list[str]:
+        """Load the scenario's World slice, merge it into the world, commit its sources and METAR, and run its
+        days like a storm run. Runs once (reset restores the baseline, where it has not run). A missing or failing
+        loader is recorded and reported, never raised: the clock move itself succeeded."""
+        now = self.now
+        loader = find([sc.loader])
+        if loader is None:
+            self.store.put("scenario", sc.id, {"ran": False, "reason": f"{'.'.join(sc.loader)} is missing"}, now)
+            self.emit("info", "agent.engine", f"{sc.label}: not available on this server ({sc.loader[0]} has not "
+                      "landed)", "INFO", sc.id)
+            return []
+        try:
+            part = loader()
+        except Exception as exc:
+            log.exception("scenario %s did not load", sc.id)
+            self.store.put("scenario", sc.id, {"ran": False, "reason": type(exc).__name__}, now)
+            self.emit("info", "agent.engine", f"{sc.label}: could not be loaded ({type(exc).__name__})", "INFO", sc.id)
+            return []
+        base = self.world
+        have = {s.id for s in base.sources}
+        self.adopt_world(scenario.merge_worlds(base, part))
+        new_sources = [s for s in part.sources if s.id not in have]
+        self.commit_world(part.model_copy(update={
+            "sources": new_sources, "metar": {k: v for k, v in part.metar.items() if k not in base.metar}}))
+        if self.broker is not None:
+            self.broker.register_sources(new_sources)
+        event = scenario.event_of(part)
+        cancelled = sum(1 for f in part.flights if f.status == "cancelled")
+        self.emit("info", "agent.reader", f"Read {sc.label}: {getattr(event, 'title', sc.label)} · "
+                  f"{len(part.flights)} flights, {cancelled} cancelled · {len(new_sources)} sources", "INFO", sc.id)
+        ran = []
+        for station, day in scenario.runs(part, self.hub(base)):
+            res = self.run_and_store(self.world, station, day, now, source="scenario")
+            run = scenario.decorate(res.run, part, self.world)
+            if run is not res.run:
+                self.store.put("storm_run", run.id, run, now)
+            ran.append(run.id)
+        self.store.put("scenario", sc.id, {"ran": True, "runs": ran}, now)
+        return ran
 
     def _run_pending_storms(self) -> None:
         if self.world is None:

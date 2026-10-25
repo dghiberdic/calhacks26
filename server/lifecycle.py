@@ -170,7 +170,7 @@ class Lifecycle:
         change). Features do not depend on the rule set: rules only adjust a finding after it is made."""
         rt = self.rt
         eng = rt.impls.engine
-        key = (rt.now, len(rt.store.keys("injected_fact")))
+        key = (rt.now, len(rt.store.keys("injected_fact")), id(rt.world))
         cache = getattr(self, "_feat_cache", None)
         if cache is not None and cache[0] == key:
             return cache[1]
